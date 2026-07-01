@@ -1,36 +1,32 @@
-import { useNavigate } from "react-router-dom";
-
-import Page from "../components/layout/Page.tsx";
-import Button from "../components/ui/Button.tsx";
+import Container from "../components/ui/Container";
+import Card from "../components/ui/Card";
 
 export default function Home() {
-  const navigate = useNavigate();
-
   return (
-    <Page title="🎉 London Games">
+    <Container>
+      <div className="space-y-8">
 
-      <p
-        style={{
-          opacity: .75,
-          marginBottom: 40,
-          lineHeight: 1.6
-        }}
-      >
-        Welcome to tonight's game.
-      </p>
+        <div>
+          <span className="rounded-full bg-zinc-800 px-3 py-1 text-sm">
+            🎉 London Games
+          </span>
 
-      <Button onClick={() => navigate("/join")}>
-        Join Game
-      </Button>
+          <h1 className="mt-6 text-5xl font-bold">
+            Real-world
+            <br />
+            Social Chaos
+          </h1>
 
-      <Button onClick={() => navigate("/leaderboard")}>
-        Leaderboard
-      </Button>
+          <p className="mt-4 text-zinc-400">
+            Complete ridiculous challenges with your friends.
+          </p>
+        </div>
 
-      <Button onClick={() => navigate("/admin")}>
-        Admin
-      </Button>
+        <Card>
+          Home screen complete.
+        </Card>
 
-    </Page>
+      </div>
+    </Container>
   );
 }
