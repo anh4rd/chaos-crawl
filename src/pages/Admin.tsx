@@ -2,31 +2,32 @@ import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 
 import { usePlayers } from "../game/hooks/usePlayers";
-import { updateGame } from "../lib/gameApi";
+import { updateGameState } from "../lib/gameApi";
+import { useGameState } from "../game/hooks/useGameState";
 
 export default function Admin() {
   const players = usePlayers();
 
-  const currentPub = "Little Nan's";
+  async function nextPub() {
+    await updateGameState({
+      current_pub: "The Dog & Bell"
+    });
+  }
+
+  async function revealChallenge() {
+    await updateGameState({
+      current_challenge: "Hide the Pineapple",
+      challenge_description: "Hide the pineapple somewhere on your person."
+    });
+  }
+
+  const game = useGameState ();
+  if (!game) return <p>Loading...</p>;
 
   const currentChallenge = "Become Nan";
 
   const challengeDescription =
     "Take the funniest photo pretending to be Little Nan.";
-
-  async function nextPub() {
-    await updateGame({
-      current_pub: "The Dog & Bell",
-    });
-  }
-
-  async function revealChallenge() {
-    await updateGame({
-      current_challenge: "Hide the Pineapple",
-      challenge_description:
-        "Hide the pineapple somewhere on your person.",
-    });
-  }
 
   return (
     <main className="mx-auto min-h-screen max-w-md space-y-6 p-6">
@@ -41,7 +42,7 @@ export default function Admin() {
           Current Pub
         </h2>
 
-        <p>{currentPub}</p>
+        <p>{game.currentPub}</p>
 
       </Card>
 
@@ -94,7 +95,8 @@ export default function Admin() {
 
         <div className="space-y-3">
 
-          <Button onClick={nextPub}>
+          <Button onClick={nextPub}
+          >
             Next Pub
           </Button>
 

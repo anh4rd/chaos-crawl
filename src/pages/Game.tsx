@@ -1,24 +1,19 @@
-import { useEffect, useState } from "react";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
-import { getGame } from "../lib/gameApi";
+import { useGameState } from "../hooks/useGameState";
 
 export default function Game() {
-  const [game, setGame] = useState<Record<string, unknown> | null>(null);
+  const game = useGameState();
+  if (!game) return <p>Waiting for bday kween...</p>;
 
-  useEffect(() => {
-    getGame().then((result) => {
-      if (result.data) {
-        setGame(result.data as Record<string, unknown>);
-      }
-    });
-  }, []);
-
-  const currentPub = game?.current_pub as string | undefined ?? "Unknown pub";
-  const currentChallenge = game?.current_challenge as string | undefined ?? "No mission loaded.";
-  const challengeDescription = game?.challenge_description as string | undefined ?? "Check back soon.";
-  const sideMissions = Array.isArray(game?.side_missions)
-    ? (game.side_missions as string[])
+  const currentPub = game.current_pub;
+  const currentChallenge = game.current_challenge;
+  const challengeDescription =
+    game.challenge_description;
+  const sideMissions = Array.isArray((game as any).side_missions)
+    ? ((game as any).side_missions as string[])
+    : Array.isArray((game as any).sideChallenges)
+    ? ((game as any).sideChallenges as string[])
     : [];
 
   return (

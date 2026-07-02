@@ -1,23 +1,24 @@
 import { supabase } from "./supabase";
 
-export async function getGame() {
-  const { data, error } = await supabase
-    .from("game")
+export async function getGameState() {
+  return await supabase
+    .from("game_state")
     .select("*")
     .eq("id", 1)
     .single();
-
-  return { data, error };
 }
 
-export async function updateGame(values: {
+export async function updateGameState(values: {
   current_pub?: string;
   current_challenge?: string;
   challenge_description?: string;
-  broadcast?: string;
+  broadcast_message?: string;
 }) {
   return await supabase
-    .from("game")
-    .update(values)
+    .from("game_state")
+    .update({
+      ...values,
+      updated_at: new Date().toISOString(),
+    })
     .eq("id", 1);
 }

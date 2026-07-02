@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 import { supabase } from "../../lib/supabase";
 
 export interface Player {
@@ -14,6 +13,30 @@ export function usePlayers() {
 
   useEffect(() => {
     loadPlayers();
+
+    const channel = supabase
+      .channel("players")
+
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "players",
+        },
+        (payload) => {
+            console.log("Realtime payload:", payload);
+          loadPlayers();
+        }
+      )
+
+      .subscribe((status) => {
+        console.log("Realtime status", status);
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   async function loadPlayers() {
@@ -27,7 +50,7 @@ export function usePlayers() {
       return;
     }
 
-    setPlayers(data);
+    setPlayers(data ?? []);
   }
 
   return players;
