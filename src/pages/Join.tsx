@@ -10,13 +10,13 @@ import { savePlayerId } from "../lib/playerSession";
 import { useEffect } from "react";
 import { getPlayerId } from "../lib/playerSession";
 
-useEffect(() => {
+export default function Join() {
+  useEffect(() => {
   if (getPlayerId()) {
     window.location.href = "/game";
   }
 }, []);
 
-export default function Join() {
   const [playerName, setPlayerName] = useState("");
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
 
