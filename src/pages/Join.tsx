@@ -1,69 +1,84 @@
 import { useState } from "react";
-
+import { savePlayer } from "../lib/playerStorage";
 import Container from "../components/ui/Container";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import TeamCard from "../components/ui/TeamCard";
+import { teams } from "../lib/demoData";
 
 export default function Join() {
-  const [team, setTeam] = useState("");
+  const [playerName, setPlayerName] = useState("");
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
+
+  const handleJoin = () => {
+    if (!playerName.trim() ){
+        alert("Please enter your name.");
+        return;
+        }
+    if (!selectedTeam) {
+        alert("Please select a team.");
+        return;
+    }
+    console.log({
+      playerName,
+      selectedTeam,
+    });
+    savePlayer({
+      id: crypto.randomUUID(),
+      name: playerName,
+      teamId: selectedTeam,
+      score: 0,
+    });
+    alert("Let's fckn go!");
+    window.location.href = "/game";
+  };
 
   return (
     <Container>
       <div className="space-y-8">
-
         <div>
-          <h1 className="text-4xl font-bold">
-            Join Tonight's Game
-          </h1>
+          <div className="text-center">
+            <div className="text-6xl">🎉</div>
 
-          <p className="mt-2 text-zinc-400">
-            Pick a team and get ready.
-          </p>
+            <h1 className="mt-4 text-4xl font-black">
+              Anna's Chaos Crawl
+            </h1>
+
+            <p className="mt-2 text-zinc-400">
+              Complete ridiculous challenges across London.
+            </p>
+          </div>
+
+          <p className="mt-2 text-zinc-400">Pick a team and get ready.</p>
         </div>
 
         <Card>
-
           <div className="space-y-6">
-
-            <Input placeholder="Your name" />
+            <Input
+              value={playerName}
+              onChange={(event) => setPlayerName(event.target.value)}
+              placeholder="Your name"
+            />
 
             <div className="space-y-4">
-
-              <TeamCard
-                emoji="🍍"
-                name="Pineapples"
-                selected={team==="pineapple"}
-                onClick={()=>setTeam("pineapple")}
-              />
-
-              <TeamCard
-                emoji="🦆"
-                name="Ducks"
-                selected={team==="ducks"}
-                onClick={()=>setTeam("ducks")}
-              />
-
-              <TeamCard
-                emoji="🍺"
-                name="Beer Mats"
-                selected={team==="beer"}
-                onClick={()=>setTeam("beer")}
-              />
-
+              {teams.map((team) => (
+                <TeamCard
+                  key={team.id}
+                  emoji={team.emoji}
+                  name={team.name}
+                  colour={team.colour}
+                  selected={selectedTeam === team.id}
+                  onClick={() => setSelectedTeam(team.id)}
+                />
+              ))}
             </div>
 
-            <Button>
-
+            <Button type="button" onClick={handleJoin}>
               Join Game
-
             </Button>
-
           </div>
-
         </Card>
-
       </div>
     </Container>
   );

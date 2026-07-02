@@ -1,6 +1,7 @@
 interface TeamCardProps {
   emoji: string;
   name: string;
+  colour: string;
   selected?: boolean;
   onClick?: () => void;
 }
@@ -8,6 +9,7 @@ interface TeamCardProps {
 export default function TeamCard({
   emoji,
   name,
+  colour,
   selected = false,
   onClick,
 }: TeamCardProps) {
@@ -15,25 +17,47 @@ export default function TeamCard({
     <button
       onClick={onClick}
       className={`
+        relative
         w-full
-        rounded-2xl
+        overflow-hidden
+        rounded-3xl
         border
         p-5
         text-left
-        transition
-
+        transition-all
+        duration-200
         ${
           selected
-            ? "border-yellow-400 bg-yellow-400/10"
-            : "border-zinc-800 bg-zinc-900"
+            ? "border-yellow-400 scale-[1.02]"
+            : "border-zinc-800 hover:border-zinc-600"
         }
       `}
     >
-      <div className="flex items-center gap-4">
-        <span className="text-3xl">{emoji}</span>
+      <div
+        className="absolute inset-y-0 left-0 w-2"
+        style={{ background: colour }}
+      />
 
-        <h3 className="text-lg font-semibold">{name}</h3>
+      <div className="ml-4 flex items-center gap-4">
+
+        <span className="text-4xl">
+          {emoji}
+        </span>
+
+        <div>
+
+          <h3 className="text-xl font-bold">
+            {name}
+          </h3>
+
+          <p className="text-sm text-zinc-400">
+            Join this team
+          </p>
+
+        </div>
+
       </div>
+
     </button>
   );
 }
