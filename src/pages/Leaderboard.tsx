@@ -1,9 +1,7 @@
 import { usePlayers } from "../game/hooks/usePlayers";
 import Card from "../components/ui/Card";
-import { useNavigate } from "react-router-dom";
 
 export default function Leaderboard() {
-  const navigate = useNavigate();
   const players = usePlayers();
 
   const sortedPlayers = [...players].sort(
@@ -57,6 +55,4 @@ export default function Leaderboard() {
 
     </main>
   );
-    navigate("/leaderboard");
-
 }

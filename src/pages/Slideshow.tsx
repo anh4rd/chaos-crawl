@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { usePhotos } from "../hooks/usePhotos";
-import { useNavigate } from "react-router-dom";
 
 export default function Slideshow() {
-    const navigate = useNavigate();
   const photos = usePhotos();
 
   const [index, setIndex] = useState(0);
@@ -111,6 +109,4 @@ export default function Slideshow() {
 </main>
 
 );
-  navigate("/slideshow");
-
 }

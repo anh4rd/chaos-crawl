@@ -11,18 +11,9 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Join />} />
       <Route path="/game" element={<Game />} />
-      <Route
-        path="/leaderboard"
-        element={<Leaderboard />}
-      />
-      <Route
-        path="/admin"
-        element={<Admin />}
-      />
-      <Route
-    path="/slideshow"
-    element={<Slideshow />}
-/>
+      <Route path="/leaderboard" element={<Leaderboard />} />
+      <Route path="/admin" element={<Admin />} />
+      <Route path="/slideshow" element={<Slideshow />} />
     </Routes>
   );
 }

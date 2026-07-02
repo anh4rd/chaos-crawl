@@ -104,6 +104,4 @@ export default function Game() {
 
     </main>
   );
-    navigate("/game");
-
 }

@@ -1,10 +1,7 @@
 import Container from "../components/ui/Container";
 import Card from "../components/ui/Card";
-import { useNavigate } from "react-router-dom";
-
 
 export default function Home() {
-  const navigate = useNavigate();
   return (
     <Container>
       <div className="space-y-8">
@@ -32,6 +29,4 @@ export default function Home() {
       </div>
     </Container>
   );
-    navigate("/home");
-
 }

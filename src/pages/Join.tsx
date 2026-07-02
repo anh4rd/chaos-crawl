@@ -40,9 +40,7 @@ export default function Join() {
     return;
   }
   savePlayerId(result.data.id);
-  navigate("/game");
   alert("Let's fckn go!");
-
   navigate("/game");
 };
 
@@ -94,6 +92,4 @@ export default function Join() {
       </div>
     </Container>
   );
-    navigate("/join");
-
 }
