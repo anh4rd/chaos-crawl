@@ -7,11 +7,14 @@ import TeamCard from "../components/ui/TeamCard";
 import { teams } from "../lib/demoData";
 import { createPlayer } from "../lib/playerApi";
 import { savePlayerId, getPlayerId } from "../lib/playerSession";
+import { useNavigate } from "react-router-dom";
+
 
 export default function Join() {
+  const navigate = useNavigate();
   useEffect(() => {
   if (getPlayerId()) {
-    window.location.href = "/game";
+    navigate("/game");
   }
 }, []);
 
@@ -37,10 +40,10 @@ export default function Join() {
     return;
   }
   savePlayerId(result.data.id);
-  window.location.href = "/game";
+  navigate("/game");
   alert("Let's fckn go!");
 
-  window.location.href = "/game";
+  navigate("/game");
 };
 
   return (
@@ -91,4 +94,6 @@ export default function Join() {
       </div>
     </Container>
   );
+    navigate("/join");
+
 }

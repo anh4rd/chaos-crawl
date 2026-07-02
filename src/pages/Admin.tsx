@@ -11,8 +11,11 @@ import { useChallenges } from "../game/hooks/useChallenges";
 
 import { updateGameState } from "../lib/gameApi";
 import { addPoints } from "../lib/playerApi";
+import { useNavigate } from "react-router-dom";
+
 
 export default function Admin() {
+  const navigate = useNavigate();
   const players = usePlayers();
   const game = useGameState();
 
@@ -228,4 +231,5 @@ export default function Admin() {
 
     </main>
   );
+  navigate("/admin");
 }

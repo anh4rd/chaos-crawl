@@ -2,8 +2,10 @@ import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { useGameState } from "../hooks/useGameState";
 import { clearPlayerId } from "../lib/playerSession";
+import { useNavigate } from "react-router-dom";
 
 export default function Game() {
+  const navigate = useNavigate();
   const game = useGameState();
   if (!game) return <p>Waiting for bday kween...</p>;
 
@@ -87,14 +89,14 @@ export default function Game() {
 
       </Card>
 
-      <Button type="button" onClick={() => window.location.href = "/leaderboard"}>
+      <Button type="button" onClick={() => navigate("/leaderboard")}>
         Leaderboard
       </Button>
 
       <Button
   onClick={() => {
     clearPlayerId();
-    window.location.href = "/";
+    navigate("/leaderboard");
   }}
 >
   Leave Game
@@ -102,4 +104,6 @@ export default function Game() {
 
     </main>
   );
+    navigate("/game");
+
 }
