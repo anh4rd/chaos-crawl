@@ -51,7 +51,7 @@ export default function Join() {
             <img
               src={`${import.meta.env.BASE_URL}Title.png`}
               alt="Anna's Chaos Crawl"
-              className="mx-auto mb-4 h-32 w-32"
+              className="mx-auto aspect-ratio:auto mb-4 w-fill"
             />
 
             <p className="mt-2 text-zinc-400">
