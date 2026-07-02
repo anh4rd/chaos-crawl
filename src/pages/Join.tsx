@@ -1,17 +1,17 @@
 import { useState } from "react";
-import { savePlayer } from "../lib/playerStorage";
 import Container from "../components/ui/Container";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
 import TeamCard from "../components/ui/TeamCard";
 import { teams } from "../lib/demoData";
+import { createPlayer } from "../lib/playerApi";
 
 export default function Join() {
   const [playerName, setPlayerName] = useState("");
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     if (!playerName.trim() ){
         alert("Please enter your name.");
         return;
@@ -20,19 +20,23 @@ export default function Join() {
         alert("Please select a team.");
         return;
     }
-    console.log({
-      playerName,
-      selectedTeam,
-    });
-    savePlayer({
-      id: crypto.randomUUID(),
-      name: playerName,
-      teamId: selectedTeam,
-      score: 0,
-    });
-    alert("Let's fckn go!");
-    window.location.href = "/game";
-  };
+    const result = await createPlayer(
+    playerName,
+    selectedTeam
+  );
+
+  console.log("CREATE PLAYER RESULT", result);
+
+  if (result.error) {
+    console.error(result.error);
+    alert(result.error.message);
+    return;
+  }
+
+  alert("Let's fckn go!");
+
+  window.location.href = "/game";
+};
 
   return (
     <Container>

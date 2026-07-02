@@ -1,14 +1,17 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getGame } from "../lib/gameApi";
 
 export function useGame() {
-  const [playerName, setPlayerName] = useState("");
-  const [selectedTeam, setSelectedTeam] = useState("");
+  const [game, setGame] = useState<any>(null);
 
-  return {
-    playerName,
-    setPlayerName,
+  useEffect(() => {
+    loadGame();
+  }, []);
 
-    selectedTeam,
-    setSelectedTeam,
-  };
+  async function loadGame() {
+    const { data } = await getGame();
+    setGame(data);
+  }
+
+  return game;
 }

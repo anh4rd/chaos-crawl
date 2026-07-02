@@ -16,6 +16,7 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
+    "ignoreDeprecations": "6.0",
 
     "skipLibCheck": true,
     "noEmit": true,
