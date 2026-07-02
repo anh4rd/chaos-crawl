@@ -4,6 +4,7 @@ import Button from "../components/ui/Button";
 import { usePlayers } from "../game/hooks/usePlayers";
 import { updateGameState } from "../lib/gameApi";
 import { useGameState } from "../game/hooks/useGameState";
+import { addPoints } from "../lib/playerApi";
 
 export default function Admin() {
   const players = usePlayers();
@@ -76,16 +77,49 @@ export default function Admin() {
             </p>
           )}
 
-          {players.map((player: { id: string; name: string; team: string }) => (
-            <div
-              key={player.id}
-              className="flex justify-between rounded-xl bg-zinc-800 p-3"
-            >
-              <span>{player.name}</span>
+          {players.map((player) => (
 
-              <span>{player.team}</span>
+<Card key={player.id}>
+
+    <div className="flex justify-between">
+
+        <div>
+
+            <div className="font-bold">
+                {player.name}
             </div>
-          ))}
+
+            <div className="text-zinc-400">
+                {player.team}
+            </div>
+
+            <div className="mt-2 font-semibold">
+                {player.score} pts
+            </div>
+
+        </div>
+
+        <div className="flex gap-2">
+
+            <Button
+                onClick={() => addPoints(player.id,5)}
+            >
+                +5
+            </Button>
+
+            <Button
+                onClick={() => addPoints(player.id,10)}
+            >
+                +10
+            </Button>
+
+        </div>
+
+    </div>
+
+</Card>
+
+))}
 
         </div>
 

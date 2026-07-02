@@ -4,6 +4,7 @@ import Join from "./pages/Join";
 import Game from "./pages/Game";
 import Leaderboard from "./pages/Leaderboard";
 import Admin from "./pages/Admin";
+import Slideshow from "./pages/Slideshow";
 
 export default function App() {
   return (
@@ -18,6 +19,10 @@ export default function App() {
         path="/admin"
         element={<Admin />}
       />
+      <Route
+    path="/slideshow"
+    element={<Slideshow />}
+/>
     </Routes>
   );
 }

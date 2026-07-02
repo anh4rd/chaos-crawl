@@ -6,6 +6,15 @@ import Input from "../components/ui/Input";
 import TeamCard from "../components/ui/TeamCard";
 import { teams } from "../lib/demoData";
 import { createPlayer } from "../lib/playerApi";
+import { savePlayerId } from "../lib/playerSession";
+import { useEffect } from "react";
+import { getPlayerId } from "../lib/playerSession";
+
+useEffect(() => {
+  if (getPlayerId()) {
+    window.location.href = "/game";
+  }
+}, []);
 
 export default function Join() {
   const [playerName, setPlayerName] = useState("");
@@ -25,14 +34,12 @@ export default function Join() {
     selectedTeam
   );
 
-  console.log("CREATE PLAYER RESULT", result);
-
   if (result.error) {
-    console.error(result.error);
     alert(result.error.message);
     return;
   }
-
+  savePlayerId(result.data.id);
+  window.location.href = "/game";
   alert("Let's fckn go!");
 
   window.location.href = "/game";

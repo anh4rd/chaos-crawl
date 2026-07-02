@@ -1,6 +1,7 @@
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { useGameState } from "../hooks/useGameState";
+import { clearPlayerId } from "../lib/playerSession";
 
 export default function Game() {
   const game = useGameState();
@@ -89,6 +90,15 @@ export default function Game() {
       <Button type="button" onClick={() => window.location.href = "/leaderboard"}>
         Leaderboard
       </Button>
+
+      <Button
+  onClick={() => {
+    clearPlayerId();
+    window.location.href = "/";
+  }}
+>
+  Leave Game
+</Button>
 
     </main>
   );
