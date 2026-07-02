@@ -1,71 +1,61 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;500;700;900&display=swap");
 
-:root{
-  --bg:#09090b;
-  --card:#18181b;
-  --border:#27272a;
-  --text:#fafafa;
-  --muted:#a1a1aa;
-  --yellow:#facc15;
+:root {
+  --pink: #ff1493;
+  --yellow: #ffe600;
+  --black: #090909;
+  --white: #ffffff;
 }
 
-*{
-  box-sizing:border-box;
+* {
+  box-sizing: border-box;
 }
 
 html,
 body,
-#root{
-  margin:0;
-  min-height:100%;
+#root {
+  min-height: 100%;
 }
 
-body{
-  background:var(--bg);
-  color:var(--text);
-  font-family:Inter,sans-serif;
+body {
+  margin: 0;
+
+  font-family: "Inter", sans-serif;
+
+  color: white;
+
+  background-image:
+    linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)),
+    url("/leopard.jpg");
+
+  background-size: cover;
+
+  background-position: center;
+
+  background-repeat: no-repeat;
+
+  background-attachment: fixed;
 }
 
-.page{
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:24px;
+h1,
+h2,
+h3 {
+
+  font-family: "Permanent Marker", cursive;
+
+  text-transform: uppercase;
+
+  font-style: italic;
+
+  color: var(--pink);
+
+  text-shadow:
+    3px 3px black,
+    0 0 15px hotpink;
+
 }
 
-.hero{
-  width:100%;
-  max-width:420px;
-}
-
-.badge{
-  display:inline-block;
-  padding:8px 14px;
-  background:#27272a;
-  border-radius:999px;
-  margin-bottom:24px;
-}
-
-h1{
-  font-size:3rem;
-  line-height:1;
-  margin:0;
-}
-
-p{
-  color:var(--muted);
-  line-height:1.7;
-  margin:24px 0 40px;
-}
-
-.primaryButton{
-  width:100%;
-  border:none;
-  border-radius:18px;
-  background:var(--yellow);
-  color:black;
-  font-weight:700;
-  padding:18px;
-  font-size:18px;
+a{
+  color:white;
 }

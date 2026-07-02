@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -77,7 +77,7 @@ export default function Admin() {
   <select
     className="mb-6 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
     value={selectedPub}
-    onChange={(e) => {
+    onChange={(e: ChangeEvent<HTMLSelectElement>) => {
       setSelectedPub(e.target.value);
       setSelectedChallenge("");
     }}
@@ -211,7 +211,7 @@ export default function Admin() {
         <Input
           placeholder="Message to everyone..."
           value={broadcastMessage}
-          onChange={(e) =>
+          onChange={(e: ChangeEvent<HTMLInputElement>) =>
             setBroadcastMessage(e.target.value)
           }
         />

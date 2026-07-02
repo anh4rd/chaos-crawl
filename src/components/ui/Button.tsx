@@ -4,28 +4,13 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   fullWidth?: boolean;
 }
 
-export default function Button({
-  children,
-  fullWidth = true,
-  ...props
-}: ButtonProps) {
+export default function Button({ fullWidth = true, className = "", ...props }: ButtonProps) {
   return (
     <button
       {...props}
-      className={`
-        rounded-2xl
-        bg-yellow-400
-        text-black
-        font-semibold
-        py-4
-        px-6
-        transition
-        hover:brightness-110
-        active:scale-95
-        ${fullWidth ? "w-full" : ""}
-      `}
+      className={`w-full rounded-full bg-pink-500 px-6 py-4 font-black uppercase text-white shadow-[0_0_20px_#ff1493] transition hover:scale-105 hover:bg-pink-400 ${className}`.trim()}
     >
-      {children}
+      {props.children}
     </button>
   );
 }

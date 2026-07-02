@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import Container from "../components/ui/Container";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
@@ -6,9 +6,7 @@ import Input from "../components/ui/Input";
 import TeamCard from "../components/ui/TeamCard";
 import { teams } from "../lib/demoData";
 import { createPlayer } from "../lib/playerApi";
-import { savePlayerId } from "../lib/playerSession";
-import { useEffect } from "react";
-import { getPlayerId } from "../lib/playerSession";
+import { savePlayerId, getPlayerId } from "../lib/playerSession";
 
 export default function Join() {
   useEffect(() => {
@@ -49,12 +47,12 @@ export default function Join() {
     <Container>
       <div className="space-y-8">
         <div>
-          <div className="text-center">
-            <div className="text-6xl">🎉</div>
-
-            <h1 className="mt-4 text-4xl font-black">
-              Anna's Chaos Crawl
-            </h1>
+          <div>
+            <img
+              src={`${import.meta.env.BASE_URL}Title.png`}
+              alt="Anna's Chaos Crawl"
+              className="mx-auto mb-4 h-32 w-32"
+            />
 
             <p className="mt-2 text-zinc-400">
               Complete ridiculous challenges across London.
@@ -68,7 +66,7 @@ export default function Join() {
           <div className="space-y-6">
             <Input
               value={playerName}
-              onChange={(event) => setPlayerName(event.target.value)}
+              onChange={(event: ChangeEvent<HTMLInputElement>) => setPlayerName(event.target.value)}
               placeholder="Your name"
             />
 
