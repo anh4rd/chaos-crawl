@@ -2,14 +2,18 @@ import { supabase } from "./supabase";
 
 export async function submitVote(
   voterId: string,
-  votedForPlayerId: string,
-  challengeName: string
+  challengeName: string,
+  target: {
+    playerId?: string;
+    teamId?: string;
+  }
 ) {
   return await supabase
     .from("votes")
     .insert({
       voter_id: voterId,
-      voted_for_player_id: votedForPlayerId,
+      voted_for_player_id: target.playerId ?? null,
+      voted_for_team_id: target.teamId ?? null,
       challenge_name: challengeName,
     });
 }

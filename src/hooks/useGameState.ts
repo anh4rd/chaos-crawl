@@ -9,6 +9,7 @@ export interface GameState {
   challenge_description: string;
   broadcast_message: string;
   voting_open?: boolean;
+  voting_target: "player" | "team";
 }
 
 export function useGameState() {

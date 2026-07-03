@@ -7,10 +7,8 @@ import Button from "../components/ui/Button";
 import { useGameState } from "../hooks/useGameState";
 import { usePlayers } from "../game/hooks/usePlayers";
 
-import {
-  getPlayerId,
-  clearPlayerId,
-} from "../lib/playerSession";
+import { getPlayerId } from "../lib/playerSession";
+
 import {
   getMyVote,
   submitVote,
@@ -24,16 +22,35 @@ export default function Vote() {
   const [selectedPlayerId, setSelectedPlayerId] =
     useState<string | null>(null);
 
-  const [hasVoted, setHasVoted] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] =
+    useState<string | null>(null);
 
-  const [submitting, setSubmitting] = useState(false);
+  const [hasVoted, setHasVoted] =
+    useState(false);
+
+  const [submitting, setSubmitting] =
+    useState(false);
 
   const playerId = getPlayerId();
+
+  // Derive unique teams from joined players
+  const teams = Array.from(
+    new Set(
+      players
+        .map((player) => player.team)
+        .filter(
+          (team): team is string =>
+            typeof team === "string" &&
+            team.trim() !== ""
+        )
+    )
+  );
+
   useEffect(() => {
-  if (game?.voting_open === false) {
-    navigate("/game");
-  }
-}, [game?.voting_open, navigate]);
+    if (game?.voting_open === false) {
+      navigate("/game");
+    }
+  }, [game?.voting_open, navigate]);
 
   useEffect(() => {
     async function checkExistingVote() {
@@ -65,52 +82,53 @@ export default function Vote() {
     }
 
     if (!playerId) {
-      alert("Player session not found. Please rejoin the game.");
-      navigate("/");
+      alert("Player session not found.");
       return;
     }
 
-    if (!selectedPlayerId) {
+    const votingForTeams =
+      game.voting_target === "team";
+
+    if (votingForTeams && !selectedTeamId) {
+      alert("Choose a team first.");
+      return;
+    }
+
+    if (!votingForTeams && !selectedPlayerId) {
       alert("Choose someone first.");
       return;
     }
 
     setSubmitting(true);
 
-    // Check saved player still exists
-    const currentPlayer = players.find(
-      (player) => player.id === playerId
-    );
-
-    if (!currentPlayer) {
-      setSubmitting(false);
-      clearPlayerId();
-
-      alert(
-        "Your saved player session is no longer valid. Please join again."
-      );
-
-      navigate("/");
-      return;
-    }
-
     const { error } = await submitVote(
       playerId,
-      selectedPlayerId,
-      game.current_challenge
+      game.current_challenge,
+      votingForTeams
+        ? {
+            teamId: selectedTeamId!,
+          }
+        : {
+            playerId: selectedPlayerId!,
+          }
     );
 
     setSubmitting(false);
 
     if (error) {
-      console.error("VOTE ERROR FULL:", error);
+      console.error("VOTE ERROR", error);
 
       if (error.code === "23505") {
         setHasVoted(true);
+        alert(
+          "You already voted for this challenge."
+        );
         return;
       }
 
-      alert(`Vote failed: ${error.message}`);
+      alert(
+        `Vote failed: ${error.message}`
+      );
       return;
     }
 
@@ -135,18 +153,22 @@ export default function Vote() {
             </h1>
 
             <p className="mt-4">
-              Your vote for {game.current_challenge} is locked in.
+              Your vote for{" "}
+              {game.current_challenge}{" "}
+              is locked in.
+            </p>
+
+            <p className="mt-4 text-sm text-zinc-400">
+              Waiting for the host to close voting...
             </p>
           </div>
         </Card>
-
-        <p className ="mt-4 text-sm text-zinc400">
-          Waiting for the host to close voting...
-        </p>
-        
       </main>
     );
   }
+
+  const votingForTeams =
+    game.voting_target === "team";
 
   return (
     <main className="mx-auto min-h-screen max-w-md space-y-6 p-6">
@@ -160,41 +182,70 @@ export default function Vote() {
         </p>
 
         <p className="mt-2 text-sm">
-          Choose the winner.
+          {votingForTeams
+            ? "Choose the winning team."
+            : "Choose the winning player."}
         </p>
       </header>
 
       <div className="space-y-3">
-        {players.map((player) => {
-          const selected =
-            selectedPlayerId === player.id;
+        {votingForTeams
+          ? teams.map((team) => {
+              const selected =
+                selectedTeamId === team;
 
-          return (
-            <button
-              key={player.id}
-              type="button"
-              onClick={() =>
-                setSelectedPlayerId(player.id)
-              }
-              className={`
-                w-full rounded-2xl border-4 p-4 text-left
-                ${
-                  selected
-                    ? "border-yellow-400 bg-pink-500"
-                    : "border-pink-500 bg-black/80"
-                }
-              `}
-            >
-              <div className="text-xl font-bold">
-                {player.name}
-              </div>
+              return (
+                <button
+                  key={team}
+                  type="button"
+                  onClick={() =>
+                    setSelectedTeamId(team)
+                  }
+                  className={`
+                    w-full rounded-2xl border-4 p-4 text-left
+                    ${
+                      selected
+                        ? "border-yellow-400 bg-pink-500"
+                        : "border-pink-500 bg-black/80"
+                    }
+                  `}
+                >
+                  <div className="text-xl font-bold">
+                    {team}
+                  </div>
+                </button>
+              );
+            })
+          : players.map((player) => {
+              const selected =
+                selectedPlayerId === player.id;
 
-              <div className="text-sm">
-                {player.team}
-              </div>
-            </button>
-          );
-        })}
+              return (
+                <button
+                  key={player.id}
+                  type="button"
+                  onClick={() =>
+                    setSelectedPlayerId(player.id)
+                  }
+                  className={`
+                    w-full rounded-2xl border-4 p-4 text-left
+                    ${
+                      selected
+                        ? "border-yellow-400 bg-pink-500"
+                        : "border-pink-500 bg-black/80"
+                    }
+                  `}
+                >
+                  <div className="text-xl font-bold">
+                    {player.name}
+                  </div>
+
+                  <div className="text-sm">
+                    {player.team}
+                  </div>
+                </button>
+              );
+            })}
       </div>
 
       <Button
@@ -202,7 +253,9 @@ export default function Vote() {
         onClick={handleVote}
         disabled={submitting}
       >
-        {submitting ? "Submitting..." : "Cast Vote"}
+        {submitting
+          ? "Submitting..."
+          : "Cast Vote"}
       </Button>
     </main>
   );

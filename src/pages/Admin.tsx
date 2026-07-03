@@ -358,6 +358,24 @@ useEffect(() => {
       <Card>
 
   <h2>Voting</h2>
+  <select
+  value={game.voting_target ?? "player"}
+  onChange={async (e) => {
+    await updateGameState({
+      voting_target:
+        e.target.value as "player" | "team",
+    });
+  }}
+  className="mb-4 w-full rounded-xl p-3 text-black"
+>
+  <option value="player">
+    Vote for Player
+  </option>
+
+  <option value="team">
+    Vote for Team
+  </option>
+</select>
 
   <Button
     onClick={() =>
