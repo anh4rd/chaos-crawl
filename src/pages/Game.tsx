@@ -97,8 +97,8 @@ export default function Game() {
   const currentPubSubChallenges =
     pubSubChallenges.filter(
       (challenge) =>
-        challenge.pub_id ===
-        currentPubObject?.id
+        String (challenge.pub_id) ===
+        String (currentPubObject?.id)
     );
 
   async function handlePhotoSelected(
@@ -289,7 +289,7 @@ export default function Game() {
         <Card>
 
           <h2 className="mb-4 text-2xl font-bold">
-            PUB BONUS MISSIONS
+            SIDE MISSIONS
           </h2>
 
           <div className="space-y-4">
@@ -386,7 +386,7 @@ export default function Game() {
                 className="rounded-2xl border-2 border-pink-500 bg-black/70 p-3"
               >
 
-                <div className="text-lg font-bold">
+                <div className="text-lg font-bold leading-tight">
                   {
                     SideChallenge.title
                   }
