@@ -7,7 +7,10 @@ import Button from "../components/ui/Button";
 import { useGameState } from "../hooks/useGameState";
 import { usePlayers } from "../game/hooks/usePlayers";
 
-import { getPlayerId } from "../lib/playerSession";
+import {
+  getPlayerId,
+  clearPlayerId,
+} from "../lib/playerSession";
 import {
   getMyVote,
   submitVote,
@@ -62,7 +65,8 @@ export default function Vote() {
     }
 
     if (!playerId) {
-      alert("Player session not found.");
+      alert("Player session not found. Please rejoin the game.");
+      navigate("/");
       return;
     }
 
@@ -73,6 +77,23 @@ export default function Vote() {
 
     setSubmitting(true);
 
+    // Check saved player still exists
+    const currentPlayer = players.find(
+      (player) => player.id === playerId
+    );
+
+    if (!currentPlayer) {
+      setSubmitting(false);
+      clearPlayerId();
+
+      alert(
+        "Your saved player session is no longer valid. Please join again."
+      );
+
+      navigate("/");
+      return;
+    }
+
     const { error } = await submitVote(
       playerId,
       selectedPlayerId,
@@ -82,18 +103,16 @@ export default function Vote() {
     setSubmitting(false);
 
     if (error) {
-  console.error("VOTE ERROR FULL:", error);
+      console.error("VOTE ERROR FULL:", error);
 
-  alert(
-    `Vote failed:
-${error.message}
-Code: ${error.code}
-Details: ${error.details ?? "none"}
-Hint: ${error.hint ?? "none"}`
-  );
+      if (error.code === "23505") {
+        setHasVoted(true);
+        return;
+      }
 
-  return;
-}
+      alert(`Vote failed: ${error.message}`);
+      return;
+    }
 
     setHasVoted(true);
   }
