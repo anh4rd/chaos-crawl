@@ -1,22 +1,77 @@
-import { Routes, Route } from "react-router-dom";
+import {
+  lazy,
+  Suspense,
+} from "react";
 
-import Join from "./pages/Join";
-import Game from "./pages/Game";
-import Leaderboard from "./pages/Leaderboard";
-import Admin from "./pages/Admin";
-import Slideshow from "./pages/Slideshow";
-import Vote from "./pages/Vote";
+import {
+  Routes,
+  Route,
+} from "react-router-dom";
 
+const Join = lazy(
+  () => import("./pages/Join")
+);
+
+const Game = lazy(
+  () => import("./pages/Game")
+);
+
+const Admin = lazy(
+  () => import("./pages/Admin")
+);
+
+const Leaderboard = lazy(
+  () => import("./pages/Leaderboard")
+);
+
+const Vote = lazy(
+  () => import("./pages/Vote")
+);
+
+const Slideshow = lazy(
+  () => import("./pages/Slideshow")
+);
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Join />} />
-      <Route path="/game" element={<Game />} />
-      <Route path="/leaderboard" element={<Leaderboard />} />
-      <Route path="/admin" element={<Admin />} />
-      <Route path="/slideshow" element={<Slideshow />} />
-      <Route path="/vote" element={<Vote />} />
-    </Routes>
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center p-6">
+          <p>Loading chaos...</p>
+        </main>
+      }
+    >
+      <Routes>
+        <Route
+          path="/"
+          element={<Join />}
+        />
+
+        <Route
+          path="/game"
+          element={<Game />}
+        />
+
+        <Route
+          path="/admin"
+          element={<Admin />}
+        />
+
+        <Route
+          path="/leaderboard"
+          element={<Leaderboard />}
+        />
+
+        <Route
+          path="/vote"
+          element={<Vote />}
+        />
+
+        <Route
+          path="/slideshow"
+          element={<Slideshow />}
+        />
+      </Routes>
+    </Suspense>
   );
 }

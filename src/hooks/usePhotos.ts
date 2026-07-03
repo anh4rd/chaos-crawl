@@ -20,7 +20,9 @@ export function usePhotos() {
   async function loadPhotos() {
     const { data, error } = await supabase
       .from("photos")
-      .select("*")
+      .select(
+        "id, image_url, uploaded_at, player_name, team, challenge, pub, points"
+      )
       .order("uploaded_at", {
         ascending: false,
       });
@@ -30,7 +32,7 @@ export function usePhotos() {
       return;
     }
 
-    setPhotos(data ?? []);
+    setPhotos((data ?? []) as Photo[]);
   }
 
   useEffect(() => {

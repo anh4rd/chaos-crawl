@@ -66,6 +66,17 @@ export default function Slideshow() {
         setPaused((current) => !current);
       }
     }
+    useEffect(() => {
+  if (photos.length <= 1) {
+    return;
+  }
+
+  const nextIndex =
+    (currentIndex + 1) % photos.length;
+
+  const image = new Image();
+  image.src = photos[nextIndex].image_url;
+}, [currentIndex, photos]);
 
     window.addEventListener(
       "keydown",

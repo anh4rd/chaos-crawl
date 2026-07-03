@@ -1,3 +1,4 @@
+import imageCompression from "browser-image-compression";
 import { supabase } from "./supabase";
 
 export async function uploadPhoto(
@@ -11,57 +12,60 @@ export async function uploadPhoto(
     points?: number;
   }
 ) {
-  const extension =
-    file.name.split(".").pop() || "jpg";
+  try {
+    const compressedFile = await imageCompression(file, {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    });
 
-  const fileName =
-    `${details.playerId}/${Date.now()}-${crypto.randomUUID()}.${extension}`;
+    const extension =
+      compressedFile.name.split(".").pop() || "jpg";
 
-  // Upload image to Supabase Storage
-  const { error: uploadError } =
-    await supabase.storage
-      .from("photos")
-      .upload(fileName, file, {
-        cacheControl: "3600",
-        upsert: false,
-      });
+    const fileName =
+      `${details.playerId}/${Date.now()}-${crypto.randomUUID()}.${extension}`;
 
-  if (uploadError) {
+    const { error: uploadError } =
+      await supabase.storage
+        .from("photos")
+        .upload(fileName, compressedFile, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+    if (uploadError) {
+      return {
+        data: null,
+        error: uploadError,
+      };
+    }
+
+    const { data: publicUrlData } =
+      supabase.storage
+        .from("photos")
+        .getPublicUrl(fileName);
+
+    const { data, error } =
+      await supabase
+        .from("photos")
+        .insert({
+          image_url: publicUrlData.publicUrl,
+          uploaded_at: new Date().toISOString(),
+          player_id: details.playerId,
+          player_name: details.playerName,
+          team: details.team,
+          challenge: details.challenge,
+          pub: details.pub,
+          points: details.points ?? 0,
+        })
+        .select()
+        .single();
+
+    return { data, error };
+  } catch (error) {
     return {
       data: null,
-      error: uploadError,
+      error: error as Error,
     };
   }
-
-  // Get public URL
-  const { data: publicUrlData } =
-    supabase.storage
-      .from("photos")
-      .getPublicUrl(fileName);
-
-  const imageUrl =
-    publicUrlData.publicUrl;
-
-  // Insert photo metadata into photos table
-  const { data, error } =
-    await supabase
-      .from("photos")
-      .insert({
-        image_url: imageUrl,
-        uploaded_at:
-          new Date().toISOString(),
-        player_id: details.playerId,
-        player_name: details.playerName,
-        team: details.team,
-        challenge: details.challenge,
-        pub: details.pub,
-        points: details.points ?? 0,
-      })
-      .select()
-      .single();
-
-  return {
-    data,
-    error,
-  };
 }

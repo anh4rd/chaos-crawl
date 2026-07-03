@@ -120,6 +120,7 @@ export default function Game() {
         <img
           src={`${import.meta.env.BASE_URL}Title.png`}
           alt="Anna's Chaos Crawl"
+          loading="lazy"
           className="mx-auto mb-4 w-full"
         />
       </header>
