@@ -24,11 +24,17 @@ import {
 
 import { uploadPhoto } from "../lib/photoApi";
 
+import {
+  completeChallenge,
+  type ChallengeType,
+} from "../lib/completionApi";
+
 export default function Game() {
-  // ALL HOOKS FIRST
   const game = useGameState();
-  const sideChallenges = useSideChallenges();
-  const pubSubChallenges = usePubSubChallenges();
+  const sideChallenges =
+    useSideChallenges();
+  const pubSubChallenges =
+    usePubSubChallenges();
 
   const players = usePlayers();
   const pubs = usePubs();
@@ -42,63 +48,70 @@ export default function Game() {
   const [uploading, setUploading] =
     useState(false);
 
-  const [uploadChallenge, setUploadChallenge] =
-    useState<{
-      title: string;
-      points: number;
-    } | null>(null);
+  const [
+    uploadChallenge,
+    setUploadChallenge,
+  ] = useState<{
+    id: string | number;
+    title: string;
+    points: number;
+    type: ChallengeType;
+  } | null>(null);
 
-  // Send players to voting when host opens it
   useEffect(() => {
     if (game?.voting_open === true) {
       navigate("/vote");
     }
   }, [game?.voting_open, navigate]);
 
-  // CONDITIONAL RETURN ONLY AFTER ALL HOOKS
+  useEffect(() => {
+    if (
+      game?.show_vote_results === true
+    ) {
+      navigate("/vote-results");
+    }
+  }, [
+    game?.show_vote_results,
+    navigate,
+  ]);
+
   if (!game) {
     return (
-      <p>
-        Waiting for bday kween...
-      </p>
+      <p>Waiting for bday kween...</p>
     );
   }
 
-  const currentPub =
-    game.current_pub;
+  const playerId = getPlayerId();
+
+  const currentPlayer = players.find(
+    (player) => player.id === playerId
+  );
+
+  const currentPub = game.current_pub;
 
   const currentChallenge =
     game.current_challenge;
 
-  const challengeDescription =
-    game.challenge_description;
-
-  // Find current pub object
   const currentPubObject = pubs.find(
-    (pub) =>
-      pub.name === currentPub
+    (pub) => pub.name === currentPub
   );
 
-  // Find current challenge object
   const currentChallengeObject =
     challenges.find(
       (challenge) =>
-        challenge.title === currentChallenge
+        challenge.title ===
+        currentChallenge
     );
 
-  // Main challenge only shows upload
-  // button when enabled in Supabase
   const allowPhotoUpload =
     currentChallengeObject
       ?.allow_photo_upload === true;
 
-  // Only show sub-challenges
-  // belonging to current pub
   const currentPubSubChallenges =
     pubSubChallenges.filter(
       (challenge) =>
-        String (challenge.pub_id) ===
-        String (currentPubObject?.id)
+        String(challenge.pub_id) ===
+        String(currentPubObject?.id)
     );
 
   async function handlePhotoSelected(
@@ -107,105 +120,92 @@ export default function Game() {
     const file =
       event.target.files?.[0];
 
-    if (!file) {
+    if (!file || !uploadChallenge) {
       return;
     }
 
-    const playerId =
-      getPlayerId();
-
-    if (!playerId) {
+    if (!playerId || !currentPlayer) {
       alert(
         "Player session not found. Please rejoin."
       );
-
-      navigate("/");
       return;
     }
-
-    const currentPlayer =
-      players.find(
-        (player) =>
-          player.id === playerId
-      );
-
-    if (!currentPlayer) {
-      alert(
-        "Could not find your player."
-      );
-
-      return;
-    }
-
-    // If a sub-challenge was selected,
-    // use its title and points.
-    // Otherwise use the main challenge.
-    const challengeTitle =
-      uploadChallenge?.title ??
-      currentChallenge;
-
-    const challengePoints =
-      uploadChallenge?.points ??
-      currentChallengeObject?.points ??
-      0;
 
     setUploading(true);
 
-    const { error } =
-      await uploadPhoto(
-        file,
-        {
-          playerId,
-          playerName:
-            currentPlayer.name,
-
-          team:
-            currentPlayer.team ??
-            null,
-
-          challenge:
-            challengeTitle,
-
-          pub:
-            currentPub,
-
-          points:
-            challengePoints,
-        }
-      );
-
-    setUploading(false);
-
-    // Allow same file to be
-    // selected again later
-    event.target.value = "";
-
-    // Reset selected upload challenge
-    setUploadChallenge(null);
+    const { data, error } =
+      await uploadPhoto(file, {
+        playerId,
+        playerName: currentPlayer.name,
+        team:
+          currentPlayer.team ?? null,
+        challenge:
+          uploadChallenge.title,
+        pub: currentPub,
+        points:
+          uploadChallenge.points,
+      });
 
     if (error) {
+      setUploading(false);
+      event.target.value = "";
+      setUploadChallenge(null);
+
       console.error(
-        "PHOTO UPLOAD ERROR:",
+        "PHOTO UPLOAD ERROR",
         error
       );
 
       alert(
         `Upload failed: ${error.message}`
       );
-
       return;
     }
 
-    alert(
-      "Photo uploaded!"
-    );
+    const {
+      error: completionError,
+    } = await completeChallenge({
+      playerId,
+      challengeType:
+        uploadChallenge.type,
+      challengeId:
+        uploadChallenge.id,
+      challengeTitle:
+        uploadChallenge.title,
+      points:
+        uploadChallenge.points,
+      photoId: data?.id ?? null,
+    });
+
+    setUploading(false);
+    event.target.value = "";
+    setUploadChallenge(null);
+
+    if (completionError) {
+      console.error(
+        "COMPLETION ERROR",
+        completionError
+      );
+    }
+
+    alert("Photo uploaded!");
+  }
+
+  function chooseUpload(details: {
+    id: string | number;
+    title: string;
+    points: number;
+    type: ChallengeType;
+  }) {
+    setUploadChallenge(details);
+
+    window.setTimeout(() => {
+      fileInputRef.current?.click();
+    }, 0);
   }
 
   return (
     <main className="mx-auto min-h-screen max-w-md space-y-6 p-6">
-
-      {/* TITLE */}
-
       <header>
         <img
           src={`${import.meta.env.BASE_URL}Title.png`}
@@ -214,219 +214,174 @@ export default function Game() {
         />
       </header>
 
-      {/* ONE SHARED HIDDEN FILE INPUT */}
-
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
         className="hidden"
-        onChange={
-          handlePhotoSelected
-        }
+        onChange={handlePhotoSelected}
       />
 
-      {/* CURRENT PUB */}
-
-      <Card>
-        <div className="space-y-2">
-
-          <div className="text-sm text-zinc-400">
-            📍 Current Pub
-          </div>
-
-          <h2 className="text-3xl font-bold">
-            {currentPub}
-          </h2>
-
-        </div>
-      </Card>
-
-      {/* MAIN MISSION */}
-
-      <Card>
-        <div className="space-y-4">
-
-          <div className="text-sm text-zinc-400">
-            ⭐ Main Mission
-          </div>
-
-          <h2 className="text-2xl font-bold">
-            {currentChallenge}
-          </h2>
-
-          <p>
-            {challengeDescription}
+      {currentPlayer?.team ? (
+        <Card>
+          <p className="text-sm">
+            Your team
           </p>
 
-          {allowPhotoUpload && (
-            <Button
-              type="button"
-              disabled={uploading}
-              onClick={() => {
-                setUploadChallenge(
-                  null
-                );
+          <h2 className="text-2xl font-bold">
+            {currentPlayer.team}
+          </h2>
+        </Card>
+      ) : (
+        <Card>
+          <p>
+            Waiting for the host to assign
+            your team...
+          </p>
+        </Card>
+      )}
 
-                fileInputRef
-                  .current
-                  ?.click();
-              }}
-            >
-              {uploading
-                ? "Uploading..."
-                : "Upload Photo"}
-            </Button>
-          )}
+      <Card>
+        <p className="text-sm">
+          📍 Current Pub
+        </p>
 
-        </div>
+        <h2 className="text-3xl font-bold">
+          {currentPub}
+        </h2>
       </Card>
 
-      {/* PUB SUB-CHALLENGES */}
+      <Card>
+        <p className="text-sm">
+          ⭐ Main Mission
+        </p>
+
+        <h2 className="mt-2 text-2xl font-bold">
+          {currentChallenge}
+        </h2>
+
+        <p className="mt-3">
+          {game.challenge_description}
+        </p>
+
+        {allowPhotoUpload &&
+          currentChallengeObject && (
+            <div className="mt-4">
+              <Button
+                type="button"
+                disabled={uploading}
+                onClick={() =>
+                  chooseUpload({
+                    id:
+                      currentChallengeObject.id,
+                    title:
+                      currentChallengeObject.title,
+                    points:
+                      currentChallengeObject.points ??
+                      0,
+                    type: "main",
+                  })
+                }
+              >
+                Upload Photo
+              </Button>
+            </div>
+          )}
+      </Card>
 
       {currentPubSubChallenges.length >
         0 && (
         <Card>
-
           <h2 className="mb-4 text-2xl font-bold">
-            SIDE MISSIONS
+            PUB BONUS MISSIONS
           </h2>
 
           <div className="space-y-4">
-
             {currentPubSubChallenges.map(
               (challenge) => (
                 <div
-                  key={
-                    challenge.id
-                  }
+                  key={challenge.id}
                   className="rounded-2xl border-2 border-pink-500 bg-black/70 p-4"
                 >
+                  <h3 className="text-xl font-bold">
+                    {challenge.title}
+                  </h3>
 
-                  <div className="flex items-start justify-between gap-3">
-
-                    <div>
-
-                      <h3 className="text-lg font-bold">
-                        {
-                          challenge.title
-                        }
-                      </h3>
-
-                      {challenge.description && (
-                        <p className="mt-2 text-sm text-zinc-300">
-                          {
-                            challenge.description
-                          }
-                        </p>
-                      )}
-
-                    </div>
-
-                    <div className="whitespace-nowrap font-bold text-yellow-400">
-                      +
+                  {challenge.description && (
+                    <p className="mt-2">
                       {
-                        challenge.points
+                        challenge.description
                       }
-                    </div>
+                    </p>
+                  )}
 
-                  </div>
+                  <p className="mt-2 font-bold">
+                    +{challenge.points}
+                  </p>
 
                   <div className="mt-4">
-
                     <Button
                       type="button"
-                      disabled={
-                        uploading
-                      }
-                      onClick={() => {
-                        setUploadChallenge({
+                      disabled={uploading}
+                      onClick={() =>
+                        chooseUpload({
+                          id:
+                            challenge.id,
                           title:
                             challenge.title,
-
                           points:
                             challenge.points,
-                        });
-
-                        fileInputRef
-                          .current
-                          ?.click();
-                      }}
+                          type: "bonus",
+                        })
+                      }
                     >
-                      {uploading
-                        ? "Uploading..."
-                        : "Upload Photo"}
+                      Upload Photo
                     </Button>
-
                   </div>
-
                 </div>
               )
             )}
-
           </div>
-
         </Card>
       )}
 
-      {/* CHAOS BINGO */}
-
       <Card>
-
         <h2 className="mb-4 text-2xl font-bold">
           CHAOS BINGO
         </h2>
 
         <div className="grid grid-cols-2 gap-3">
-
           {sideChallenges.map(
-            (SideChallenge) => (
+            (challenge) => (
               <div
-                key={SideChallenge.id}
+                key={challenge.id}
                 className="rounded-2xl border-2 border-pink-500 bg-black/70 p-3"
               >
+                <h3 className="font-bold">
+                  {challenge.title}
+                </h3>
 
-                <div className="text-lg font-bold leading-tight">
-                  {
-                    SideChallenge.title
-                  }
-                </div>
-
-                <p className="mt-2 text-sm text-zinc-300">
-                  {
-                    SideChallenge.description
-                  }
+                <p className="mt-2 text-sm">
+                  {challenge.description}
                 </p>
 
-                <div className="mt-3 font-bold text-yellow-400">
-                  +
-                  {
-                    SideChallenge.points
-                  }
-                </div>
-
+                <p className="mt-2 font-bold">
+                  +{challenge.points}
+                </p>
               </div>
             )
           )}
-
         </div>
-
       </Card>
-
-      {/* LEADERBOARD */}
 
       <Button
         type="button"
         onClick={() =>
-          navigate(
-            "/leaderboard"
-          )
+          navigate("/leaderboard")
         }
       >
         Leaderboard
       </Button>
-
-      {/* LEAVE GAME */}
 
       <Button
         type="button"
@@ -437,7 +392,6 @@ export default function Game() {
       >
         Leave Game
       </Button>
-
     </main>
   );
 }

@@ -32,6 +32,10 @@ const Slideshow = lazy(
   () => import("./pages/Slideshow")
 );
 
+const VoteResults = lazy(
+  () => import("./pages/VoteResults")
+);
+
 export default function App() {
   return (
     <Suspense
@@ -72,6 +76,10 @@ export default function App() {
           element={<Slideshow />}
         />
       </Routes>
+      <Route
+  path="/vote-results"
+  element={<VoteResults />}
+/>
     </Suspense>
   );
 }

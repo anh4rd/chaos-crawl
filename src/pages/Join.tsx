@@ -1,96 +1,87 @@
-import { useEffect, useState, type ChangeEvent } from "react";
-import Container from "../components/ui/Container";
-import Button from "../components/ui/Button";
-import Card from "../components/ui/Card";
-import Input from "../components/ui/Input";
-import TeamCard from "../components/ui/TeamCard";
-import { teams } from "../lib/demoData";
-import { createPlayer } from "../lib/playerApi";
-import { savePlayerId, getPlayerId } from "../lib/playerSession";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import Input from "../components/ui/Input";
+
+import { supabase } from "../lib/supabase";
+import { setPlayerId } from "../lib/playerSession";
 
 export default function Join() {
   const navigate = useNavigate();
-  useEffect(() => {
-  if (getPlayerId()) {
+
+  const [name, setName] = useState("");
+  const [joining, setJoining] =
+    useState(false);
+
+  async function handleJoin() {
+    const cleanName = name.trim();
+
+    if (!cleanName) {
+      alert("Enter your name first.");
+      return;
+    }
+
+    setJoining(true);
+
+    const { data, error } = await supabase
+      .from("players")
+      .insert({
+        name: cleanName,
+        team: null,
+        score: 0,
+      })
+      .select()
+      .single();
+
+    setJoining(false);
+
+    if (error) {
+      console.error("JOIN ERROR", error);
+      alert(`Join failed: ${error.message}`);
+      return;
+    }
+
+    setPlayerId(data.id);
     navigate("/game");
   }
-}, []);
-
-  const [playerName, setPlayerName] = useState("");
-  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
-
-  const handleJoin = async () => {
-    if (!playerName.trim() ){
-        alert("Please enter your name.");
-        return;
-        }
-    if (!selectedTeam) {
-        alert("Please select a team.");
-        return;
-    }
-    const result = await createPlayer(
-    playerName,
-    selectedTeam
-  );
-
-  if (result.error) {
-    alert(result.error.message);
-    return;
-  }
-  savePlayerId(result.data.id);
-  alert("Let's fckn go!");
-  navigate("/game");
-};
 
   return (
-    <Container>
-      <div className="space-y-8">
-        <div>
-          <div>
-            <img
-              src={`${import.meta.env.BASE_URL}Title.png`}
-              alt="Anna's Chaos Crawl"
-              loading="lazy"
-              className="mx-auto aspect-ratio:auto mb-4 w-fill"
-            />
+    <main className="mx-auto min-h-screen max-w-md space-y-6 p-6">
+      <header>
+        <img
+          src={`${import.meta.env.BASE_URL}Title.png`}
+          alt="Anna's Chaos Crawl"
+          className="mx-auto mb-4 w-full"
+        />
+      </header>
 
-            <p className="mt-2 text-zinc-400">
-              
-            </p>
-          </div>
+      <Card>
+        <h1 className="mb-4 text-3xl font-bold">
+          Join the Chaos
+        </h1>
 
-          <p className="mt-2 text-zinc-400">.</p>
+        <Input
+          placeholder="Your name..."
+          value={name}
+          onChange={(event) =>
+            setName(event.target.value)
+          }
+        />
+
+        <div className="mt-4">
+          <Button
+            type="button"
+            disabled={joining}
+            onClick={handleJoin}
+          >
+            {joining
+              ? "Joining..."
+              : "Join Game"}
+          </Button>
         </div>
-
-        <Card>
-          <div className="space-y-6">
-            <Input
-              value={playerName}
-              onChange={(event: ChangeEvent<HTMLInputElement>) => setPlayerName(event.target.value)}
-              placeholder="Your name"
-            />
-
-            <div className="space-y-4">
-              {teams.map((team) => (
-                <TeamCard
-                  key={team.id}
-                  emoji={team.emoji}
-                  name={team.name}
-                  colour={team.colour}
-                  selected={selectedTeam === team.id}
-                  onClick={() => setSelectedTeam(team.id)}
-                />
-              ))}
-            </div>
-
-            <Button type="button" onClick={handleJoin}>
-              Join Game
-            </Button>
-          </div>
-        </Card>
-      </div>
-    </Container>
+      </Card>
+    </main>
   );
 }

@@ -10,6 +10,7 @@ export interface GameState {
   broadcast_message: string;
   voting_open?: boolean;
   voting_target: "player" | "team";
+  show_vote_results: boolean;
 }
 
 export function useGameState() {

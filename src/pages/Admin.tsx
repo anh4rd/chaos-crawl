@@ -15,13 +15,18 @@ import { addPoints, changeTeam, deletePlayer, removePoints, renamePlayer } from 
 import { teams } from "@/lib/demoData";
 
 import { getVotesForChallenge } from "../lib/voteApi";
+import { useNavigate } from "react-router-dom";
 
+import useChallengeCompletions from "../hooks/challengeCompletions";
 
 export default function Admin() {
   const players = usePlayers();
   const game = useGameState();
   const pubs = usePubs();
   const challenges = useChallenges();
+  const navigate = useNavigate();
+
+  const completions = useChallengeCompletions();
   const [votes, setVotes] = useState<
   {
     id: number;
@@ -76,7 +81,24 @@ useEffect(() => {
   const [selectedChallenge, setSelectedChallenge] = useState("");
   const [broadcastMessage, setBroadcastMessage] = useState("");
   if (!game) return <p>Loading...</p>;
-  const currentPubObject = pubs.find(
+  const orderedPubs = [...pubs].sort(
+  (a, b) =>
+    a.sort_order - b.sort_order
+);
+
+const currentPubIndex =
+  orderedPubs.findIndex(
+    (pub) =>
+      pub.name === game.current_pub
+  );
+
+const nextPub =
+  currentPubIndex >= 0
+    ? orderedPubs[
+        currentPubIndex + 1
+      ] ?? null
+    : orderedPubs[0] ?? null;
+    const currentPubObject = pubs.find(
     (pub) => pub.name === selectedPub
   );
   const voteResults = players
@@ -116,6 +138,34 @@ useEffect(() => {
     setBroadcastMessage("");
   }
 
+  async function openVoting() {
+    const confirmed =
+      window.confirm(
+        `Open voting for "${game.current_challenge}"?`
+      );
+
+    if (!confirmed) return;
+
+    await updateGameState({
+      voting_open: true,
+      show_vote_results: false,
+    });
+  }
+
+  async function closeVoting() {
+    const confirmed =
+      window.confirm(
+        "Close voting and show results?"
+      );
+
+    if (!confirmed) return;
+
+    await updateGameState({
+      voting_open: false,
+      show_vote_results: true,
+    });
+  }
+
   return (
     <main className="mx-auto min-h-screen max-w-md space-y-6 p-6">
 
@@ -124,6 +174,31 @@ useEffect(() => {
       </h1>
 
       <Card>
+  <h2 className="mb-4 text-xl font-bold">
+    Host Screens
+  </h2>
+
+  <div className="grid grid-cols-2 gap-3">
+    <Button
+      type="button"
+      onClick={() =>
+        navigate("/leaderboard")
+      }
+    >
+      Leaderboard
+    </Button>
+
+    <Button
+      type="button"
+      onClick={() =>
+        navigate("/slideshow")
+      }
+    >
+      Slideshow
+    </Button>
+  </div>
+</Card>
+<Card>
 
   <h2 className="mb-4 text-xl font-bold">
     Change Live Game
@@ -132,7 +207,36 @@ useEffect(() => {
   <label className="mb-2 block text-sm text-zinc-400">
     Pub
   </label>
+{nextPub && (
+  <Button
+    type="button"
+    onClick={async () => {
+      const pubChallenges =
+        challenges.filter(
+          (challenge) =>
+            challenge.pub_id ===
+            nextPub.id
+        );
 
+      const firstChallenge =
+        pubChallenges[0];
+
+      await updateGameState({
+        current_pub:
+          nextPub.name,
+
+        current_challenge:
+          firstChallenge?.title ?? "",
+
+        challenge_description:
+          firstChallenge?.description ??
+          "",
+      });
+    }}
+  >
+    Next Pub: {nextPub.name}
+  </Button>
+)}
   <select
     className="mb-6 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
     value={selectedPub}
@@ -245,6 +349,16 @@ useEffect(() => {
   )}
 
   </select>
+                  </div>
+                  <div className="mt-3 text-sm text-zinc-400">
+                    {completions.filter(
+                      (completion) =>
+                        completion.player_id === player.id
+                    ).length} completed challenge
+                    {completions.filter(
+                      (completion) =>
+                        completion.player_id === player.id
+                    ).length === 1 ? "" : "s"}
                   </div>
 
                   <div className="mt-2">
@@ -377,23 +491,11 @@ useEffect(() => {
   </option>
 </select>
 
-  <Button
-    onClick={() =>
-      updateGameState({
-        voting_open: true,
-      })
-    }
-  >
-    Open Voting
-  </Button>
+<Button onClick={openVoting}>
+      Open Voting
+    </Button>
 
-  <Button
-    onClick={() =>
-      updateGameState({
-        voting_open: false,
-      })
-    }
-  >
+    <Button onClick={closeVoting}>
     Close Voting
   </Button>
 
