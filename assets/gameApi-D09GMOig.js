@@ -1,0 +1,1 @@
+import{t as e}from"./supabase-DlG5gNZY.js";async function t(){return await e.from(`game_state`).select(`*`).eq(`id`,1).single()}async function n(t){return await e.from(`game_state`).update({...t,updated_at:new Date().toISOString()}).eq(`id`,1)}export{n,t};

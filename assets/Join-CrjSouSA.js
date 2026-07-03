@@ -1,4 +1,4 @@
-import{a as e,i as t,n,t as r}from"./index-DfdXlCIG.js";import{n as i,t as a}from"./Button-Dcdh5mCW.js";import{c as o,i as s,t as c}from"./demoData-DaL9twBo.js";import{n as l,r as u}from"./playerSession-6sn5rjSf.js";var d=e(t(),1),f=r();function p({children:e}){return(0,f.jsx)(`main`,{className:`
+import{a as e,i as t,n,t as r}from"./index-Bv45kXBN.js";import{n as i,t as a}from"./Button-COZDvTan.js";import{c as o,i as s,t as c}from"./demoData-CF0hvWn_.js";import{n as l,r as u}from"./playerSession-6sn5rjSf.js";var d=e(t(),1),f=r();function p({children:e}){return(0,f.jsx)(`main`,{className:`
         mx-auto
         min-h-screen
         max-w-md
