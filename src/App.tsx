@@ -7,6 +7,7 @@ import Admin from "./pages/Admin";
 import Slideshow from "./pages/Slideshow";
 import Vote from "./pages/Vote";
 
+
 export default function App() {
   return (
     <Routes>

@@ -1,112 +1,150 @@
 import { useEffect, useState } from "react";
+
 import { usePhotos } from "../hooks/usePhotos";
 
 export default function Slideshow() {
   const photos = usePhotos();
 
-  const [index, setIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] =
+    useState(0);
 
+  const [paused, setPaused] =
+    useState(false);
+
+  // Keep index valid if photos change
   useEffect(() => {
-    if (photos.length === 0) return;
+    if (
+      photos.length > 0 &&
+      currentIndex >= photos.length
+    ) {
+      setCurrentIndex(0);
+    }
+  }, [photos.length, currentIndex]);
 
-    const interval = setInterval(() => {
-      setIndex((current) => (current + 1) % photos.length);
+  // Auto advance every 5 seconds
+  useEffect(() => {
+    if (paused || photos.length <= 1) {
+      return;
+    }
+
+    const timer = window.setInterval(() => {
+      setCurrentIndex((current) =>
+        (current + 1) % photos.length
+      );
     }, 5000);
 
-    return () => clearInterval(interval);
-  }, [photos]);
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [paused, photos.length]);
+
   // Keyboard controls
   useEffect(() => {
-    function handleKey(event: KeyboardEvent) {
-      if (photos.length === 0) return;
+    function handleKeyDown(
+      event: KeyboardEvent
+    ) {
+      if (photos.length === 0) {
+        return;
+      }
 
       if (event.key === "ArrowRight") {
-        setIndex((current) => (current + 1) % photos.length);
+        setCurrentIndex((current) =>
+          (current + 1) % photos.length
+        );
       }
 
       if (event.key === "ArrowLeft") {
-        setIndex((current) =>
-          (current - 1 + photos.length) % photos.length
+        setCurrentIndex((current) =>
+          (current - 1 + photos.length) %
+          photos.length
         );
+      }
+
+      if (event.key === " ") {
+        event.preventDefault();
+
+        setPaused((current) => !current);
       }
     }
 
-    window.addEventListener("keydown", handleKey);
+    window.addEventListener(
+      "keydown",
+      handleKeyDown
+    );
 
     return () => {
-      window.removeEventListener("keydown", handleKey);
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown
+      );
     };
-  }, [photos]);
-
-  if (photos.length === 0) {
-    return <div>Waiting for photos...</div>;
-  }
-
-  const photo = photos[index];
+  }, [photos.length]);
 
   if (photos.length === 0) {
     return (
-      <div className="flex h-screen items-center justify-center bg-black text-white text-3xl">
-        Waiting for photos...
-      </div>
+      <main className="flex min-h-screen items-center justify-center p-8 text-center">
+        <div>
+          <h1 className="text-6xl font-bold">
+            Anna's Chaos Crawl
+          </h1>
+
+          <p className="mt-6 text-2xl">
+            Waiting for chaos...
+          </p>
+        </div>
+      </main>
     );
   }
 
+  const currentPhoto =
+    photos[currentIndex];
+
   return (
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black">
+      <img
+        src={currentPhoto.image_url}
+        alt="Chaos Crawl upload"
+        className="h-screen w-screen object-contain"
+      />
 
-<main className="flex h-screen flex-col bg-black text-white">
+      <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-6 text-white">
+        {currentPhoto.pub && (
+          <p className="text-sm uppercase">
+            📍 {currentPhoto.pub}
+          </p>
+        )}
 
-    <div className="p-8 text-center">
+        {currentPhoto.challenge && (
+          <h1 className="mt-1 text-3xl font-bold">
+            {currentPhoto.challenge}
+          </h1>
+        )}
 
-        <div className="text-2xl">
+        {currentPhoto.player_name && (
+          <p className="mt-2 text-xl">
+            {currentPhoto.player_name}
+            {currentPhoto.team
+              ? ` • ${currentPhoto.team}`
+              : ""}
+          </p>
+        )}
 
-            📍 {photo.pub}
+        {currentPhoto.points != null && (
+          <p className="mt-2 font-bold">
+            +{currentPhoto.points} points
+          </p>
+        )}
+      </div>
 
+      {paused && (
+        <div className="absolute right-6 top-6 rounded-xl bg-black/70 px-4 py-2 text-white">
+          PAUSED
         </div>
+      )}
 
-        <div className="mt-2 text-4xl font-bold">
-
-            ⭐ {photo.challenge}
-
-        </div>
-
-    </div>
-
-    <div className="flex flex-1 items-center justify-center">
-
-        <img
-
-            src={photo.image_url}
-
-            className="max-h-[70vh] rounded-3xl"
-
-        />
-
-    </div>
-
-    <div className="flex justify-between p-8 text-2xl">
-
-        <div>
-
-            👤 {photo.player_name}
-
-        </div>
-
-        <div>
-
-            {photo.team}
-
-        </div>
-
-        <div>
-
-            🏆 {photo.points} pts
-
-        </div>
-
-    </div>
-
-</main>
-
-);
+      <div className="absolute left-6 top-6 rounded-xl bg-black/70 px-4 py-2 text-white">
+        {currentIndex + 1} / {photos.length}
+      </div>
+    </main>
+  );
 }

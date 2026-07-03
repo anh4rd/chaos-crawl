@@ -366,7 +366,7 @@ useEffect(() => {
         e.target.value as "player" | "team",
     });
   }}
-  className="mb-4 w-full rounded-xl p-3 text-black"
+  className="mb-4 w-full rounded-xl p-3 text-white"
 >
   <option value="player">
     Vote for Player
