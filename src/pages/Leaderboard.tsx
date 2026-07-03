@@ -16,9 +16,11 @@ export default function Leaderboard() {
       <div className="space-y-4">
         {sortedPlayers.map((player, index) => (
           <Card key={player.id}>
-            <div className="flex justify-between items-center">
+            <div className="grid grid-cols-3 justify-between items-center align-left gap-10">
               <div>
-                <div className="font-bold">#{index + 1} {player.name}</div>
+                <h2> {index + 1}. </h2>
+              </div><div>
+                <div className="font-bold">{player.name}</div>  
                 <div className="text-zinc-400">{player.team}</div>
               </div>
 
