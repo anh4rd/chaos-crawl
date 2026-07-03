@@ -82,17 +82,18 @@ export default function Vote() {
     setSubmitting(false);
 
     if (error) {
-      console.error("VOTE ERROR", error);
+  console.error("VOTE ERROR FULL:", error);
 
-      if (error.code === "23505") {
-        setHasVoted(true);
-        alert("You already voted for this challenge.");
-        return;
-      }
+  alert(
+    `Vote failed:
+${error.message}
+Code: ${error.code}
+Details: ${error.details ?? "none"}
+Hint: ${error.hint ?? "none"}`
+  );
 
-      alert("Vote failed.");
-      return;
-    }
+  return;
+}
 
     setHasVoted(true);
   }
