@@ -1,1 +1,0 @@
-var e=`chaos-crawl-player-id`;function t(t){localStorage.setItem(e,t)}function n(){return localStorage.getItem(e)}function r(){localStorage.removeItem(e)}export{n,t as r,r as t};
