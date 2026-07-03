@@ -1,4 +1,4 @@
-import { useState, type ChangeEvent } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -13,24 +13,59 @@ import { updateGameState } from "../lib/gameApi";
 import { addPoints, changeTeam, deletePlayer, removePoints, renamePlayer } from "../lib/playerApi";
 import { teams } from "@/lib/demoData";
 
+import { getVotesForChallenge } from "../lib/voteApi";
+
 
 export default function Admin() {
   const players = usePlayers();
   const game = useGameState();
-
   const pubs = usePubs();
   const challenges = useChallenges();
+  const [votes, setVotes] = useState<
+  {
+    id: number;
+    voter_id: string;
+    voted_for_player_id: string;
+    challenge_name: string;
+  }[]
+>([]);
+useEffect(() => {
+  async function loadVotes() {
+    if (!game?.current_challenge) {
+      return;
+    }
 
+    const { data, error } =
+      await getVotesForChallenge(
+        game.current_challenge
+      );
+
+    if (error) {
+      console.error("LOAD VOTES ERROR", error);
+      return;
+    }
+
+    setVotes(data ?? []);
+  }
+
+  loadVotes();
+}, [game?.current_challenge]);
   const [selectedPub, setSelectedPub] = useState("");
   const [selectedChallenge, setSelectedChallenge] = useState("");
   const [broadcastMessage, setBroadcastMessage] = useState("");
-
   if (!game) return <p>Loading...</p>;
-
   const currentPubObject = pubs.find(
     (pub) => pub.name === selectedPub
   );
-
+  const voteResults = players
+  .map((player) => ({
+    ...player,
+    votes: votes.filter(
+      (vote) =>
+        vote.voted_for_player_id === player.id
+    ).length,
+  }))
+  .sort((a, b) => b.votes - a.votes);
   const availableChallenges = challenges.filter(
     (challenge) =>
       challenge.pub_id === currentPubObject?.id
@@ -322,6 +357,38 @@ export default function Admin() {
     Close Voting
   </Button>
 
+</Card>
+<Card>
+  <h2 className="mb-4 text-xl font-bold">
+    Voting Results
+  </h2>
+
+  <p className="mb-4">
+    {game.current_challenge}
+  </p>
+
+  <div className="space-y-3">
+    {voteResults.map((player) => (
+      <div
+        key={player.id}
+        className="flex items-center justify-between rounded-xl bg-black/70 p-3"
+      >
+        <div>
+          <div className="font-bold">
+            {player.name}
+          </div>
+
+          <div className="text-sm">
+            {player.team}
+          </div>
+        </div>
+
+        <div className="text-2xl font-bold">
+          {player.votes}
+        </div>
+      </div>
+    ))}
+  </div>
 </Card>
 
     </main>

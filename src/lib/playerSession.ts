@@ -1,13 +1,13 @@
-const STORAGE_KEY = "chaos-crawl-player-id";
+const PLAYER_ID_KEY = "chaos-crawl-player-id";
 
-export function savePlayerId(id: string) {
-  localStorage.setItem(STORAGE_KEY, id);
+export function savePlayerId(playerId: string) {
+  localStorage.setItem(PLAYER_ID_KEY, playerId);
 }
 
 export function getPlayerId() {
-  return localStorage.getItem(STORAGE_KEY);
+  return localStorage.getItem(PLAYER_ID_KEY);
 }
 
 export function clearPlayerId() {
-  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(PLAYER_ID_KEY);
 }
