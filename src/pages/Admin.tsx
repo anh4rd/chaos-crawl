@@ -1,4 +1,5 @@
 import { useEffect, useState, type ChangeEvent } from "react";
+import { supabase } from "../lib/supabase";
 
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -48,7 +49,28 @@ useEffect(() => {
     setVotes(data ?? []);
   }
 
+  // Load existing votes immediately
   loadVotes();
+
+  // Listen for new / changed / deleted votes
+  const channel = supabase
+    .channel("admin-votes")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "votes",
+      },
+      () => {
+        loadVotes();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
 }, [game?.current_challenge]);
   const [selectedPub, setSelectedPub] = useState("");
   const [selectedChallenge, setSelectedChallenge] = useState("");
