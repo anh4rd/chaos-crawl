@@ -3,32 +3,27 @@ import Button from "../components/ui/Button";
 import { useGameState } from "../hooks/useGameState";
 import { clearPlayerId } from "../lib/playerSession";
 import { useNavigate } from "react-router-dom";
+import useSideChallenges from "../hooks/useSideChallenges";
 
 export default function Game() {
   const navigate = useNavigate();
   const game = useGameState();
   if (!game) return <p>Waiting for bday kween...</p>;
-
+  const sideChallenges = useSideChallenges();
   const currentPub = game.current_pub;
   const currentChallenge = game.current_challenge;
-  const challengeDescription =
-    game.challenge_description;
-  const sideMissions = Array.isArray((game as any).side_missions)
-    ? ((game as any).side_missions as string[])
-    : Array.isArray((game as any).sideChallenges)
-    ? ((game as any).sideChallenges as string[])
-    : [];
+  const challengeDescription = game.challenge_description;
 
   return (
     <main className="mx-auto min-h-screen max-w-md p-6 space-y-6">
 
       <header>
-        <h1 className="text-4xl font-bold">
-          Anna's Chaos Crawl
-        </h1>
-        <p className="text-zinc-400">
-          Current Mission
-        </p>
+          <img
+            src={`${import.meta.env.BASE_URL}Title.png`}
+            alt="Anna's Chaos Crawl"
+            className="mx-auto aspect-ratio:auto mb-4 w-fill"
+          />
+
       </header>
 
       <Card>
@@ -69,25 +64,46 @@ export default function Game() {
 
       <Card>
 
-        <div className="space-y-3">
+  <h2 className="mb-4 text-2xl font-bold">
 
-          <div className="font-semibold">Side Missions</div>
+    CHAOS BINGO
 
-          <div className="space-y-2">
-            {sideMissions.length > 0 ? (
-              sideMissions.map((mission, index) => (
-                <p key={index} className="text-sm text-zinc-400">
-                  • {mission}
-                </p>
-              ))
-            ) : (
-              <p className="text-sm text-zinc-400">No side missions available.</p>
-            )}
-          </div>
+  </h2>
+
+  <div className="grid grid-cols-2 gap-3">
+
+    {sideChallenges.map((challenge) => (
+
+      <div
+        key={challenge.id}
+        className="rounded-2xl p-3 border-2 border-pink-500 bg-black/70"
+      >
+
+        <div className="text-lg font-bold">
+
+          {challenge.title}
 
         </div>
 
-      </Card>
+        <p className="mt-2 text-sm text-zinc-300">
+
+          {challenge.description}
+
+        </p>
+
+        <div className="mt-3 font-bold text-yellow-400">
+
+          +{challenge.points}
+
+        </div>
+
+      </div>
+
+    ))}
+
+  </div>
+
+</Card>
 
       <Button type="button" onClick={() => navigate("/leaderboard")}>
         Leaderboard

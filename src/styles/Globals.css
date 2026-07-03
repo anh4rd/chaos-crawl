@@ -1,5 +1,6 @@
 @import "tailwindcss";
-@import url("https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Inter:wght@400;500;700;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=ui-sans-serif:wght@400;500;700;900&display=swap");
+@import url("https://db.onlinewebfonts.com/c/becf0732ab67a589d6c1f405375cc3d9?family=Lost+in+South");
 
 :root {
   --pink: #ff1493;
@@ -21,7 +22,7 @@ body,
 body {
   margin: 0;
 
-  font-family: "Inter", sans-serif;
+  font-family: "Menlo", monospace;
 
   color: white;
 
@@ -38,21 +39,33 @@ body {
   background-attachment: fixed;
 }
 
-h1,
-h2,
-h3 {
+@font-face {
+  font-family: "Lost in South";
+  src:url("/fonts/Lost in South.woff2") format("woff2");
+  font-display: swap;
+  font-weight: 400;
+}
 
-  font-family: "Permanent Marker", cursive;
+h1 {
 
-  text-transform: uppercase;
-
-  font-style: italic;
+  font-family: "Lost in South", cursive;
 
   color: var(--pink);
+  font-size: 4rem;
 
   text-shadow:
     3px 3px black,
     0 0 15px hotpink;
+
+}
+
+h2,
+h3 {
+
+  font-family: "Lost in South", cursive;
+  color: var(--white);
+  letter-spacing: 3px;
+  font-size: 2rem;
 
 }
 

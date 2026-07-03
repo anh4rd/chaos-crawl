@@ -13,6 +13,7 @@ export async function updateGameState(values: {
   current_challenge?: string;
   challenge_description?: string;
   broadcast_message?: string;
+  voting_open?: boolean;
 }) {
   return await supabase
     .from("game_state")

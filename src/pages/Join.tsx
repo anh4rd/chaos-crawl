@@ -56,11 +56,11 @@ export default function Join() {
             />
 
             <p className="mt-2 text-zinc-400">
-              Complete ridiculous challenges across London.
+              
             </p>
           </div>
 
-          <p className="mt-2 text-zinc-400">Pick a team and get ready.</p>
+          <p className="mt-2 text-zinc-400">.</p>
         </div>
 
         <Card>

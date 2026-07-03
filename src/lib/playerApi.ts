@@ -16,26 +16,70 @@ export async function addPoints(
   playerId: string,
   points: number
 ) {
-  console.log("Adding points", playerId, points);
-
   const { data: player, error } = await supabase
     .from("players")
     .select("score")
     .eq("id", playerId)
     .single();
 
-  console.log("Player:", player);
-  console.log("Error:", error);
-
   if (error || !player) return;
 
-  const result = await supabase
+  await supabase
     .from("players")
     .update({
       score: player.score + points,
     })
     .eq("id", playerId)
     .select();
+}
 
-  console.log("Update result:", result);
+export async function renamePlayer(
+  id: string,
+  name: string
+) {
+  return await supabase
+    .from("players")
+    .update({ name })
+    .eq("id", id);
+}
+
+export async function deletePlayer(
+  id: string
+) {
+  return await supabase
+    .from("players")
+    .delete()
+    .eq("id", id);
+}
+
+export async function changeTeam(
+  id: string,
+  team: string
+) {
+  return await supabase
+    .from("players")
+    .update({
+      team,
+    })
+    .eq("id", id);
+}
+
+export async function removePoints(
+  id: string,
+  amount: number
+) {
+  const { data } = await supabase
+    .from("players")
+    .select("score")
+    .eq("id", id)
+    .single();
+
+  if (!data) return;
+
+  await supabase
+    .from("players")
+    .update({
+      score: Math.max(0, data.score - amount),
+    })
+    .eq("id", id);
 }

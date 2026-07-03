@@ -10,7 +10,8 @@ import { usePubs } from "../game/hooks/usePubs";
 import { useChallenges } from "../game/hooks/useChallenges";
 
 import { updateGameState } from "../lib/gameApi";
-import { addPoints } from "../lib/playerApi";
+import { addPoints, changeTeam, deletePlayer, removePoints, renamePlayer } from "../lib/playerApi";
+import { teams } from "@/lib/demoData";
 
 
 export default function Admin() {
@@ -133,13 +134,14 @@ export default function Admin() {
     🚀 Go Live
   </Button>
 
-</Card>
+  </Card>
 
       <Card>
 
         <h2 className="mb-4 text-xl font-bold">
           Players
         </h2>
+        
 
         <div className="space-y-3">
 
@@ -156,25 +158,70 @@ export default function Admin() {
                   </div>
 
                   <div className="text-zinc-400">
-                    {player.team}
+                    <select
+
+                      value={player.team}
+
+                      onChange={(e)=>
+
+                      changeTeam(
+                      player.id,
+                      e.target.value
+                      )
+
+                      }
+
+                      >
+
+  {teams.map(team=>
+
+    <option
+      key={team.id}
+      value={team.name}
+    >
+
+    {team.name}
+
+    </option>
+    
+
+  )}
+
+  </select>
                   </div>
 
                   <div className="mt-2">
                     {player.score} pts
                   </div>
-
+                  <Input
+                    value={player.name}
+                    onBlur={(e) => renamePlayer(player.id, e.target.value)}
+                    />
+                    <p className="flex:items-center justify-between">
+<Button
+                    onClick={async()=>{
+                    if(confirm("Delete player?")){
+                    await deletePlayer(player.id);
+                    }
+                    }}
+                    >
+                    X
+                  </Button>
+                  </p>
                 </div>
-
-                <div className="flex gap-2">
-
-                  <Button
+                <div className="grid-cols-3 gap-2 gap-y-2">
+                  <div className="flex gap-2">
+                  
+                  
+                  <div className="grid-cols-3 mt-4 gap-2">
+                    <p className="grid-cols-3 mt-4">
+                    <Button
                     onClick={() =>
-                      addPoints(player.id, 5)
+                      addPoints(player.id, 10)
                     }
                   >
                     +5
                   </Button>
-
                   <Button
                     onClick={() =>
                       addPoints(player.id, 10)
@@ -182,7 +229,6 @@ export default function Admin() {
                   >
                     +10
                   </Button>
-
                   <Button
                     onClick={() =>
                       addPoints(player.id, 20)
@@ -190,7 +236,33 @@ export default function Admin() {
                   >
                     +20
                   </Button>
+                  </p>
+                  </div>
+                  <div className="grid-cols-3 mt-4 gap-2 gap-2">
+                    <p className="inline:grid-cols-3 mt-4">
+                  <Button
+                    onClick={()=>removePoints(player.id,10)}
+                  >
+                    -5
+                  </Button>
+                  <Button
+                    onClick={()=>removePoints(player.id,10)}
+                  >
+                    -10
+                  </Button>
+                  <Button
+                    onClick={()=>removePoints(player.id,10)}
+                  >
+                    -20
+                  </Button>
+                  </p>
+                  </div>
+                  <div>
 
+                
+                  </div>
+                  
+</div>
                 </div>
 
               </div>
@@ -226,6 +298,31 @@ export default function Admin() {
         </div>
 
       </Card>
+      <Card>
+
+  <h2>Voting</h2>
+
+  <Button
+    onClick={() =>
+      updateGameState({
+        voting_open: true,
+      })
+    }
+  >
+    Open Voting
+  </Button>
+
+  <Button
+    onClick={() =>
+      updateGameState({
+        voting_open: false,
+      })
+    }
+  >
+    Close Voting
+  </Button>
+
+</Card>
 
     </main>
   );
