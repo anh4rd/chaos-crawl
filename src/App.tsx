@@ -5,6 +5,7 @@ import Game from "./pages/Game";
 import Leaderboard from "./pages/Leaderboard";
 import Admin from "./pages/Admin";
 import Slideshow from "./pages/Slideshow";
+import Vote from "./pages/Vote";
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
       <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/slideshow" element={<Slideshow />} />
+      <Route path="/vote" element={<Vote />} />
     </Routes>
   );
 }

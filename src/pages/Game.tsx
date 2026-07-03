@@ -2,17 +2,30 @@ import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { useGameState } from "../hooks/useGameState";
 import { clearPlayerId } from "../lib/playerSession";
-import { useNavigate } from "react-router-dom";
 import useSideChallenges from "../hooks/useSideChallenges";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Game() {
-  const navigate = useNavigate();
+  
   const game = useGameState();
   if (!game) return <p>Waiting for bday kween...</p>;
   const sideChallenges = useSideChallenges();
   const currentPub = game.current_pub;
   const currentChallenge = game.current_challenge;
   const challengeDescription = game.challenge_description;
+  const navigate = useNavigate();
+
+    useEffect(() => {
+    if (game?.voting_open) {
+      navigate("/vote");
+      }
+       }, [game?.voting_open, navigate]);
+
+    if (!game) {
+    return <p>Waiting for bday kween...</p>;
+      }
+  
 
   return (
     <main className="mx-auto min-h-screen max-w-md p-6 space-y-6">

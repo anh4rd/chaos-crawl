@@ -8,6 +8,7 @@ export interface GameState {
   current_challenge: string;
   challenge_description: string;
   broadcast_message: string;
+  voting_open?: boolean;
 }
 
 export function useGameState() {
