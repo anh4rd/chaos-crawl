@@ -380,28 +380,28 @@ export default function Game() {
         <div className="grid grid-cols-2 gap-3">
 
           {sideChallenges.map(
-            (challenge) => (
+            (SideChallenge) => (
               <div
-                key={challenge.id}
+                key={SideChallenge.id}
                 className="rounded-2xl border-2 border-pink-500 bg-black/70 p-3"
               >
 
                 <div className="text-lg font-bold">
                   {
-                    challenge.title
+                    SideChallenge.title
                   }
                 </div>
 
                 <p className="mt-2 text-sm text-zinc-300">
                   {
-                    challenge.description
+                    SideChallenge.description
                   }
                 </p>
 
                 <div className="mt-3 font-bold text-yellow-400">
                   +
                   {
-                    challenge.points
+                    SideChallenge.points
                   }
                 </div>
 
