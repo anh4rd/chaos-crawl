@@ -437,6 +437,8 @@ export default function Game() {
 
       challengeId:
         uploadChallenge.id,
+    
+
 
       points:
         uploadChallenge.points,

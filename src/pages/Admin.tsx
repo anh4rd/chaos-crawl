@@ -30,6 +30,12 @@ import {
   useChallenges,
 } from "../game/hooks/useChallenges";
 
+import useSideChallenges
+  from "../game/hooks/useSideChallenges";
+
+import usePubSubChallenges
+  from "../game/hooks/usePubSubChallenges";
+
 import {
   updateGameState,
 } from "../lib/gameApi";
@@ -75,6 +81,11 @@ export default function Admin() {
   const challenges = useChallenges();
   const completions =
     useChallengeCompletions();
+    const sideChallenges =
+  useSideChallenges();
+
+const pubSubChallenges =
+  usePubSubChallenges();
 
   const navigate = useNavigate();
 
@@ -113,10 +124,7 @@ export default function Admin() {
     setSelectedChallenge,
   ] = useState("");
 
-  const [
-    broadcastMessage,
-    setBroadcastMessage,
-  ] = useState("");
+
 
 
   // -------------------------
@@ -237,6 +245,38 @@ export default function Admin() {
   }
 
 
+function getPlayersWhoCompleted(
+  challengeType: "side" | "bonus",
+  challengeId: string | number
+) {
+  const matchingCompletions =
+    completions.filter(
+      (completion) =>
+        completion.chellenge_type ===
+          challengeType &&
+        String(
+          completion.challenge_id
+        ) ===
+          String(challengeId)
+    );
+
+  return matchingCompletions
+    .map((completion) =>
+      players.find(
+        (player) =>
+          String(player.id) ===
+          String(completion.player_id)
+      )
+    )
+    .filter(
+      (
+        player
+      ): player is NonNullable<
+        typeof player
+      > => Boolean(player)
+    );
+}
+
   // -------------------------
   // DERIVED DATA
   // -------------------------
@@ -270,6 +310,13 @@ export default function Admin() {
     pubs.find(
       (pub) =>
         pub.name === selectedPub
+    );
+
+  const currentPubSubChallenges =
+    pubSubChallenges.filter(
+      (challenge) =>
+        String(challenge.pub_id) ===
+        String(currentPubObject?.id)
     );
 
   const availableChallenges =
@@ -718,41 +765,6 @@ async function closeResults() {
 
 
   // -------------------------
-  // BROADCAST
-  // -------------------------
-
-  async function sendBroadcast() {
-    const cleanMessage =
-      broadcastMessage.trim();
-
-    if (!cleanMessage) {
-      alert("Enter a message.");
-      return;
-    }
-
-    const { error } =
-      await updateGameState({
-        broadcast_message:
-          cleanMessage,
-      });
-
-    if (error) {
-      console.error(
-        "BROADCAST ERROR:",
-        error
-      );
-
-      alert(
-        `Could not send message: ${error.message}`
-      );
-      return;
-    }
-
-    setBroadcastMessage("");
-  }
-
-
-  // -------------------------
   // JSX
   // -------------------------
 
@@ -799,175 +811,6 @@ async function closeResults() {
           )}
         </div>
       </Card>
-
-
-      {/* CREATE TEAMS */}
-
-      <Card>
-        <h2 className="mb-4 text-2xl font-bold">
-          Create Teams
-        </h2>
-
-        <Input
-          placeholder="Team name..."
-          value={newTeamName}
-          onChange={(event) =>
-            setNewTeamName(
-              event.target.value
-            )
-          }
-        />
-
-        <div className="mt-4">
-          <Button
-            type="button"
-            disabled={creatingTeam}
-            onClick={createTeam}
-          >
-            {creatingTeam
-              ? "Creating..."
-              : "Create Team"}
-          </Button>
-        </div>
-
-        {teams.length === 0 && (
-          <p className="mt-4 text-sm text-zinc-400">
-            No teams created yet.
-          </p>
-        )}
-
-        {teams.length > 0 && (
-          <div className="mt-5 space-y-2">
-            <h3 className="font-bold">
-              Current Teams
-            </h3>
-
-            {teams.map((team) => (
-              <div
-                key={team.id}
-                className="rounded-xl bg-black/70 p-3"
-              >
-                {team.name}
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
-
-
-      {/* ASSIGN TEAMS */}
-
-      {unassignedPlayers.length > 0 && (
-        <Card>
-          <h2 className="text-2xl font-bold">
-            ⚠️ Assign Teams
-          </h2>
-
-          <p className="mt-2">
-            {unassignedPlayers.length === 1
-              ? "1 player is waiting for a team."
-              : `${unassignedPlayers.length} players are waiting for teams.`}
-          </p>
-
-          <div className="mt-4 space-y-4">
-            {unassignedPlayers.map(
-              (player) => (
-                <div
-                  key={player.id}
-                  className="rounded-2xl border-2 border-pink-500 bg-black/70 p-4"
-                >
-                  <div className="mb-3 text-xl font-bold">
-                    {player.name}
-                  </div>
-
-                  <select
-                    value=""
-                    disabled={
-                      assigningPlayerId ===
-                      player.id
-                    }
-                    onChange={async (
-                      event
-                    ) => {
-                      const team =
-                        event.target.value;
-
-                      if (!team) {
-                        return;
-                      }
-
-                      await assignPlayerToTeam(
-                        player.id,
-                        team
-                      );
-                    }}
-                    className="w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
-                  >
-                    <option value="">
-                      Assign to team...
-                    </option>
-
-                    {teams.map(
-                      (team) => (
-                        <option
-                          key={team.id}
-                          value={team.name}
-                        >
-                          {team.name}
-                        </option>
-                      )
-                    )}
-                  </select>
-
-                  {assigningPlayerId ===
-                    player.id && (
-                    <p className="mt-2 text-sm">
-                      Assigning...
-                    </p>
-                  )}
-                </div>
-              )
-            )}
-          </div>
-        </Card>
-      )}
-
-
-      {/* HOST SCREENS */}
-
-      <Card>
-        <h2 className="mb-4 text-xl font-bold">
-          Host Screens
-        </h2>
-
-        <div className="grid grid-cols-2 gap-3">
-          <Button
-            type="button"
-            onClick={() =>
-              navigate("/leaderboard")
-            }
-          >
-            Leaderboard
-          </Button>
-
-          {!game.slideshow_open ? (
-            <Button
-              type="button"
-              onClick={startSlideshow}
-            >
-              Start Slideshow
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              onClick={stopSlideshow}
-            >
-              End Slideshow
-            </Button>
-          )}
-        </div>
-      </Card>
-
 
       {/* CHANGE LIVE GAME */}
 
@@ -1071,6 +914,386 @@ async function closeResults() {
         </Button>
       </Card>
 
+{/* SIDE CHALLENGES */}
+
+<Card>
+  <h2 className="text-2xl font-bold">
+    Chaos Bingo
+  </h2>
+
+  <p className="mt-2 text-sm text-zinc-400">
+    Side challenges available throughout the game.
+  </p>
+
+  {sideChallenges.length === 0 ? (
+    <p className="mt-4 text-zinc-400">
+      No side challenges found.
+    </p>
+  ) : (
+    <div className="mt-4 space-y-3">
+      {sideChallenges.map(
+        (challenge) => {
+          const completedBy =
+            getPlayersWhoCompleted(
+              "side",
+              challenge.id
+            );
+
+          return (
+            <div
+              key={challenge.id}
+              className="rounded-2xl border-2 border-pink-500 bg-black/70 p-4"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-bold">
+                    {challenge.title}
+                  </h3>
+
+                  {challenge.description && (
+                    <p className="mt-1 text-sm text-zinc-300">
+                      {challenge.description}
+                    </p>
+                  )}
+                </div>
+
+                <strong>
+                  +{challenge.points}
+                </strong>
+              </div>
+
+              <div className="mt-4">
+                <p className="text-xs uppercase text-zinc-400">
+                  Completed by
+                </p>
+
+                {completedBy.length === 0 ? (
+                  <p className="mt-1 text-sm text-zinc-500">
+                    Nobody yet
+                  </p>
+                ) : (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {completedBy.map(
+                      (player) => (
+                        <span
+                          key={player.id}
+                          className="rounded-full bg-green-900/60 px-3 py-1 text-sm"
+                        >
+                          ✓ {player.name}
+                        </span>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+      )}
+    </div>
+  )}
+</Card>
+
+{/* CURRENT PUB SUB CHALLENGES */}
+
+<Card>
+  <h2 className="text-2xl font-bold">
+    Pub Bonus Missions
+  </h2>
+
+  <p className="mt-2 text-sm text-zinc-400">
+    Showing missions for{" "}
+    <strong>
+      {game.current_pub}
+    </strong>
+  </p>
+
+  {!currentPubObject ? (
+    <p className="mt-4 text-yellow-400">
+      Current pub could not be matched to the pubs table.
+    </p>
+  ) : currentPubSubChallenges.length === 0 ? (
+    <p className="mt-4 text-zinc-400">
+      No bonus missions assigned to this pub.
+    </p>
+  ) : (
+    <div className="mt-4 space-y-3">
+      {currentPubSubChallenges.map(
+        (challenge) => {
+          const completedBy =
+            getPlayersWhoCompleted(
+              "bonus",
+              challenge.id
+            );
+
+          return (
+            <div
+              key={challenge.id}
+              className="rounded-2xl border-2 border-yellow-400 bg-black/70 p-4"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-bold">
+                    {challenge.title}
+                  </h3>
+
+                  {challenge.description && (
+                    <p className="mt-1 text-sm text-zinc-300">
+                      {challenge.description}
+                    </p>
+                  )}
+                </div>
+
+                <strong>
+                  +{challenge.points}
+                </strong>
+              </div>
+
+              <div className="mt-4">
+                <p className="text-xs uppercase text-zinc-400">
+                  Completed by
+                </p>
+
+                {completedBy.length === 0 ? (
+                  <p className="mt-1 text-sm text-zinc-500">
+                    Nobody yet
+                  </p>
+                ) : (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {completedBy.map(
+                      (player) => (
+                        <span
+                          key={player.id}
+                          className="rounded-full bg-green-900/60 px-3 py-1 text-sm"
+                        >
+                          ✓ {player.name}
+                        </span>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+      )}
+    </div>
+  )}
+</Card>
+
+      {/* HOST SCREENS */}
+
+      <Card>
+        <h2 className="mb-4 text-xl font-bold">
+          Host Screens
+        </h2>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            type="button"
+            onClick={() =>
+              navigate("/leaderboard")
+            }
+          >
+            Leaderboard
+          </Button>
+
+          {!game.slideshow_open ? (
+            <Button
+              type="button"
+              onClick={startSlideshow}
+            >
+              Start Slideshow
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              onClick={stopSlideshow}
+            >
+              End Slideshow
+            </Button>
+          )}
+        </div>
+      </Card>
+
+      {/* VOTING */}
+
+      <Card>
+        <h2 className="mb-4 text-xl font-bold">
+          Voting
+        </h2>
+
+        <p className="mb-4 text-sm text-zinc-400">
+          Current challenge:{" "}
+          {game.current_challenge}
+        </p>
+
+        <select
+          value={
+            game.voting_target ??
+            "player"
+          }
+          onChange={async (
+            event
+          ) => {
+            await updateGameState({
+              voting_target:
+                event.target.value as
+                  | "player"
+                  | "team",
+            });
+          }}
+          className="mb-4 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
+        >
+          <option value="player">
+            Vote for Player
+          </option>
+
+          <option value="team">
+            Vote for Team
+          </option>
+        </select>
+
+        <div className="space-y-3">
+
+          {!game.voting_open &&
+            !game.show_vote_results && (
+              <Button
+                type="button"
+                onClick={openVoting}
+              >
+                Open Voting
+              </Button>
+            )}
+
+
+          {game.voting_open && (
+            <>
+              <Button
+                type="button"
+                onClick={() =>
+                  navigate(
+                    "/vote?from=admin"
+                  )
+                }
+              >
+                🗳️ Vote Now
+              </Button>
+
+              <Button
+                type="button"
+                onClick={closeVoting}
+              >
+                Close Voting & Show Results
+              </Button>
+            </>
+          )}
+
+
+          {game.show_vote_results && (
+            <>
+              <Button
+                type="button"
+                onClick={() =>
+                  navigate(
+                    "/vote-results"
+                  )
+                }
+              >
+                View Results
+              </Button>
+
+              <Button
+                type="button"
+                onClick={closeResults}
+              >
+                Close Results & Return Everyone
+              </Button>
+            </>
+          )}
+        </div>
+
+        <div className="mt-4 rounded-xl bg-black/50 p-3 text-sm">
+          {game.voting_open && (
+            <p>
+              🟢 Voting is currently open
+            </p>
+          )}
+
+          {game.show_vote_results && (
+            <p>
+              🏆 Results are currently showing
+            </p>
+          )}
+
+          {!game.voting_open &&
+            !game.show_vote_results && (
+              <p>
+                ⚪ Voting is closed
+              </p>
+            )}
+        </div>
+      </Card>
+
+      {/* LIVE VOTING RESULTS */}
+
+      <Card>
+        <h2 className="mb-4 text-xl font-bold">
+          Live Voting Results
+        </h2>
+
+        <p className="mb-4">
+          {game.current_challenge}
+        </p>
+
+        {game.voting_target ===
+        "team" ? (
+          <div className="space-y-3">
+            {teamVoteResults.map(
+              (team) => (
+                <div
+                  key={team.id}
+                  className="flex items-center justify-between rounded-xl bg-black/70 p-3"
+                >
+                  <div className="font-bold">
+                    {team.name}
+                  </div>
+
+                  <div className="text-2xl font-bold">
+                    {team.votes}
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {playerVoteResults.map(
+              (player) => (
+                <div
+                  key={player.id}
+                  className="flex items-center justify-between rounded-xl bg-black/70 p-3"
+                >
+                  <div>
+                    <div className="font-bold">
+                      {player.name}
+                    </div>
+
+                    <div className="text-sm text-zinc-400">
+                      {player.team ??
+                        "Unassigned"}
+                    </div>
+                  </div>
+
+                  <div className="text-2xl font-bold">
+                    {player.votes}
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        )}
+      </Card>
 
       {/* PLAYERS */}
 
@@ -1241,21 +1464,18 @@ async function closeResults() {
         </div>
       </Card>
 
-
-      {/* BROADCAST */}
+      {/* CREATE TEAMS */}
 
       <Card>
-        <h2 className="mb-4 text-xl font-bold">
-          Broadcast Message
+        <h2 className="mb-4 text-2xl font-bold">
+          Create Teams
         </h2>
 
         <Input
-          placeholder="Message to everyone..."
-          value={broadcastMessage}
-          onChange={(
-            event: ChangeEvent<HTMLInputElement>
-          ) =>
-            setBroadcastMessage(
+          placeholder="Team name..."
+          value={newTeamName}
+          onChange={(event) =>
+            setNewTeamName(
               event.target.value
             )
           }
@@ -1264,194 +1484,115 @@ async function closeResults() {
         <div className="mt-4">
           <Button
             type="button"
-            onClick={sendBroadcast}
+            disabled={creatingTeam}
+            onClick={createTeam}
           >
-            Send Message
+            {creatingTeam
+              ? "Creating..."
+              : "Create Team"}
           </Button>
         </div>
-      </Card>
 
+        {teams.length === 0 && (
+          <p className="mt-4 text-sm text-zinc-400">
+            No teams created yet.
+          </p>
+        )}
 
-      {/* VOTING */}
+        {teams.length > 0 && (
+          <div className="mt-5 space-y-2">
+            <h3 className="font-bold">
+              Current Teams
+            </h3>
 
-      <Card>
-        <h2 className="mb-4 text-xl font-bold">
-          Voting
-        </h2>
-
-        <p className="mb-4 text-sm text-zinc-400">
-          Current challenge:{" "}
-          {game.current_challenge}
-        </p>
-
-        <select
-          value={
-            game.voting_target ??
-            "player"
-          }
-          onChange={async (
-            event
-          ) => {
-            await updateGameState({
-              voting_target:
-                event.target.value as
-                  | "player"
-                  | "team",
-            });
-          }}
-          className="mb-4 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
-        >
-          <option value="player">
-            Vote for Player
-          </option>
-
-          <option value="team">
-            Vote for Team
-          </option>
-        </select>
-
-        <div className="space-y-3">
-
-          {!game.voting_open &&
-            !game.show_vote_results && (
-              <Button
-                type="button"
-                onClick={openVoting}
+            {teams.map((team) => (
+              <div
+                key={team.id}
+                className="rounded-xl bg-black/70 p-3"
               >
-                Open Voting
-              </Button>
-            )}
-
-
-          {game.voting_open && (
-            <>
-              <Button
-                type="button"
-                onClick={() =>
-                  navigate(
-                    "/vote?from=admin"
-                  )
-                }
-              >
-                🗳️ Vote Now
-              </Button>
-
-              <Button
-                type="button"
-                onClick={closeVoting}
-              >
-                Close Voting & Show Results
-              </Button>
-            </>
-          )}
-
-
-          {game.show_vote_results && (
-            <>
-              <Button
-                type="button"
-                onClick={() =>
-                  navigate(
-                    "/vote-results"
-                  )
-                }
-              >
-                View Results
-              </Button>
-
-              <Button
-                type="button"
-                onClick={closeResults}
-              >
-                Close Results & Return Everyone
-              </Button>
-            </>
-          )}
-        </div>
-
-        <div className="mt-4 rounded-xl bg-black/50 p-3 text-sm">
-          {game.voting_open && (
-            <p>
-              🟢 Voting is currently open
-            </p>
-          )}
-
-          {game.show_vote_results && (
-            <p>
-              🏆 Results are currently showing
-            </p>
-          )}
-
-          {!game.voting_open &&
-            !game.show_vote_results && (
-              <p>
-                ⚪ Voting is closed
-              </p>
-            )}
-        </div>
-      </Card>
-
-
-      {/* LIVE VOTING RESULTS */}
-
-      <Card>
-        <h2 className="mb-4 text-xl font-bold">
-          Live Voting Results
-        </h2>
-
-        <p className="mb-4">
-          {game.current_challenge}
-        </p>
-
-        {game.voting_target ===
-        "team" ? (
-          <div className="space-y-3">
-            {teamVoteResults.map(
-              (team) => (
-                <div
-                  key={team.id}
-                  className="flex items-center justify-between rounded-xl bg-black/70 p-3"
-                >
-                  <div className="font-bold">
-                    {team.name}
-                  </div>
-
-                  <div className="text-2xl font-bold">
-                    {team.votes}
-                  </div>
-                </div>
-              )
-            )}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {playerVoteResults.map(
-              (player) => (
-                <div
-                  key={player.id}
-                  className="flex items-center justify-between rounded-xl bg-black/70 p-3"
-                >
-                  <div>
-                    <div className="font-bold">
-                      {player.name}
-                    </div>
-
-                    <div className="text-sm text-zinc-400">
-                      {player.team ??
-                        "Unassigned"}
-                    </div>
-                  </div>
-
-                  <div className="text-2xl font-bold">
-                    {player.votes}
-                  </div>
-                </div>
-              )
-            )}
+                {team.name}
+              </div>
+            ))}
           </div>
         )}
       </Card>
 
+      {/* ASSIGN TEAMS */}
+
+      {unassignedPlayers.length > 0 && (
+        <Card>
+          <h2 className="text-2xl font-bold">
+            ⚠️ Assign Teams
+          </h2>
+
+          <p className="mt-2">
+            {unassignedPlayers.length === 1
+              ? "1 player is waiting for a team."
+              : `${unassignedPlayers.length} players are waiting for teams.`}
+          </p>
+
+          <div className="mt-4 space-y-4">
+            {unassignedPlayers.map(
+              (player) => (
+                <div
+                  key={player.id}
+                  className="rounded-2xl border-2 border-pink-500 bg-black/70 p-4"
+                >
+                  <div className="mb-3 text-xl font-bold">
+                    {player.name}
+                  </div>
+
+                  <select
+                    value=""
+                    disabled={
+                      assigningPlayerId ===
+                      player.id
+                    }
+                    onChange={async (
+                      event
+                    ) => {
+                      const team =
+                        event.target.value;
+
+                      if (!team) {
+                        return;
+                      }
+
+                      await assignPlayerToTeam(
+                        player.id,
+                        team
+                      );
+                    }}
+                    className="w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
+                  >
+                    <option value="">
+                      Assign to team...
+                    </option>
+
+                    {teams.map(
+                      (team) => (
+                        <option
+                          key={team.id}
+                          value={team.name}
+                        >
+                          {team.name}
+                        </option>
+                      )
+                    )}
+                  </select>
+
+                  {assigningPlayerId ===
+                    player.id && (
+                    <p className="mt-2 text-sm">
+                      Assigning...
+                    </p>
+                  )}
+                </div>
+              )
+            )}
+          </div>
+        </Card>
+      )}
     </main>
   );
 }
