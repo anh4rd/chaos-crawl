@@ -1,21 +1,37 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  useNavigate,
+} from "react-router-dom";
 
 import Card from "../components/ui/Card";
-import Button from "../components/ui/Button";
 
-import { useGameState } from "../hooks/useGameState";
-import { usePlayers } from "../game/hooks/usePlayers";
+import {
+  useGameState,
+} from "../game/hooks/useGameState";
+
+import {
+  usePlayers,
+} from "../game/hooks/usePlayers";
 
 import {
   getVotesForChallenge,
 } from "../lib/voteApi";
 
+import {
+  supabase,
+} from "../lib/supabase";
+
 interface VoteRow {
   id: string | number;
+
   voted_for_player_id:
     | string
     | null;
+
   voted_for_team_id:
     | string
     | null;
@@ -29,7 +45,12 @@ export default function VoteResults() {
   const [votes, setVotes] =
     useState<VoteRow[]>([]);
 
+  // Load votes and keep results live
   useEffect(() => {
+    if (!game?.current_challenge) {
+      return;
+    }
+
     async function loadVotes() {
       if (!game?.current_challenge) {
         return;
@@ -42,7 +63,7 @@ export default function VoteResults() {
 
       if (error) {
         console.error(
-          "RESULTS ERROR",
+          "RESULTS ERROR:",
           error
         );
         return;
@@ -52,13 +73,40 @@ export default function VoteResults() {
     }
 
     loadVotes();
+
+    const channel = supabase
+      .channel("vote-results-live")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "votes",
+        },
+        () => {
+          loadVotes();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [game?.current_challenge]);
 
+  // Host closed results:
+  // send everyone back to game
   useEffect(() => {
+    if (!game) {
+      return;
+    }
+
     if (
-      game?.show_vote_results === false
+      game.show_vote_results !== true
     ) {
-      navigate("/game");
+      navigate("/game", {
+        replace: true,
+      });
     }
   }, [
     game?.show_vote_results,
@@ -66,13 +114,18 @@ export default function VoteResults() {
   ]);
 
   if (!game) {
-    return <p>Loading results...</p>;
+    return (
+      <main className="mx-auto min-h-screen max-w-md p-6">
+        <p>Loading results...</p>
+      </main>
+    );
   }
 
   const playerResults = players
     .map((player) => ({
       id: player.id,
       name: player.name,
+
       votes: votes.filter(
         (vote) =>
           vote.voted_for_player_id ===
@@ -80,16 +133,24 @@ export default function VoteResults() {
       ).length,
     }))
     .sort(
-      (a, b) => b.votes - a.votes
+      (a, b) =>
+        b.votes - a.votes
     );
 
   const teamNames = Array.from(
     new Set(
       players
-        .map((player) => player.team)
+        .map(
+          (player) =>
+            player.team
+        )
         .filter(
-          (team): team is string =>
-            Boolean(team)
+          (
+            team
+          ): team is string =>
+            typeof team ===
+              "string" &&
+            team.trim() !== ""
         )
     )
   );
@@ -98,6 +159,7 @@ export default function VoteResults() {
     .map((team) => ({
       id: team,
       name: team,
+
       votes: votes.filter(
         (vote) =>
           vote.voted_for_team_id ===
@@ -105,7 +167,8 @@ export default function VoteResults() {
       ).length,
     }))
     .sort(
-      (a, b) => b.votes - a.votes
+      (a, b) =>
+        b.votes - a.votes
     );
 
   const results =
@@ -115,6 +178,7 @@ export default function VoteResults() {
 
   return (
     <main className="mx-auto min-h-screen max-w-md space-y-6 p-6">
+
       <Card>
         <h1 className="text-4xl font-bold">
           Voting Results
@@ -128,8 +192,11 @@ export default function VoteResults() {
       <div className="space-y-3">
         {results.map(
           (result, index) => (
-            <Card key={result.id}>
+            <Card
+              key={result.id}
+            >
               <div className="flex items-center justify-between">
+
                 <div>
                   <span className="mr-3">
                     {index === 0
@@ -145,20 +212,13 @@ export default function VoteResults() {
                 <div className="text-2xl font-bold">
                   {result.votes}
                 </div>
+
               </div>
             </Card>
           )
         )}
       </div>
 
-      <Button
-        type="button"
-        onClick={() =>
-          navigate("/game")
-        }
-      >
-        Back to Game
-      </Button>
     </main>
   );
 }

@@ -76,9 +76,9 @@ export default function App() {
           element={<Slideshow />}
         />
         <Route
-  path="/vote-results"
-  element={<VoteResults />}
-/>
+        path="/vote-results"
+        element={<VoteResults />}
+        />
       </Routes>
     
     </Suspense>

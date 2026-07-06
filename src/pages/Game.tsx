@@ -4,49 +4,89 @@ import {
   useState,
 } from "react";
 
-import { useNavigate } from "react-router-dom";
+import {
+  useNavigate,
+} from "react-router-dom";
 
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 
-import { useGameState } from "../hooks/useGameState";
-import useSideChallenges from "../hooks/useSideChallenges";
-import usePubSubChallenges from "../hooks/usePubSubChallenges";
+import {
+  useGameState,
+} from "../game/hooks/useGameState";
 
-import { usePlayers } from "../game/hooks/usePlayers";
-import { usePubs } from "../game/hooks/usePubs";
-import { useChallenges } from "../game/hooks/useChallenges";
+import useSideChallenges
+  from "../game/hooks/useSideChallenges";
+
+import usePubSubChallenges
+  from "../game/hooks/usePubSubChallenges";
+
+import useChallengeCompletions
+  from "../game/hooks/useChallengeCompletions";
+
+import {
+  usePlayers,
+} from "../game/hooks/usePlayers";
+
+import {
+  usePubs,
+} from "../game/hooks/usePubs";
+
+import {
+  useChallenges,
+} from "../game/hooks/useChallenges";
 
 import {
   clearPlayerId,
   getPlayerId,
 } from "../lib/playerSession";
 
-import { uploadPhoto } from "../lib/photoApi";
+import {
+  uploadPhoto,
+} from "../lib/photoApi";
 
 import {
   completeChallenge,
   type ChallengeType,
 } from "../lib/completionApi";
 
+
 export default function Game() {
+  // -------------------------
+  // ALL HOOKS MUST BE HERE
+  // BEFORE ANY RETURN
+  // -------------------------
+
   const game = useGameState();
+
   const sideChallenges =
     useSideChallenges();
+
   const pubSubChallenges =
     usePubSubChallenges();
 
-  const players = usePlayers();
-  const pubs = usePubs();
-  const challenges = useChallenges();
+  const completions =
+    useChallengeCompletions();
 
-  const navigate = useNavigate();
+  const players =
+    usePlayers();
+
+  const pubs =
+    usePubs();
+
+  const challenges =
+    useChallenges();
+
+  const navigate =
+    useNavigate();
 
   const fileInputRef =
     useRef<HTMLInputElement>(null);
 
-  const [uploading, setUploading] =
-    useState(false);
+  const [
+    uploading,
+    setUploading,
+  ] = useState(false);
 
   const [
     uploadChallenge,
@@ -58,43 +98,106 @@ export default function Game() {
     type: ChallengeType;
   } | null>(null);
 
+
+  // -------------------------
+  // LIVE PAGE REDIRECTS
+  // -------------------------
+
   useEffect(() => {
-    if (game?.voting_open === true) {
-      navigate("/vote");
+    if (
+      game?.slideshow_open === true
+    ) {
+      navigate(
+        "/slideshow",
+        {
+          replace: true,
+        }
+      );
     }
-  }, [game?.voting_open, navigate]);
+  }, [
+    game?.slideshow_open,
+    navigate,
+  ]);
+
+
+  useEffect(() => {
+    if (
+      game?.voting_open === true
+    ) {
+      navigate(
+        "/vote",
+        {
+          replace: true,
+        }
+      );
+    }
+  }, [
+    game?.voting_open,
+    navigate,
+  ]);
+
 
   useEffect(() => {
     if (
       game?.show_vote_results === true
     ) {
-      navigate("/vote-results");
+      navigate(
+        "/vote-results",
+        {
+          replace: true,
+        }
+      );
     }
   }, [
     game?.show_vote_results,
     navigate,
   ]);
 
+
+  // -------------------------
+  // LOADING
+  // -------------------------
+
   if (!game) {
     return (
-      <p>Waiting for bday kween...</p>
+      <p>
+        Waiting for bday kween...
+      </p>
     );
   }
 
-  const playerId = getPlayerId();
 
-  const currentPlayer = players.find(
-    (player) => player.id === playerId
-  );
+  // -------------------------
+  // CURRENT PLAYER
+  // -------------------------
 
-  const currentPub = game.current_pub;
+  const playerId =
+    getPlayerId();
+
+  const currentPlayer =
+    players.find(
+      (player) =>
+        String(player.id) ===
+        String(playerId)
+    );
+
+
+  // -------------------------
+  // CURRENT GAME DATA
+  // -------------------------
+
+  const currentPub =
+    game.current_pub;
 
   const currentChallenge =
     game.current_challenge;
 
-  const currentPubObject = pubs.find(
-    (pub) => pub.name === currentPub
-  );
+  const currentPubObject =
+    pubs.find(
+      (pub) =>
+        pub.name ===
+        currentPub
+    );
 
   const currentChallengeObject =
     challenges.find(
@@ -107,89 +210,122 @@ export default function Game() {
     currentChallengeObject
       ?.allow_photo_upload === true;
 
+
+  // -------------------------
+  // CURRENT PUB BONUS MISSIONS
+  // -------------------------
+
   const currentPubSubChallenges =
     pubSubChallenges.filter(
       (challenge) =>
-        String(challenge.pub_id) ===
-        String(currentPubObject?.id)
+        String(
+          challenge.pub_id
+        ) ===
+        String(
+          currentPubObject?.id
+        )
     );
 
-  async function handlePhotoSelected(
-    event: React.ChangeEvent<HTMLInputElement>
-  ) {
-    const file =
-      event.target.files?.[0];
 
-    if (!file || !uploadChallenge) {
-      return;
+  // -------------------------
+  // COMPLETION CHECK
+  // -------------------------
+
+  function hasCompleted(
+    challengeType: ChallengeType,
+    challengeId:
+      string | number
+  ) {
+    if (!playerId) {
+      return false;
     }
 
-    if (!playerId || !currentPlayer) {
+    return completions.some(
+      (completion) =>
+        String(
+          completion.player_id
+        ) ===
+          String(playerId) &&
+
+        completion.chellenge_type ===
+          challengeType &&
+
+        String(
+          completion.challenge_id
+        ) ===
+          String(challengeId)
+    );
+  }
+
+
+  // -------------------------
+  // TICK NON-PHOTO CHALLENGE
+  // -------------------------
+
+  async function tickChallengeDone(
+    challengeType: ChallengeType,
+    challengeId:
+      string | number,
+    points: number
+  ) {
+    if (
+      !playerId ||
+      !currentPlayer
+    ) {
       alert(
         "Player session not found. Please rejoin."
       );
+
       return;
     }
 
-    setUploading(true);
+    if (
+      hasCompleted(
+        challengeType,
+        challengeId
+      )
+    ) {
+      return;
+    }
 
-    const { data, error } =
-      await uploadPhoto(file, {
+    const { error } =
+      await completeChallenge({
         playerId,
-        playerName: currentPlayer.name,
-        team:
-          currentPlayer.team ?? null,
-        challenge:
-          uploadChallenge.title,
-        pub: currentPub,
-        points:
-          uploadChallenge.points,
+        challengeType,
+        challengeId,
+        points,
+        photoId: null,
       });
 
     if (error) {
-      setUploading(false);
-      event.target.value = "";
-      setUploadChallenge(null);
+      if (
+        error.code ===
+        "ALREADY_COMPLETED"
+      ) {
+        alert(
+          "You already completed this challenge."
+        );
+
+        return;
+      }
 
       console.error(
-        "PHOTO UPLOAD ERROR",
+        "COMPLETE CHALLENGE ERROR:",
         error
       );
 
       alert(
-        `Upload failed: ${error.message}`
+        `Could not complete challenge: ${error.message}`
       );
+
       return;
     }
-
-    const {
-      error: completionError,
-    } = await completeChallenge({
-      playerId,
-      challengeType:
-        uploadChallenge.type,
-      challengeId:
-        uploadChallenge.id,
-      challengeTitle:
-        uploadChallenge.title,
-      points:
-        uploadChallenge.points,
-      photoId: data?.id ?? null,
-    });
-
-    setUploading(false);
-    event.target.value = "";
-    setUploadChallenge(null);
-
-    if (completionError) {
-      console.error(
-        "COMPLETION ERROR",
-        completionError
-      );
-    }
-
-    alert("Photo uploaded!");
   }
+
+
+  // -------------------------
+  // CHOOSE PHOTO UPLOAD
+  // -------------------------
 
   function chooseUpload(details: {
     id: string | number;
@@ -197,15 +333,168 @@ export default function Game() {
     points: number;
     type: ChallengeType;
   }) {
-    setUploadChallenge(details);
+    setUploadChallenge(
+      details
+    );
 
     window.setTimeout(() => {
-      fileInputRef.current?.click();
+      fileInputRef
+        .current
+        ?.click();
     }, 0);
   }
 
+
+  // -------------------------
+  // HANDLE PHOTO
+  // -------------------------
+
+  async function handlePhotoSelected(
+    event:
+      React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file =
+      event.target.files?.[0];
+
+    if (
+      !file ||
+      !uploadChallenge
+    ) {
+      return;
+    }
+
+    if (
+      !playerId ||
+      !currentPlayer
+    ) {
+      alert(
+        "Player session not found. Please rejoin."
+      );
+
+      return;
+    }
+
+    setUploading(true);
+
+    const {
+      data,
+      error,
+    } = await uploadPhoto(
+      file,
+      {
+        playerId,
+
+        playerName:
+          currentPlayer.name,
+
+        team:
+          currentPlayer.team ??
+          null,
+
+        challenge:
+          uploadChallenge.title,
+
+        pub:
+          currentPub,
+
+        points:
+          uploadChallenge.points,
+      }
+    );
+
+
+    if (error) {
+      setUploading(false);
+
+      event.target.value =
+        "";
+
+      setUploadChallenge(
+        null
+      );
+
+      console.error(
+        "PHOTO UPLOAD ERROR:",
+        error
+      );
+
+      alert(
+        `Upload failed: ${error.message}`
+      );
+
+      return;
+    }
+
+
+    const {
+      error:
+        completionError,
+    } = await completeChallenge({
+      playerId,
+
+      challengeType:
+        uploadChallenge.type,
+
+      challengeId:
+        uploadChallenge.id,
+
+      points:
+        uploadChallenge.points,
+
+      photoId:
+        data?.id != null
+          ? String(data.id)
+          : null,
+    });
+
+    setUploading(false);
+
+    event.target.value =
+      "";
+
+    setUploadChallenge(
+      null
+    );
+
+
+    if (completionError) {
+      console.error(
+        "COMPLETION ERROR:",
+        completionError
+      );
+
+      if (
+        completionError.code ===
+        "ALREADY_COMPLETED"
+      ) {
+        alert(
+          "You already completed this challenge."
+        );
+
+        return;
+      }
+
+      alert(
+        `Photo uploaded, but completion failed: ${completionError.message}`
+      );
+
+      return;
+    }
+
+
+    alert(
+      "Photo uploaded and challenge completed!"
+    );
+  }
+
+
+  // -------------------------
+  // JSX
+  // -------------------------
+
   return (
     <main className="mx-auto min-h-screen max-w-md space-y-6 p-6">
+
       <header>
         <img
           src={`${import.meta.env.BASE_URL}Title.png`}
@@ -214,13 +503,21 @@ export default function Game() {
         />
       </header>
 
+
+      {/* HIDDEN PHOTO INPUT */}
+
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
         className="hidden"
-        onChange={handlePhotoSelected}
+        onChange={
+          handlePhotoSelected
+        }
       />
+
+
+      {/* PLAYER TEAM */}
 
       {currentPlayer?.team ? (
         <Card>
@@ -235,11 +532,14 @@ export default function Game() {
       ) : (
         <Card>
           <p>
-            Waiting for the host to assign
-            your team...
+            Waiting for the host
+            to assign your team...
           </p>
         </Card>
       )}
+
+
+      {/* CURRENT PUB */}
 
       <Card>
         <p className="text-sm">
@@ -251,6 +551,9 @@ export default function Game() {
         </h2>
       </Card>
 
+
+      {/* MAIN MISSION */}
+
       <Card>
         <p className="text-sm">
           ⭐ Main Mission
@@ -261,137 +564,262 @@ export default function Game() {
         </h2>
 
         <p className="mt-3">
-          {game.challenge_description}
+          {
+            game.challenge_description
+          }
         </p>
+
 
         {allowPhotoUpload &&
           currentChallengeObject && (
             <div className="mt-4">
+
               <Button
                 type="button"
-                disabled={uploading}
+
+                disabled={
+                  uploading ||
+                  hasCompleted(
+                    "main",
+                    currentChallengeObject.id
+                  )
+                }
+
                 onClick={() =>
                   chooseUpload({
                     id:
                       currentChallengeObject.id,
+
                     title:
                       currentChallengeObject.title,
+
                     points:
                       currentChallengeObject.points ??
                       0,
-                    type: "main",
+
+                    type:
+                      "main",
                   })
                 }
               >
-                Upload Photo
+                {hasCompleted(
+                  "main",
+                  currentChallengeObject.id
+                )
+                  ? "✓ Completed"
+                  : uploading
+                    ? "Uploading..."
+                    : "Upload Photo"}
               </Button>
+
             </div>
           )}
+
       </Card>
+
+
+      {/* PUB BONUS MISSIONS */}
 
       {currentPubSubChallenges.length >
         0 && (
         <Card>
+
           <h2 className="mb-4 text-2xl font-bold">
             PUB BONUS MISSIONS
           </h2>
 
-          <div className="space-y-4">
-            {currentPubSubChallenges.map(
-              (challenge) => (
-                <div
-                  key={challenge.id}
-                  className="rounded-2xl border-2 border-pink-500 bg-black/70 p-4"
-                >
-                  <h3 className="text-xl font-bold">
-                    {challenge.title}
-                  </h3>
 
-                  {challenge.description && (
-                    <p className="mt-2">
+          <div className="space-y-4">
+
+            {currentPubSubChallenges.map(
+              (challenge) => {
+                const completed =
+                  hasCompleted(
+                    "bonus",
+                    challenge.id
+                  );
+
+                return (
+                  <div
+                    key={
+                      challenge.id
+                    }
+                    className={`
+                      rounded-2xl border-2 p-4
+                      ${
+                        completed
+                          ? "border-green-400 bg-green-950/50"
+                          : "border-pink-500 bg-black/70"
+                      }
+                    `}
+                  >
+
+                    <h3 className="text-xl font-bold">
                       {
-                        challenge.description
+                        challenge.title
+                      }
+                    </h3>
+
+
+                    {challenge.description && (
+                      <p className="mt-2">
+                        {
+                          challenge.description
+                        }
+                      </p>
+                    )}
+
+
+                    <p className="mt-2 font-bold">
+                      +{
+                        challenge.points
                       }
                     </p>
-                  )}
 
-                  <p className="mt-2 font-bold">
-                    +{challenge.points}
-                  </p>
 
-                  <div className="mt-4">
-                    <Button
-                      type="button"
-                      disabled={uploading}
-                      onClick={() =>
-                        chooseUpload({
-                          id:
-                            challenge.id,
-                          title:
-                            challenge.title,
-                          points:
-                            challenge.points,
-                          type: "bonus",
-                        })
-                      }
-                    >
-                      Upload Photo
-                    </Button>
+                    <div className="mt-4">
+
+                      <Button
+                        type="button"
+
+                        disabled={
+                          uploading ||
+                          completed
+                        }
+
+                        onClick={() =>
+                          chooseUpload({
+                            id:
+                              challenge.id,
+
+                            title:
+                              challenge.title,
+
+                            points:
+                              challenge.points,
+
+                            type:
+                              "bonus",
+                          })
+                        }
+                      >
+                        {completed
+                          ? "✓ Completed"
+                          : uploading
+                            ? "Uploading..."
+                            : "Upload Photo"}
+                      </Button>
+
+                    </div>
+
                   </div>
-                </div>
-              )
+                );
+              }
             )}
+
           </div>
+
         </Card>
       )}
 
-      <Card>
-        <h2 className="mb-4 text-2xl font-bold">
-          CHAOS BINGO
-        </h2>
 
-        <div className="grid grid-cols-2 gap-3">
-          {sideChallenges.map(
-            (challenge) => (
-              <div
-                key={challenge.id}
-                className="rounded-2xl border-2 border-pink-500 bg-black/70 p-3"
+      {/* CHAOS BINGO */}
+
+<Card>
+  <h2 className="mb-4 text-2xl font-bold">
+    CHAOS BINGO
+  </h2>
+
+  <div className="grid grid-cols-2 gap-3">
+    {sideChallenges.map(
+      (challenge) => {
+        const completed =
+          hasCompleted(
+            "side",
+            challenge.id
+          );
+
+        return (
+          <div
+            key={challenge.id}
+            className={`
+              rounded-2xl border-2 p-3
+              ${
+                completed
+                  ? "border-green-400 bg-green-950/50"
+                  : "border-pink-500 bg-black/70"
+              }
+            `}
+          >
+            <h3 className="font-bold">
+              {challenge.title}
+            </h3>
+
+            <p className="mt-2 text-sm">
+              {challenge.description}
+            </p>
+
+            <p className="mt-2 font-bold">
+              +{challenge.points}
+            </p>
+
+            <div className="mt-3">
+              <Button
+                type="button"
+                disabled={completed}
+                onClick={() =>
+                  tickChallengeDone(
+                    "side",
+                    challenge.id,
+                    challenge.points
+                  )
+                }
               >
-                <h3 className="font-bold">
-                  {challenge.title}
-                </h3>
+                {completed
+                  ? "✓ Done"
+                  : "Mark Done"}
+              </Button>
+            </div>
+          </div>
+        );
+      }
+    )}
+  </div>
+</Card>
 
-                <p className="mt-2 text-sm">
-                  {challenge.description}
-                </p>
 
-                <p className="mt-2 font-bold">
-                  +{challenge.points}
-                </p>
-              </div>
-            )
-          )}
-        </div>
-      </Card>
+      {/* LEADERBOARD */}
 
       <Button
         type="button"
         onClick={() =>
-          navigate("/leaderboard")
+          navigate(
+            "/leaderboard"
+          )
         }
       >
         Leaderboard
       </Button>
 
+
+      {/* LEAVE GAME */}
+
       <Button
         type="button"
         onClick={() => {
           clearPlayerId();
-          navigate("/");
+
+          navigate(
+            "/",
+            {
+              replace: true,
+            }
+          );
         }}
       >
         Leave Game
       </Button>
+
     </main>
   );
 }
