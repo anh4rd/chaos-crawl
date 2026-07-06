@@ -1,9 +1,0 @@
-import{a as e,o as t}from"./index-Dtt6qpMr.js";import{t as n}from"./supabase-DiXykxJx.js";var r=t(e(),1);function i(){let[e,t]=(0,r.useState)([]);return(0,r.useEffect)(()=>{async function e(){let{data:e}=await n.from(`pubs`).select(`*`).order(`sort_order`);t(e??[])}e()},[]),e}function a(){let[e,t]=(0,r.useState)([]);return(0,r.useEffect)(()=>{async function e(){let{data:e}=await n.from(`challenges`).select(`*`);t(e??[])}e()},[]),e}function o(){let[e,t]=(0,r.useState)([]);async function i(){let{data:e}=await n.from(`side_challenges`).select(`*`).eq(`active`,!0).order(`id`);t(e??[])}return(0,r.useEffect)(()=>{i()},[]),e}function s(){let[e,t]=(0,r.useState)([]);return(0,r.useEffect)(()=>{async function e(){let{data:e,error:r}=await n.from(`pub_sub_challenges`).select(`*`).eq(`active`,!0).order(`id`);if(r){console.error(`LOAD PUB SUB CHALLENGES ERROR`,r);return}t(e??[])}e()},[]),e}function c(){let[e,t]=(0,r.useState)([]);return(0,r.useEffect)(()=>{let e=!0;async function r(){let{data:r,error:i}=await n.from(`challenge_completions`).select(`
-          id,
-          player_id,
-          chellenge_type,
-          challenge_id,
-          points,
-          photo_id,
-          completed_at
-        `).order(`completed_at`,{ascending:!1});if(i){console.error(`LOAD COMPLETIONS ERROR:`,i);return}e&&t(r??[])}r();let i=n.channel(`challenge-completions-live`).on(`postgres_changes`,{event:`*`,schema:`public`,table:`challenge_completions`},()=>{r()}).subscribe(e=>{console.log(`COMPLETIONS REALTIME:`,e)});return()=>{e=!1,n.removeChannel(i)}},[]),e}export{i as a,a as i,s as n,o as r,c as t};
