@@ -75,11 +75,12 @@ export default function App() {
           path="/slideshow"
           element={<Slideshow />}
         />
-      </Routes>
-      <Route
+        <Route
   path="/vote-results"
   element={<VoteResults />}
 />
+      </Routes>
+    
     </Suspense>
   );
 }

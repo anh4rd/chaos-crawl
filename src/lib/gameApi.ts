@@ -16,6 +16,7 @@ export async function updateGameState(values: {
   voting_open?: boolean;
   voting_target?: "player" | "team";
   show_vote_results?: boolean;
+  slideshow_open?: boolean;
 }) {
   return await supabase
     .from("game_state")

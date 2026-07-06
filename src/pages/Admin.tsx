@@ -12,7 +12,7 @@ import { useChallenges } from "../game/hooks/useChallenges";
 
 import { updateGameState } from "../lib/gameApi";
 import { addPoints, changeTeam, deletePlayer, removePoints, renamePlayer } from "../lib/playerApi";
-import { teams } from "@/lib/demoData";
+
 
 import { getVotesForChallenge } from "../lib/voteApi";
 import { useNavigate } from "react-router-dom";
@@ -22,12 +22,67 @@ import useChallengeCompletions from "../hooks/challengeCompletions";
 export default function Admin() {
   const players = usePlayers();
   const game = useGameState();
+  const [assigningPlayerId, setAssigningPlayerId] =
+  useState<string | null>(null);
+  async function createTeam() {
+  const cleanName =
+    newTeamName.trim();
+
+  if (!cleanName) {
+    alert("Enter a team name.");
+    return;
+  }
+
+  setCreatingTeam(true);
+
+  const teamId = cleanName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  const { error } = await supabase
+    .from("teams")
+    .insert({
+      id: teamId,
+      name: cleanName,
+    });
+
+  setCreatingTeam(false);
+
+  if (error) {
+    console.error(
+      "CREATE TEAM ERROR:",
+      error
+    );
+
+    alert(
+      `Could not create team: ${error.message}`
+    );
+    return;
+  }
+
+  setNewTeamName("");
+
+  await loadTeams();
+}
   const pubs = usePubs();
   const challenges = useChallenges();
   const navigate = useNavigate();
+  const [newTeamName, setNewTeamName] =
+  useState("");
+
+const [creatingTeam, setCreatingTeam] =
+  useState(false);
+  const [teams, setTeams] = useState<
+  {
+    id: string;
+    name: string;
+  }[]
+>([]);
 
   const completions = useChallengeCompletions();
-  const [votes, setVotes] = useState<
+
+const [votes, setVotes] = useState<
   {
     id: number;
     voter_id: string;
@@ -35,6 +90,33 @@ export default function Admin() {
     challenge_name: string;
   }[]
 >([]);
+
+
+// LOAD TEAMS
+  async function loadTeams() {
+  const { data, error } =
+    await supabase
+      .from("teams")
+      .select("id, name")
+      .order("name");
+
+  if (error) {
+    console.error(
+      "LOAD TEAMS ERROR:",
+      error
+    );
+    return;
+  }
+
+  setTeams(data ?? []);
+}
+
+useEffect(() => {
+  loadTeams();
+}, []);
+
+
+// LOAD VOTES + REALTIME
 useEffect(() => {
   async function loadVotes() {
     if (!game?.current_challenge) {
@@ -47,17 +129,18 @@ useEffect(() => {
       );
 
     if (error) {
-      console.error("LOAD VOTES ERROR", error);
+      console.error(
+        "LOAD VOTES ERROR",
+        error
+      );
       return;
     }
 
     setVotes(data ?? []);
   }
 
-  // Load existing votes immediately
   loadVotes();
 
-  // Listen for new / changed / deleted votes
   const channel = supabase
     .channel("admin-votes")
     .on(
@@ -77,11 +160,18 @@ useEffect(() => {
     supabase.removeChannel(channel);
   };
 }, [game?.current_challenge]);
+
   const [selectedPub, setSelectedPub] = useState("");
   const [selectedChallenge, setSelectedChallenge] = useState("");
   const [broadcastMessage, setBroadcastMessage] = useState("");
   if (!game) return <p>Loading...</p>;
-  const orderedPubs = [...pubs].sort(
+  const unassignedPlayers = players.filter(
+  (player) =>
+    !player.team ||
+    player.team.trim() === ""
+);
+
+const orderedPubs = [...pubs].sort(
   (a, b) =>
     a.sort_order - b.sort_order
 );
@@ -152,7 +242,39 @@ const nextPub =
     });
   }
 
-  async function closeVoting() {
+  async function assignPlayerToTeam(
+  playerId: string,
+  team: string
+) {
+  if (!team) {
+    return;
+  }
+
+  setAssigningPlayerId(playerId);
+
+  const { error } = await supabase
+    .from("players")
+    .update({
+      team,
+    })
+    .eq("id", playerId);
+
+  setAssigningPlayerId(null);
+
+  if (error) {
+    console.error(
+      "ASSIGN TEAM ERROR:",
+      error
+    );
+
+    alert(
+      `Could not assign team: ${error.message}`
+    );
+
+    return;
+  }
+}
+async function closeVoting() {
     const confirmed =
       window.confirm(
         "Close voting and show results?"
@@ -172,6 +294,125 @@ const nextPub =
       <h1 className="text-4xl font-bold">
         Host Control
       </h1>
+      {unassignedPlayers.length > 0 && (
+        
+  <Card>
+    <Card>
+  <h2 className="mb-4 text-2xl font-bold">
+    Create Teams
+  </h2>
+
+  <p className="mb-4">
+    Create the teams first, then assign
+    players to them.
+  </p>
+
+  <Input
+    placeholder="Team name..."
+    value={newTeamName}
+    onChange={(event) =>
+      setNewTeamName(
+        event.target.value
+      )
+    }
+  />
+
+  <div className="mt-4">
+    <Button
+      type="button"
+      disabled={creatingTeam}
+      onClick={createTeam}
+    >
+      {creatingTeam
+        ? "Creating..."
+        : "Create Team"}
+    </Button>
+  </div>
+
+  {teams.length > 0 && (
+    <div className="mt-5 space-y-2">
+      <h3 className="font-bold">
+        Current Teams
+      </h3>
+
+      {teams.map((team) => (
+        <div
+          key={team.id}
+          className="rounded-xl bg-black/70 p-3"
+        >
+          {team.name}
+        </div>
+      ))}
+    </div>
+  )}
+</Card>
+<div className="mb-4">
+      <h2 className="text-2xl font-bold">
+        ⚠️ Assign Teams
+      </h2>
+
+      <p className="mt-2">
+        {unassignedPlayers.length === 1
+          ? "1 player is waiting for a team."
+          : `${unassignedPlayers.length} players are waiting for teams.`}
+      </p>
+    </div>
+
+    <div className="space-y-4">
+      {unassignedPlayers.map((player) => (
+        <div
+          key={player.id}
+          className="rounded-2xl border-2 border-pink-500 bg-black/70 p-4"
+        >
+          <div className="mb-3 text-xl font-bold">
+            {player.name}
+          </div>
+
+          <select
+            defaultValue=""
+            disabled={
+              assigningPlayerId === player.id
+            }
+            onChange={(event) => {
+              const team =
+                event.target.value;
+
+              if (!team) {
+                return;
+              }
+
+              assignPlayerToTeam(
+                player.id,
+                team
+              );
+            }}
+            className="w-full rounded-xl p-3 text-white"
+          >
+            <option value="">
+              Assign to team...
+            </option>
+
+            {teams.map((team) => (
+              <option
+                key={team.id}
+                value={team.name}
+              >
+                {team.name}
+              </option>
+            ))}
+          </select>
+
+          {assigningPlayerId ===
+            player.id && (
+            <p className="mt-2 text-sm">
+              Assigning...
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  </Card>
+)}
 
       <Card>
   <h2 className="mb-4 text-xl font-bold">
@@ -321,7 +562,7 @@ const nextPub =
                   <div className="text-zinc-400">
                     <select
 
-                      value={player.team}
+                      value={player.team ?? ""}
 
                       onChange={(e)=>
 
@@ -333,6 +574,8 @@ const nextPub =
                       }
 
                       >
+                        <option value=""> Unassigned</option>
+
 
   {teams.map(team=>
 
@@ -365,7 +608,7 @@ const nextPub =
                     {player.score} pts
                   </div>
                   <Input
-                    value={player.name}
+                    defaultValue={player.name}
                     onBlur={(e) => renamePlayer(player.id, e.target.value)}
                     />
                     <p className="flex:items-center justify-between">
