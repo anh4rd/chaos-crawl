@@ -6,6 +6,7 @@ export interface Photo {
   player_id: string | null;
   image_url: string;
   uploaded_at: string;
+  media_type?: "image" | "video" | null;
 
   player_name?: string | null;
   team?: string | null;
@@ -21,7 +22,7 @@ export function usePhotos() {
     const { data, error } = await supabase
       .from("photos")
       .select(
-        "id, image_url, uploaded_at, player_name, team, challenge, pub, points"
+        "id, image_url, uploaded_at, media_type, player_name, team, challenge, pub, points"
       )
       .order("uploaded_at", {
         ascending: false,

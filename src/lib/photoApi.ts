@@ -13,6 +13,11 @@ export async function uploadPhoto(
   }
 ) {
   try {
+    const mediaType =
+      file.type.startsWith("video/")
+        ? "video"
+        : "image";
+
     const compressedFile = await imageCompression(file, {
       maxSizeMB: 1,
       maxWidthOrHeight: 1920,
@@ -57,6 +62,7 @@ export async function uploadPhoto(
           challenge: details.challenge,
           pub: details.pub,
           points: details.points ?? 0,
+          media_type: mediaType,
         })
         .select()
         .single();

@@ -313,13 +313,22 @@ export default function Slideshow() {
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black">
 
-      <img
-        src={
-          currentPhoto.image_url
-        }
-        alt="Chaos Crawl submission"
-        className="h-screen w-screen object-contain"
-      />
+      {currentPhoto.media_type === "video" ? (
+        <video
+          key={currentPhoto.image_url}
+          src={currentPhoto.image_url}
+          className="h-screen w-screen object-contain"
+          autoPlay
+          playsInline
+          controls
+        />
+      ) : (
+        <img
+          src={currentPhoto.image_url}
+          alt="Chaos Crawl upload"
+          className="h-screen w-screen object-contain"
+        />
+      )}
 
 
       {/* PHOTO INFO */}

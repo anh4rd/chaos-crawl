@@ -864,6 +864,10 @@ async function closeResults() {
     setUploadingChallengeKey(key);
 
     try {
+      const mediaType = file.type.startsWith("video/")
+        ? "video"
+        : "image";
+
       const safeFileName = file.name
         .replace(/[^a-zA-Z0-9._-]/g, "-");
 
@@ -911,6 +915,8 @@ async function closeResults() {
             game?.current_pub ?? null,
           points:
             pendingUpload.points,
+          media_type:
+            mediaType,
         })
         .select("id")
         .single();
@@ -990,7 +996,7 @@ async function closeResults() {
       <input
         ref={challengePhotoInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         className="hidden"
         onChange={
           handleChallengePhotoSelected

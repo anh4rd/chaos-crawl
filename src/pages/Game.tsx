@@ -511,7 +511,7 @@ export default function Game() {
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         className="hidden"
         onChange={
           handlePhotoSelected
