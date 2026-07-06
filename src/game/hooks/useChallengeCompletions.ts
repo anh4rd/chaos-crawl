@@ -15,7 +15,7 @@ export interface ChallengeCompletion {
 
   // This spelling matches your
   // Supabase column exactly
-  chellenge_type: string;
+  challenge_type: string;
 
   challenge_id:
     | string
@@ -56,7 +56,7 @@ export default function useChallengeCompletions() {
         .select(`
           id,
           player_id,
-          chellenge_type,
+          challenge_type,
           challenge_id,
           points,
           photo_id,

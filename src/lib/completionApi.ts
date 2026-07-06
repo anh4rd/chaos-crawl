@@ -32,7 +32,7 @@ export async function completeChallenge({
     .select("id")
     .eq("player_id", playerId)
     .eq(
-      "chellenge_type",
+      "challenge_type",
       challengeType
     )
     .eq(
@@ -68,7 +68,7 @@ export async function completeChallenge({
       player_id: playerId,
 
       // Exact typo from your database
-      chellenge_type:
+      challenge_type:
         challengeType,
 
       challenge_id:
@@ -105,7 +105,7 @@ export async function removeChallengeCompletion(
     .delete()
     .eq("player_id", playerId)
     .eq(
-      "chellenge_type",
+      "challenge_type",
       challengeType
     )
     .eq(

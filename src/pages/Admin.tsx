@@ -252,7 +252,7 @@ function getPlayersWhoCompleted(
   const matchingCompletions =
     completions.filter(
       (completion) =>
-        completion.chellenge_type ===
+        completion.challenge_type ===
           challengeType &&
         String(
           completion.challenge_id

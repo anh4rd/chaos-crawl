@@ -247,7 +247,7 @@ export default function Game() {
         ) ===
           String(playerId) &&
 
-        completion.chellenge_type ===
+        completion.challenge_type ===
           challengeType &&
 
         String(
