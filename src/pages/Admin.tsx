@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useRef,
   useState,
   type ChangeEvent,
 } from "react";
@@ -125,6 +126,41 @@ const pubSubChallenges =
   ] = useState("");
 
 
+  // -------------------------
+  // HOST PARTICIPATION
+  // -------------------------
+
+  const [
+    playingAsPlayerId,
+    setPlayingAsPlayerId,
+  ] = useState("");
+
+  const [
+    uploadingChallengeKey,
+    setUploadingChallengeKey,
+  ] = useState<string | null>(null);
+
+  const [
+    pendingCompletedKeys,
+    setPendingCompletedKeys,
+  ] = useState<Set<string>>(
+    () => new Set()
+  );
+
+  const [
+    pendingUpload,
+    setPendingUpload,
+  ] = useState<{
+    id: string | number;
+    title: string;
+    points: number;
+    type: "side" | "bonus";
+  } | null>(null);
+
+  const challengePhotoInputRef =
+    useRef<HTMLInputElement>(null);
+
+
 
 
   // -------------------------
@@ -243,39 +279,6 @@ const pubSubChallenges =
       </main>
     );
   }
-
-
-function getPlayersWhoCompleted(
-  challengeType: "side" | "bonus",
-  challengeId: string | number
-) {
-  const matchingCompletions =
-    completions.filter(
-      (completion) =>
-        completion.challenge_type ===
-          challengeType &&
-        String(
-          completion.challenge_id
-        ) ===
-          String(challengeId)
-    );
-
-  return matchingCompletions
-    .map((completion) =>
-      players.find(
-        (player) =>
-          String(player.id) ===
-          String(completion.player_id)
-      )
-    )
-    .filter(
-      (
-        player
-      ): player is NonNullable<
-        typeof player
-      > => Boolean(player)
-    );
-}
 
   // -------------------------
   // DERIVED DATA
@@ -764,6 +767,214 @@ async function closeResults() {
 }
 
 
+
+  // -------------------------
+  // HOST CHALLENGE PARTICIPATION
+  // -------------------------
+
+  function completionKey(
+    playerId: string,
+    challengeType: "side" | "bonus",
+    challengeId: string | number
+  ) {
+    return `${playerId}:${challengeType}:${String(challengeId)}`;
+  }
+
+
+  function hasPlayerCompleted(
+    playerId: string,
+    challengeType: "side" | "bonus",
+    challengeId: string | number
+  ) {
+    const key = completionKey(
+      playerId,
+      challengeType,
+      challengeId
+    );
+
+    return (
+      pendingCompletedKeys.has(key) ||
+      completions.some(
+        (completion) =>
+          String(completion.player_id) ===
+            String(playerId) &&
+          completion.challenge_type ===
+            challengeType &&
+          String(completion.challenge_id) ===
+            String(challengeId)
+      )
+    );
+  }
+
+
+  function chooseChallengePhoto(details: {
+    id: string | number;
+    title: string;
+    points: number;
+    type: "side" | "bonus";
+  }) {
+    if (!playingAsPlayerId) {
+      alert(
+        "Choose who the host is playing as first."
+      );
+      return;
+    }
+
+    setPendingUpload(details);
+
+    window.setTimeout(() => {
+      challengePhotoInputRef.current?.click();
+    }, 0);
+  }
+
+
+  async function handleChallengePhotoSelected(
+    event: ChangeEvent<HTMLInputElement>
+  ) {
+    const file = event.target.files?.[0];
+
+    if (
+      !file ||
+      !pendingUpload ||
+      !playingAsPlayerId
+    ) {
+      event.target.value = "";
+      return;
+    }
+
+    const player = players.find(
+      (item) =>
+        String(item.id) ===
+        String(playingAsPlayerId)
+    );
+
+    if (!player) {
+      alert("Selected player could not be found.");
+      event.target.value = "";
+      setPendingUpload(null);
+      return;
+    }
+
+    const key = completionKey(
+      playingAsPlayerId,
+      pendingUpload.type,
+      pendingUpload.id
+    );
+
+    setUploadingChallengeKey(key);
+
+    try {
+      const safeFileName = file.name
+        .replace(/[^a-zA-Z0-9._-]/g, "-");
+
+      const storagePath =
+        `${playingAsPlayerId}/${Date.now()}-${safeFileName}`;
+
+      const {
+        error: storageError,
+      } = await supabase.storage
+        .from("photos")
+        .upload(storagePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (storageError) {
+        throw storageError;
+      }
+
+      const {
+        data: publicUrlData,
+      } = supabase.storage
+        .from("photos")
+        .getPublicUrl(storagePath);
+
+      const {
+        data: photoRow,
+        error: photoError,
+      } = await supabase
+        .from("photos")
+        .insert({
+          image_url:
+            publicUrlData.publicUrl,
+          player_id:
+            playingAsPlayerId,
+          player_name:
+            player.name,
+          team:
+            player.team ?? null,
+          challenge_id:
+            String(pendingUpload.id),
+          challenge:
+            pendingUpload.title,
+          pub:
+            game?.current_pub ?? null,
+          points:
+            pendingUpload.points,
+        })
+        .select("id")
+        .single();
+
+      if (photoError) {
+        await supabase.storage
+          .from("photos")
+          .remove([storagePath]);
+
+        throw photoError;
+      }
+
+      const {
+        error: completionError,
+      } = await supabase
+        .from("challenge_completions")
+        .insert({
+          player_id:
+            playingAsPlayerId,
+          challenge_type:
+            pendingUpload.type,
+          challenge_id:
+            String(pendingUpload.id),
+          points:
+            pendingUpload.points,
+          photo_id:
+            photoRow?.id ?? null,
+        });
+
+      if (completionError) {
+        throw completionError;
+      }
+
+      // Immediate local state change: hide the card now,
+      // without waiting for Realtime to refresh the hook.
+      setPendingCompletedKeys(
+        (current) => {
+          const next = new Set(current);
+          next.add(key);
+          return next;
+        }
+      );
+    } catch (error) {
+      console.error(
+        "HOST CHALLENGE UPLOAD ERROR:",
+        error
+      );
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unknown upload error";
+
+      alert(
+        `Could not upload photo: ${message}`
+      );
+    } finally {
+      setUploadingChallengeKey(null);
+      setPendingUpload(null);
+      event.target.value = "";
+    }
+  }
+
+
   // -------------------------
   // JSX
   // -------------------------
@@ -774,6 +985,17 @@ async function closeResults() {
       <h1 className="text-4xl font-bold">
         Host Control
       </h1>
+
+
+      <input
+        ref={challengePhotoInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={
+          handleChallengePhotoSelected
+        }
+      />
 
 
       {/* LIVE STATUS */}
@@ -922,75 +1144,120 @@ async function closeResults() {
   </h2>
 
   <p className="mt-2 text-sm text-zinc-400">
-    Side challenges available throughout the game.
+    Choose who you are playing as. Once that player uploads a photo successfully, the completed challenge disappears for them.
   </p>
 
-  {sideChallenges.length === 0 ? (
-    <p className="mt-4 text-zinc-400">
-      No side challenges found.
+  <select
+    value={playingAsPlayerId}
+    onChange={(event) =>
+      setPlayingAsPlayerId(
+        event.target.value
+      )
+    }
+    className="mt-4 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
+  >
+    <option value="">
+      Playing as...
+    </option>
+
+    {players.map((player) => (
+      <option
+        key={player.id}
+        value={player.id}
+      >
+        {player.name}
+        {player.team
+          ? ` • ${player.team}`
+          : ""}
+      </option>
+    ))}
+  </select>
+
+  {!playingAsPlayerId ? (
+    <p className="mt-4 text-sm text-yellow-400">
+      Select a player above to take part.
     </p>
   ) : (
-    <div className="mt-4 space-y-3">
-      {sideChallenges.map(
-        (challenge) => {
-          const completedBy =
-            getPlayersWhoCompleted(
+    (() => {
+      const availableSideChallenges =
+        sideChallenges.filter(
+          (challenge) =>
+            !hasPlayerCompleted(
+              playingAsPlayerId,
               "side",
               challenge.id
-            );
+            )
+        );
 
-          return (
-            <div
-              key={challenge.id}
-              className="rounded-2xl border-2 border-pink-500 bg-black/70 p-4"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="font-bold">
-                    {challenge.title}
-                  </h3>
+      return availableSideChallenges.length ===
+        0 ? (
+        <p className="mt-4 text-green-400">
+          ✓ No unfinished Chaos Bingo challenges for this player.
+        </p>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {availableSideChallenges.map(
+            (challenge) => {
+              const key = completionKey(
+                playingAsPlayerId,
+                "side",
+                challenge.id
+              );
 
-                  {challenge.description && (
-                    <p className="mt-1 text-sm text-zinc-300">
-                      {challenge.description}
-                    </p>
-                  )}
-                </div>
+              return (
+                <div
+                  key={challenge.id}
+                  className="rounded-2xl border-2 border-pink-500 bg-black/70 p-4"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="font-bold">
+                        {challenge.title}
+                      </h3>
 
-                <strong>
-                  +{challenge.points}
-                </strong>
-              </div>
+                      {challenge.description && (
+                        <p className="mt-1 text-sm text-zinc-300">
+                          {challenge.description}
+                        </p>
+                      )}
+                    </div>
 
-              <div className="mt-4">
-                <p className="text-xs uppercase text-zinc-400">
-                  Completed by
-                </p>
-
-                {completedBy.length === 0 ? (
-                  <p className="mt-1 text-sm text-zinc-500">
-                    Nobody yet
-                  </p>
-                ) : (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {completedBy.map(
-                      (player) => (
-                        <span
-                          key={player.id}
-                          className="rounded-full bg-green-900/60 px-3 py-1 text-sm"
-                        >
-                          ✓ {player.name}
-                        </span>
-                      )
-                    )}
+                    <strong>
+                      +{challenge.points}
+                    </strong>
                   </div>
-                )}
-              </div>
-            </div>
-          );
-        }
-      )}
-    </div>
+
+                  <div className="mt-4">
+                    <Button
+                      type="button"
+                      disabled={
+                        uploadingChallengeKey !==
+                        null
+                      }
+                      onClick={() =>
+                        chooseChallengePhoto({
+                          id: challenge.id,
+                          title:
+                            challenge.title,
+                          points:
+                            challenge.points,
+                          type: "side",
+                        })
+                      }
+                    >
+                      {uploadingChallengeKey ===
+                      key
+                        ? "Uploading..."
+                        : "📸 Upload Photo"}
+                    </Button>
+                  </div>
+                </div>
+              );
+            }
+          )}
+        </div>
+      );
+    })()
   )}
 </Card>
 
@@ -1008,76 +1275,95 @@ async function closeResults() {
     </strong>
   </p>
 
-  {!currentPubObject ? (
+  {!playingAsPlayerId ? (
+    <p className="mt-4 text-sm text-yellow-400">
+      Choose who you are playing as in Chaos Bingo above.
+    </p>
+  ) : !currentPubObject ? (
     <p className="mt-4 text-yellow-400">
       Current pub could not be matched to the pubs table.
     </p>
-  ) : currentPubSubChallenges.length === 0 ? (
-    <p className="mt-4 text-zinc-400">
-      No bonus missions assigned to this pub.
-    </p>
   ) : (
-    <div className="mt-4 space-y-3">
-      {currentPubSubChallenges.map(
-        (challenge) => {
-          const completedBy =
-            getPlayersWhoCompleted(
+    (() => {
+      const availableBonusChallenges =
+        currentPubSubChallenges.filter(
+          (challenge) =>
+            !hasPlayerCompleted(
+              playingAsPlayerId,
               "bonus",
               challenge.id
-            );
+            )
+        );
 
-          return (
-            <div
-              key={challenge.id}
-              className="rounded-2xl border-2 border-yellow-400 bg-black/70 p-4"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="font-bold">
-                    {challenge.title}
-                  </h3>
+      return availableBonusChallenges.length ===
+        0 ? (
+        <p className="mt-4 text-green-400">
+          ✓ No unfinished bonus missions for this player at this pub.
+        </p>
+      ) : (
+        <div className="mt-4 space-y-3">
+          {availableBonusChallenges.map(
+            (challenge) => {
+              const key = completionKey(
+                playingAsPlayerId,
+                "bonus",
+                challenge.id
+              );
 
-                  {challenge.description && (
-                    <p className="mt-1 text-sm text-zinc-300">
-                      {challenge.description}
-                    </p>
-                  )}
-                </div>
+              return (
+                <div
+                  key={challenge.id}
+                  className="rounded-2xl border-2 border-yellow-400 bg-black/70 p-4"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="font-bold">
+                        {challenge.title}
+                      </h3>
 
-                <strong>
-                  +{challenge.points}
-                </strong>
-              </div>
+                      {challenge.description && (
+                        <p className="mt-1 text-sm text-zinc-300">
+                          {challenge.description}
+                        </p>
+                      )}
+                    </div>
 
-              <div className="mt-4">
-                <p className="text-xs uppercase text-zinc-400">
-                  Completed by
-                </p>
-
-                {completedBy.length === 0 ? (
-                  <p className="mt-1 text-sm text-zinc-500">
-                    Nobody yet
-                  </p>
-                ) : (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {completedBy.map(
-                      (player) => (
-                        <span
-                          key={player.id}
-                          className="rounded-full bg-green-900/60 px-3 py-1 text-sm"
-                        >
-                          ✓ {player.name}
-                        </span>
-                      )
-                    )}
+                    <strong>
+                      +{challenge.points}
+                    </strong>
                   </div>
-                )}
-              </div>
-            </div>
-          );
-        }
-      )}
-    </div>
+
+                  <div className="mt-4">
+                    <Button
+                      type="button"
+                      disabled={
+                        uploadingChallengeKey !==
+                        null
+                      }
+                      onClick={() =>
+                        chooseChallengePhoto({
+                          id: challenge.id,
+                          title:
+                            challenge.title,
+                          points:
+                            challenge.points,
+                          type: "bonus",
+                        })
+                      }
+                    >
+                      {uploadingChallengeKey ===
+                      key
+                        ? "Uploading..."
+                        : "📸 Upload Photo"}
+                    </Button>
+                  </div>
+                </div>
+              );
+            }
+          )}
+        </div>
+      );
+    })()
   )}
 </Card>
 

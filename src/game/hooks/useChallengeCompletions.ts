@@ -7,30 +7,15 @@ import {
   supabase,
 } from "../../lib/supabase";
 
-
 export interface ChallengeCompletion {
   id: string | number;
-
   player_id: string;
-
-  // This spelling matches your
-  // Supabase column exactly
   challenge_type: string;
-
-  challenge_id:
-    | string
-    | number;
-
+  challenge_id: string | number;
   points: number;
-
-  photo_id:
-    | string
-    | number
-    | null;
-
+  photo_id: string | null;
   completed_at: string;
 }
-
 
 export default function useChallengeCompletions() {
   const [
@@ -40,12 +25,10 @@ export default function useChallengeCompletions() {
     ChallengeCompletion[]
   >([]);
 
-
   useEffect(() => {
     let active = true;
 
-
-    async function loadCompletions() {
+    async function load() {
       const {
         data,
         error,
@@ -53,15 +36,7 @@ export default function useChallengeCompletions() {
         .from(
           "challenge_completions"
         )
-        .select(`
-          id,
-          player_id,
-          challenge_type,
-          challenge_id,
-          points,
-          photo_id,
-          completed_at
-        `)
+        .select("*")
         .order(
           "completed_at",
           {
@@ -69,34 +44,26 @@ export default function useChallengeCompletions() {
           }
         );
 
-
       if (error) {
         console.error(
           "LOAD COMPLETIONS ERROR:",
           error
         );
-
         return;
       }
 
-
       if (active) {
         setCompletions(
-          (data ?? []) as
-            ChallengeCompletion[]
+          data ?? []
         );
       }
     }
 
+    load();
 
-    // Initial load
-    loadCompletions();
-
-
-    // Live updates
     const channel = supabase
       .channel(
-        "challenge-completions-live"
+        "challenge-completions"
       )
       .on(
         "postgres_changes",
@@ -107,28 +74,18 @@ export default function useChallengeCompletions() {
             "challenge_completions",
         },
         () => {
-          loadCompletions();
+          load();
         }
       )
-      .subscribe(
-        (status) => {
-          console.log(
-            "COMPLETIONS REALTIME:",
-            status
-          );
-        }
-      );
-
+      .subscribe();
 
     return () => {
       active = false;
-
       supabase.removeChannel(
         channel
       );
     };
   }, []);
-
 
   return completions;
 }

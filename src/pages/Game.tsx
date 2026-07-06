@@ -733,8 +733,15 @@ export default function Game() {
   </h2>
 
   <div className="grid grid-cols-2 gap-3">
-    {sideChallenges.map(
-      (challenge) => {
+    {sideChallenges
+    .filter(
+      (challenge) =>
+        !hasCompleted(
+          "side",
+          challenge.id
+        )
+    )
+    .map((challenge) => {
         const completed =
           hasCompleted(
             "side",
