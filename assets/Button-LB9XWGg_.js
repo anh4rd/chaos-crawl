@@ -1,0 +1,1 @@
+import{t as e}from"./index-CDOVR1FH.js";var t=e();function n({fullWidth:e=!0,className:n=``,...r}){return(0,t.jsx)(`button`,{...r,className:`w-full rounded-full bg-pink-500 px-6 py-4 font-black uppercase text-white shadow-[0_0_20px_#ff1493] transition hover:scale-105 hover:bg-pink-400 ${n}`.trim(),children:r.children})}export{n as t};
