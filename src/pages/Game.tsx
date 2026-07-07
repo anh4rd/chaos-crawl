@@ -1162,11 +1162,9 @@ export default function Game() {
 
         <Button
           type="button"
-          onClick={() =>
-            navigate(
-              "/leaderboard"
-            )
-          }
+          onClick={() => {
+            navigate("/leaderboard");
+          }}
         >
           Leaderboard
         </Button>
