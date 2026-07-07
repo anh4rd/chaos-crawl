@@ -8,11 +8,8 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-import Card
-  from "../components/ui/Card";
-
-import Button
-  from "../components/ui/Button";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
 
 import {
   useGameState,
@@ -63,9 +60,10 @@ interface PendingUpload {
 
 
 export default function Game() {
-  // -------------------------
-  // ALL HOOKS FIRST
-  // -------------------------
+  // =========================================
+  // HOOKS
+  // ALL HOOKS MUST STAY ABOVE EARLY RETURNS
+  // =========================================
 
   const game =
     useGameState();
@@ -95,9 +93,9 @@ export default function Game() {
     useRef<HTMLInputElement>(null);
 
 
-  // -------------------------
-  // LOCAL UI STATE
-  // -------------------------
+  // =========================================
+  // LOCAL STATE
+  // =========================================
 
   const [
     pendingUpload,
@@ -128,9 +126,9 @@ export default function Game() {
   );
 
 
-  // -------------------------
-  // LIVE PAGE REDIRECTS
-  // -------------------------
+  // =========================================
+  // LIVE SCREEN REDIRECTS
+  // =========================================
 
   useEffect(() => {
     if (
@@ -183,155 +181,10 @@ export default function Game() {
   ]);
 
 
-  // -------------------------
-  // LOADING
-  // -------------------------
-
-  if (!game) {
-    return (
-      <main className="flex min-h-screen items-center justify-center p-6">
-        <p>
-          Waiting for bday kween...
-        </p>
-      </main>
-    );
-  }
-
-
-  // -------------------------
-  // CURRENT PLAYER
-  // -------------------------
-
-  const playerId =
-    getPlayerId();
-
-  const currentPlayer =
-    players.find(
-      (player) =>
-        String(player.id) ===
-        String(playerId)
-    );
-
-
-  // -------------------------
-  // CURRENT GAME DATA
-  // -------------------------
-
-  const currentPub =
-    game.current_pub;
-
-  const currentChallenge =
-    game.current_challenge;
-
-  const currentPubObject =
-    pubs.find(
-      (pub) =>
-        pub.name ===
-        currentPub
-    );
-
-  const currentChallengeObject =
-    challenges.find(
-      (challenge) =>
-        challenge.title ===
-        currentChallenge
-    );
-
-  const allowPhotoUpload =
-    currentChallengeObject
-      ?.allow_photo_upload === true;
-
-
-  // -------------------------
-  // CURRENT PUB BONUS MISSIONS
-  // -------------------------
-
-  const currentPubSubChallenges =
-    pubSubChallenges.filter(
-      (challenge) =>
-        String(
-          challenge.pub_id
-        ) ===
-        String(
-          currentPubObject?.id
-        )
-    );
-
-
-  // -------------------------
-  // COMPLETION KEY
-  // -------------------------
-
-  function completionKey(
-    challengeType: ChallengeType,
-    challengeId: string | number
-  ) {
-    return [
-      String(playerId ?? ""),
-      challengeType,
-      String(challengeId),
-    ].join(":");
-  }
-
-
-  // -------------------------
-  // DATABASE COMPLETION CHECK
-  // -------------------------
-
-  function hasDatabaseCompletion(
-    challengeType: ChallengeType,
-    challengeId: string | number
-  ) {
-    if (!playerId) {
-      return false;
-    }
-
-    return completions.some(
-      (completion) =>
-        String(
-          completion.player_id
-        ) ===
-          String(playerId) &&
-
-        completion.challenge_type ===
-          challengeType &&
-
-        String(
-          completion.challenge_id
-        ) ===
-          String(challengeId)
-    );
-  }
-
-
-  // -------------------------
-  // COMBINED COMPLETION CHECK
-  // -------------------------
-
-  function hasCompleted(
-    challengeType: ChallengeType,
-    challengeId: string | number
-  ) {
-    const key =
-      completionKey(
-        challengeType,
-        challengeId
-      );
-
-    return (
-      pendingCompletedKeys.has(key) ||
-      hasDatabaseCompletion(
-        challengeType,
-        challengeId
-      )
-    );
-  }
-
-
-  // -------------------------
-  // CLEAN OPTIMISTIC KEYS
-  // WHEN REALTIME CATCHES UP
-  // -------------------------
+  // =========================================
+  // REMOVE OPTIMISTIC COMPLETION KEYS
+  // ONCE REALTIME DATABASE DATA CATCHES UP
+  // =========================================
 
   useEffect(() => {
     if (
@@ -389,9 +242,143 @@ export default function Game() {
   ]);
 
 
-  // -------------------------
-  // MARK OPTIMISTIC COMPLETE
-  // -------------------------
+  // =========================================
+  // SAFE EARLY RETURN
+  // ALL HOOKS HAVE ALREADY RUN
+  // =========================================
+
+  if (!game) {
+    return (
+      <main className="flex min-h-screen items-center justify-center p-6">
+        <p>
+          Waiting for bday kween...
+        </p>
+      </main>
+    );
+  }
+
+
+  // =========================================
+  // CURRENT PLAYER
+  // =========================================
+
+  const playerId =
+    getPlayerId();
+
+  const currentPlayer =
+    players.find(
+      (player) =>
+        String(player.id) ===
+        String(playerId)
+    );
+
+
+  // =========================================
+  // CURRENT GAME DATA
+  // =========================================
+
+  const currentPub =
+    game.current_pub;
+
+  const currentChallenge =
+    game.current_challenge;
+
+  const currentPubObject =
+    pubs.find(
+      (pub) =>
+        pub.name ===
+        currentPub
+    );
+
+  const currentChallengeObject =
+    challenges.find(
+      (challenge) =>
+        challenge.title ===
+        currentChallenge
+    );
+
+  const allowPhotoUpload =
+    currentChallengeObject
+      ?.allow_photo_upload === true;
+
+
+  // =========================================
+  // CURRENT PUB BONUS MISSIONS
+  // =========================================
+
+  const currentPubSubChallenges =
+    pubSubChallenges.filter(
+      (challenge) =>
+        String(
+          challenge.pub_id
+        ) ===
+        String(
+          currentPubObject?.id
+        )
+    );
+
+
+  // =========================================
+  // COMPLETION HELPERS
+  // =========================================
+
+  function completionKey(
+    challengeType: ChallengeType,
+    challengeId: string | number
+  ) {
+    return [
+      String(playerId ?? ""),
+      challengeType,
+      String(challengeId),
+    ].join(":");
+  }
+
+
+  function hasDatabaseCompletion(
+    challengeType: ChallengeType,
+    challengeId: string | number
+  ) {
+    if (!playerId) {
+      return false;
+    }
+
+    return completions.some(
+      (completion) =>
+        String(
+          completion.player_id
+        ) ===
+          String(playerId) &&
+
+        completion.challenge_type ===
+          challengeType &&
+
+        String(
+          completion.challenge_id
+        ) ===
+          String(challengeId)
+    );
+  }
+
+
+  function hasCompleted(
+    challengeType: ChallengeType,
+    challengeId: string | number
+  ) {
+    const key =
+      completionKey(
+        challengeType,
+        challengeId
+      );
+
+    return (
+      pendingCompletedKeys.has(key) ||
+      hasDatabaseCompletion(
+        challengeType,
+        challengeId
+      )
+    );
+  }
+
 
   function markPendingComplete(
     challengeType: ChallengeType,
@@ -416,10 +403,6 @@ export default function Game() {
   }
 
 
-  // -------------------------
-  // REMOVE OPTIMISTIC COMPLETE
-  // -------------------------
-
   function removePendingComplete(
     challengeType: ChallengeType,
     challengeId: string | number
@@ -443,10 +426,10 @@ export default function Game() {
   }
 
 
-  // -------------------------
+  // =========================================
   // MARK CHALLENGE DONE
   // WITHOUT MEDIA
-  // -------------------------
+  // =========================================
 
   async function tickChallengeDone(
     challengeType: ChallengeType,
@@ -481,7 +464,6 @@ export default function Game() {
 
     setCompletingKey(key);
 
-    // Immediate UI disappearance.
     markPendingComplete(
       challengeType,
       challengeId
@@ -491,13 +473,9 @@ export default function Game() {
       error,
     } = await completeChallenge({
       playerId,
-
       challengeType,
-
       challengeId,
-
       points,
-
       photoId: null,
     });
 
@@ -511,7 +489,6 @@ export default function Game() {
         return;
       }
 
-      // Put challenge back if DB failed.
       removePendingComplete(
         challengeType,
         challengeId
@@ -529,9 +506,9 @@ export default function Game() {
   }
 
 
-  // -------------------------
-  // CHOOSE MEDIA UPLOAD
-  // -------------------------
+  // =========================================
+  // OPEN FILE PICKER
+  // =========================================
 
   function chooseUpload(
     details: PendingUpload
@@ -552,9 +529,9 @@ export default function Game() {
   }
 
 
-  // -------------------------
-  // HANDLE MEDIA UPLOAD
-  // -------------------------
+  // =========================================
+  // HANDLE PHOTO / VIDEO
+  // =========================================
 
   async function handleMediaSelected(
     event:
@@ -644,8 +621,6 @@ export default function Game() {
     }
 
 
-    // Hide challenge immediately
-    // after successful media upload.
     markPendingComplete(
       uploadDetails.type,
       uploadDetails.id
@@ -667,9 +642,7 @@ export default function Game() {
         uploadDetails.points,
 
       photoId:
-        data?.id != null
-          ? String(data.id)
-          : null,
+        data?.id ?? null,
     });
 
 
@@ -688,8 +661,6 @@ export default function Game() {
         return;
       }
 
-      // Upload exists but completion
-      // failed, so put challenge back.
       removePendingComplete(
         uploadDetails.type,
         uploadDetails.id
@@ -709,9 +680,9 @@ export default function Game() {
   }
 
 
-  // -------------------------
+  // =========================================
   // AVAILABLE CHALLENGES
-  // -------------------------
+  // =========================================
 
   const availableSideChallenges =
     sideChallenges.filter(
@@ -721,6 +692,7 @@ export default function Game() {
           challenge.id
         )
     );
+
 
   const availableBonusChallenges =
     currentPubSubChallenges.filter(
@@ -732,9 +704,9 @@ export default function Game() {
     );
 
 
-  // -------------------------
+  // =========================================
   // MAIN CHALLENGE STATE
-  // -------------------------
+  // =========================================
 
   const mainCompleted =
     currentChallengeObject
@@ -744,7 +716,8 @@ export default function Game() {
         )
       : false;
 
-  const mainUploadKey =
+
+  const mainActionKey =
     currentChallengeObject
       ? completionKey(
           "main",
@@ -753,12 +726,14 @@ export default function Game() {
       : null;
 
 
-  // -------------------------
-  // JSX
-  // -------------------------
+  // =========================================
+  // PAGE
+  // =========================================
 
   return (
     <main className="mx-auto min-h-screen max-w-md space-y-6 p-6">
+
+      {/* TITLE */}
 
       <header>
         <img
@@ -769,7 +744,7 @@ export default function Game() {
       </header>
 
 
-      {/* HIDDEN MEDIA INPUT */}
+      {/* HIDDEN FILE INPUT */}
 
       <input
         ref={fileInputRef}
@@ -782,7 +757,7 @@ export default function Game() {
       />
 
 
-      {/* PLAYER TEAM */}
+      {/* TEAM */}
 
       {currentPlayer?.team ? (
         <Card>
@@ -797,8 +772,8 @@ export default function Game() {
       ) : (
         <Card>
           <p>
-            Waiting for the host
-            to assign your team...
+            Waiting for the host to
+            assign your team...
           </p>
         </Card>
       )}
@@ -849,7 +824,8 @@ export default function Game() {
               <Button
                 type="button"
                 disabled={
-                  uploadingKey !== null
+                  uploadingKey !== null ||
+                  completingKey !== null
                 }
                 onClick={() =>
                   chooseUpload({
@@ -869,7 +845,7 @@ export default function Game() {
                 }
               >
                 {uploadingKey ===
-                mainUploadKey
+                mainActionKey
                   ? "Uploading..."
                   : "📸 Upload Photo / Video"}
               </Button>
@@ -884,6 +860,7 @@ export default function Game() {
               <Button
                 type="button"
                 disabled={
+                  uploadingKey !== null ||
                   completingKey !== null
                 }
                 onClick={() =>
@@ -896,7 +873,7 @@ export default function Game() {
                 }
               >
                 {completingKey ===
-                mainUploadKey
+                mainActionKey
                   ? "Saving..."
                   : "✓ Mark Done"}
               </Button>
