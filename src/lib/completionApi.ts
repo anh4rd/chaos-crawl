@@ -1,18 +1,28 @@
 import {
   supabase,
-} from "././supabase";
+} from "./supabase";
 
 export type ChallengeType =
   | "main"
   | "side"
   | "bonus";
 
-interface CompleteChallengeArgs {
+export interface CompleteChallengeArgs {
   playerId: string;
   challengeType: ChallengeType;
   challengeId: string | number;
   points: number;
   photoId?: string | number | null;
+}
+
+export interface ChallengeCompletion {
+  id: string | number;
+  player_id: string;
+  challenge_type: ChallengeType;
+  challenge_id: string;
+  points: number;
+  photo_id: string | number | null;
+  completed_at?: string | null;
 }
 
 export async function completeChallenge({
@@ -22,15 +32,16 @@ export async function completeChallenge({
   points,
   photoId = null,
 }: CompleteChallengeArgs) {
-  // First check whether this player
-  // already completed this challenge
   const {
     data: existing,
     error: checkError,
   } = await supabase
     .from("challenge_completions")
-    .select("id")
-    .eq("player_id", playerId)
+    .select("*")
+    .eq(
+      "player_id",
+      playerId
+    )
     .eq(
       "challenge_type",
       challengeType
@@ -42,6 +53,11 @@ export async function completeChallenge({
     .maybeSingle();
 
   if (checkError) {
+    console.error(
+      "CHECK COMPLETION ERROR:",
+      checkError
+    );
+
     return {
       data: null,
       error: checkError,
@@ -50,7 +66,9 @@ export async function completeChallenge({
 
   if (existing) {
     return {
-      data: existing,
+      data:
+        existing as ChallengeCompletion,
+
       error: {
         code: "ALREADY_COMPLETED",
         message:
@@ -65,9 +83,9 @@ export async function completeChallenge({
   } = await supabase
     .from("challenge_completions")
     .insert({
-      player_id: playerId,
+      player_id:
+        playerId,
 
-      // Exact typo from your database
       challenge_type:
         challengeType,
 
@@ -83,6 +101,11 @@ export async function completeChallenge({
     .single();
 
   if (error) {
+    console.error(
+      "CREATE COMPLETION ERROR:",
+      error
+    );
+
     return {
       data: null,
       error,
@@ -90,7 +113,9 @@ export async function completeChallenge({
   }
 
   return {
-    data,
+    data:
+      data as ChallengeCompletion,
+
     error: null,
   };
 }
@@ -103,7 +128,10 @@ export async function removeChallengeCompletion(
   return supabase
     .from("challenge_completions")
     .delete()
-    .eq("player_id", playerId)
+    .eq(
+      "player_id",
+      playerId
+    )
     .eq(
       "challenge_type",
       challengeType
@@ -112,4 +140,55 @@ export async function removeChallengeCompletion(
       "challenge_id",
       String(challengeId)
     );
+}
+
+export async function getChallengeCompletions() {
+  const {
+    data,
+    error,
+  } = await supabase
+    .from("challenge_completions")
+    .select("*")
+    .order(
+      "completed_at",
+      {
+        ascending: false,
+      }
+    );
+
+  if (error) {
+    console.error(
+      "LOAD COMPLETIONS ERROR:",
+      error
+    );
+
+    return {
+      data: [],
+      error,
+    };
+  }
+
+  return {
+    data:
+      (data ?? []) as ChallengeCompletion[],
+
+    error: null,
+  };
+}
+
+export async function updateCompletionPoints(
+  completionId: string | number,
+  points: number
+) {
+  return supabase
+    .from("challenge_completions")
+    .update({
+      points,
+    })
+    .eq(
+      "id",
+      completionId
+    )
+    .select()
+    .single();
 }

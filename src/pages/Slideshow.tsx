@@ -20,19 +20,30 @@ import {
   updateGameState,
 } from "../lib/gameApi";
 
-import Button from "../components/ui/Button";
+import Button
+  from "../components/ui/Button";
 
 
 export default function Slideshow() {
-  const photos = usePhotos();
-  const game = useGameState();
-  const navigate = useNavigate();
+  const {
+    photos,
+    loading,
+    reload,
+  } = usePhotos();
 
-  const [searchParams] =
-    useSearchParams();
+  const game =
+    useGameState();
+
+  const navigate =
+    useNavigate();
+
+  const [
+    searchParams,
+  ] = useSearchParams();
 
   const isHost =
-    searchParams.get("host") === "true";
+    searchParams.get("host") ===
+    "true";
 
   const [
     currentIndex,
@@ -44,10 +55,19 @@ export default function Slideshow() {
     setPaused,
   ] = useState(false);
 
+  const [
+    mediaError,
+    setMediaError,
+  ] = useState(false);
+
+  const [
+    ending,
+    setEnding,
+  ] = useState(false);
+
 
   // -------------------------
-  // HOST ENDS SLIDESHOW
-  // → EVERYONE RETURNS
+  // RETURN WHEN HOST CLOSES
   // -------------------------
 
   useEffect(() => {
@@ -79,9 +99,14 @@ export default function Slideshow() {
   // -------------------------
 
   useEffect(() => {
+    if (photos.length === 0) {
+      setCurrentIndex(0);
+      return;
+    }
+
     if (
-      photos.length > 0 &&
-      currentIndex >= photos.length
+      currentIndex >=
+      photos.length
     ) {
       setCurrentIndex(0);
     }
@@ -92,19 +117,84 @@ export default function Slideshow() {
 
 
   // -------------------------
-  // AUTO ADVANCE
+  // CURRENT MEDIA
+  // -------------------------
+
+  const currentPhoto =
+    photos.length > 0
+      ? photos[currentIndex]
+      : null;
+
+
+  // -------------------------
+  // CLEAR ERROR ON CHANGE
+  // -------------------------
+
+  useEffect(() => {
+    setMediaError(false);
+  }, [
+    currentIndex,
+    currentPhoto?.image_url,
+  ]);
+
+
+  // -------------------------
+  // NEXT / PREVIOUS
+  // -------------------------
+
+  function nextMedia() {
+    if (photos.length === 0) {
+      return;
+    }
+
+    setCurrentIndex(
+      (current) =>
+        (current + 1) %
+        photos.length
+    );
+  }
+
+
+  function previousMedia() {
+    if (photos.length === 0) {
+      return;
+    }
+
+    setCurrentIndex(
+      (current) =>
+        (
+          current -
+          1 +
+          photos.length
+        ) %
+        photos.length
+    );
+  }
+
+
+  // -------------------------
+  // AUTO ADVANCE IMAGES
   // -------------------------
 
   useEffect(() => {
     if (
       paused ||
-      photos.length <= 1
+      photos.length <= 1 ||
+      !currentPhoto
+    ) {
+      return;
+    }
+
+    // Videos move on when onEnded fires.
+    if (
+      currentPhoto.media_type ===
+      "video"
     ) {
       return;
     }
 
     const timer =
-      window.setInterval(() => {
+      window.setTimeout(() => {
         setCurrentIndex(
           (current) =>
             (current + 1) %
@@ -113,16 +203,19 @@ export default function Slideshow() {
       }, 5000);
 
     return () => {
-      window.clearInterval(timer);
+      window.clearTimeout(timer);
     };
   }, [
     paused,
     photos.length,
+    currentIndex,
+    currentPhoto?.id,
+    currentPhoto?.media_type,
   ]);
 
 
   // -------------------------
-  // PRELOAD NEXT IMAGE
+  // PRELOAD NEXT IMAGE ONLY
   // -------------------------
 
   useEffect(() => {
@@ -139,7 +232,11 @@ export default function Slideshow() {
     const nextPhoto =
       photos[nextIndex];
 
-    if (!nextPhoto?.image_url) {
+    if (
+      !nextPhoto?.image_url ||
+      nextPhoto.media_type ===
+        "video"
+    ) {
       return;
     }
 
@@ -169,7 +266,8 @@ export default function Slideshow() {
       }
 
       if (
-        event.key === "ArrowRight"
+        event.key ===
+        "ArrowRight"
       ) {
         setCurrentIndex(
           (current) =>
@@ -179,7 +277,8 @@ export default function Slideshow() {
       }
 
       if (
-        event.key === "ArrowLeft"
+        event.key ===
+        "ArrowLeft"
       ) {
         setCurrentIndex(
           (current) =>
@@ -234,12 +333,17 @@ export default function Slideshow() {
       return;
     }
 
-    const { error } =
-      await updateGameState({
-        slideshow_open: false,
-      });
+    setEnding(true);
+
+    const {
+      error,
+    } = await updateGameState({
+      slideshow_open: false,
+    });
 
     if (error) {
+      setEnding(false);
+
       console.error(
         "END SLIDESHOW ERROR:",
         error
@@ -248,18 +352,32 @@ export default function Slideshow() {
       alert(
         `Could not end slideshow: ${error.message}`
       );
+
+      return;
     }
+
+    // Realtime should redirect,
+    // but host navigation is immediate.
+    navigate(
+      "/admin",
+      {
+        replace: true,
+      }
+    );
   }
 
 
   // -------------------------
-  // LOADING GAME STATE
+  // LOADING
   // -------------------------
 
-  if (!game) {
+  if (
+    !game ||
+    loading
+  ) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-black p-8 text-center text-white">
-        <p>
+        <p className="text-xl">
           Loading slideshow...
         </p>
       </main>
@@ -268,21 +386,35 @@ export default function Slideshow() {
 
 
   // -------------------------
-  // NO PHOTOS
+  // NO MEDIA
   // -------------------------
 
-  if (photos.length === 0) {
+  if (
+    photos.length === 0 ||
+    !currentPhoto
+  ) {
     return (
       <main className="relative flex min-h-screen items-center justify-center bg-black p-8 text-center text-white">
 
         <div>
-          <h1 className="text-6xl font-bold">
-            Anna's Chaos Crawl
+          <h1 className="text-5xl font-bold">
+            Anna&apos;s Chaos Crawl
           </h1>
 
           <p className="mt-6 text-2xl">
             Waiting for chaos...
           </p>
+
+          <div className="mt-6">
+            <Button
+              type="button"
+              onClick={() => {
+                void reload();
+              }}
+            >
+              Check for uploads
+            </Button>
+          </div>
         </div>
 
 
@@ -290,9 +422,14 @@ export default function Slideshow() {
           <div className="absolute right-6 top-6">
             <Button
               type="button"
-              onClick={endSlideshow}
+              disabled={ending}
+              onClick={
+                endSlideshow
+              }
             >
-              End Slideshow
+              {ending
+                ? "Ending..."
+                : "End Slideshow"}
             </Button>
           </div>
         )}
@@ -303,37 +440,72 @@ export default function Slideshow() {
 
 
   // -------------------------
-  // CURRENT PHOTO
+  // SLIDESHOW
   // -------------------------
-
-  const currentPhoto =
-    photos[currentIndex];
-
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black">
 
-      {currentPhoto.media_type === "video" ? (
+      {/* MEDIA */}
+
+      {mediaError ? (
+        <div className="max-w-md p-8 text-center text-white">
+          <h2 className="text-2xl font-bold">
+            Could not load this upload
+          </h2>
+
+          <p className="mt-3 text-zinc-400">
+            The file may be unavailable
+            or use an unsupported format.
+          </p>
+
+          <div className="mt-6">
+            <Button
+              type="button"
+              onClick={nextMedia}
+            >
+              Skip to next
+            </Button>
+          </div>
+        </div>
+      ) : currentPhoto.media_type ===
+        "video" ? (
         <video
-          key={currentPhoto.image_url}
-          src={currentPhoto.image_url}
+          key={
+            currentPhoto.image_url
+          }
+          src={
+            currentPhoto.image_url
+          }
           className="h-screen w-screen object-contain"
-          autoPlay
+          autoPlay={!paused}
           playsInline
           controls
+          onEnded={nextMedia}
+          onError={() => {
+            setMediaError(true);
+          }}
         />
       ) : (
         <img
-          src={currentPhoto.image_url}
+          key={
+            currentPhoto.image_url
+          }
+          src={
+            currentPhoto.image_url
+          }
           alt="Chaos Crawl upload"
           className="h-screen w-screen object-contain"
+          onError={() => {
+            setMediaError(true);
+          }}
         />
       )}
 
 
-      {/* PHOTO INFO */}
+      {/* INFO */}
 
-      <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-6 text-white">
+      <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/70 p-6 text-white">
 
         {currentPhoto.pub && (
           <p className="text-sm uppercase">
@@ -341,17 +513,19 @@ export default function Slideshow() {
           </p>
         )}
 
-
         {currentPhoto.challenge && (
           <h1 className="mt-1 text-3xl font-bold">
-            {currentPhoto.challenge}
+            {
+              currentPhoto.challenge
+            }
           </h1>
         )}
 
-
         {currentPhoto.player_name && (
           <p className="mt-2 text-xl">
-            {currentPhoto.player_name}
+            {
+              currentPhoto.player_name
+            }
 
             {currentPhoto.team
               ? ` • ${currentPhoto.team}`
@@ -362,34 +536,71 @@ export default function Slideshow() {
       </div>
 
 
-      {/* PHOTO COUNTER */}
+      {/* COUNTER */}
 
-      <div className="absolute left-6 top-6 rounded-xl bg-black/70 px-4 py-2 text-white">
+      <div className="absolute left-6 top-6 z-20 rounded-xl bg-black/70 px-4 py-2 text-white">
         {currentIndex + 1}
         {" / "}
         {photos.length}
       </div>
 
 
-      {/* PAUSED STATUS */}
+      {/* HOST CONTROLS */}
 
-      {paused && (
-        <div className="absolute right-6 top-20 rounded-xl bg-black/70 px-4 py-2 text-white">
-          PAUSED
+      {isHost && (
+        <div className="absolute right-6 top-6 z-20 flex max-w-[70%] flex-wrap justify-end gap-2">
+
+          <Button
+            type="button"
+            onClick={
+              previousMedia
+            }
+          >
+            ← Previous
+          </Button>
+
+          <Button
+            type="button"
+            onClick={() => {
+              setPaused(
+                (current) =>
+                  !current
+              );
+            }}
+          >
+            {paused
+              ? "▶ Resume"
+              : "⏸ Pause"}
+          </Button>
+
+          <Button
+            type="button"
+            onClick={
+              nextMedia
+            }
+          >
+            Next →
+          </Button>
+
+          <Button
+            type="button"
+            disabled={ending}
+            onClick={
+              endSlideshow
+            }
+          >
+            {ending
+              ? "Ending..."
+              : "End Slideshow"}
+          </Button>
+
         </div>
       )}
 
 
-      {/* HOST CONTROL */}
-
-      {isHost && (
-        <div className="absolute right-6 top-6 z-20">
-          <Button
-            type="button"
-            onClick={endSlideshow}
-          >
-            End Slideshow
-          </Button>
+      {paused && (
+        <div className="absolute right-6 top-24 z-20 rounded-xl bg-black/70 px-4 py-2 text-white">
+          PAUSED
         </div>
       )}
 

@@ -1,63 +1,152 @@
-import { useEffect, useState } from "react";
-import { supabase } from "../../lib/supabase";
+import {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  supabase,
+} from "../../lib/supabase";
 
 export interface Photo {
-  id: number;
-  player_id: string | null;
-  image_url: string;
-  uploaded_at: string;
-  media_type?: "image" | "video" | null;
+  id: string | number;
 
-  player_name?: string | null;
-  team?: string | null;
-  challenge?: string | null;
-  pub?: string | null;
-  points?: number | null;
+  player_id:
+    | string
+    | null;
+
+  image_url:
+    string;
+
+  uploaded_at:
+    string;
+
+  media_type:
+    | "image"
+    | "video"
+    | null;
+
+  player_name:
+    | string
+    | null;
+
+  team:
+    | string
+    | null;
+
+  challenge:
+    | string
+    | null;
+
+  pub:
+    | string
+    | null;
+
+  points:
+    | number
+    | null;
 }
 
 export function usePhotos() {
-  const [photos, setPhotos] = useState<Photo[]>([]);
+  const [
+    photos,
+    setPhotos,
+  ] = useState<Photo[]>([]);
 
-  async function loadPhotos() {
-    const { data, error } = await supabase
-      .from("photos")
-      .select(
-        "id, image_url, uploaded_at, media_type, player_name, team, challenge, pub, points"
-      )
-      .order("uploaded_at", {
-        ascending: false,
-      });
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
 
-    if (error) {
-      console.error("LOAD PHOTOS ERROR", error);
-      return;
-    }
+  const loadPhotos =
+    useCallback(
+      async () => {
+        const {
+          data,
+          error,
+        } = await supabase
+          .from("photos")
+          .select(`
+            id,
+            player_id,
+            image_url,
+            uploaded_at,
+            media_type,
+            player_name,
+            team,
+            challenge,
+            pub,
+            points
+          `)
+          .order(
+            "uploaded_at",
+            {
+              ascending:
+                false,
+            }
+          );
 
-    setPhotos((data ?? []) as Photo[]);
-  }
+        if (error) {
+          console.error(
+            "LOAD MEDIA ERROR:",
+            error
+          );
+
+          setLoading(false);
+          return;
+        }
+
+        setPhotos(
+          (data ?? []) as Photo[]
+        );
+
+        setLoading(false);
+      },
+      []
+    );
 
   useEffect(() => {
-    loadPhotos();
+    void loadPhotos();
 
-    const channel = supabase
-      .channel("slideshow-photos")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "photos",
-        },
-        () => {
-          loadPhotos();
-        }
-      )
-      .subscribe();
+    const channel =
+      supabase
+        .channel(
+          "slideshow-media"
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "photos",
+          },
+          () => {
+            void loadPhotos();
+          }
+        )
+        .subscribe(
+          (status) => {
+            console.log(
+              "MEDIA REALTIME:",
+              status
+            );
+          }
+        );
 
     return () => {
-      supabase.removeChannel(channel);
+      void supabase
+        .removeChannel(
+          channel
+        );
     };
-  }, []);
+  }, [
+    loadPhotos,
+  ]);
 
-  return photos;
+  return {
+    photos,
+    loading,
+    reload:
+      loadPhotos,
+  };
 }

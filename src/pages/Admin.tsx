@@ -971,7 +971,7 @@ async function closeResults() {
           : "Unknown upload error";
 
       alert(
-        `Could not upload photo: ${message}`
+        `Could not upload: ${message}`
       );
     } finally {
       setUploadingChallengeKey(null);
@@ -1254,7 +1254,7 @@ async function closeResults() {
                       {uploadingChallengeKey ===
                       key
                         ? "Uploading..."
-                        : "📸 Upload Photo"}
+                        : "📸 Upload Photo/Video"}
                     </Button>
                   </div>
                 </div>
@@ -1360,7 +1360,7 @@ async function closeResults() {
                       {uploadingChallengeKey ===
                       key
                         ? "Uploading..."
-                        : "📸 Upload Photo"}
+                        : "📸 Upload Photo/Video"}
                     </Button>
                   </div>
                 </div>
