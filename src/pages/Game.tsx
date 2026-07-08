@@ -22,6 +22,10 @@ import useSideChallenges
 import useChallengeCompletions
   from "../game/hooks/useChallengeCompletions";
 
+
+
+
+
 import {
   usePlayers,
 } from "../game/hooks/usePlayers";
@@ -112,6 +116,8 @@ export default function Game() {
   ] = useState<Set<string>>(
     () => new Set()
   );
+
+  
 
 
   // =========================================
@@ -259,6 +265,56 @@ export default function Game() {
         String(player.id) ===
         String(playerId)
     );
+
+  const teamScore =
+    currentPlayer?.team
+      ? players
+          .filter(
+            (player) =>
+              player.team ===
+              currentPlayer.team
+          )
+          .reduce(
+            (total, player) =>
+              total +
+              Number(
+                player.score ??
+                player.points ??
+                0
+              ),
+            0
+          )
+      : null;
+
+  const scheduledRevealMs =
+    game.scheduled_reveal_at
+      ? new Date(
+          game.scheduled_reveal_at
+        ).getTime()
+      : null;
+
+  const countdownMs =
+    scheduledRevealMs
+      ? Math.max(
+          0,
+          scheduledRevealMs - Date.now()
+        )
+      : null;
+
+  const countdownText =
+    countdownMs == null
+      ? null
+      : [
+          Math.floor(
+            countdownMs / 60000
+          ),
+          Math.floor(
+            (countdownMs % 60000) /
+              1000
+          )
+            .toString()
+            .padStart(2, "0"),
+        ].join(":");
 
 
   // =========================================
@@ -712,38 +768,49 @@ export default function Game() {
       />
 
 
-      {/* TEAM */}
-
-      {currentPlayer?.team ? (
-        <Card>
-          <p className="text-sm">
-            Your team
-          </p>
-
-          <h2 className="text-2xl font-bold">
-            {currentPlayer.team}
-          </h2>
-        </Card>
-      ) : (
-        <Card>
-          <p>
-            Waiting for the host to
-            assign your team...
-          </p>
-        </Card>
-      )}
-
-
-      {/* CURRENT PUB */}
+      {/* GLANCEABLE NOW STATUS */}
 
       <Card>
-        <p className="text-sm">
-          📍 Current Pub
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-400">
+          Now
         </p>
 
-        <h2 className="text-3xl font-bold">
+        <h2 className="mt-2 text-4xl font-black leading-none">
           {currentPub}
         </h2>
+
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-zinc-900 p-3">
+            <p className="text-xs uppercase text-zinc-400">
+              Your team
+            </p>
+
+            <p className="mt-1 font-bold">
+              {currentPlayer?.team ??
+                "Waiting..."}
+            </p>
+          </div>
+
+          <div className="rounded-2xl bg-zinc-900 p-3">
+            <p className="text-xs uppercase text-zinc-400">
+              Team score
+            </p>
+
+            <p className="mt-1 text-2xl font-black text-yellow-400">
+              {teamScore ?? "—"}
+            </p>
+          </div>
+        </div>
+
+        {countdownText && (
+          <div className="mt-3 rounded-2xl border border-pink-500/60 bg-pink-950/30 p-3">
+            <p className="text-xs font-bold uppercase text-pink-300">
+              Next challenge in
+            </p>
+
+
+          </div>
+        )}
       </Card>
 
 
@@ -751,7 +818,7 @@ export default function Game() {
 
       <Card>
         <p className="text-sm font-bold uppercase text-pink-400">
-          ⭐ Live Challenge
+          Your Task
         </p>
 
         <h2 className="mt-2 text-3xl font-bold">

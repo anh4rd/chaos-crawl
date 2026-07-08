@@ -35,6 +35,14 @@ export interface GameState {
   show_vote_results: boolean;
 
   slideshow_open: boolean;
+
+  scheduled_challenge_id:
+    | number
+    | null;
+
+  scheduled_reveal_at:
+    | string
+    | null;
 }
 
 
@@ -55,16 +63,6 @@ export function useGameState() {
         error,
       } = await getGameState();
 
-      console.log(
-        "GAME DATA",
-        data
-      );
-
-      console.log(
-        "GAME ERROR",
-        error
-      );
-
       if (error) {
         console.error(
           "LOAD GAME STATE ERROR:",
@@ -81,7 +79,7 @@ export function useGameState() {
       }
     }
 
-    load();
+    void load();
 
     const channel = supabase
       .channel("game-state")
@@ -93,7 +91,7 @@ export function useGameState() {
           table: "game_state",
         },
         () => {
-          load();
+          void load();
         }
       )
       .subscribe();
@@ -101,7 +99,7 @@ export function useGameState() {
     return () => {
       active = false;
 
-      supabase.removeChannel(
+      void supabase.removeChannel(
         channel
       );
     };

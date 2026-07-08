@@ -67,6 +67,7 @@ import {
 
 type AdminTab =
   | "live"
+  | "tonight"
   | "challenges"
   | "review"
   | "screens"
@@ -159,6 +160,11 @@ export default function Admin() {
     selectedChallenge,
     setSelectedChallenge,
   ] = useState("");
+
+  const [
+    scheduleMinutes,
+    setScheduleMinutes,
+  ] = useState("10");
 
 
   // =========================================
@@ -477,6 +483,96 @@ export default function Admin() {
     );
   }
 }
+
+  // =========================================
+  // SCHEDULED REVEALS
+  // =========================================
+
+  async function scheduleChallenge(
+    challenge: {
+      id: string | number;
+      title: string;
+    }
+  ) {
+    const minutes =
+      Number(scheduleMinutes);
+
+    if (
+      !Number.isFinite(minutes) ||
+      minutes <= 0
+    ) {
+      alert(
+        "Enter a valid number of minutes."
+      );
+      return;
+    }
+
+    const revealAt =
+      new Date(
+        Date.now() +
+          minutes * 60_000
+      ).toISOString();
+
+    const { error } =
+      await updateGameState({
+        scheduled_challenge_id:
+          Number(challenge.id),
+
+        scheduled_reveal_at:
+          revealAt,
+      });
+
+    if (error) {
+      alert(
+        `Could not schedule challenge: ${error.message}`
+      );
+      return;
+    }
+
+    alert(
+      `"${challenge.title}" scheduled for ${new Date(
+        revealAt
+      ).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      })}.`
+    );
+  }
+
+
+  async function cancelScheduledReveal() {
+    const { error } =
+      await updateGameState({
+        scheduled_challenge_id:
+          null,
+
+        scheduled_reveal_at:
+          null,
+      });
+
+    if (error) {
+      alert(
+        `Could not cancel schedule: ${error.message}`
+      );
+    }
+  }
+
+
+  async function returnEveryoneToGame() {
+    const { error } =
+      await updateGameState({
+        voting_open: false,
+        show_vote_results: false,
+        slideshow_open: false,
+      });
+
+    if (error) {
+      alert(
+        `Could not return everyone: ${error.message}`
+      );
+    }
+  }
+
 
   // =========================================
   // SAFE LOADING RETURN
@@ -1479,6 +1575,7 @@ const currentGame = game;
       <div className="sticky top-0 z-30 -mx-6 mt-6 overflow-x-auto border-y border-zinc-800 bg-black/95 px-6 py-3 backdrop-blur">
         <div className="flex gap-2">
           {tabButton("live", "🔴 Live")}
+          {tabButton("tonight", "🌙 Tonight")}
           {tabButton("challenges", "🎯 Challenges")}
           {tabButton("review", "✅ Review")}
           {tabButton("screens", "📺 Screens")}
@@ -1806,6 +1903,175 @@ const currentGame = game;
               </div>
             </Card>
 
+          </>
+        )}
+
+
+        {/* =================================
+            TONIGHT TAB
+        ================================= */}
+
+        {activeTab ===
+          "tonight" && (
+          <>
+            <Card>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-400">
+                Live right now
+              </p>
+
+              <h2 className="mt-2 text-3xl font-black">
+                {game.current_pub}
+              </h2>
+
+              <p className="mt-3 text-lg font-bold">
+                {game.current_challenge ||
+                  "No live challenge"}
+              </p>
+
+              <div className="mt-5 grid grid-cols-1 gap-3">
+                {nextRoundChallenge && (
+                  <Button
+                    type="button"
+                    onClick={() =>
+                      revealRoundChallenge(
+                        nextRoundChallenge
+                      )
+                    }
+                  >
+                    ⚡ Reveal Next Challenge
+                  </Button>
+                )}
+
+                <Button
+                  type="button"
+                  disabled={!nextPub}
+                  onClick={moveToNextPub}
+                >
+                  📍 Move to Next Pub
+                </Button>
+
+                <Button
+                  type="button"
+                  onClick={returnEveryoneToGame}
+                >
+                  ↩ Return Everyone to Game
+                </Button>
+              </div>
+            </Card>
+
+            <Card>
+              <h2 className="text-2xl font-bold">
+                Schedule a Reveal
+              </h2>
+
+              <p className="mt-2 text-sm text-zinc-400">
+                The reveal is stored in Supabase.
+                Any open player or admin app can
+                trigger it when the time arrives.
+              </p>
+
+              <label className="mt-4 block text-sm font-bold">
+                Reveal in minutes
+              </label>
+
+              <Input
+                value={scheduleMinutes}
+                onChange={(event) =>
+                  setScheduleMinutes(
+                    event.target.value
+                  )
+                }
+              />
+
+              {game.scheduled_reveal_at && (
+                <div className="mt-4 rounded-xl border border-yellow-500/60 bg-yellow-950/20 p-3">
+                  <p className="font-bold text-yellow-300">
+                    Scheduled for{" "}
+                    {new Date(
+                      game.scheduled_reveal_at
+                    ).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+
+                  <Button
+                    type="button"
+                    onClick={cancelScheduledReveal}
+                  >
+                    Cancel Scheduled Reveal
+                  </Button>
+                </div>
+              )}
+
+              <div className="mt-4 space-y-3">
+                {currentRoundChallenges.map(
+                  (challenge) => (
+                    <div
+                      key={challenge.id}
+                      className="rounded-xl border border-zinc-700 bg-black/50 p-4"
+                    >
+                      <strong>
+                        {challenge.title}
+                      </strong>
+
+                      <div className="mt-3">
+                        <Button
+                          type="button"
+                          onClick={() =>
+                            scheduleChallenge(
+                              challenge
+                            )
+                          }
+                        >
+                          ⏰ Schedule This
+                        </Button>
+                      </div>
+                    </div>
+                  )
+                )}
+              </div>
+            </Card>
+
+            <Card>
+              <h2 className="text-2xl font-bold">
+                Emergency Controls
+              </h2>
+
+              <div className="mt-4 grid grid-cols-1 gap-3">
+                {!game.slideshow_open ? (
+                  <Button
+                    type="button"
+                    onClick={startSlideshow}
+                  >
+                    📺 Start Slideshow
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={stopSlideshow}
+                  >
+                    ⛔ End Slideshow
+                  </Button>
+                )}
+
+                {!game.voting_open ? (
+                  <Button
+                    type="button"
+                    onClick={openVoting}
+                  >
+                    🗳️ Open Voting
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    onClick={closeVoting}
+                  >
+                    🏁 Close Voting & Show Results
+                  </Button>
+                )}
+              </div>
+            </Card>
           </>
         )}
 
