@@ -18,8 +18,6 @@ import {
 import useSideChallenges
   from "../game/hooks/useSideChallenges";
 
-import usePubSubChallenges
-  from "../game/hooks/usePubSubChallenges";
 
 import useChallengeCompletions
   from "../game/hooks/useChallengeCompletions";
@@ -27,10 +25,6 @@ import useChallengeCompletions
 import {
   usePlayers,
 } from "../game/hooks/usePlayers";
-
-import {
-  usePubs,
-} from "../game/hooks/usePubs";
 
 import {
   useChallenges,
@@ -68,23 +62,17 @@ export default function Game() {
   const game =
     useGameState();
 
+  const challenges =
+    useChallenges();
+
   const sideChallenges =
     useSideChallenges();
-
-  const pubSubChallenges =
-    usePubSubChallenges();
 
   const completions =
     useChallengeCompletions();
 
   const players =
     usePlayers();
-
-  const pubs =
-    usePubs();
-
-  const challenges =
-    useChallenges();
 
   const navigate =
     useNavigate();
@@ -280,42 +268,20 @@ export default function Game() {
   const currentPub =
     game.current_pub;
 
-  const currentChallenge =
-    game.current_challenge;
-
-  const currentPubObject =
-    pubs.find(
-      (pub) =>
-        pub.name ===
-        currentPub
-    );
-
   const currentChallengeObject =
-    challenges.find(
-      (challenge) =>
-        challenge.title ===
-        currentChallenge
-    );
+  challenges.find(
+    (challenge) =>
+      String(challenge.id) ===
+      String(
+        game.current_challenge_id
+      )
+  ) ??
+  challenges.find(
+    (challenge) =>
+      challenge.title ===
+      game.current_challenge
+  );
 
-  const allowPhotoUpload =
-    currentChallengeObject
-      ?.allow_photo_upload === true;
-
-
-  // =========================================
-  // CURRENT PUB BONUS MISSIONS
-  // =========================================
-
-  const currentPubSubChallenges =
-    pubSubChallenges.filter(
-      (challenge) =>
-        String(
-          challenge.pub_id
-        ) ===
-        String(
-          currentPubObject?.id
-        )
-    );
 
 
   // =========================================
@@ -694,21 +660,11 @@ export default function Game() {
     );
 
 
-  const availableBonusChallenges =
-    currentPubSubChallenges.filter(
-      (challenge) =>
-        !hasCompleted(
-          "bonus",
-          challenge.id
-        )
-    );
-
-
   // =========================================
-  // MAIN CHALLENGE STATE
+  // LIVE CHALLENGE STATE
   // =========================================
 
-  const mainCompleted =
+  const liveChallengeCompleted =
     currentChallengeObject
       ? hasCompleted(
           "main",
@@ -716,8 +672,7 @@ export default function Game() {
         )
       : false;
 
-
-  const mainActionKey =
+  const liveChallengeKey =
     currentChallengeObject
       ? completionKey(
           "main",
@@ -792,35 +747,62 @@ export default function Game() {
       </Card>
 
 
-      {/* MAIN MISSION */}
+      {/* LIVE ROUND CHALLENGE */}
 
       <Card>
-        <p className="text-sm">
-          ⭐ Main Mission
+        <p className="text-sm font-bold uppercase text-pink-400">
+          ⭐ Live Challenge
         </p>
 
-        <h2 className="mt-2 text-2xl font-bold">
-          {currentChallenge}
+        <h2 className="mt-2 text-3xl font-bold">
+          {currentChallengeObject?.title ??
+            game.current_challenge}
         </h2>
 
-        <p className="mt-3">
-          {
-            game.challenge_description
-          }
-        </p>
-
-
-        {mainCompleted && (
-          <p className="mt-4 font-bold text-green-400">
-            ✓ Completed
+        {(currentChallengeObject?.description ??
+          game.challenge_description) && (
+          <p className="mt-3">
+            {currentChallengeObject?.description ??
+              game.challenge_description}
           </p>
         )}
 
+        {currentChallengeObject && (
+          <p className="mt-3 text-xl font-bold text-yellow-400">
+            +{currentChallengeObject.points ?? 0} points
+          </p>
+        )}
 
-        {!mainCompleted &&
-          allowPhotoUpload &&
-          currentChallengeObject && (
-            <div className="mt-4">
+        {!currentChallengeObject ? (
+          <p className="mt-4 text-sm text-zinc-400">
+            Waiting for the host to reveal the next challenge...
+          </p>
+        ) : liveChallengeCompleted ? (
+          <p className="mt-4 font-bold text-green-400">
+            ✓ Challenge completed
+          </p>
+        ) : (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button
+              type="button"
+              disabled={
+                uploadingKey !== null ||
+                completingKey !== null
+              }
+              onClick={() =>
+                tickChallengeDone(
+                  "main",
+                  currentChallengeObject.id,
+                  currentChallengeObject.points ?? 0
+                )
+              }
+            >
+              {completingKey === liveChallengeKey
+                ? "Saving..."
+                : "✓ Mark Done"}
+            </Button>
+
+            {currentChallengeObject.allow_photo_upload === true && (
               <Button
                 type="button"
                 disabled={
@@ -829,197 +811,20 @@ export default function Game() {
                 }
                 onClick={() =>
                   chooseUpload({
-                    id:
-                      currentChallengeObject.id,
-
-                    title:
-                      currentChallengeObject.title,
-
-                    points:
-                      currentChallengeObject.points ??
-                      0,
-
-                    type:
-                      "main",
+                    id: currentChallengeObject.id,
+                    title: currentChallengeObject.title,
+                    points: currentChallengeObject.points ?? 0,
+                    type: "main",
                   })
                 }
               >
-                {uploadingKey ===
-                mainActionKey
+                {uploadingKey === liveChallengeKey
                   ? "Uploading..."
                   : "📸 Upload Photo / Video"}
               </Button>
-            </div>
-          )}
-
-
-        {!mainCompleted &&
-          !allowPhotoUpload &&
-          currentChallengeObject && (
-            <div className="mt-4">
-              <Button
-                type="button"
-                disabled={
-                  uploadingKey !== null ||
-                  completingKey !== null
-                }
-                onClick={() =>
-                  tickChallengeDone(
-                    "main",
-                    currentChallengeObject.id,
-                    currentChallengeObject.points ??
-                      0
-                  )
-                }
-              >
-                {completingKey ===
-                mainActionKey
-                  ? "Saving..."
-                  : "✓ Mark Done"}
-              </Button>
-            </div>
-          )}
-
-      </Card>
-
-
-      {/* PUB BONUS MISSIONS */}
-
-      <Card>
-        <h2 className="text-2xl font-bold">
-          Pub Bonus Missions
-        </h2>
-
-        <p className="mt-2 text-sm text-zinc-400">
-          Missions for{" "}
-          <strong>
-            {currentPub}
-          </strong>
-        </p>
-
-
-        {!currentPubObject ? (
-          <p className="mt-4 text-yellow-400">
-            Current pub could not be
-            matched to the pubs table.
-          </p>
-        ) : availableBonusChallenges.length ===
-          0 ? (
-          <p className="mt-4 text-green-400">
-            ✓ No unfinished bonus
-            missions here.
-          </p>
-        ) : (
-          <div className="mt-4 space-y-4">
-
-            {availableBonusChallenges.map(
-              (challenge) => {
-                const key =
-                  completionKey(
-                    "bonus",
-                    challenge.id
-                  );
-
-                return (
-                  <div
-                    key={
-                      challenge.id
-                    }
-                    className="rounded-2xl border-2 border-yellow-400 bg-black/70 p-4"
-                  >
-
-                    <div className="flex items-start justify-between gap-4">
-
-                      <div>
-                        <h3 className="text-xl font-bold">
-                          {
-                            challenge.title
-                          }
-                        </h3>
-
-                        {challenge.description && (
-                          <p className="mt-2">
-                            {
-                              challenge.description
-                            }
-                          </p>
-                        )}
-                      </div>
-
-                      <strong>
-                        +{
-                          challenge.points
-                        }
-                      </strong>
-
-                    </div>
-
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-
-                      <Button
-                        type="button"
-                        disabled={
-                          uploadingKey !==
-                            null ||
-                          completingKey !==
-                            null
-                        }
-                        onClick={() =>
-                          tickChallengeDone(
-                            "bonus",
-                            challenge.id,
-                            challenge.points
-                          )
-                        }
-                      >
-                        {completingKey ===
-                        key
-                          ? "Saving..."
-                          : "✓ Mark Done"}
-                      </Button>
-
-
-                      <Button
-                        type="button"
-                        disabled={
-                          uploadingKey !==
-                            null ||
-                          completingKey !==
-                            null
-                        }
-                        onClick={() =>
-                          chooseUpload({
-                            id:
-                              challenge.id,
-
-                            title:
-                              challenge.title,
-
-                            points:
-                              challenge.points,
-
-                            type:
-                              "bonus",
-                          })
-                        }
-                      >
-                        {uploadingKey ===
-                        key
-                          ? "Uploading..."
-                          : "📸 Upload Photo / Video"}
-                      </Button>
-
-                    </div>
-
-                  </div>
-                );
-              }
             )}
-
           </div>
         )}
-
       </Card>
 
 

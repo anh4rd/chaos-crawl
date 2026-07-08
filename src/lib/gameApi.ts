@@ -11,8 +11,9 @@ export async function getGameState() {
 export async function updateGameState(values: {
   current_pub?: string;
   current_challenge?: string;
+  current_challenge_id?: number | null;
+  current_challenge_order?: number;
   challenge_description?: string;
-  broadcast_message?: string;
   voting_open?: boolean;
   voting_target?: "player" | "team";
   show_vote_results?: boolean;

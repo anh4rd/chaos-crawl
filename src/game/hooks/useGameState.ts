@@ -13,11 +13,18 @@ import {
 
 
 export interface GameState {
-  id?: string | number;
+  id: number;
 
   current_pub: string;
   current_challenge: string;
   challenge_description: string;
+
+  current_challenge_id:
+    | number
+    | null;
+
+  current_challenge_order:
+    number;
 
   voting_open: boolean;
 
@@ -28,10 +35,6 @@ export interface GameState {
   show_vote_results: boolean;
 
   slideshow_open: boolean;
-
-  broadcast_message?:
-    | string
-    | null;
 }
 
 

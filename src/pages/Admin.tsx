@@ -36,9 +36,6 @@ import {
 import useSideChallenges
   from "../game/hooks/useSideChallenges";
 
-import usePubSubChallenges
-  from "../game/hooks/usePubSubChallenges";
-
 import useChallengeCompletions
   from "../game/hooks/useChallengeCompletions";
 
@@ -107,9 +104,7 @@ interface PendingUpload {
   title: string;
   points: number;
 
-  type:
-    | "side"
-    | "bonus";
+  type: "side";
 }
 
 
@@ -133,16 +128,12 @@ export default function Admin() {
   const sideChallenges =
     useSideChallenges();
 
-  const pubSubChallenges =
-    usePubSubChallenges();
-
   const completions =
     useChallengeCompletions();
 
   const navigate =
     useNavigate();
-
-
+  
   // =========================================
   // TAB STATE
   // =========================================
@@ -270,6 +261,7 @@ export default function Admin() {
       return;
     }
 
+
     setTeams(
       (data ?? []) as Team[]
     );
@@ -349,6 +341,7 @@ export default function Admin() {
     };
   }, [
     game?.current_challenge,
+    game?.current_challenge_id,
   ]);
 
 
@@ -434,6 +427,56 @@ export default function Admin() {
     pendingCompletedKeys.size,
   ]);
 
+  async function revealRoundChallenge(
+    challenge: {
+      id: string | number;
+      title: string;
+      description?: string | null;
+      reveal_order?: number | null;
+    }
+  ) {
+  const confirmed =
+    window.confirm(
+      `Reveal "${challenge.title}" to everyone?`
+    );
+
+  if (!confirmed) {
+    return;
+  }
+
+  const {
+    error,
+  } = await updateGameState({
+    current_challenge_id:
+      Number (challenge.id),
+
+    current_challenge:
+      challenge.title,
+
+    challenge_description:
+      challenge.description ?? "",
+
+    current_challenge_order:
+      challenge.reveal_order ?? 0,
+
+    voting_open: false,
+
+    show_vote_results: false,
+
+    slideshow_open: false,
+  });
+
+  if (error) {
+    console.error(
+      "REVEAL CHALLENGE ERROR",
+      error
+    );
+
+    alert(
+      `Could not reveal challenge: ${error.message}`
+    );
+  }
+}
 
   // =========================================
   // SAFE LOADING RETURN
@@ -506,16 +549,32 @@ const currentGame = game;
     );
 
 
-  const currentPubSubChallenges =
-    pubSubChallenges.filter(
+  const currentRoundChallenges =
+    challenges
+      .filter(
+        (challenge) =>
+          String(challenge.pub_id) ===
+          String(livePubObject?.id)
+      )
+      .sort(
+        (a, b) =>
+          (a.reveal_order ?? 0) -
+          (b.reveal_order ?? 0)
+      );
+
+  const currentChallengeIndex =
+    currentRoundChallenges.findIndex(
       (challenge) =>
-        String(
-          challenge.pub_id
-        ) ===
-        String(
-          livePubObject?.id
-        )
+        String(challenge.id) ===
+        String(game.current_challenge_id)
     );
+
+  const nextRoundChallenge =
+    currentChallengeIndex >= 0
+      ? currentRoundChallenges[
+          currentChallengeIndex + 1
+        ]
+      : currentRoundChallenges[0];
 
 
   const playingAsPlayer =
@@ -578,9 +637,7 @@ const currentGame = game;
 
 
   function getPlayersWhoCompleted(
-    challengeType:
-      | "side"
-      | "bonus",
+    challengeType: "side",
 
     challengeId:
       string | number
@@ -701,12 +758,18 @@ const currentGame = game;
       current_pub:
         selectedPub,
 
+      current_challenge_id:
+        challenge?.id ?? null,
+
       current_challenge:
         selectedChallenge,
 
       challenge_description:
         challenge?.description ??
         "",
+
+      current_challenge_order:
+        challenge?.reveal_order ?? 0,
 
       voting_open:
         false,
@@ -739,26 +802,22 @@ const currentGame = game;
 
   async function moveToNextPub() {
     if (!nextPub) {
-      return;
-    }
-
-    const confirmed =
-      window.confirm(
-        `Move everyone to ${nextPub.name}?`
-      );
-
-    if (!confirmed) {
+      alert("There is no next pub.");
       return;
     }
 
     const pubChallenges =
-      challenges.filter(
-        (challenge) =>
-          String(
-            challenge.pub_id
-          ) ===
-          String(nextPub.id)
-      );
+      challenges
+        .filter(
+          (challenge) =>
+            String(challenge.pub_id) ===
+            String(nextPub.id)
+        )
+        .sort(
+          (a, b) =>
+            (a.reveal_order ?? 0) -
+            (b.reveal_order ?? 0)
+        );
 
     const firstChallenge =
       pubChallenges[0];
@@ -769,13 +828,17 @@ const currentGame = game;
       current_pub:
         nextPub.name,
 
+      current_challenge_id:
+        firstChallenge?.id ?? null,
+
       current_challenge:
-        firstChallenge?.title ??
-        "",
+        firstChallenge?.title ?? "",
 
       challenge_description:
-        firstChallenge?.description ??
-        "",
+        firstChallenge?.description ?? "",
+
+      current_challenge_order:
+        firstChallenge?.reveal_order ?? 0,
 
       voting_open:
         false,
@@ -805,8 +868,7 @@ const currentGame = game;
     );
 
     setSelectedChallenge(
-      firstChallenge?.title ??
-      ""
+      firstChallenge?.title ?? ""
     );
   }
 
@@ -984,9 +1046,7 @@ const currentGame = game;
   // =========================================
 
   async function markChallengeDone(
-    challengeType:
-      | "side"
-      | "bonus",
+    challengeType: "side",
 
     challengeId:
       string | number,
@@ -1439,49 +1499,160 @@ const currentGame = game;
           <>
 
             <Card>
+  <h2 className="text-2xl font-bold">
+    Round Challenges
+  </h2>
+
+  <p className="mt-2 text-sm text-zinc-400">
+    Reveal challenges throughout the round.
+  </p>
+
+  {currentRoundChallenges.length ===
+  0 ? (
+    <p className="mt-4">
+      No challenges assigned to this pub.
+    </p>
+  ) : (
+    <div className="mt-4 space-y-3">
+      {currentRoundChallenges.map(
+        (challenge, index) => {
+          const isLive =
+            String(
+              game?.current_challenge_id
+            ) ===
+            String(challenge.id);
+
+          const hasPassed =
+            currentChallengeIndex >= 0 &&
+            index <
+              currentChallengeIndex;
+
+          const isNext =
+            nextRoundChallenge?.id ===
+            challenge.id;
+
+          return (
+            <div
+              key={challenge.id}
+              className={`
+                rounded-2xl border-2 p-4
+                ${
+                  isLive
+                    ? "border-yellow-400 bg-pink-500"
+                    : hasPassed
+                      ? "border-zinc-700 bg-zinc-900 opacity-60"
+                      : "border-pink-500 bg-black/70"
+                }
+              `}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase text-zinc-400">
+                    Challenge{" "}
+                    {index + 1}
+                  </p>
+
+                  <h3 className="mt-1 text-xl font-bold">
+                    {challenge.title}
+                  </h3>
+
+                  {challenge.description && (
+                    <p className="mt-2">
+                      {
+                        challenge.description
+                      }
+                    </p>
+                  )}
+
+                  <p className="mt-2 font-bold">
+                    +
+                    {challenge.points ??
+                      0}{" "}
+                    points
+                  </p>
+                </div>
+
+                {isLive && (
+                  <span className="rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-black">
+                    LIVE
+                  </span>
+                )}
+
+                {hasPassed && (
+                  <span className="rounded-full bg-zinc-700 px-3 py-1 text-xs font-bold">
+                    DONE
+                  </span>
+                )}
+
+                {isNext &&
+                  !isLive && (
+                    <span className="rounded-full bg-pink-500 px-3 py-1 text-xs font-bold">
+                      NEXT
+                    </span>
+                  )}
+              </div>
+
+              {!isLive &&
+                !hasPassed && (
+                  <div className="mt-4">
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        revealRoundChallenge(
+                          challenge
+                        )
+                      }
+                    >
+                      Reveal Now
+                    </Button>
+                  </div>
+                )}
+            </div>
+          );
+        }
+      )}
+    </div>
+  )}
+
+  {nextRoundChallenge && (
+    <div className="mt-6 border-t border-zinc-700 pt-4">
+      <Button
+        type="button"
+        onClick={() =>
+          revealRoundChallenge(
+            nextRoundChallenge
+          )
+        }
+      >
+        Reveal Next Challenge
+      </Button>
+    </div>
+  )}
+</Card>
+
+
+            <Card>
               <h2 className="text-xl font-bold">
-                Live Now
+                Move Round
               </h2>
 
-              <p className="mt-4 text-sm">
-                📍 Current Pub
-              </p>
-
-              <p className="text-2xl font-bold">
-                {
-                  game.current_pub
-                }
-              </p>
-
-              <p className="mt-4 text-sm">
-                ⭐ Current Challenge
-              </p>
-
-              <p className="text-xl font-bold">
-                {
-                  game.current_challenge
-                }
+              <p className="mt-2 text-sm text-zinc-400">
+                Current pub: <strong>{game.current_pub}</strong>
               </p>
 
               <p className="mt-2 text-sm text-zinc-400">
-                {
-                  game.challenge_description
-                }
+                Next pub: <strong>{nextPub?.name ?? "None"}</strong>
               </p>
 
-              {nextPub && (
-                <div className="mt-6">
-                  <Button
-                    type="button"
-                    onClick={
-                      moveToNextPub
-                    }
-                  >
-                    Next Pub:{" "}
-                    {nextPub.name}
-                  </Button>
-                </div>
-              )}
+              <div className="mt-4">
+                <Button
+                  type="button"
+                  disabled={!nextPub}
+                  onClick={moveToNextPub}
+                >
+                  Move to Next Pub
+                </Button>
+              </div>
             </Card>
 
 
@@ -1601,8 +1772,13 @@ const currentGame = game;
   const activeChallenge =
     challenges.find(
       (challenge) =>
+        String(challenge.id) ===
+        String(game.current_challenge_id)
+    ) ??
+    challenges.find(
+      (challenge) =>
         challenge.title ===
-        game?.current_challenge
+        game.current_challenge
     );
 
   if (!activeChallenge) {
@@ -1891,222 +2067,6 @@ const currentGame = game;
             </Card>
 
 
-            {/* PUB BONUS MISSIONS */}
-
-            <Card>
-              <h2 className="text-2xl font-bold">
-                Pub Bonus Missions
-              </h2>
-
-              <p className="mt-2 text-sm text-zinc-400">
-                Live pub:{" "}
-                <strong>
-                  {
-                    game.current_pub
-                  }
-                </strong>
-              </p>
-
-
-              {!playingAsPlayerId ? (
-                <p className="mt-4 text-yellow-400">
-                  Select a player above
-                  to take part.
-                </p>
-              ) : !livePubObject ? (
-                <p className="mt-4 text-yellow-400">
-                  Current pub could not
-                  be matched.
-                </p>
-              ) : currentPubSubChallenges.length ===
-                0 ? (
-                <p className="mt-4 text-zinc-400">
-                  No bonus missions for
-                  this pub.
-                </p>
-              ) : (
-                <div className="mt-4 space-y-4">
-
-                  {currentPubSubChallenges.map(
-                    (challenge) => {
-                      const completed =
-                        hasPlayerCompleted(
-                          playingAsPlayerId,
-                          "bonus",
-                          challenge.id
-                        );
-
-                      const completedBy =
-                        getPlayersWhoCompleted(
-                          "bonus",
-                          challenge.id
-                        );
-
-                      const key =
-                        completionKey(
-                          playingAsPlayerId,
-                          "bonus",
-                          challenge.id
-                        );
-
-                      return (
-                        <div
-                          key={
-                            challenge.id
-                          }
-                          className={`
-                            rounded-2xl border-2 p-4
-                            ${
-                              completed
-                                ? "border-green-500 bg-green-950/40"
-                                : "border-yellow-400 bg-black/70"
-                            }
-                          `}
-                        >
-                          <div className="flex justify-between gap-4">
-                            <div>
-                              <h3 className="font-bold">
-                                {
-                                  challenge.title
-                                }
-                              </h3>
-
-                              {challenge.description && (
-                                <p className="mt-1 text-sm text-zinc-300">
-                                  {
-                                    challenge.description
-                                  }
-                                </p>
-                              )}
-                            </div>
-
-                            <strong>
-                              +{
-                                challenge.points
-                              }
-                            </strong>
-                          </div>
-
-
-                          {!completed && (
-                            <div className="mt-4 flex flex-wrap gap-2">
-
-                              <Button
-                                type="button"
-                                disabled={
-                                  completingChallengeKey !==
-                                    null ||
-                                  uploadingChallengeKey !==
-                                    null
-                                }
-                                onClick={() =>
-                                  markChallengeDone(
-                                    "bonus",
-                                    challenge.id,
-                                    challenge.points
-                                  )
-                                }
-                              >
-                                {completingChallengeKey ===
-                                key
-                                  ? "Saving..."
-                                  : "✓ Mark Done"}
-                              </Button>
-
-
-                              <Button
-                                type="button"
-                                disabled={
-                                  completingChallengeKey !==
-                                    null ||
-                                  uploadingChallengeKey !==
-                                    null
-                                }
-                                onClick={() =>
-                                  chooseChallengeUpload({
-                                    id:
-                                      challenge.id,
-
-                                    title:
-                                      challenge.title,
-
-                                    points:
-                                      challenge.points,
-
-                                    type:
-                                      "bonus",
-                                  })
-                                }
-                              >
-                                {uploadingChallengeKey ===
-                                key
-                                  ? "Uploading..."
-                                  : "📸 Upload Photo / Video"}
-                              </Button>
-                              <Button
-  type="button"
-  onClick={() =>
-    navigate(
-      `/challenge-review?type=bonus&id=${encodeURIComponent(
-        String(challenge.id)
-      )}&title=${encodeURIComponent(
-        challenge.title
-      )}`
-    )
-  }
->
-  Review & Award Points
-</Button>
-
-                            </div>
-                          )}
-
-
-                          {completed && (
-                            <p className="mt-4 font-bold text-green-400">
-                              ✓ Completed
-                            </p>
-                          )}
-
-
-                          <div className="mt-4">
-                            <p className="text-xs uppercase text-zinc-400">
-                              Completed by
-                            </p>
-
-                            {completedBy.length ===
-                            0 ? (
-                              <p className="mt-1 text-sm text-zinc-500">
-                                Nobody yet
-                              </p>
-                            ) : (
-                              <div className="mt-2 flex flex-wrap gap-2">
-                                {completedBy.map(
-                                  (player) => (
-                                    <span
-                                      key={
-                                        player.id
-                                      }
-                                      className="rounded-full bg-green-900/60 px-3 py-1 text-sm"
-                                    >
-                                      ✓{" "}
-                                      {
-                                        player.name
-                                      }
-                                    </span>
-                                  )
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    }
-                  )}
-
-                </div>
-              )}
-            </Card>
 
 
           </>
@@ -2156,33 +2116,18 @@ const currentGame = game;
                         "side"
                           ? sideChallenges.find(
                               (item) =>
-                                String(
-                                  item.id
-                                ) ===
+                                String(item.id) ===
                                 String(
                                   completion.challenge_id
                                 )
                             )
-                          : completion.challenge_type ===
-                            "bonus"
-                            ? pubSubChallenges.find(
-                                (item) =>
-                                  String(
-                                    item.id
-                                  ) ===
-                                  String(
-                                    completion.challenge_id
-                                  )
-                              )
-                            : challenges.find(
-                                (item) =>
-                                  String(
-                                    item.id
-                                  ) ===
-                                  String(
-                                    completion.challenge_id
-                                  )
-                              );
+                          : challenges.find(
+                              (item) =>
+                                String(item.id) ===
+                                String(
+                                  completion.challenge_id
+                                )
+                            );
 
                       return (
                         <div

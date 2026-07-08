@@ -505,7 +505,7 @@ export default function Slideshow() {
 
       {/* INFO */}
 
-      <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/70 p-6 text-white">
+      <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/70 p-6 text-white text-s">
 
         {currentPhoto.pub && (
           <p className="text-sm uppercase">
