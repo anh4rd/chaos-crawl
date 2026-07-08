@@ -50,6 +50,10 @@ export default function App() {
           path="/"
           element={<Join />}
         />
+        <Route
+  path="/join"
+  element={<Join />}
+/>
 
         <Route
           path="/game"
