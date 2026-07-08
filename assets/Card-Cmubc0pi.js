@@ -1,0 +1,1 @@
+import{t as e}from"./index-BV7Q3xEQ.js";var t=e();function n({children:e,className:n}){return(0,t.jsx)(`div`,{className:`rounded-3xl border-4 border-pink-500 bg-black/70 p-6 backdrop-blur-md shadow-[0_0_25px_#ff1493] ${n??``}`.trim(),children:e})}export{n as t};
