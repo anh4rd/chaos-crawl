@@ -1,4 +1,4 @@
-import{a as e,o as t}from"./index-BV7Q3xEQ.js";import{t as n}from"./supabase-CbXVX6_F.js";var r=t(e(),1);function i(){let[e,t]=(0,r.useState)([]);return(0,r.useEffect)(()=>{async function e(){let{data:e,error:r}=await n.from(`challenges`).select(`
+import{a as e,o as t}from"./index-Cr-eUkoI.js";import{t as n}from"./supabase-CNPL2rew.js";var r=t(e(),1);function i(){let[e,t]=(0,r.useState)([]);return(0,r.useEffect)(()=>{async function e(){let{data:e,error:r}=await n.from(`challenges`).select(`
           id,
           pub_id,
           title,

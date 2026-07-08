@@ -1,4 +1,4 @@
-import{a as e,n as t,o as n,r,t as i}from"./index-BV7Q3xEQ.js";import{t as a}from"./supabase-CbXVX6_F.js";import{t as o}from"./Button-diaCCvjc.js";import{n as s,t as c}from"./useGameState-Bj6R_Lbv.js";var l=n(e(),1);function u(){let[e,t]=(0,l.useState)([]),[n,r]=(0,l.useState)(!0),i=(0,l.useCallback)(async()=>{let{data:e,error:n}=await a.from(`photos`).select(`
+import{a as e,n as t,o as n,r,t as i}from"./index-Cr-eUkoI.js";import{t as a}from"./supabase-CNPL2rew.js";import{t as o}from"./Button-BJJxhCU-.js";import{n as s,t as c}from"./useGameState-CyW-hDOW.js";var l=n(e(),1);function u(){let[e,t]=(0,l.useState)([]),[n,r]=(0,l.useState)(!0),i=(0,l.useCallback)(async()=>{let{data:e,error:n}=await a.from(`photos`).select(`
             id,
             player_id,
             image_url,
