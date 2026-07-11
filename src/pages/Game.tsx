@@ -35,7 +35,7 @@ import {
 } from "../game/hooks/useChallenges";
 
 import {
-  clearPlayerId,
+
   getPlayerId,
 } from "../lib/playerSession";
 
@@ -1042,16 +1042,7 @@ export default function Game() {
         </Button>
 
 
-        <Button
-          type="button"
-          onClick={() => {
-            clearPlayerId();
-
-            navigate("/");
-          }}
-        >
-          Leave Game
-        </Button>
+    
 
       </div>
 

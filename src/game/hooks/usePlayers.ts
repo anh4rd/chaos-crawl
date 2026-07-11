@@ -92,7 +92,84 @@ export function usePlayers() {
               payload
             );
 
-            void loadPlayers();
+            const eventType =
+              payload.eventType ??
+              (payload as {
+                event?: string;
+              }).event;
+
+            setPlayers((current) => {
+              const next = [...current];
+
+              switch (eventType) {
+                case "INSERT": {
+                  const newPlayer =
+                    payload.new as
+                      | Player
+                      | undefined;
+
+                  if (
+                    newPlayer &&
+                    !next.some(
+                      (player) =>
+                        player.id ===
+                        newPlayer.id
+                    )
+                  ) {
+                    next.unshift(
+                      newPlayer
+                    );
+                  }
+
+                  return next;
+                }
+                case "UPDATE": {
+                  const updatedPlayer =
+                    payload.new as
+                      | Player
+                      | undefined;
+
+                  if (!updatedPlayer) {
+                    return current;
+                  }
+
+                  const index = next.findIndex(
+                    (player) =>
+                      player.id ===
+                      updatedPlayer.id
+                  );
+
+                  if (index >= 0) {
+                    next[index] =
+                      updatedPlayer;
+                  } else {
+                    next.unshift(
+                      updatedPlayer
+                    );
+                  }
+
+                  return next;
+                }
+                case "DELETE": {
+                  const deletedPlayer =
+                    payload.old as
+                      | Player
+                      | undefined;
+
+                  if (!deletedPlayer) {
+                    return current;
+                  }
+
+                  return next.filter(
+                    (player) =>
+                      player.id !==
+                      deletedPlayer.id
+                  );
+                }
+                default:
+                  return current;
+              }
+            });
           }
         )
         .subscribe(
