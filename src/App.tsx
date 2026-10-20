@@ -8,6 +8,8 @@ const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Vote = lazy(() => import("./pages/Vote"));
 const Slideshow = lazy(() => import("./pages/Slideshow"));
 const VoteResults = lazy(() => import("./pages/VoteResults"));
+const SessionPlayerGame = lazy(() => import("./pages/SessionPlayerGame"));
+const HostLiveSession = lazy(() => import("./pages/HostLiveSession"));
 
 const HostLogin = lazy(() => import("./pages/HostLogin"));
 const HostHub = lazy(() => import("./pages/HostHub"));
@@ -29,6 +31,7 @@ export default function App() {
         <Route path="/" element={<Join />} />
         <Route path="/join" element={<Join />} />
         <Route path="/game" element={<Game />} />
+        <Route path="/play/:joinCode" element={<SessionPlayerGame />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/vote" element={<Vote />} />
         <Route path="/slideshow" element={<Slideshow />} />
@@ -38,6 +41,7 @@ export default function App() {
         <Route path="/host/login" element={<HostLogin />} />
         <Route element={<HostGuard />}>
           <Route path="/admin" element={<Admin />} />
+          <Route path="/host/live/:sessionId" element={<HostLiveSession />} />
           <Route path="/host" element={<HostHub />} />
           <Route path="/host/games/new" element={<HostPlanSetup />} />
           <Route path="/host/games/:id/edit" element={<HostPlanSetup />} />

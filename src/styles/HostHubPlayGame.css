@@ -1,0 +1,27 @@
+.host-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.host-button-spinner {
+  animation: host-hub-spinner 0.8s linear infinite;
+}
+
+@keyframes host-hub-spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 640px) {
+  .host-hero-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .host-hero-actions > .host-button {
+    justify-content: center;
+  }
+}
