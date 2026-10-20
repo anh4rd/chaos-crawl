@@ -35,6 +35,10 @@ import {
 } from "../game/hooks/useChallenges";
 
 import {
+  usePubs,
+} from "../game/hooks/usePubs";
+
+import {
 
   getPlayerId,
 } from "../lib/playerSession";
@@ -68,6 +72,9 @@ export default function Game() {
 
   const challenges =
     useChallenges();
+
+  const pubs =
+    usePubs();
 
   const sideChallenges =
     useSideChallenges();
@@ -323,6 +330,21 @@ export default function Game() {
 
   const currentPub =
     game.current_pub;
+
+  const sortedRoundGroups =
+    [...pubs].sort(
+      (a, b) => Number(a.sort_order ?? a.order_index ?? 0) - Number(b.sort_order ?? b.order_index ?? 0)
+    );
+
+  const currentRoundIndex =
+    sortedRoundGroups.findIndex(
+      (round) => round.name === currentPub
+    );
+
+  const currentRoundLabel =
+    currentRoundIndex >= 0
+      ? `Round ${currentRoundIndex + 1}`
+      : "Party venue";
 
   const currentChallengeObject =
   challenges.find(
@@ -615,7 +637,7 @@ export default function Game() {
           uploadDetails.title,
 
         pub:
-          currentPub,
+          currentRoundLabel,
 
         points:
           uploadDetails.points,
@@ -776,7 +798,7 @@ export default function Game() {
         </p>
 
         <h2 className="mt-2 text-4xl font-black leading-none">
-          {currentPub}
+          {currentRoundLabel}
         </h2>
 
         <div className="mt-4 grid grid-cols-2 gap-3">

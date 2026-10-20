@@ -82,6 +82,11 @@ export default function ChallengeReview() {
     searchParams.get("title") ??
     "Challenge";
 
+  const returnPath =
+    searchParams.get("from") === "admin-v2"
+      ? "/admin-v2"
+      : "/admin";
+
   const [
     completions,
     setCompletions,
@@ -323,7 +328,7 @@ export default function ChallengeReview() {
         <Button
           type="button"
           onClick={() =>
-            navigate("/admin")
+            navigate(returnPath)
           }
         >
           Back to Admin
@@ -503,7 +508,7 @@ export default function ChallengeReview() {
       <Button
         type="button"
         onClick={() =>
-          navigate("/admin")
+          navigate(returnPath)
         }
       >
         Back to Admin

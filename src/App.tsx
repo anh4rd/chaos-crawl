@@ -20,6 +20,14 @@ const Admin = lazy(
   () => import("./pages/Admin")
 );
 
+const AdminV2 = lazy(
+  () => import("./pages/AdminV2")
+);
+
+const ChallengeReview = lazy(
+  () => import("./pages/ChallengeReview")
+);
+
 const Leaderboard = lazy(
   () => import("./pages/Leaderboard")
 );
@@ -63,6 +71,16 @@ export default function App() {
         <Route
           path="/admin"
           element={<Admin />}
+        />
+
+        <Route
+          path="/admin-v2"
+          element={<AdminV2 />}
+        />
+
+        <Route
+          path="/challenge-review"
+          element={<ChallengeReview />}
         />
 
         <Route
