@@ -1,48 +1,19 @@
-import {
-  lazy,
-  Suspense,
-} from "react";
+import { lazy, Suspense } from "react";
+import { Route, Routes } from "react-router-dom";
 
-import {
-  Routes,
-  Route,
-} from "react-router-dom";
+const Join = lazy(() => import("./pages/Join"));
+const Game = lazy(() => import("./pages/Game"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Vote = lazy(() => import("./pages/Vote"));
+const Slideshow = lazy(() => import("./pages/Slideshow"));
+const VoteResults = lazy(() => import("./pages/VoteResults"));
 
-const Join = lazy(
-  () => import("./pages/Join")
-);
-
-const Game = lazy(
-  () => import("./pages/Game")
-);
-
-const Admin = lazy(
-  () => import("./pages/Admin")
-);
-
-const AdminV2 = lazy(
-  () => import("./pages/AdminV2")
-);
-
-const ChallengeReview = lazy(
-  () => import("./pages/ChallengeReview")
-);
-
-const Leaderboard = lazy(
-  () => import("./pages/Leaderboard")
-);
-
-const Vote = lazy(
-  () => import("./pages/Vote")
-);
-
-const Slideshow = lazy(
-  () => import("./pages/Slideshow")
-);
-
-const VoteResults = lazy(
-  () => import("./pages/VoteResults")
-);
+const HostLogin = lazy(() => import("./pages/HostLogin"));
+const HostHub = lazy(() => import("./pages/HostHub"));
+const HostPlanSetup = lazy(() => import("./pages/HostPlanSetup"));
+const HostSaved = lazy(() => import("./pages/HostSaved"));
+const HostGuard = lazy(() => import("./components/host/HostGuard"));
 
 export default function App() {
   return (
@@ -54,55 +25,26 @@ export default function App() {
       }
     >
       <Routes>
-        <Route
-          path="/"
-          element={<Join />}
-        />
-        <Route
-  path="/join"
-  element={<Join />}
-/>
+        {/* Existing player and live-game routes remain unchanged. */}
+        <Route path="/" element={<Join />} />
+        <Route path="/join" element={<Join />} />
+        <Route path="/game" element={<Game />} />
+        <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/vote" element={<Vote />} />
+        <Route path="/slideshow" element={<Slideshow />} />
+        <Route path="/vote-results" element={<VoteResults />} />
 
-        <Route
-          path="/game"
-          element={<Game />}
-        />
-
-        <Route
-          path="/admin"
-          element={<Admin />}
-        />
-
-        <Route
-          path="/admin-v2"
-          element={<AdminV2 />}
-        />
-
-        <Route
-          path="/challenge-review"
-          element={<ChallengeReview />}
-        />
-
-        <Route
-          path="/leaderboard"
-          element={<Leaderboard />}
-        />
-
-        <Route
-          path="/vote"
-          element={<Vote />}
-        />
-
-        <Route
-          path="/slideshow"
-          element={<Slideshow />}
-        />
-        <Route
-        path="/vote-results"
-        element={<VoteResults />}
-        />
+        {/* Host authentication is separate from the player join flow. */}
+        <Route path="/host/login" element={<HostLogin />} />
+        <Route element={<HostGuard />}>
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/host" element={<HostHub />} />
+          <Route path="/host/games/new" element={<HostPlanSetup />} />
+          <Route path="/host/games/:id/edit" element={<HostPlanSetup />} />
+          <Route path="/host/saved" element={<HostSaved />} />
+          <Route path="/host/games" element={<HostHub />} />
+        </Route>
       </Routes>
-    
     </Suspense>
   );
 }

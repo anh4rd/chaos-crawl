@@ -1,2944 +1,650 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEvent,
-} from "react";
+  ArrowRight,
+  CalendarClock,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  CircleDot,
+  Clock3,
+  Flag,
+  ListChecks,
+  MapPin,
+  Minus,
+  Plus,
+  Radio,
+  Trophy,
+  Users,
+  X,
+} from "lucide-react";
 
-import {
-  useNavigate,
-} from "react-router-dom";
+import { useGameState } from "../game/hooks/useGameState";
+import { usePlayers, type Player } from "../game/hooks/usePlayers";
+import { usePubs } from "../game/hooks/usePubs";
+import { useChallenges, type Challenge } from "../game/hooks/useChallenges";
+import useSideChallenges from "../game/hooks/useSideChallenges";
+import useChallengeCompletions from "../game/hooks/useChallengeCompletions";
+import { useScoreEvents } from "../game/hooks/useScoreEvents";
+import { updateGameState } from "../lib/gameApi";
+import { awardScore } from "../lib/scoreApi";
+import { deletePlayer, renamePlayer } from "../lib/playerApi";
+import { supabase } from "../lib/supabase";
+import "../styles/HostV2.css";
 
-import {
-  supabase,
-} from "../lib/supabase";
-
-import Card from "../components/ui/Card";
-import Button from "../components/ui/Button";
-import Input from "../components/ui/Input";
-
-import {
-  usePlayers,
-} from "../game/hooks/usePlayers";
-
-import {
-  useGameState,
-} from "../game/hooks/useGameState";
-
-import {
-  usePubs,
-} from "../game/hooks/usePubs";
-
-import {
-  useChallenges,
-} from "../game/hooks/useChallenges";
-
-import useSideChallenges
-  from "../game/hooks/useSideChallenges";
-
-import useChallengeCompletions
-  from "../game/hooks/useChallengeCompletions";
-
-import {
-  updateGameState,
-} from "../lib/gameApi";
-
-import {
-  addPoints,
-  changeTeam,
-  deletePlayer,
-  removePoints,
-  renamePlayer,
-} from "../lib/playerApi";
-
-import {
-  getVotesForChallenge,
-} from "../lib/voteApi";
-
-import {
-  uploadPhoto,
-} from "../lib/photoApi";
-
-import {
-  completeChallenge,
-  type ChallengeType,
-} from "../lib/completionApi";
-
-
-type AdminTab =
-  | "live"
-  | "tonight"
-  | "challenges"
-  | "review"
-  | "screens"
-  | "voting"
-  | "players"
-  | "teams";
+type HostTab = "live" | "challenges" | "scores" | "players";
+type ScoreTarget = "player" | "team";
+type ScoreAction = "award" | "dock";
 
 interface Team {
-  id: string;
+  id: string | number;
   name: string;
 }
 
-
-interface VoteRow {
-  id: string | number;
-
-  voter_id:
-    string;
-
-  voted_for_player_id:
-    | string
-    | null;
-
-  voted_for_team_id:
-    | string
-    | null;
-
-  challenge_name:
-    string;
+interface Round {
+  id: string;
+  label: string;
+  legacyName: string;
+  challenges: Challenge[];
 }
 
+const TAB_ITEMS: Array<{
+  id: HostTab;
+  label: string;
+  Icon: typeof Radio;
+}> = [
+  { id: "live", label: "Live", Icon: Radio },
+  { id: "challenges", label: "Challenges", Icon: ListChecks },
+  { id: "scores", label: "Scores", Icon: Trophy },
+  { id: "players", label: "Players", Icon: Users },
+];
 
-interface PendingUpload {
-  id: string | number;
-  title: string;
-  points: number;
+export default function AdminV2() {
+  const navigate = useNavigate();
+  const game = useGameState();
+  const players = usePlayers();
+  const pubs = usePubs();
+  const challenges = useChallenges();
+  const sideChallenges = useSideChallenges();
+  const completions = useChallengeCompletions();
+  const { scoreEvents, loading: scoresLoading } = useScoreEvents();
 
-  type: "side";
-}
+  const [activeTab, setActiveTab] = useState<HostTab>("live");
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [teamsLoading, setTeamsLoading] = useState(true);
+  const [teamNameDraft, setTeamNameDraft] = useState("");
+  const [newPlayerName, setNewPlayerName] = useState("");
+  const [creatingTeam, setCreatingTeam] = useState(false);
+  const [creatingPlayer, setCreatingPlayer] = useState(false);
+  const [busyAction, setBusyAction] = useState<string | null>(null);
+  const [scheduleMinutes, setScheduleMinutes] = useState("15");
+  const [scoreTarget, setScoreTarget] = useState<ScoreTarget>("player");
+  const [scoreLeaderboardTarget, setScoreLeaderboardTarget] = useState<ScoreTarget>("player");
+  const [scoreAction, setScoreAction] = useState<ScoreAction>("award");
+  const [selectedPlayerId, setSelectedPlayerId] = useState("");
+  const [selectedTeamName, setSelectedTeamName] = useState("");
+  const [pointsDraft, setPointsDraft] = useState("5");
+  const [scoreReason, setScoreReason] = useState("");
+  const [voteTarget, setVoteTarget] = useState<ScoreTarget>("player");
+  const firedScheduleRef = useRef<string | null>(null);
 
-
-export default function Admin() {
-  // =========================================
-  // DATA HOOKS
-  // =========================================
-
-  const players =
-    usePlayers();
-
-  const game =
-    useGameState();
-
-  const pubs =
-    usePubs();
-
-  const challenges =
-    useChallenges();
-
-  const sideChallenges =
-    useSideChallenges();
-
-  const completions =
-    useChallengeCompletions();
-
-  const navigate =
-    useNavigate();
-  
-  // =========================================
-  // TAB STATE
-  // =========================================
-
-  const [
-    activeTab,
-    setActiveTab,
-  ] = useState<AdminTab>(
-    "live"
+  const sortedPubs = useMemo(
+    () => [...pubs].sort((a, b) => Number(a.sort_order ?? a.order_index ?? 0) - Number(b.sort_order ?? b.order_index ?? 0)),
+    [pubs],
   );
 
+  // The old pub groups are retained in the database but become round groups in V2.
+  // This avoids migrating challenge rows just to run a stationary event.
+  const rounds = useMemo<Round[]>(() => {
+    const grouped = sortedPubs.map((pub, index) => ({
+      id: String(pub.id),
+      label: `Round ${index + 1}`,
+      legacyName: String(pub.name ?? `Round ${index + 1}`),
+      challenges: challenges
+        .filter((challenge) => String(challenge.pub_id) === String(pub.id))
+        .sort((a, b) => Number(a.reveal_order ?? 0) - Number(b.reveal_order ?? 0) || Number(a.id) - Number(b.id)),
+    }));
 
-  // =========================================
-  // GAME SELECTION STATE
-  // =========================================
+    const unassigned = challenges
+      .filter((challenge) => !challenge.pub_id || !sortedPubs.some((pub) => String(pub.id) === String(challenge.pub_id)))
+      .sort((a, b) => Number(a.reveal_order ?? 0) - Number(b.reveal_order ?? 0) || Number(a.id) - Number(b.id));
 
-  const [
-    selectedPub,
-    setSelectedPub,
-  ] = useState("");
-
-  const [
-    selectedChallenge,
-    setSelectedChallenge,
-  ] = useState("");
-
-  const [
-    scheduleMinutes,
-    setScheduleMinutes,
-  ] = useState("10");
-
-
-  // =========================================
-  // TEAM STATE
-  // =========================================
-
-  const [
-    teams,
-    setTeams,
-  ] = useState<Team[]>([]);
-
-  const [
-    newTeamName,
-    setNewTeamName,
-  ] = useState("");
-
-  const [
-    creatingTeam,
-    setCreatingTeam,
-  ] = useState(false);
-
-  const [
-    assigningPlayerId,
-    setAssigningPlayerId,
-  ] = useState<string | null>(
-    null
-  );
-
-
-  // =========================================
-  // VOTING STATE
-  // =========================================
-
-  const [
-    votes,
-    setVotes,
-  ] = useState<VoteRow[]>([]);
-
-
-  // =========================================
-  // HOST PARTICIPATION STATE
-  // =========================================
-
-  const [
-    playingAsPlayerId,
-    setPlayingAsPlayerId,
-  ] = useState("");
-
-  const [
-    pendingUpload,
-    setPendingUpload,
-  ] = useState<PendingUpload | null>(
-    null
-  );
-
-  const [
-    uploadingChallengeKey,
-    setUploadingChallengeKey,
-  ] = useState<string | null>(
-    null
-  );
-
-  const [
-    completingChallengeKey,
-    setCompletingChallengeKey,
-  ] = useState<string | null>(
-    null
-  );
-
-  const [
-    pendingCompletedKeys,
-    setPendingCompletedKeys,
-  ] = useState<Set<string>>(
-    () => new Set()
-  );
-
-  const challengeFileInputRef =
-    useRef<HTMLInputElement>(null);
-
-
-  // =========================================
-  // LOAD TEAMS
-  // =========================================
-
-  async function loadTeams() {
-    const {
-      data,
-      error,
-    } = await supabase
-      .from("teams")
-      .select("id, name")
-      .order("name");
-
-    if (error) {
-      console.error(
-        "LOAD TEAMS ERROR:",
-        error
-      );
-
-      return;
+    const nonEmpty = grouped.filter((round) => round.challenges.length > 0);
+    if (unassigned.length > 0) {
+      nonEmpty.push({
+        id: "unassigned",
+        label: `Round ${nonEmpty.length + 1}`,
+        legacyName: game?.current_pub || "Stationary venue",
+        challenges: unassigned,
+      });
     }
+    return nonEmpty;
+  }, [sortedPubs, challenges, game?.current_pub]);
 
+  const orderedChallenges = useMemo(() => rounds.flatMap((round) => round.challenges), [rounds]);
+  const currentChallenge = useMemo(() => {
+    return orderedChallenges.find((challenge) => String(challenge.id) === String(game?.current_challenge_id))
+      ?? orderedChallenges.find((challenge) => challenge.title === game?.current_challenge)
+      ?? null;
+  }, [orderedChallenges, game?.current_challenge_id, game?.current_challenge]);
+  const currentChallengeIndex = currentChallenge
+    ? orderedChallenges.findIndex((challenge) => String(challenge.id) === String(currentChallenge.id))
+    : -1;
+  const nextChallenge = orderedChallenges[currentChallengeIndex >= 0 ? currentChallengeIndex + 1 : 0] ?? null;
+  const scheduledChallenge = orderedChallenges.find((challenge) => String(challenge.id) === String(game?.scheduled_challenge_id)) ?? null;
+  const currentRound = rounds.find((round) => round.challenges.some((challenge) => String(challenge.id) === String(currentChallenge?.id))) ?? null;
 
-    setTeams(
-      (data ?? []) as Team[]
-    );
-  }
+  const playerLeaderboard = useMemo(() => players.map((player) => {
+    const score = scoreEvents
+      .filter((event) => String(event.player_id) === String(player.id))
+      .reduce((total, event) => total + Number(event.points ?? 0), 0);
+    return { id: String(player.id), name: player.name, score, player };
+  }).sort((a, b) => b.score - a.score), [players, scoreEvents]);
 
+  const teamNames = useMemo(() => Array.from(new Set([
+    ...teams.map((team) => team.name),
+    ...players.map((player) => player.team).filter((team): team is string => Boolean(team)),
+    ...scoreEvents.map((event) => event.team_name).filter((team): team is string => Boolean(team)),
+  ])).sort((a, b) => a.localeCompare(b)), [teams, players, scoreEvents]);
+
+  const teamLeaderboard = useMemo(() => teamNames.map((name) => {
+    const score = scoreEvents
+      .filter((event) => event.team_name === name)
+      .reduce((total, event) => total + Number(event.points ?? 0), 0);
+    return { id: name, name, score };
+  }).sort((a, b) => b.score - a.score), [teamNames, scoreEvents]);
+
+  const loadTeams = useCallback(async () => {
+    setTeamsLoading(true);
+    const { data, error } = await supabase.from("teams").select("id, name").order("name");
+    if (error) {
+      console.error("Could not load teams", error);
+    } else {
+      setTeams((data ?? []) as Team[]);
+    }
+    setTeamsLoading(false);
+  }, []);
 
   useEffect(() => {
     void loadTeams();
-  }, []);
+    const channel = supabase
+      .channel("host-v2-teams")
+      .on("postgres_changes", { event: "*", schema: "public", table: "teams" }, () => void loadTeams())
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [loadTeams]);
 
-
-  // =========================================
-  // LOAD VOTES + REALTIME
-  // =========================================
-
+  // If a scheduled reveal becomes due while the host dashboard is open,
+  // publish the challenge to all connected player screens.
   useEffect(() => {
-    if (
-      !game?.current_challenge
-    ) {
-      return;
-    }
+    if (!game?.scheduled_reveal_at || game.scheduled_challenge_id == null) return;
+    const dueAt = Date.parse(game.scheduled_reveal_at);
+    if (!Number.isFinite(dueAt)) return;
 
-    async function loadVotes() {
-      if (
-        !game?.current_challenge
-      ) {
-        return;
-      }
-
-      const {
-        data,
-        error,
-      } =
-        await getVotesForChallenge(
-          game.current_challenge
-        );
-
-      if (error) {
-        console.error(
-          "LOAD VOTES ERROR:",
-          error
-        );
-
-        return;
-      }
-
-      setVotes(
-        (data ?? []) as VoteRow[]
-      );
-    }
-
-    void loadVotes();
-
-    const channel =
-      supabase
-        .channel(
-          "admin-votes"
-        )
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "votes",
-          },
-          () => {
-            void loadVotes();
-          }
-        )
-        .subscribe();
-
-    return () => {
-      void supabase
-        .removeChannel(
-          channel
-        );
-    };
-  }, [
-    game?.current_challenge,
-    game?.current_challenge_id,
-  ]);
-
-
-  // =========================================
-  // KEEP SELECTS IN SYNC
-  // =========================================
-
-  useEffect(() => {
-    if (!game) {
-      return;
-    }
-
-    setSelectedPub(
-      game.current_pub ?? ""
-    );
-
-    setSelectedChallenge(
-      game.current_challenge ?? ""
-    );
-  }, [
-    game?.current_pub,
-    game?.current_challenge,
-  ]);
-
-
-  // =========================================
-  // CLEAN OPTIMISTIC COMPLETIONS
-  // =========================================
-
-  useEffect(() => {
-    if (
-      pendingCompletedKeys.size ===
-      0
-    ) {
-      return;
-    }
-
-    setPendingCompletedKeys(
-      (current) => {
-        const next =
-          new Set(current);
-
-        let changed =
-          false;
-
-        for (const key of current) {
-          const [
-            playerId,
-            type,
-            challengeId,
-          ] = key.split(":");
-
-          const exists =
-            completions.some(
-              (completion) =>
-                String(
-                  completion.player_id
-                ) ===
-                  String(playerId) &&
-
-                completion.challenge_type ===
-                  type &&
-
-                String(
-                  completion.challenge_id
-                ) ===
-                  String(challengeId)
-            );
-
-          if (exists) {
-            next.delete(key);
-            changed = true;
-          }
-        }
-
-        return changed
-          ? next
-          : current;
-      }
-    );
-  }, [
-    completions,
-    pendingCompletedKeys.size,
-  ]);
-
-  async function revealRoundChallenge(
-    challenge: {
-      id: string | number;
-      title: string;
-      description?: string | null;
-      reveal_order?: number | null;
-    }
-  ) {
-  const confirmed =
-    window.confirm(
-      `Reveal "${challenge.title}" to everyone?`
-    );
-
-  if (!confirmed) {
-    return;
-  }
-
-  const {
-    error,
-  } = await updateGameState({
-    current_challenge_id:
-      Number (challenge.id),
-
-    current_challenge:
-      challenge.title,
-
-    challenge_description:
-      challenge.description ?? "",
-
-    current_challenge_order:
-      challenge.reveal_order ?? 0,
-
-    voting_open: false,
-
-    show_vote_results: false,
-
-    slideshow_open: false,
-  });
-
-  if (error) {
-    console.error(
-      "REVEAL CHALLENGE ERROR",
-      error
-    );
-
-    alert(
-      `Could not reveal challenge: ${error.message}`
-    );
-  }
-}
-
-  // =========================================
-  // SCHEDULED REVEALS
-  // =========================================
-
-  async function scheduleChallenge(
-    challenge: {
-      id: string | number;
-      title: string;
-    }
-  ) {
-    const minutes =
-      Number(scheduleMinutes);
-
-    if (
-      !Number.isFinite(minutes) ||
-      minutes <= 0
-    ) {
-      alert(
-        "Enter a valid number of minutes."
-      );
-      return;
-    }
-
-    const revealAt =
-      new Date(
-        Date.now() +
-          minutes * 60_000
-      ).toISOString();
-
-    const { error } =
-      await updateGameState({
-        scheduled_challenge_id:
-          Number(challenge.id),
-
-        scheduled_reveal_at:
-          revealAt,
-      });
-
-    if (error) {
-      alert(
-        `Could not schedule challenge: ${error.message}`
-      );
-      return;
-    }
-
-    alert(
-      `"${challenge.title}" scheduled for ${new Date(
-        revealAt
-      ).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      })}.`
-    );
-  }
-
-
-  async function cancelScheduledReveal() {
-    const { error } =
-      await updateGameState({
-        scheduled_challenge_id:
-          null,
-
-        scheduled_reveal_at:
-          null,
-      });
-
-    if (error) {
-      alert(
-        `Could not cancel schedule: ${error.message}`
-      );
-    }
-  }
-
-
-  async function returnEveryoneToGame() {
-    const { error } =
-      await updateGameState({
+    const scheduleKey = `${game.scheduled_challenge_id}:${game.scheduled_reveal_at}`;
+    const checkSchedule = () => {
+      if (Date.now() < dueAt || firedScheduleRef.current === scheduleKey) return;
+      const challenge = orderedChallenges.find((item) => String(item.id) === String(game.scheduled_challenge_id));
+      if (!challenge) return;
+      firedScheduleRef.current = scheduleKey;
+      const round = rounds.find((item) => item.challenges.some((entry) => String(entry.id) === String(challenge.id)));
+      void updateGameState({
+        current_pub: round?.legacyName ?? game.current_pub,
+        current_challenge_id: Number(challenge.id),
+        current_challenge: challenge.title,
+        challenge_description: challenge.description ?? "",
+        current_challenge_order: challenge.reveal_order ?? 0,
         voting_open: false,
         show_vote_results: false,
         slideshow_open: false,
+        scheduled_challenge_id: null,
+        scheduled_reveal_at: null,
+      }).then(({ error }) => {
+        if (error) {
+          console.error("Scheduled reveal failed", error);
+          window.alert(`Scheduled reveal failed: ${error.message}`);
+        }
       });
+    };
 
-    if (error) {
-      alert(
-        `Could not return everyone: ${error.message}`
-      );
+    checkSchedule();
+    const intervalId = window.setInterval(checkSchedule, 1000);
+    return () => window.clearInterval(intervalId);
+  }, [game?.scheduled_reveal_at, game?.scheduled_challenge_id, game?.current_pub, orderedChallenges, rounds]);
+
+  const runBusy = async (key: string, operation: () => Promise<void>) => {
+    setBusyAction(key);
+    try {
+      await operation();
+    } finally {
+      setBusyAction(null);
     }
-  }
-
-
-  // =========================================
-  // SAFE LOADING RETURN
-  // =========================================
-
-  if (!game) {
-    return (
-      <main className="mx-auto min-h-screen max-w-md p-6">
-        <p>
-          Loading host control...
-        </p>
-      </main>
-    );
-  }
-const currentGame = game;
-
-  // =========================================
-  // DERIVED GAME DATA
-  // =========================================
-
-  const sortedPubs =
-    [...pubs].sort(
-      (a, b) =>
-        Number(a.order_index ?? 0) -
-        Number(b.order_index ?? 0)
-    );
-
-
-  const currentPubIndex =
-    sortedPubs.findIndex(
-      (pub) =>
-        pub.name ===
-        game.current_pub
-    );
-
-
-  const nextPub =
-    currentPubIndex >= 0
-      ? sortedPubs[
-          currentPubIndex + 1
-        ]
-      : undefined;
-
-
-  const selectedPubObject =
-    pubs.find(
-      (pub) =>
-        pub.name ===
-        selectedPub
-    );
-
-
-  const livePubObject =
-    pubs.find(
-      (pub) =>
-        pub.name ===
-        game.current_pub
-    );
-
-
-  const availableChallenges =
-    challenges.filter(
-      (challenge) =>
-        String(
-          challenge.pub_id
-        ) ===
-        String(
-          selectedPubObject?.id
-        )
-    );
-
-
-  const currentRoundChallenges =
-    challenges
-      .filter(
-        (challenge) =>
-          String(challenge.pub_id) ===
-          String(livePubObject?.id)
-      )
-      .sort(
-        (a, b) =>
-          (a.reveal_order ?? 0) -
-          (b.reveal_order ?? 0)
-      );
-
-  const currentChallengeIndex =
-    currentRoundChallenges.findIndex(
-      (challenge) =>
-        String(challenge.id) ===
-        String(game.current_challenge_id)
-    );
-
-  const nextRoundChallenge =
-    currentChallengeIndex >= 0
-      ? currentRoundChallenges[
-          currentChallengeIndex + 1
-        ]
-      : currentRoundChallenges[0];
-
-
-  const playingAsPlayer =
-    players.find(
-      (player) =>
-        String(player.id) ===
-        String(playingAsPlayerId)
-    );
-
-
-  // =========================================
-  // COMPLETION HELPERS
-  // =========================================
-
-  function completionKey(
-    playerId: string,
-    challengeType: ChallengeType,
-    challengeId: string | number
-  ) {
-    return [
-      playerId,
-      challengeType,
-      String(challengeId),
-    ].join(":");
-  }
-
-
-  function hasPlayerCompleted(
-    playerId: string,
-    challengeType: ChallengeType,
-    challengeId: string | number
-  ) {
-    const key =
-      completionKey(
-        playerId,
-        challengeType,
-        challengeId
-      );
-
-    return (
-      pendingCompletedKeys.has(key) ||
-
-      completions.some(
-        (completion) =>
-          String(
-            completion.player_id
-          ) ===
-            String(playerId) &&
-
-          completion.challenge_type ===
-            challengeType &&
-
-          String(
-            completion.challenge_id
-          ) ===
-            String(challengeId)
-      )
-    );
-  }
-
-
-  function getPlayersWhoCompleted(
-    challengeType: "side",
-
-    challengeId:
-      string | number
-  ) {
-    return completions
-      .filter(
-        (completion) =>
-          completion.challenge_type ===
-            challengeType &&
-
-          String(
-            completion.challenge_id
-          ) ===
-            String(challengeId)
-      )
-      .map(
-        (completion) =>
-          players.find(
-            (player) =>
-              String(player.id) ===
-              String(
-                completion.player_id
-              )
-          )
-      )
-      .filter(
-        (
-          player
-        ): player is NonNullable<
-          typeof player
-        > =>
-          Boolean(player)
-      );
-  }
-
-
-  function markPendingComplete(
-    playerId: string,
-    challengeType: ChallengeType,
-    challengeId: string | number
-  ) {
-    const key =
-      completionKey(
-        playerId,
-        challengeType,
-        challengeId
-      );
-
-    setPendingCompletedKeys(
-      (current) => {
-        const next =
-          new Set(current);
-
-        next.add(key);
-
-        return next;
-      }
-    );
-  }
-
-
-  function removePendingComplete(
-    playerId: string,
-    challengeType: ChallengeType,
-    challengeId: string | number
-  ) {
-    const key =
-      completionKey(
-        playerId,
-        challengeType,
-        challengeId
-      );
-
-    setPendingCompletedKeys(
-      (current) => {
-        const next =
-          new Set(current);
-
-        next.delete(key);
-
-        return next;
-      }
-    );
-  }
-
-
-  // =========================================
-  // LIVE GAME
-  // =========================================
-
-  async function goLive() {
-    if (!selectedPub) {
-      alert(
-        "Select a pub first."
-      );
-
-      return;
-    }
-
-    if (!selectedChallenge) {
-      alert(
-        "Select a challenge first."
-      );
-
-      return;
-    }
-
-    const challenge =
-      challenges.find(
-        (item) =>
-          item.title ===
-          selectedChallenge
-      );
-
-    const {
-      error,
-    } = await updateGameState({
-      current_pub:
-        selectedPub,
-
-      current_challenge_id:
-        challenge?.id ?? null,
-
-      current_challenge:
-        selectedChallenge,
-
-      challenge_description:
-        challenge?.description ??
-        "",
-
-      current_challenge_order:
-        challenge?.reveal_order ?? 0,
-
-      voting_open:
-        false,
-
-      show_vote_results:
-        false,
-
-      slideshow_open:
-        false,
-    });
-
-    if (error) {
-      console.error(
-        "GO LIVE ERROR:",
-        error
-      );
-
-      alert(
-        `Could not update game: ${error.message}`
-      );
-
-      return;
-    }
-
-    alert(
-      "Live game updated!"
-    );
-  }
-
-
-  async function moveToNextPub() {
-    if (!nextPub) {
-      alert("There is no next pub.");
-      return;
-    }
-
-    const pubChallenges =
-      challenges
-        .filter(
-          (challenge) =>
-            String(challenge.pub_id) ===
-            String(nextPub.id)
-        )
-        .sort(
-          (a, b) =>
-            (a.reveal_order ?? 0) -
-            (b.reveal_order ?? 0)
-        );
-
-    const firstChallenge =
-      pubChallenges[0];
-
-    const {
-      error,
-    } = await updateGameState({
-      current_pub:
-        nextPub.name,
-
-      current_challenge_id:
-        firstChallenge?.id ?? null,
-
-      current_challenge:
-        firstChallenge?.title ?? "",
-
-      challenge_description:
-        firstChallenge?.description ?? "",
-
-      current_challenge_order:
-        firstChallenge?.reveal_order ?? 0,
-
-      voting_open:
-        false,
-
-      show_vote_results:
-        false,
-
-      slideshow_open:
-        false,
-    });
-
-    if (error) {
-      console.error(
-        "NEXT PUB ERROR:",
-        error
-      );
-
-      alert(
-        `Could not change pub: ${error.message}`
-      );
-
-      return;
-    }
-
-    setSelectedPub(
-      nextPub.name
-    );
-
-    setSelectedChallenge(
-      firstChallenge?.title ?? ""
-    );
-  }
-
-
-  // =========================================
-  // SLIDESHOW
-  // =========================================
-
-  async function startSlideshow() {
-    const confirmed =
-      window.confirm(
-        "Start the slideshow for everyone?"
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    const {
-      error,
-    } = await updateGameState({
-      slideshow_open:
-        true,
-
-      voting_open:
-        false,
-
-      show_vote_results:
-        false,
-    });
-
-    if (error) {
-      console.error(
-        "START SLIDESHOW ERROR:",
-        error
-      );
-
-      alert(
-        `Could not start slideshow: ${error.message}`
-      );
-
-      return;
-    }
-
-    navigate(
-      "/slideshow?host=true"
-    );
-  }
-
-
-  async function stopSlideshow() {
-    const confirmed =
-      window.confirm(
-        "End slideshow for everyone?"
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    const {
-      error,
-    } = await updateGameState({
-      slideshow_open:
-        false,
-    });
-
-    if (error) {
-      alert(
-        `Could not end slideshow: ${error.message}`
-      );
-    }
-  }
-
-
-  // =========================================
-  // VOTING
-  // =========================================
-
-  async function openVoting() {
-    const confirmed =
-      window.confirm(
-        `Open voting for "${game?.current_challenge ?? "current "}"?`
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    const {
-      error,
-    } = await updateGameState({
-      voting_open:
-        true,
-
-      show_vote_results:
-        false,
-
-      slideshow_open:
-        false,
-    });
-
-    if (error) {
-      alert(
-        `Could not open voting: ${error.message}`
-      );
-    }
-  }
-
-
-  async function closeVoting() {
-    const confirmed =
-      window.confirm(
-        "Close voting and show results?"
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    const {
-      error,
-    } = await updateGameState({
-      voting_open:
-        false,
-
-      show_vote_results:
-        true,
-
-      slideshow_open:
-        false,
-    });
-
-    if (error) {
-      alert(
-        `Could not show results: ${error.message}`
-      );
-    }
-  }
-
-
-  async function closeResults() {
-    const confirmed =
-      window.confirm(
-        "Close results and return everyone to the game?"
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    const {
-      error,
-    } = await updateGameState({
-      show_vote_results:
-        false,
-
-      voting_open:
-        false,
-
-      slideshow_open:
-        false,
-    });
-
-    if (error) {
-      alert(
-        `Could not close results: ${error.message}`
-      );
-    }
-  }
-
-
-  // =========================================
-  // HOST MARK DONE
-  // =========================================
-
-  async function markChallengeDone(
-    challengeType: "side",
-
-    challengeId:
-      string | number,
-
-    points:
-      number
-  ) {
-    if (!playingAsPlayerId) {
-      alert(
-        "Choose who you are playing as first."
-      );
-
-      return;
-    }
-
-    const key =
-      completionKey(
-        playingAsPlayerId,
-        challengeType,
-        challengeId
-      );
-
-    setCompletingChallengeKey(
-      key
-    );
-
-    markPendingComplete(
-      playingAsPlayerId,
-      challengeType,
-      challengeId
-    );
-
-    const {
-      error,
-    } = await completeChallenge({
-      playerId:
-        playingAsPlayerId,
-
-      challengeType,
-
-      challengeId,
-
-      points,
-
-      photoId:
-        null,
-    });
-
-    setCompletingChallengeKey(
-      null
-    );
-
-    if (error) {
-      if (
-        error.code ===
-        "ALREADY_COMPLETED"
-      ) {
+  };
+
+  async function revealChallenge(challenge: Challenge) {
+    const round = rounds.find((item) => item.challenges.some((entry) => String(entry.id) === String(challenge.id)));
+    await runBusy(`reveal-${challenge.id}`, async () => {
+      const { error } = await updateGameState({
+        current_pub: round?.legacyName ?? game?.current_pub ?? "Stationary venue",
+        current_challenge_id: Number(challenge.id),
+        current_challenge: challenge.title,
+        challenge_description: challenge.description ?? "",
+        current_challenge_order: challenge.reveal_order ?? 0,
+        voting_open: false,
+        show_vote_results: false,
+        slideshow_open: false,
+        scheduled_challenge_id: null,
+        scheduled_reveal_at: null,
+      });
+      if (error) {
+        window.alert(`Could not reveal challenge: ${error.message}`);
         return;
       }
-
-      removePendingComplete(
-        playingAsPlayerId,
-        challengeType,
-        challengeId
-      );
-
-      alert(
-        `Could not complete challenge: ${error.message}`
-      );
-    }
-  }
-
-
-  // =========================================
-  // HOST CHOOSES UPLOAD
-  // =========================================
-
-  function chooseChallengeUpload(
-    details: PendingUpload
-  ) {
-    if (!playingAsPlayerId) {
-      alert(
-        "Choose who you are playing as first."
-      );
-
-      return;
-    }
-
-    setPendingUpload(
-      details
-    );
-
-    window.setTimeout(() => {
-      challengeFileInputRef
-        .current
-        ?.click();
-    }, 0);
-  }
-
-
-  // =========================================
-  // HOST PHOTO / VIDEO UPLOAD
-  // =========================================
-
-  async function handleChallengeFileSelected(
-    event:
-      ChangeEvent<HTMLInputElement>
-  ) {
-    const file =
-      event.target.files?.[0];
-
-    const details =
-      pendingUpload;
-
-    if (
-      !file ||
-      !details ||
-      !playingAsPlayerId ||
-      !playingAsPlayer
-    ) {
-      event.target.value = "";
-      return;
-    }
-
-    const key =
-      completionKey(
-        playingAsPlayerId,
-        details.type,
-        details.id
-      );
-
-    setUploadingChallengeKey(
-      key
-    );
-
-    const {
-      data,
-      error,
-    } = await uploadPhoto(
-      file,
-      {
-        playerId:
-          playingAsPlayerId,
-
-        playerName:
-          playingAsPlayer.name,
-
-        team:
-          playingAsPlayer.team ??
-          null,
-
-        challenge:
-          details.title,
-
-        pub:
-          currentGame.current_pub ?? "",
-
-        points:
-          details.points,
-      }
-    );
-
-    if (error) {
-      setUploadingChallengeKey(
-        null
-      );
-
-      setPendingUpload(
-        null
-      );
-
-      event.target.value =
-        "";
-
-      alert(
-        `Upload failed: ${error.message}`
-      );
-
-      return;
-    }
-
-    markPendingComplete(
-      playingAsPlayerId,
-      details.type,
-      details.id
-    );
-
-    const {
-      error: completionError,
-    } = await completeChallenge({
-      playerId:
-        playingAsPlayerId,
-
-      challengeType:
-        details.type,
-
-      challengeId:
-        details.id,
-
-      points:
-        details.points,
-
-      photoId:
-        data?.id ?? null,
+      setActiveTab("live");
     });
+  }
 
-    setUploadingChallengeKey(
-      null
-    );
-
-    setPendingUpload(
-      null
-    );
-
-    event.target.value =
-      "";
-
-    if (completionError) {
-      if (
-        completionError.code ===
-        "ALREADY_COMPLETED"
-      ) {
+  async function scheduleChallenge(challenge: Challenge) {
+    const minutes = Number(scheduleMinutes);
+    if (!Number.isFinite(minutes) || minutes <= 0 || minutes > 240) {
+      window.alert("Enter a reveal time between 1 and 240 minutes.");
+      return;
+    }
+    await runBusy(`schedule-${challenge.id}`, async () => {
+      const revealAt = new Date(Date.now() + minutes * 60_000).toISOString();
+      const { error } = await updateGameState({
+        scheduled_challenge_id: Number(challenge.id),
+        scheduled_reveal_at: revealAt,
+      });
+      if (error) {
+        window.alert(`Could not schedule challenge: ${error.message}`);
         return;
       }
-
-      removePendingComplete(
-        playingAsPlayerId,
-        details.type,
-        details.id
-      );
-
-      alert(
-        `Media uploaded, but completion failed: ${completionError.message}`
-      );
-    }
+      setActiveTab("live");
+    });
   }
 
+  async function cancelScheduledReveal() {
+    await runBusy("cancel-schedule", async () => {
+      const { error } = await updateGameState({ scheduled_challenge_id: null, scheduled_reveal_at: null });
+      if (error) {
+        window.alert(`Could not cancel schedule: ${error.message}`);
+        throw error;
+      }
+    });
+  }
 
-  // =========================================
-  // TEAMS
-  // =========================================
+  async function setVoting(open: boolean, target: ScoreTarget = voteTarget) {
+    const { error } = await updateGameState(open
+      ? { voting_open: true, voting_target: target, show_vote_results: false, slideshow_open: false }
+      : { voting_open: false, show_vote_results: true, slideshow_open: false });
+    if (error) window.alert(`Could not update voting: ${error.message}`);
+  }
 
-  async function createTeam() {
-    const trimmed =
-      newTeamName.trim();
+  async function returnEveryoneToGame() {
+    const { error } = await updateGameState({ voting_open: false, show_vote_results: false, slideshow_open: false });
+    if (error) window.alert(`Could not return everyone to the game: ${error.message}`);
+  }
 
-    if (!trimmed) {
+  async function setSlideshow(open: boolean) {
+    const { error } = await updateGameState({ slideshow_open: open, ...(open ? { voting_open: false, show_vote_results: false } : {}) });
+    if (error) window.alert(`Could not update the slideshow: ${error.message}`);
+  }
+
+  function openReview(challenge: Challenge | null) {
+    if (!challenge) {
+      window.alert("Reveal a challenge before reviewing submissions.");
+      return;
+    }
+    navigate(`/challenge-review?type=main&id=${encodeURIComponent(String(challenge.id))}&title=${encodeURIComponent(challenge.title)}&from=admin-v2`);
+  }
+
+  async function handleAwardOrDock() {
+    const points = Number(pointsDraft);
+    if (!Number.isFinite(points) || points <= 0) {
+      window.alert("Enter a points amount greater than zero.");
+      return;
+    }
+    if (scoreTarget === "player" && !selectedPlayerId) {
+      window.alert("Choose a player first.");
+      return;
+    }
+    if (scoreTarget === "team" && !selectedTeamName) {
+      window.alert("Choose a team first.");
       return;
     }
 
-    setCreatingTeam(
-      true
-    );
-
-    const {
-      error,
-    } = await supabase
-      .from("teams")
-      .insert({
-        name: trimmed,
-      });
-
-    setCreatingTeam(
-      false
-    );
-
+    const challengeTitle = scoreReason.trim() || (scoreAction === "award" ? "Host points award" : "Host points deduction");
+    const { error } = await awardScore({
+      playerId: scoreTarget === "player" ? selectedPlayerId : null,
+      teamName: scoreTarget === "team" ? selectedTeamName : null,
+      challengeType: "manual",
+      challengeId: `manual-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      challengeTitle,
+      points: scoreAction === "award" ? points : -points,
+      reason: challengeTitle,
+    });
     if (error) {
-      alert(
-        `Could not create team: ${error.message}`
-      );
-
+      window.alert(`Could not update score: ${error.message}`);
       return;
     }
+    setScoreReason("");
+  }
 
-    setNewTeamName("");
-
+  async function addTeam() {
+    const name = teamNameDraft.trim();
+    if (!name) return;
+    setCreatingTeam(true);
+    const { error } = await supabase.from("teams").insert({ name });
+    setCreatingTeam(false);
+    if (error) {
+      window.alert(`Could not create team: ${error.message}`);
+      return;
+    }
+    setTeamNameDraft("");
     await loadTeams();
   }
 
-
-  async function assignTeam(
-    playerId: string,
-    teamName: string
-  ) {
-    setAssigningPlayerId(
-      playerId
-    );
-
-    await changeTeam(
-      playerId,
-      teamName
-    );
-
-    setAssigningPlayerId(
-      null
-    );
+  async function addPlayer() {
+    const name = newPlayerName.trim();
+    if (!name) return;
+    setCreatingPlayer(true);
+    const { error } = await supabase.from("players").insert({ name, team: null, score: 0 });
+    setCreatingPlayer(false);
+    if (error) {
+      window.alert(`Could not add player: ${error.message}`);
+      return;
+    }
+    setNewPlayerName("");
   }
 
+  async function assignTeam(player: Player, teamName: string) {
+    const { error } = await supabase.from("players").update({ team: teamName || null }).eq("id", player.id);
+    if (error) window.alert(`Could not change ${player.name}'s team: ${error.message}`);
+  }
 
-  // =========================================
-  // VOTE RESULTS
-  // =========================================
+  async function savePlayerName(player: Player, newName: string) {
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === player.name) return;
+    const { error } = await renamePlayer(player.id, trimmed);
+    if (error) window.alert(`Could not rename player: ${error.message}`);
+  }
 
-  const playerVoteResults =
-    players
-      .map(
-        (player) => ({
-          id:
-            player.id,
+  async function removePlayer(player: Player) {
+    if (!window.confirm(`Remove ${player.name} from this game?`)) return;
+    const { error } = await deletePlayer(player.id);
+    if (error) window.alert(`Could not remove player: ${error.message}`);
+  }
 
-          name:
-            player.name,
-
-          votes:
-            votes.filter(
-              (vote) =>
-                String(
-                  vote.voted_for_player_id
-                ) ===
-                String(player.id)
-            ).length,
-        })
-      )
-      .sort(
-        (a, b) =>
-          b.votes - a.votes
-      );
-
-
-  const teamVoteResults =
-    teams
-      .map(
-        (team) => ({
-          id:
-            team.id,
-
-          name:
-            team.name,
-
-          votes:
-            votes.filter(
-              (vote) =>
-                String(
-                  vote.voted_for_team_id
-                ) ===
-                  String(team.id) ||
-
-                String(
-                  vote.voted_for_team_id
-                ) ===
-                  String(team.name)
-            ).length,
-        })
-      )
-      .sort(
-        (a, b) =>
-          b.votes - a.votes
-      );
-
-
-  const liveResults =
-    game.voting_target ===
-    "team"
-      ? teamVoteResults
-      : playerVoteResults;
-
-
-  // =========================================
-  // TAB BUTTON
-  // =========================================
-
-  function tabButton(
-    tab: AdminTab,
-    label: string
-  ) {
-    const selected =
-      activeTab === tab;
-
+  if (!game) {
     return (
-      <button
-        type="button"
-        onClick={() =>
-          setActiveTab(tab)
-        }
-        className={`
-          shrink-0 rounded-xl px-4 py-3
-          text-sm font-bold
-          ${
-            selected
-              ? "bg-pink-500 text-white"
-              : "bg-zinc-900 text-zinc-300"
-          }
-        `}
-      >
-        {label}
-      </button>
-      
+      <main className="host-v2">
+        <div className="host-v2__loading">Loading host controls…</div>
+      </main>
     );
   }
 
-
-  // =========================================
-  // PAGE
-  // =========================================
+  const challengeProgress = orderedChallenges.length > 0
+    ? Math.max(0, Math.min(100, ((currentChallengeIndex + 1) / orderedChallenges.length) * 100))
+    : 0;
+  const scheduledTime = game.scheduled_reveal_at
+    ? new Date(game.scheduled_reveal_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : null;
 
   return (
-    <main className="mx-auto min-h-screen max-w-md p-6">
+    <main className="host-v2">
+      <div className="host-v2__app">
+        <header className="host-v2__header">
+          <div className="host-v2__brand-row">
+            <div>
+              <p className="host-v2__eyebrow">CHAOS · HOST CONTROL</p>
+              <h1 className="host-v2__brand">Run the game</h1>
+            </div>
+            <span className={`host-v2__live-pill ${currentChallenge ? "is-live" : "is-ready"}`}>
+              <span className="host-v2__live-dot" />
+              {currentChallenge ? "LIVE" : "READY"}
+            </span>
+          </div>
+          <div className="host-v2__event-row">
+            <span><MapPin size={14} /> One venue · No travel between rounds</span>
+            <span>{players.length} players</span>
+          </div>
+        </header>
 
-      <h1 className="text-4xl font-bold">
-        Host Control
-      </h1>
-
-
-      {/* HIDDEN MEDIA INPUT */}
-
-      <input
-        ref={
-          challengeFileInputRef
-        }
-        type="file"
-        accept="image/*,video/*"
-        className="hidden"
-        onChange={
-          handleChallengeFileSelected
-        }
-      />
-
-
-      {/* TABS */}
-      <div className="sticky top-0 z-30 -mx-6 mt-6 overflow-x-auto border-y border-zinc-800 bg-black/95 px-6 py-3 backdrop-blur">
-        <div className="flex gap-2">
-          {tabButton("live", "🔴 Live")}
-          {tabButton("tonight", "🌙 Tonight")}
-          {tabButton("challenges", "🎯 Challenges")}
-          {tabButton("review", "✅ Review")}
-          {tabButton("screens", "📺 Screens")}
-          {tabButton("voting", "🗳️ Voting")}
-          {tabButton("players", "👥 Players")}
-          {tabButton("teams", "🏁 Teams")}
-        </div>
-      </div>
-
-      <div className="mt-6 space-y-6">
-
-        {/* =================================
-            LIVE TAB
-        ================================= */}
-
-        {activeTab ===
-          "live" && (
-          <>
-
-            <Card>
-  <h2 className="text-2xl font-bold">
-    Round Challenges
-  </h2>
-
-  <p className="mt-2 text-sm text-zinc-400">
-    Reveal challenges throughout the round.
-  </p>
-
-  {currentRoundChallenges.length ===
-  0 ? (
-    <p className="mt-4">
-      No challenges assigned to this pub.
-    </p>
-  ) : (
-    <div className="mt-4 space-y-3">
-      {currentRoundChallenges.map(
-        (challenge, index) => {
-          const isLive =
-            String(
-              game?.current_challenge_id
-            ) ===
-            String(challenge.id);
-
-          const hasPassed =
-            currentChallengeIndex >= 0 &&
-            index <
-              currentChallengeIndex;
-
-          const isNext =
-            nextRoundChallenge?.id ===
-            challenge.id;
-
-          return (
-            <div
-              key={challenge.id}
-              className={`
-                rounded-2xl border-2 p-4
-                ${
-                  isLive
-                    ? "border-yellow-400 bg-pink-500"
-                    : hasPassed
-                      ? "border-zinc-700 bg-zinc-900 opacity-60"
-                      : "border-pink-500 bg-black/70"
-                }
-              `}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-bold uppercase text-zinc-400">
-                    Challenge{" "}
-                    {index + 1}
-                  </p>
-
-                  <h3 className="mt-1 text-xl font-bold">
-                    {challenge.title}
-                  </h3>
-
-                  {challenge.description && (
-                    <p className="mt-2">
-                      {
-                        challenge.description
-                      }
-                    </p>
-                  )}
-
-                  <p className="mt-2 font-bold">
-                    +
-                    {challenge.points ??
-                      0}{" "}
-                    points
-                  </p>
+        <div className="host-v2__content">
+          {activeTab === "live" && (
+            <>
+              <section className="host-v2__round-overview">
+                <div className="host-v2__section-heading">
+                  <div>
+                    <p className="host-v2__eyebrow">GAME PROGRESS</p>
+                    <h2>{currentRound?.label ?? "Ready to start"}</h2>
+                  </div>
+                  <span className="host-v2__progress-number">{Math.max(currentChallengeIndex + 1, 0)} / {orderedChallenges.length}</span>
                 </div>
+                <div className="host-v2__progress"><span style={{ width: `${challengeProgress}%` }} /></div>
+              </section>
 
-                {isLive && (
-                  <span className="rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-black">
-                    LIVE
-                  </span>
-                )}
-
-                {hasPassed && (
-                  <span className="rounded-full bg-zinc-700 px-3 py-1 text-xs font-bold">
-                    DONE
-                  </span>
-                )}
-
-                {isNext &&
-                  !isLive && (
-                    <span className="rounded-full bg-pink-500 px-3 py-1 text-xs font-bold">
-                      NEXT
-                    </span>
-                  )}
-              </div>
-
-              {!isLive &&
-                !hasPassed && (
-                  <div className="mt-4">
-                    <Button
-                      type="button"
-                      onClick={() =>
-                        revealRoundChallenge(
-                          challenge
-                        )
-                      }
-                    >
-                      Reveal Now
-                    </Button>
+              <section className="host-v2__panel host-v2__panel--white">
+                <div className="host-v2__panel-topline">
+                  <span className="host-v2__kicker"><Radio size={14} /> NOW</span>
+                  {currentChallenge && <span className="host-v2__status host-v2__status--live">Live challenge</span>}
+                </div>
+                {currentChallenge ? (
+                  <>
+                    <div className="host-v2__challenge-title-row">
+                      <div className="host-v2__challenge-art"><Flag size={28} /></div>
+                      <div className="host-v2__grow">
+                        <h2>{currentChallenge.title}</h2>
+                        <p>{currentChallenge.description || "No extra instructions for this challenge."}</p>
+                      </div>
+                      <span className="host-v2__points">+{currentChallenge.points} pts</span>
+                    </div>
+                    <div className="host-v2__meta-row">
+                      <span><CheckCircle2 size={15} /> {completions.filter((item) => item.challenge_type === "main" && String(item.challenge_id) === String(currentChallenge.id)).length} submissions</span>
+                      <button type="button" className="host-v2__text-button" onClick={() => openReview(currentChallenge)}>Review <ChevronRight size={16} /></button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="host-v2__empty">
+                    <h2>No challenge is live yet</h2>
+                    <p>Reveal the first challenge when everyone is ready.</p>
                   </div>
                 )}
-            </div>
-          );
-        }
-      )}
-    </div>
-  )}
+              </section>
 
-  {nextRoundChallenge && (
-    <div className="mt-6 border-t border-zinc-700 pt-4">
-      <Button
-        type="button"
-        onClick={() =>
-          revealRoundChallenge(
-            nextRoundChallenge
-          )
-        }
-      >
-        Reveal Next Challenge
-      </Button>
-    </div>
-  )}
-</Card>
-
-
-            <Card>
-              <h2 className="text-xl font-bold">
-                Move Round
-              </h2>
-
-              <p className="mt-2 text-sm text-zinc-400">
-                Current pub: <strong>{game.current_pub}</strong>
-              </p>
-
-              <p className="mt-2 text-sm text-zinc-400">
-                Next pub: <strong>{nextPub?.name ?? "None"}</strong>
-              </p>
-
-              <div className="mt-4">
-                <Button
-                  type="button"
-                  disabled={!nextPub}
-                  onClick={moveToNextPub}
-                >
-                  Move to Next Pub
-                </Button>
-              </div>
-            </Card>
-
-
-            <Card>
-              <h2 className="text-xl font-bold">
-                Change Live Game
-              </h2>
-
-              <label className="mt-4 block text-sm">
-                Pub
-              </label>
-
-              <select
-                value={
-                  selectedPub
-                }
-                onChange={(
-                  event
-                ) => {
-                  const pubName =
-                    event.target.value;
-
-                  setSelectedPub(
-                    pubName
-                  );
-
-                  const pub =
-                    pubs.find(
-                      (item) =>
-                        item.name ===
-                        pubName
-                    );
-
-                  const first =
-                    challenges.find(
-                      (challenge) =>
-                        String(
-                          challenge.pub_id
-                        ) ===
-                        String(pub?.id)
-                    );
-
-                  setSelectedChallenge(
-                    first?.title ??
-                    ""
-                  );
-                }}
-                className="mt-2 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
-              >
-                <option value="">
-                  Select pub
-                </option>
-
-                {sortedPubs.map(
-                  (pub) => (
-                    <option
-                      key={pub.id}
-                      value={
-                        pub.name
-                      }
-                    >
-                      {pub.name}
-                    </option>
-                  )
+              <section className="host-v2__panel host-v2__panel--white">
+                <div className="host-v2__panel-topline">
+                  <span className="host-v2__kicker"><ArrowRight size={14} /> NEXT</span>
+                  {scheduledTime && <span className="host-v2__status host-v2__status--scheduled"><Clock3 size={13} /> {scheduledTime}</span>}
+                </div>
+                {scheduledChallenge ? (
+                  <div className="host-v2__challenge-title-row">
+                    <div className="host-v2__challenge-art host-v2__challenge-art--lime"><CalendarClock size={25} /></div>
+                    <div className="host-v2__grow">
+                      <h2>{scheduledChallenge.title}</h2>
+                      <p>{scheduledChallenge.description || "Scheduled challenge"}</p>
+                      <p className="host-v2__small-note">Scheduled to reveal{scheduledTime ? ` at ${scheduledTime}` : " soon"}.</p>
+                    </div>
+                  </div>
+                ) : nextChallenge ? (
+                  <div className="host-v2__challenge-title-row">
+                    <div className="host-v2__challenge-art host-v2__challenge-art--lime"><CircleDot size={25} /></div>
+                    <div className="host-v2__grow">
+                      <h2>{nextChallenge.title}</h2>
+                      <p>{nextChallenge.description || "No extra instructions for this challenge."}</p>
+                      <span className="host-v2__points-inline">+{nextChallenge.points} points</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="host-v2__empty"><h2>All rounds revealed</h2><p>You've reached the end of the main challenge list.</p></div>
                 )}
-              </select>
-
-
-              <label className="mt-4 block text-sm">
-                Challenge
-              </label>
-
-              <select
-                value={
-                  selectedChallenge
-                }
-                onChange={(
-                  event
-                ) =>
-                  setSelectedChallenge(
-                    event.target.value
-                  )
-                }
-                className="mt-2 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
-              >
-                <option value="">
-                  Select challenge
-                </option>
-
-                {availableChallenges.map(
-                  (challenge) => (
-                    <option
-                      key={
-                        challenge.id
-                      }
-                      value={
-                        challenge.title
-                      }
-                    >
-                      {
-                        challenge.title
-                      }
-                    </option>
-                  )
+                <div className="host-v2__actions">
+                  {nextChallenge && <button type="button" className="host-v2__button host-v2__button--primary" disabled={Boolean(busyAction)} onClick={() => void revealChallenge(nextChallenge)}>{busyAction === `reveal-${nextChallenge.id}` ? "Revealing…" : "Reveal next challenge"}<ChevronRight size={17} /></button>}
+                  {scheduledChallenge && <button type="button" className="host-v2__button host-v2__button--subtle" disabled={Boolean(busyAction)} onClick={() => void cancelScheduledReveal()}><X size={16} /> Cancel schedule</button>}
+                </div>
+                {nextChallenge && !scheduledChallenge && (
+                  <div className="host-v2__schedule-row">
+                    <label htmlFor="host-v2-schedule">Auto-reveal in</label>
+                    <input id="host-v2-schedule" aria-label="Minutes until auto reveal" type="number" min={1} max={240} value={scheduleMinutes} onChange={(event) => setScheduleMinutes(event.target.value)} />
+                    <span>min</span>
+                    <button type="button" className="host-v2__icon-button" disabled={Boolean(busyAction)} aria-label="Schedule next challenge" onClick={() => void scheduleChallenge(nextChallenge)}><CalendarClock size={17} /></button>
+                  </div>
                 )}
-              </select>
+              </section>
 
+              <section className="host-v2__panel host-v2__panel--tint">
+                <div className="host-v2__panel-topline"><span className="host-v2__kicker"><Users size={14} /> LIVE CONTROLS</span></div>
+                <div className="host-v2__actions host-v2__actions--stack">
+                  {game.voting_open ? (
+                    <button type="button" className="host-v2__button host-v2__button--primary" onClick={() => void setVoting(false)}>Close voting & show results <Trophy size={17} /></button>
+                  ) : game.show_vote_results ? (
+                    <>
+                      <button type="button" className="host-v2__button host-v2__button--primary" onClick={() => navigate("/vote-results")}>View vote results <ChevronRight size={17} /></button>
+                      <button type="button" className="host-v2__button host-v2__button--subtle" onClick={() => void returnEveryoneToGame()}>Return everyone to game</button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="host-v2__inline-selects">
+                        <label htmlFor="host-v2-vote-target">Vote for</label>
+                        <select id="host-v2-vote-target" value={voteTarget} onChange={(event) => setVoteTarget(event.target.value as ScoreTarget)}><option value="player">Players</option><option value="team">Teams</option></select>
+                      </div>
+                      <button type="button" className="host-v2__button host-v2__button--primary" disabled={!currentChallenge} onClick={() => void setVoting(true, voteTarget)}>Open voting <Trophy size={17} /></button>
+                    </>
+                  )}
+                  <button type="button" className="host-v2__button host-v2__button--subtle" onClick={() => void setSlideshow(!game.slideshow_open)}>{game.slideshow_open ? "Close slideshow" : "Open slideshow"}<ChevronRight size={17} /></button>
+                </div>
+              </section>
+            </>
+          )}
 
-              <div className="mt-6">
-                <Button
-                  type="button"
-                  onClick={goLive}
-                >
-                  Go Live
-                </Button>
-                {(() => {
-  const activeChallenge =
-    challenges.find(
-      (challenge) =>
-        String(challenge.id) ===
-        String(game.current_challenge_id)
-    ) ??
-    challenges.find(
-      (challenge) =>
-        challenge.title ===
-        game.current_challenge
-    );
-
-  if (!activeChallenge) {
-    return null;
-  }
-
-  return (
-    <Button
-      type="button"
-      onClick={() =>
-        navigate(
-          `/challenge-review?type=main&id=${encodeURIComponent(
-            String(activeChallenge.id)
-          )}&title=${encodeURIComponent(
-            activeChallenge.title
-          )}`
-        )
-      }
-    >
-      Review & Award Points
-    </Button>
-    
-  );
-})()}
-              </div>
-            </Card>
-
-          </>
-        )}
-
-
-        {/* =================================
-            TONIGHT TAB
-        ================================= */}
-
-        {activeTab ===
-          "tonight" && (
-          <>
-            <Card>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-400">
-                Live right now
-              </p>
-
-              <h2 className="mt-2 text-3xl font-black">
-                {game.current_pub}
-              </h2>
-
-              <p className="mt-3 text-lg font-bold">
-                {game.current_challenge ||
-                  "No live challenge"}
-              </p>
-
-              <div className="mt-5 grid grid-cols-1 gap-3">
-                {nextRoundChallenge && (
-                  <Button
-                    type="button"
-                    onClick={() =>
-                      revealRoundChallenge(
-                        nextRoundChallenge
-                      )
-                    }
-                  >
-                    ⚡ Reveal Next Challenge
-                  </Button>
-                )}
-
-                <Button
-                  type="button"
-                  disabled={!nextPub}
-                  onClick={moveToNextPub}
-                >
-                  📍 Move to Next Pub
-                </Button>
-
-                <Button
-                  type="button"
-                  onClick={returnEveryoneToGame}
-                >
-                  ↩ Return Everyone to Game
-                </Button>
-              </div>
-            </Card>
-
-            <Card>
-              <h2 className="text-2xl font-bold">
-                Schedule a Reveal
-              </h2>
-
-              <p className="mt-2 text-sm text-zinc-400">
-                The reveal is stored in Supabase.
-                Any open player or admin app can
-                trigger it when the time arrives.
-              </p>
-
-              <label className="mt-4 block text-sm font-bold">
-                Reveal in minutes
-              </label>
-
-              <Input
-                value={scheduleMinutes}
-                onChange={(event) =>
-                  setScheduleMinutes(
-                    event.target.value
-                  )
-                }
-              />
-
-              {game.scheduled_reveal_at && (
-                <div className="mt-4 rounded-xl border border-yellow-500/60 bg-yellow-950/20 p-3">
-                  <p className="font-bold text-yellow-300">
-                    Scheduled for{" "}
-                    {new Date(
-                      game.scheduled_reveal_at
-                    ).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
+          {activeTab === "challenges" && (
+            <>
+              <div className="host-v2__page-intro"><p className="host-v2__eyebrow">GAME CONTENT</p><h2>Challenges</h2><p>Rounds happen here at the venue. Reveal or schedule a challenge whenever you're ready.</p></div>
+              {rounds.map((round) => (
+                <section className="host-v2__panel host-v2__panel--white" key={round.id}>
+                  <div className="host-v2__panel-topline"><span className="host-v2__kicker">{round.label.toUpperCase()}</span><span className="host-v2__muted">{round.challenges.length} challenges</span></div>
+                  <div className="host-v2__list">
+                    {round.challenges.map((challenge) => {
+                      const isCurrent = String(challenge.id) === String(game.current_challenge_id);
+                      const isScheduled = String(challenge.id) === String(game.scheduled_challenge_id);
+                      const isPast = currentChallengeIndex >= 0 && orderedChallenges.findIndex((item) => String(item.id) === String(challenge.id)) < currentChallengeIndex;
+                      return (
+                        <article className="host-v2__challenge-list-item" key={challenge.id}>
+                          <div className="host-v2__list-icon">{isPast ? <Check size={17} /> : <Flag size={17} />}</div>
+                          <div className="host-v2__grow">
+                            <div className="host-v2__title-line"><h3>{challenge.title}</h3>{isCurrent && <span className="host-v2__status host-v2__status--live">Live</span>}{isScheduled && <span className="host-v2__status host-v2__status--scheduled">Scheduled</span>}</div>
+                            <p>{challenge.description || "No description added."}</p>
+                            <span className="host-v2__points-inline">+{challenge.points} points</span>
+                          </div>
+                          <div className="host-v2__row-actions">
+                            <button type="button" className="host-v2__small-action" disabled={Boolean(busyAction) || isCurrent} onClick={() => void revealChallenge(challenge)}>{isCurrent ? "Live" : "Reveal"}</button>
+                            {!isCurrent && !isScheduled && <button type="button" className="host-v2__small-action host-v2__small-action--quiet" disabled={Boolean(busyAction)} onClick={() => void scheduleChallenge(challenge)}>Schedule</button>}
+                          </div>
+                        </article>
+                      );
                     })}
-                  </p>
+                  </div>
+                </section>
+              ))}
+              <section className="host-v2__panel host-v2__panel--tint">
+                <div className="host-v2__section-heading"><div><p className="host-v2__eyebrow">OPTIONAL TASKS</p><h2>Side challenges</h2></div><span className="host-v2__count-pill">{sideChallenges.length}</span></div>
+                <p className="host-v2__body-copy">These can be completed at any point during the party.</p>
+                {sideChallenges.length ? <div className="host-v2__list">
+                  {sideChallenges.map((challenge) => {
+                    const count = completions.filter((item) => item.challenge_type === "side" && String(item.challenge_id) === String(challenge.id)).length;
+                    return <article className="host-v2__side-card" key={challenge.id}><div className="host-v2__side-card-top"><h3>{challenge.title}</h3><span className="host-v2__points">+{challenge.points} pts</span></div><p>{challenge.description}</p><div className="host-v2__side-card-bottom"><span className="host-v2__muted">{count} completions recorded</span><button type="button" className="host-v2__small-action" onClick={() => navigate(`/challenge-review?type=side&id=${encodeURIComponent(String(challenge.id))}&title=${encodeURIComponent(challenge.title)}&from=admin-v2`)}>Review</button></div></article>;
+                  })}
+                </div> : <p className="host-v2__empty-copy">No active side challenges found.</p>}
+              </section>
+            </>
+          )}
 
-                  <Button
-                    type="button"
-                    onClick={cancelScheduledReveal}
-                  >
-                    Cancel Scheduled Reveal
-                  </Button>
+          {activeTab === "scores" && (
+            <>
+              <div className="host-v2__page-intro"><p className="host-v2__eyebrow">COMPETITION</p><h2>Scores & results</h2><p>Award points, dock points and keep track of the leaderboard.</p></div>
+              <section className="host-v2__panel host-v2__panel--white">
+                <div className="host-v2__panel-topline"><span className="host-v2__kicker"><Plus size={14} /> POINTS ADJUSTMENT</span></div>
+                <div className="host-v2__segmented" role="group" aria-label="Score target">
+                  <button type="button" className={scoreTarget === "player" ? "is-selected" : ""} onClick={() => setScoreTarget("player")}>Player</button>
+                  <button type="button" className={scoreTarget === "team" ? "is-selected" : ""} onClick={() => setScoreTarget("team")}>Team</button>
                 </div>
-              )}
-
-              <div className="mt-4 space-y-3">
-                {currentRoundChallenges.map(
-                  (challenge) => (
-                    <div
-                      key={challenge.id}
-                      className="rounded-xl border border-zinc-700 bg-black/50 p-4"
-                    >
-                      <strong>
-                        {challenge.title}
-                      </strong>
-
-                      <div className="mt-3">
-                        <Button
-                          type="button"
-                          onClick={() =>
-                            scheduleChallenge(
-                              challenge
-                            )
-                          }
-                        >
-                          ⏰ Schedule This
-                        </Button>
-                      </div>
-                    </div>
-                  )
-                )}
-              </div>
-            </Card>
-
-            <Card>
-              <h2 className="text-2xl font-bold">
-                Emergency Controls
-              </h2>
-
-              <div className="mt-4 grid grid-cols-1 gap-3">
-                {!game.slideshow_open ? (
-                  <Button
-                    type="button"
-                    onClick={startSlideshow}
-                  >
-                    📺 Start Slideshow
-                  </Button>
+                <div className="host-v2__segmented host-v2__segmented--action" role="group" aria-label="Award or dock points">
+                  <button type="button" className={scoreAction === "award" ? "is-selected" : ""} onClick={() => setScoreAction("award")}><Plus size={15} /> Award</button>
+                  <button type="button" className={scoreAction === "dock" ? "is-selected" : ""} onClick={() => setScoreAction("dock")}><Minus size={15} /> Dock</button>
+                </div>
+                {scoreTarget === "player" ? (
+                  <label className="host-v2__field"><span>Player</span><select value={selectedPlayerId} onChange={(event) => setSelectedPlayerId(event.target.value)}><option value="">Select a player</option>{players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label>
                 ) : (
-                  <Button
-                    type="button"
-                    onClick={stopSlideshow}
-                  >
-                    ⛔ End Slideshow
-                  </Button>
+                  <label className="host-v2__field"><span>Team</span><select value={selectedTeamName} onChange={(event) => setSelectedTeamName(event.target.value)}><option value="">Select a team</option>{teamNames.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>
                 )}
-
-                {!game.voting_open ? (
-                  <Button
-                    type="button"
-                    onClick={openVoting}
-                  >
-                    🗳️ Open Voting
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    onClick={closeVoting}
-                  >
-                    🏁 Close Voting & Show Results
-                  </Button>
-                )}
-              </div>
-            </Card>
-          </>
-        )}
-
-
-        {/* =================================
-            CHALLENGES TAB
-        ================================= */}
-
-        {activeTab ===
-          "challenges" && (
-          <>
-
-            <Card>
-              <h2 className="text-xl font-bold">
-                Play as a Player
-              </h2>
-
-              <p className="mt-2 text-sm text-zinc-400">
-                Choose your joined
-                player account to take
-                part as host.
-              </p>
-
-              <select
-                value={
-                  playingAsPlayerId
-                }
-                onChange={(
-                  event
-                ) =>
-                  setPlayingAsPlayerId(
-                    event.target.value
-                  )
-                }
-                className="mt-4 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
-              >
-                <option value="">
-                  Select player
-                </option>
-
-                {players.map(
-                  (player) => (
-                    <option
-                      key={
-                        player.id
-                      }
-                      value={
-                        player.id
-                      }
-                    >
-                      {
-                        player.name
-                      }
-
-                      {player.team
-                        ? ` • ${player.team}`
-                        : ""}
-                    </option>
-                  )
-                )}
-              </select>
-            </Card>
-
-
-            {/* CHAOS BINGO */}
-
-            <Card>
-              <h2 className="text-2xl font-bold">
-                Chaos Bingo
-              </h2>
-
-              {!playingAsPlayerId ? (
-                <p className="mt-4 text-yellow-400">
-                  Select a player above
-                  to take part.
-                </p>
-              ) : (
-                <div className="mt-4 space-y-4">
-
-                  {sideChallenges.map(
-                    (challenge) => {
-                      const completed =
-                        hasPlayerCompleted(
-                          playingAsPlayerId,
-                          "side",
-                          challenge.id
-                        );
-
-                      const completedBy =
-                        getPlayersWhoCompleted(
-                          "side",
-                          challenge.id
-                        );
-
-                      const key =
-                        completionKey(
-                          playingAsPlayerId,
-                          "side",
-                          challenge.id
-                        );
-
-                      return (
-                        <div
-                          key={
-                            challenge.id
-                          }
-                          className={`
-                            rounded-2xl border-2 p-4
-                            ${
-                              completed
-                                ? "border-green-500 bg-green-950/40"
-                                : "border-pink-500 bg-black/70"
-                            }
-                          `}
-                        >
-                          <div className="flex justify-between gap-4">
-                            <div>
-                              <h3 className="font-bold">
-                                {
-                                  challenge.title
-                                }
-                              </h3>
-
-                              {challenge.description && (
-                                <p className="mt-1 text-sm text-zinc-300">
-                                  {
-                                    challenge.description
-                                  }
-                                </p>
-                              )}
-                            </div>
-
-                            <strong>
-                              +{
-                                challenge.points
-                              }
-                            </strong>
-                          </div>
-
-
-                          {!completed && (
-                            <div className="mt-4 flex flex-wrap gap-2">
-
-                              <Button
-                                type="button"
-                                disabled={
-                                  completingChallengeKey !==
-                                    null ||
-                                  uploadingChallengeKey !==
-                                    null
-                                }
-                                onClick={() =>
-                                  markChallengeDone(
-                                    "side",
-                                    challenge.id,
-                                    challenge.points
-                                  )
-                                }
-                              >
-                                {completingChallengeKey ===
-                                key
-                                  ? "Saving..."
-                                  : "✓ Mark Done"}
-                              </Button>
-
-
-                              <Button
-                                type="button"
-                                disabled={
-                                  completingChallengeKey !==
-                                    null ||
-                                  uploadingChallengeKey !==
-                                    null
-                                }
-                                onClick={() =>
-                                  chooseChallengeUpload({
-                                    id:
-                                      challenge.id,
-
-                                    title:
-                                      challenge.title,
-
-                                    points:
-                                      challenge.points,
-
-                                    type:
-                                      "side",
-                                  })
-                                }
-                              >
-                                {uploadingChallengeKey ===
-                                key
-                                  ? "Uploading..."
-                                  : "📸 Upload Photo / Video"}
-                              </Button>
-                              <Button
-  type="button"
-  onClick={() =>
-    navigate(
-      `/challenge-review?type=side&id=${encodeURIComponent(
-        String(challenge.id)
-      )}&title=${encodeURIComponent(
-        challenge.title
-      )}`
-    )
-  }
->
-  Review & Award Points
-</Button>
-
-                            </div>
-                          )}
-
-
-                          {completed && (
-                            <p className="mt-4 font-bold text-green-400">
-                              ✓ Completed
-                            </p>
-                          )}
-
-
-                          <div className="mt-4">
-                            <p className="text-xs uppercase text-zinc-400">
-                              Completed by
-                            </p>
-
-                            {completedBy.length ===
-                            0 ? (
-                              <p className="mt-1 text-sm text-zinc-500">
-                                Nobody yet
-                              </p>
-                            ) : (
-                              <div className="mt-2 flex flex-wrap gap-2">
-                                {completedBy.map(
-                                  (player) => (
-                                    <span
-                                      key={
-                                        player.id
-                                      }
-                                      className="rounded-full bg-green-900/60 px-3 py-1 text-sm"
-                                    >
-                                      ✓{" "}
-                                      {
-                                        player.name
-                                      }
-                                    </span>
-                                  )
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    }
-                  )}
-
+                <label className="host-v2__field"><span>Points</span><input type="number" min={1} value={pointsDraft} onChange={(event) => setPointsDraft(event.target.value)} /></label>
+                <label className="host-v2__field"><span>Reason (optional)</span><input value={scoreReason} onChange={(event) => setScoreReason(event.target.value)} placeholder="e.g. Best costume" /></label>
+                <button type="button" className="host-v2__button host-v2__button--primary" onClick={() => void handleAwardOrDock()}>{scoreAction === "award" ? "Award points" : "Dock points"}<ChevronRight size={17} /></button>
+              </section>
+              <section className="host-v2__panel host-v2__panel--white">
+                <div className="host-v2__panel-topline"><span className="host-v2__kicker"><Trophy size={14} /> LEADERBOARD</span><span className="host-v2__muted">{scoresLoading ? "Updating…" : "Live scores"}</span></div>
+                <div className="host-v2__segmented" role="group" aria-label="Leaderboard view">
+                  <button type="button" className={scoreLeaderboardTarget === "player" ? "is-selected" : ""} onClick={() => setScoreLeaderboardTarget("player")}>Player scores</button>
+                  <button type="button" className={scoreLeaderboardTarget === "team" ? "is-selected" : ""} onClick={() => setScoreLeaderboardTarget("team")}>Team scores</button>
                 </div>
-              )}
-            </Card>
-
-
-
-
-          </>
-        )}
-
-        {/* =================================
-            REVIEW TAB
-        ================================= */}
-        {activeTab === "review" && (
-          <>
-            {/* CHALLENGE REVIEW */}
-
-            <Card>
-              <h2 className="text-2xl font-bold">
-                Challenge Review
-              </h2>
-
-              <p className="mt-2 text-sm text-zinc-400">
-                Completion records and
-                points linked to each
-                challenge.
-              </p>
-
-              {completions.length ===
-              0 ? (
-                <p className="mt-4">
-                  No completions yet.
-                </p>
-              ) : (
-                <div className="mt-4 space-y-3">
-
-                  {completions.map(
-                    (completion) => {
-                      const player =
-                        players.find(
-                          (item) =>
-                            String(
-                              item.id
-                            ) ===
-                            String(
-                              completion.player_id
-                            )
-                        );
-
-                      const challenge =
-                        completion.challenge_type ===
-                        "side"
-                          ? sideChallenges.find(
-                              (item) =>
-                                String(item.id) ===
-                                String(
-                                  completion.challenge_id
-                                )
-                            )
-                          : challenges.find(
-                              (item) =>
-                                String(item.id) ===
-                                String(
-                                  completion.challenge_id
-                                )
-                            );
-
-                      return (
-                        <div
-                          key={
-                            completion.id
-                          }
-                          className="rounded-xl border border-zinc-700 bg-black/50 p-4"
-                        >
-                          <strong>
-                            {
-                              player?.name ??
-                              "Unknown player"
-                            }
-                          </strong>
-
-                          <p className="mt-1">
-                            {
-                              challenge?.title ??
-                              `Challenge ${completion.challenge_id}`
-                            }
-                          </p>
-
-                          <p className="mt-1 text-sm text-zinc-400">
-                            {
-                              completion.challenge_type
-                            }{" "}
-                            •{" "}
-                            +{
-                              completion.points
-                            }{" "}
-                            points
-                          </p>
-
-                          {completion.photo_id !=
-                            null && (
-                            <p className="mt-2 text-sm text-pink-400">
-                              📸 Media attached
-                            </p>
-                          )}
-                        </div>
-                      );
-                    }
-                  )}
-
-                </div>
-              )}
-            </Card>
-          </>
-        )}
-
-        {/* =================================
-            SCREENS TAB
-        ================================= */}
-
-        {activeTab ===
-          "screens" && (
-          <>
-
-            <Card>
-              <h2 className="text-xl font-bold">
-                Host Screens
-              </h2>
-
-              <div className="mt-4 grid grid-cols-1 gap-3">
-
-                <Button
-                  type="button"
-                  onClick={() =>
-                    navigate(
-                      "/leaderboard"
-                    )
-                  }
-                >
-                  Leaderboard
-                </Button>
-
-
-                {!game.slideshow_open ? (
-                  <Button
-                    type="button"
-                    onClick={
-                      startSlideshow
-                    }
-                  >
-                    Start Slideshow
-                  </Button>
-                ) : (
-                  <>
-                    <Button
-                      type="button"
-                      onClick={() =>
-                        navigate(
-                          "/slideshow?host=true"
-                        )
-                      }
-                    >
-                      Open Slideshow
-                    </Button>
-
-                    <Button
-                      type="button"
-                      onClick={
-                        stopSlideshow
-                      }
-                    >
-                      End Slideshow
-                    </Button>
-                  </>
-                )}
-
-              </div>
-            </Card>
-
-
-          </>
-        )}
-
-        {/* =================================
-            VOTING TAB
-        ================================= */}
-        {activeTab === "voting" && (
-          <>
-            <Card>
-              <h2 className="text-xl font-bold">
-                Voting
-              </h2>
-
-              <p className="mt-2 text-sm text-zinc-400">
-                Current challenge:{" "}
-                {
-                  game.current_challenge
-                }
-              </p>
-
-
-              <select
-                value={
-                  currentGame.voting_target ??
-                  "player"
-                }
-                onChange={async (
-                  event
-                ) => {
-                  await updateGameState({
-                    voting_target:
-                      event.target.value as
-                        | "player"
-                        | "team",
-                  });
-                }}
-                className="mt-4 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
-              >
-                <option value="player">
-                  Vote for Player
-                </option>
-
-                <option value="team">
-                  Vote for Team
-                </option>
-              </select>
-
-
-              <div className="mt-4 space-y-3">
-
-                {!game.voting_open &&
-                  !game.show_vote_results && (
-                    <Button
-                      type="button"
-                      onClick={
-                        openVoting
-                      }
-                    >
-                      Open Voting
-                    </Button>
-                  )}
-
-
-                {game.voting_open && (
-                  <>
-                    <Button
-                      type="button"
-                      onClick={() =>
-                        navigate(
-                          "/vote?from=admin"
-                        )
-                      }
-                    >
-                      🗳️ Vote Now
-                    </Button>
-
-                    <Button
-                      type="button"
-                      onClick={
-                        closeVoting
-                      }
-                    >
-                      Close Voting & Show Results
-                    </Button>
-                  </>
-                )}
-
-
-                {game.show_vote_results && (
-                  <>
-                    <Button
-                      type="button"
-                      onClick={() =>
-                        navigate(
-                          "/vote-results"
-                        )
-                      }
-                    >
-                      View Results
-                    </Button>
-
-                    <Button
-                      type="button"
-                      onClick={
-                        closeResults
-                      }
-                    >
-                      Close Results & Return Everyone
-                    </Button>
-                  </>
-                )}
-
-              </div>
-            </Card>
-
-
-            <Card>
-              <h2 className="text-xl font-bold">
-                Live Voting Results
-              </h2>
-
-              <p className="mt-2">
-                {
-                  game.current_challenge
-                }
-              </p>
-
-
-              {liveResults.length ===
-              0 ? (
-                <p className="mt-4 text-zinc-400">
-                  No votes yet.
-                </p>
-              ) : (
-                <div className="mt-4 space-y-3">
-
-                  {liveResults.map(
-                    (
-                      result,
-                      index
-                    ) => (
-                      <div
-                        key={
-                          result.id
-                        }
-                        className="flex items-center justify-between rounded-xl bg-black/50 p-3"
-                      >
-                        <strong>
-                          {index === 0
-                            ? "👑 "
-                            : ""}
-
-                          {
-                            result.name
-                          }
-                        </strong>
-
-                        <span className="text-xl font-bold">
-                          {
-                            result.votes
-                          }
-                        </span>
+                {(scoreLeaderboardTarget === "player" ? playerLeaderboard : teamLeaderboard).length ? (
+                  <div className="host-v2__leaderboard">
+                    {(scoreLeaderboardTarget === "player" ? playerLeaderboard : teamLeaderboard).map((entry, index) => (
+                      <div className="host-v2__leader-row" key={entry.id}>
+                        <span className={`host-v2__rank ${index === 0 ? "is-first" : ""}`}>{index + 1}</span>
+                        <span className="host-v2__leader-name">{entry.name}</span>
+                        <strong>{entry.score} <small>pts</small></strong>
                       </div>
-                    )
-                  )}
+                    ))}
+                  </div>
+                ) : <p className="host-v2__empty-copy">Scores will appear here when points are awarded.</p>}
+              </section>
+              <section className="host-v2__panel host-v2__panel--tint">
+                <div className="host-v2__panel-topline"><span className="host-v2__kicker">DISPLAY CONTROLS</span></div>
+                <button type="button" className="host-v2__button host-v2__button--primary" onClick={() => void setSlideshow(true)}>Open slideshow <ChevronRight size={17} /></button>
+                {game.show_vote_results && <button type="button" className="host-v2__button host-v2__button--subtle" onClick={() => void returnEveryoneToGame()}>Return everyone to game</button>}
+              </section>
+            </>
+          )}
 
-                </div>
-              )}
-            </Card>
-          </>
-        )}
-
-        {/* =================================
-            PLAYERS TAB
-        ================================= */}
-        {activeTab === "players" && (
-          <>
-            <Card>
-              <h2 className="text-2xl font-bold">
-                Players
-              </h2>
-
-              <div className="mt-4 space-y-4">
-
-                {players.map(
-                  (player) => (
-                    <div
-                      key={
-                        player.id
-                      }
-                      className="rounded-xl border border-zinc-700 bg-black/50 p-4"
-                    >
-
-                      <Input
-                        value={
-                          player.name
-                        }
-                        onChange={(
-                          event
-                        ) => {
-                          void renamePlayer(
-                            player.id,
-                            event.target.value
-                          );
-                        }}
-                      />
-
-                      <p className="mt-2 text-sm">
-                        Team:{" "}
-                        {
-                          player.team ??
-                          "Unassigned"
-                        }
-                      </p>
-
-                      <p className="mt-1 font-bold">
-                        Score:{" "}
-                        {
-                          player.score ??
-                          0
-                        }
-                      </p>
-
-
-                      <div className="mt-3 grid grid-cols-3 gap-2">
-
-                        <Button
-                          type="button"
-                          onClick={() =>
-                            addPoints(
-                              player.id,
-                              5
-                            )
-                          }
-                        >
-                          +5
-                        </Button>
-
-                        <Button
-                          type="button"
-                          onClick={() =>
-                            addPoints(
-                              player.id,
-                              10
-                            )
-                          }
-                        >
-                          +10
-                        </Button>
-
-                        <Button
-                          type="button"
-                          onClick={() =>
-                            removePoints(
-                              player.id,
-                              5
-                            )
-                          }
-                        >
-                          -5
-                        </Button>
-
+          {activeTab === "players" && (
+            <>
+              <div className="host-v2__page-intro"><p className="host-v2__eyebrow">THE PARTY</p><h2>Players & teams</h2><p>Manage your roster and keep teams balanced.</p></div>
+              <section className="host-v2__panel host-v2__panel--white">
+                <div className="host-v2__panel-topline"><span className="host-v2__kicker"><Users size={14} /> TEAMS</span><span className="host-v2__muted">{teams.length} teams</span></div>
+                <div className="host-v2__add-row"><input aria-label="New team name" placeholder="New team name" value={teamNameDraft} onChange={(event) => setTeamNameDraft(event.target.value)} /><button type="button" className="host-v2__icon-button" aria-label="Create team" disabled={creatingTeam || !teamNameDraft.trim()} onClick={() => void addTeam()}>{creatingTeam ? "…" : <Plus size={18} />}</button></div>
+                {teamsLoading ? <p className="host-v2__muted">Loading teams…</p> : teamNames.length ? <div className="host-v2__team-chips">{teamNames.map((name) => <span key={name}>{name}</span>)}</div> : <p className="host-v2__empty-copy">Create a team or assign players to a team below.</p>}
+              </section>
+              <section className="host-v2__panel host-v2__panel--white">
+                <div className="host-v2__panel-topline"><span className="host-v2__kicker"><Users size={14} /> PLAYER ROSTER</span><span className="host-v2__muted">{players.length} players</span></div>
+                <div className="host-v2__add-row"><input aria-label="New player name" placeholder="Add a player" value={newPlayerName} onChange={(event) => setNewPlayerName(event.target.value)} /><button type="button" className="host-v2__icon-button" aria-label="Add player" disabled={creatingPlayer || !newPlayerName.trim()} onClick={() => void addPlayer()}>{creatingPlayer ? "…" : <Plus size={18} />}</button></div>
+                {players.length ? <div className="host-v2__player-list">
+                  {players.map((player) => (
+                    <article className="host-v2__player-row" key={player.id}>
+                      <div className="host-v2__avatar" aria-hidden="true">{player.name.trim().slice(0, 1).toUpperCase() || "?"}</div>
+                      <div className="host-v2__grow">
+                        <input aria-label={`Rename ${player.name}`} className="host-v2__player-name" defaultValue={player.name} key={`${player.id}-${player.name}`} onBlur={(event) => void savePlayerName(player, event.target.value)} />
+                        <label className="host-v2__team-select"><span>Team</span><select value={player.team ?? ""} onChange={(event) => void assignTeam(player, event.target.value)}><option value="">Unassigned</option>{teamNames.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>
                       </div>
+                      <button type="button" className="host-v2__remove-button" aria-label={`Remove ${player.name}`} onClick={() => void removePlayer(player)}><X size={16} /></button>
+                    </article>
+                  ))}
+                </div> : <p className="host-v2__empty-copy">Players will appear here when they join using your game code.</p>}
+              </section>
+            </>
+          )}
+        </div>
 
-
-                      <div className="mt-3">
-                        <Button
-                          type="button"
-                          onClick={async () => {
-                            const confirmed =
-                              window.confirm(
-                                `Delete ${player.name}?`
-                              );
-
-                            if (!confirmed) {
-                              return;
-                            }
-
-                            await deletePlayer(
-                              player.id
-                            );
-                          }}
-                        >
-                          Delete Player
-                        </Button>
-                      </div>
-
-                    </div>
-                  )
-                )}
-
-              </div>
-            </Card>
-          </>
-        )}
-
-        {/* =================================
-            TEAMS TAB
-        ================================= */}
-        {activeTab === "teams" && (
-          <>
-            <Card>
-              <h2 className="text-2xl font-bold">
-                Create Teams
-              </h2>
-
-              <div className="mt-4 space-y-3">
-
-                <Input
-                  placeholder="Team name..."
-                  value={
-                    newTeamName
-                  }
-                  onChange={(
-                    event
-                  ) =>
-                    setNewTeamName(
-                      event.target.value
-                    )
-                  }
-                />
-
-                <Button
-                  type="button"
-                  disabled={
-                    creatingTeam
-                  }
-                  onClick={
-                    createTeam
-                  }
-                >
-                  {creatingTeam
-                    ? "Creating..."
-                    : "Create Team"}
-                </Button>
-
-              </div>
-
-
-              {teams.length > 0 && (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {teams.map(
-                    (team) => (
-                      <span
-                        key={
-                          team.id
-                        }
-                        className="rounded-full bg-zinc-800 px-3 py-2 text-sm"
-                      >
-                        {
-                          team.name
-                        }
-                      </span>
-                    )
-                  )}
-                </div>
-              )}
-            </Card>
-
-            <Card>
-              <h2 className="text-2xl font-bold">
-                Assign Teams
-              </h2>
-
-              <div className="mt-4 space-y-4">
-
-                {players.map(
-                  (player) => (
-                    <div
-                      key={
-                        player.id
-                      }
-                      className="rounded-xl border border-zinc-700 bg-black/50 p-4"
-                    >
-                      <strong>
-                        {
-                          player.name
-                        }
-                      </strong>
-
-                      <select
-                        value={
-                          player.team ??
-                          ""
-                        }
-                        disabled={
-                          assigningPlayerId ===
-                          player.id
-                        }
-                        onChange={(
-                          event
-                        ) => {
-                          void assignTeam(
-                            player.id,
-                            event.target.value
-                          );
-                        }}
-                        className="mt-3 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
-                      >
-                        <option value="">
-                          Unassigned
-                        </option>
-
-                        {teams.map(
-                          (team) => (
-                            <option
-                              key={
-                                team.id
-                              }
-                              value={
-                                team.name
-                              }
-                            >
-                              {
-                                team.name
-                              }
-                            </option>
-                          )
-                        )}
-                      </select>
-                    </div>
-                  )
-                )}
-
-              </div>
-            </Card>
-          </>
-        )}
-
+        <nav className="host-v2__bottom-nav" aria-label="Host navigation">
+          {TAB_ITEMS.map(({ id, label, Icon }) => (
+            <button type="button" key={id} className={activeTab === id ? "is-active" : ""} aria-current={activeTab === id ? "page" : undefined} onClick={() => setActiveTab(id)}>
+              <Icon size={19} strokeWidth={2.5} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </nav>
       </div>
-
     </main>
   );
 }

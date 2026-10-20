@@ -8,7 +8,7 @@ export default function Button({ fullWidth = true, className = "", ...props }: B
   return (
     <button
       {...props}
-      className={`w-full rounded-full bg-pink-500 px-6 py-4 font-black uppercase text-white shadow-[0_0_20px_#ff1493] transition hover:scale-105 hover:bg-pink-400 ${className}`.trim()}
+      className={`w-full rounded-full bg-lime-300 px-6 py-4 font-black uppercase text-black shadow-[0_0_2px_#000000] transition hover:scale-105 hover:bg-black hover:text-white hover:shadow-[0_0_15px_#BDEE41] ${className}`.trim()}
     >
       {props.children}
     </button>

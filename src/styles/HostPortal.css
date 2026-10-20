@@ -1,0 +1,163 @@
+/* Host Hub and plan setup. Scoped so the existing player/game UI is unaffected. */
+.host-portal {
+  --host-purple: #5c36fb;
+  --host-purple-light: #7554fc;
+  --host-purple-deep: #23166e;
+  --host-lime: #d3fb6e;
+  --host-pink: #fb377a;
+  --host-ink: #060f13;
+  --host-muted: #77728c;
+  --host-line: #e7e3f1;
+  --host-panel: #f7f5ff;
+  color: var(--host-ink);
+  font-family: "Maven Pro", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.host-portal *, .host-portal *::before, .host-portal *::after { box-sizing: border-box; }
+.host-portal button, .host-portal input, .host-portal select, .host-portal textarea { font: inherit; }
+.host-portal button { cursor: pointer; }
+.host-portal button:disabled { opacity: .56; cursor: not-allowed; }
+.host-auth-loading { min-height: 100vh; display: flex; align-items: center; justify-content: center; gap: 12px; color: white; background: var(--host-purple); font: 700 16px "Maven Pro", sans-serif; }
+.host-spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,.4); border-top-color: white; border-radius: 50%; animation: host-spin .8s linear infinite; }
+@keyframes host-spin { to { transform: rotate(360deg); } }
+
+.host-auth-page { min-height: 100svh; display: grid; place-items: center; padding: 34px 18px; overflow: hidden; background: radial-gradient(ellipse at 80% 8%, #8a78ff 0%, transparent 34%), radial-gradient(ellipse at 0% 100%, #8b78ff 0%, transparent 34%), var(--host-purple); }
+.host-auth-shell { width: min(100%, 475px); }
+.host-brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; font-size: 17px; font-weight: 1000; letter-spacing: .07em; }
+.host-brand-accent { color: var(--host-lime); }
+.host-brand-mark { width: 38px; height: 38px; display: grid; place-items: center; color: var(--host-ink); background: var(--host-lime); border-radius: 13px; box-shadow: 3px 3px 0 rgba(6,15,19,.45); }
+.host-auth-card { margin-top: 25px; padding: clamp(24px, 5vw, 36px); background: #fff; border-radius: 27px; box-shadow: 0 24px 70px rgba(22,13,82,.26); }
+.host-eyebrow { display: inline-flex; font-size: 10px; font-weight: 1000; letter-spacing: .13em; text-transform: uppercase; color: var(--host-purple); }
+.host-eyebrow--light { color: var(--host-lime); }
+.host-auth-card h1 { margin: 8px 0 10px; color: var(--host-ink); font-family: "Maven Pro", sans-serif; font-size: clamp(32px, 7vw, 43px); line-height: 1.02; letter-spacing: -.05em; text-shadow: none; }
+.host-muted { color: var(--host-muted); }
+.host-auth-card > .host-muted { margin: 0; font-size: 14px; line-height: 1.5; }
+.host-auth-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 25px 0 22px; padding: 4px; border-radius: 14px; background: #f1eff8; }
+.host-auth-switch button { border: 0; padding: 11px; color: #68627d; border-radius: 11px; background: transparent; font-weight: 800; font-size: 13px; }
+.host-auth-switch button.is-active { background: #fff; color: var(--host-purple); box-shadow: 0 2px 10px rgba(35,22,110,.09); }
+.host-form { display: flex; flex-direction: column; gap: 16px; }
+.host-field { display: flex; min-width: 0; flex-direction: column; gap: 7px; color: var(--host-ink); font-size: 13px; font-weight: 900; }
+.host-field input, .host-field select, .host-field textarea, .host-custom-task-form input { width: 100%; min-width: 0; border: 1.5px solid #ddd7f0; outline: none; border-radius: 13px; padding: 12px 13px; color: var(--host-ink); background: #fff; font-weight: 600; font-size: 14px; box-shadow: 0 1px 0 rgba(35,22,110,.025); }
+.host-field input:focus, .host-field select:focus, .host-field textarea:focus, .host-custom-task-form input:focus { border-color: var(--host-purple); box-shadow: 0 0 0 3px rgba(92,54,251,.12); }
+.host-field input::placeholder, .host-custom-task-form input::placeholder { color: #aaa5bb; font-weight: 500; }
+.host-field small { color: var(--host-muted); font-size: 11px; font-weight: 600; line-height: 1.4; }
+.host-input-icon { position: relative; }
+.host-input-icon > svg { position: absolute; top: 50%; left: 13px; color: var(--host-purple); transform: translateY(-50%); }
+.host-input-icon input { padding-left: 42px; }
+.host-auth-footnote { margin: 18px 0 0; color: #8b859b; font-size: 11px; line-height: 1.45; text-align: center; }
+.host-auth-footer { margin: 22px 0 0; color: rgba(255,255,255,.75); font-size: 12px; text-align: center; font-weight: 700; }
+
+.host-app { min-height: 100svh; background: #f8f7fc; }
+.host-app-header { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 15px clamp(18px, 4vw, 44px); background: var(--host-purple); color: #fff; }
+.host-header-right { display: flex; align-items: center; gap: 13px; }
+.host-user-chip { display: flex; align-items: center; gap: 8px; color: white; font-size: 12px; font-weight: 800; }
+.host-user-avatar { display: grid; place-items: center; width: 31px; height: 31px; border-radius: 50%; background: var(--host-lime); color: var(--host-ink); font-weight: 1000; }
+.host-icon-button { display: inline-grid; flex: 0 0 auto; place-items: center; width: 37px; height: 37px; border: 1px solid rgba(255,255,255,.22); border-radius: 12px; color: white; background: rgba(35,22,110,.3); }
+.host-icon-button--danger { width: 34px; height: 34px; border-color: #f3d9e4; color: var(--host-pink); background: #fff8fb; }
+.host-app-layout { display: grid; grid-template-columns: 224px minmax(0,1fr); min-height: calc(100svh - 66px); }
+.host-sidebar { display: flex; flex-direction: column; gap: 5px; padding: 26px 14px; border-right: 1px solid var(--host-line); background: #fff; }
+.host-sidebar-label { padding: 0 12px 9px; color: #a09ab1; font-size: 9px; font-weight: 1000; letter-spacing: .15em; }
+.host-nav-link { display: flex; align-items: center; gap: 11px; width: 100%; padding: 12px; border: 0; border-radius: 12px; color: #6f6884; background: transparent; font-size: 13px; font-weight: 800; text-align: left; text-decoration: none; }
+.host-nav-link.is-active { color: var(--host-purple); background: #f0edff; }
+.host-nav-link--quiet { margin-top: auto; }
+.host-sidebar-divider { height: 1px; margin: 16px 8px; background: var(--host-line); }
+.host-sidebar-note { margin: 0 4px 20px; padding: 14px; border-radius: 16px; background: #f7f5ff; }
+.host-mini-icon { display: grid; place-items: center; width: 32px; height: 32px; margin-bottom: 10px; border-radius: 10px; color: var(--host-purple); background: #e8e3ff; }
+.host-sidebar-note strong { font-size: 12px; }
+.host-sidebar-note p { margin: 5px 0 10px; color: var(--host-muted); font-size: 11px; line-height: 1.4; }
+.host-text-button { display: inline-flex; align-items: center; gap: 7px; padding: 0; border: 0; color: var(--host-purple); background: transparent; font-size: 12px; font-weight: 1000; }
+.host-main { min-width: 0; width: min(100%, 1440px); margin: 0 auto; padding: clamp(20px, 3vw, 36px); }
+.host-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 25px; }
+.host-page-heading h1 { margin: 0; color: var(--host-ink); font: 1000 clamp(25px, 3vw, 32px)/1.1 "Maven Pro", sans-serif; letter-spacing: -.045em; text-shadow: none; }
+.host-page-heading p { margin: 7px 0 0; color: var(--host-muted); font-size: 13px; }
+.host-button { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; gap: 8px; min-height: 39px; padding: 10px 14px; border: 1px solid transparent; border-radius: 12px; font-size: 12px; font-weight: 1000; line-height: 1.15; text-decoration: none; transition: transform .15s ease, box-shadow .15s ease; }
+.host-button:hover:not(:disabled) { transform: translateY(-1px); }
+.host-button--primary { color: white; background: var(--host-purple); box-shadow: 0 3px 0 rgba(35,22,110,.13); }
+.host-button--secondary { border-color: #ddd7f0; color: var(--host-purple); background: white; }
+.host-button--ghost { border-color: transparent; color: #77718d; background: transparent; }
+.host-button--lime { color: var(--host-ink); background: var(--host-lime); box-shadow: 0 3px 0 rgba(0,0,0,.11); }
+.host-button--full { width: 100%; min-height: 47px; border-radius: 14px; }
+.host-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 22px; padding: 5px; border-radius: 14px; background: #efedf6; width: fit-content; max-width: 100%; }
+.host-tabs button { display: inline-flex; align-items: center; gap: 7px; padding: 10px 13px; border: 0; border-radius: 10px; color: #716a86; background: transparent; font-size: 12px; font-weight: 900; }
+.host-tabs button.is-active { color: var(--host-purple); background: white; box-shadow: 0 2px 8px rgba(35,22,110,.07); }
+.host-tab-count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 20px; background: #e9e3ff; color: var(--host-purple); font-size: 10px; }
+.host-hero-card { position: relative; display: flex; justify-content: space-between; gap: 24px; min-height: 245px; overflow: hidden; padding: clamp(24px, 3vw, 36px); border-radius: 22px; color: #fff; background: linear-gradient(112deg, #23166e 0%, #5c36fb 63%, #7b60ff 100%); box-shadow: 0 13px 32px rgba(67,44,177,.16); }
+.host-hero-card::after { position: absolute; inset: 0; content: ""; pointer-events: none; background: repeating-conic-gradient(from 20deg at 80% 45%, rgba(255,255,255,.08) 0deg 9deg, transparent 9deg 22deg); mask-image: radial-gradient(ellipse at 82% 46%, #000 0%, transparent 48%); }
+.host-hero-copy { position: relative; z-index: 1; max-width: 510px; }
+.host-hero-copy h2 { margin: 12px 0; color: white; font: 1000 clamp(32px, 5vw, 48px)/.97 "Maven Pro", sans-serif; letter-spacing: -.055em; text-shadow: none; }
+.host-hero-copy h2 span { color: var(--host-lime); }
+.host-hero-copy p { max-width: 410px; margin: 0 0 20px; color: rgba(255,255,255,.79); font-size: 13px; line-height: 1.55; }
+.host-hero-art { position: relative; z-index: 1; align-self: center; display: grid; place-items: center; width: clamp(140px, 22vw, 245px); min-width: 140px; height: 150px; color: var(--host-lime); font: 1000 clamp(20px, 3vw, 30px) "Maven Pro", sans-serif; text-shadow: 4px 4px 0 var(--host-ink); transform: rotate(-7deg); }
+.host-hero-art span { position: absolute; top: -4px; left: 0; font-size: 45px; }.host-hero-art i { position: absolute; right: 0; bottom: -4px; font-style: normal; font-size: 60px; }.host-hero-art b { padding: 14px 9px; border: 3px solid var(--host-ink); border-radius: 18px; background: var(--host-pink); }
+.host-list-section { margin-top: 31px; }
+.host-section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+.host-section-heading h2 { margin: 0; color: var(--host-ink); font: 1000 19px "Maven Pro", sans-serif; letter-spacing: -.03em; text-shadow: none; }
+.host-section-heading p { margin: 5px 0 0; color: var(--host-muted); font-size: 12px; }
+.host-game-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.host-game-card { display: flex; gap: 15px; min-width: 0; padding: 14px; border: 1px solid var(--host-line); border-radius: 17px; background: #fff; box-shadow: 0 3px 12px rgba(35,22,110,.025); }
+.host-game-card-art { display: flex; flex: 0 0 84px; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 132px; border-radius: 13px; color: #fff; background: linear-gradient(140deg, #5c36fb, #8b78ff); }
+.host-game-card-art span { color: var(--host-lime); font-size: 31px; font-weight: 1000; text-shadow: 2px 2px 0 var(--host-purple-deep); }
+.host-game-card-content { min-width: 0; flex: 1; }
+.host-card-topline { display: flex; align-items: center; justify-content: space-between; gap: 7px; }
+.host-status { display: inline-flex; padding: 5px 8px; border-radius: 20px; background: #f0edff; color: var(--host-purple); font-size: 9px; font-weight: 1000; text-transform: uppercase; letter-spacing: .05em; }
+.host-status--planned { color: #3c6811; background: #efffd0; }.host-status--live { color: #a11949; background: #ffe5ef; }.host-status--completed { color: #5d5870; background: #eeeaf5; }.host-status--draft { color: #665d7f; background: #f1eef7; }
+.host-small { font-size: 10px; }
+.host-game-card h3 { margin: 9px 0 12px; color: var(--host-ink); font: 1000 16px "Maven Pro", sans-serif; letter-spacing: -.025em; text-shadow: none; }
+.host-game-meta { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-bottom: 6px; color: #77718c; font-size: 10px; font-weight: 700; }
+.host-game-meta span { display: inline-flex; align-items: center; gap: 5px; }
+.host-game-meta svg { color: var(--host-purple); }
+.host-game-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.host-empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 42px 20px; border: 1px dashed #d9d2ec; border-radius: 17px; color: var(--host-purple); background: rgba(255,255,255,.65); text-align: center; }
+.host-empty-state h3 { margin: 5px 0 0; color: var(--host-ink); font: 1000 17px "Maven Pro", sans-serif; text-shadow: none; }
+.host-empty-state p { max-width: 360px; margin: 0 0 9px; color: var(--host-muted); font-size: 12px; line-height: 1.5; }
+.host-alert { margin-bottom: 16px; padding: 12px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; line-height: 1.4; }
+.host-alert--error { border: 1px solid #fac7d6; color: #9e214c; background: #fff1f5; }
+.host-alert--success { border: 1px solid #d7efab; color: #385b11; background: #f5ffdf; }
+.host-mobile-nav { display: none; }
+
+.host-plan-layout { display: grid; grid-template-columns: 245px minmax(0,1fr); align-items: start; gap: 22px; }
+.host-plan-steps { position: sticky; top: 20px; padding: 17px; border: 1px solid var(--host-line); border-radius: 18px; background: #fff; }
+.host-plan-steps-title { padding: 0 6px 12px; color: #9992ad; font-size: 9px; font-weight: 1000; letter-spacing: .12em; }
+.host-plan-step { display: flex; width: 100%; gap: 10px; padding: 11px 7px; border: 0; border-radius: 12px; color: #827b96; background: transparent; text-align: left; }
+.host-plan-step.is-active { color: var(--host-purple); background: #f1eeff; }
+.host-plan-step.is-done { color: #475d2a; }
+.host-plan-step-number { display: grid; flex: 0 0 27px; place-items: center; width: 27px; height: 27px; border: 1px solid #ddd7ee; border-radius: 50%; background: white; color: inherit; font-size: 11px; font-weight: 1000; }
+.host-plan-step.is-active .host-plan-step-number { border-color: var(--host-purple); color: white; background: var(--host-purple); }
+.host-plan-step.is-done .host-plan-step-number { border-color: #cce89b; color: #4e731c; background: #efffd3; }
+.host-plan-step strong { display: block; padding-top: 2px; font-size: 12px; }.host-plan-step small { display: block; margin-top: 3px; color: #9992ad; font-size: 10px; line-height: 1.35; }
+.host-single-venue-note { display: flex; gap: 10px; margin-top: 17px; padding: 12px; border-radius: 13px; color: var(--host-purple); background: #f5f2ff; }
+.host-single-venue-note strong { display: block; color: var(--host-ink); font-size: 11px; }
+.host-single-venue-note p { margin: 5px 0 0; color: var(--host-muted); font-size: 10px; line-height: 1.45; }
+.host-plan-card { min-width: 0; padding: clamp(18px, 3vw, 30px); border: 1px solid var(--host-line); border-radius: 20px; background: #fff; }
+.host-plan-card-heading { margin-bottom: 23px; }.host-plan-card-heading h2 { margin: 8px 0 6px; color: var(--host-ink); font: 1000 clamp(23px, 3vw, 31px)/1.08 "Maven Pro", sans-serif; letter-spacing: -.05em; text-shadow: none; }.host-plan-card-heading p { margin: 0; color: var(--host-muted); font-size: 12px; }
+.host-plan-form { gap: 17px; }.host-plan-form .host-field { margin: 0; }
+.host-two-cols { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+.host-plan-option { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 0; border-bottom: 1px solid #f0edf6; }
+.host-plan-option strong { color: var(--host-ink); font-size: 13px; }.host-plan-option p { margin: 4px 0 0; color: var(--host-muted); font-size: 11px; line-height: 1.4; }
+.host-switch { position: relative; flex: 0 0 42px; width: 42px; height: 25px; padding: 3px; border: 0; border-radius: 30px; background: #d5d1e1; transition: background .16s ease; }
+.host-switch span { display: block; width: 19px; height: 19px; border-radius: 50%; background: white; box-shadow: 0 1px 3px rgba(0,0,0,.18); transition: transform .16s ease; }
+.host-switch.is-on { background: var(--host-purple); }.host-switch.is-on span { transform: translateX(17px); }
+.host-info-banner, .host-muted-panel { display: flex; align-items: flex-start; gap: 11px; padding: 13px; border: 1px solid #e6e0ff; border-radius: 14px; color: var(--host-purple); background: #f6f3ff; }
+.host-info-banner strong { display: block; color: var(--host-ink); font-size: 12px; }.host-info-banner p, .host-muted-panel p { margin: 4px 0 0; color: #77718b; font-size: 11px; line-height: 1.5; }
+.host-muted-panel { align-items: center; }.host-muted-panel p { margin: 0; }
+.host-task-library-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 15px; margin-top: 27px; margin-bottom: 12px; }
+.host-task-library-header h3, .host-custom-task-form h3 { margin: 0; color: var(--host-ink); font: 1000 15px "Maven Pro",sans-serif; text-shadow: none; }.host-task-library-header p { margin: 4px 0 0; color: var(--host-muted); font-size: 11px; }
+.host-task-filters { display: flex; flex-wrap: wrap; gap: 4px; }
+.host-choice-pill { padding: 7px 10px; border: 1px solid #e2dcef; border-radius: 20px; color: #77718b; background: white; font-size: 10px; font-weight: 900; text-transform: capitalize; }.host-choice-pill.is-selected { border-color: var(--host-purple); color: white; background: var(--host-purple); }
+.host-task-list { display: flex; flex-direction: column; gap: 9px; }
+.host-task-card { display: flex; align-items: flex-start; gap: 11px; padding: 13px; border: 1px solid var(--host-line); border-radius: 14px; background: #fff; transition: border-color .15s ease, background .15s ease; }.host-task-card.is-selected { border-color: #a698ff; background: #fcfbff; }
+.host-task-select { display: grid; flex: 0 0 27px; place-items: center; width: 27px; height: 27px; border: 1px solid #d8d1ea; border-radius: 8px; color: #8e87a3; background: white; }.host-task-select.is-selected { border-color: var(--host-purple); color: white; background: var(--host-purple); }
+.host-task-copy { min-width: 0; flex: 1; }.host-task-title-row { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }.host-task-title-row h4 { margin: 2px 0 0; color: var(--host-ink); font-size: 13px; font-weight: 1000; }.host-task-copy p { margin: 6px 0 8px; color: #706981; font-size: 11px; line-height: 1.45; }
+.host-tag { display: inline-flex; align-items: center; flex: 0 0 auto; padding: 4px 7px; border-radius: 7px; color: #3c266f; background: #eee9ff; font-size: 9px; font-weight: 1000; text-transform: capitalize; }
+.host-task-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--host-muted); font-size: 10px; }.host-task-meta span:first-child { display: inline-flex; align-items: center; gap: 4px; }.host-task-tag { padding: 4px 6px; border-radius: 6px; background: #f0edf6; }
+.host-favourite-button { display: grid; flex: 0 0 31px; place-items: center; width: 31px; height: 31px; border: 1px solid #e7e2f1; border-radius: 10px; color: #aaa4ba; background: white; }.host-favourite-button.is-saved { border-color: #ffc7d9; color: var(--host-pink); background: #fff1f6; }
+.host-custom-task-form { display: flex; flex-direction: column; gap: 11px; margin-top: 18px; padding: 15px; border: 1px dashed #d8d0eb; border-radius: 14px; background: #fbfaff; }.host-custom-task-form .host-two-cols { grid-template-columns: 1fr 1fr; }
+.host-review-summary { display: flex; flex-direction: column; gap: 16px; }
+.host-review-hero { display: flex; gap: 13px; align-items: flex-start; padding: 18px; border-radius: 16px; color: var(--host-lime); background: linear-gradient(125deg, #23166e, #5c36fb); }.host-review-hero h3 { margin: 5px 0; color: #fff; font: 1000 23px "Maven Pro",sans-serif; text-shadow: none; }.host-review-hero p { margin: 0; color: rgba(255,255,255,.75); font-size: 11px; }
+.host-review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }.host-review-item { display: flex; align-items: flex-start; gap: 10px; padding: 13px; border: 1px solid var(--host-line); border-radius: 13px; color: var(--host-purple); }.host-review-item div { min-width: 0; }.host-review-item small,.host-review-item span { display: block; color: var(--host-muted); font-size: 10px; }.host-review-item strong { display: block; margin: 3px 0; overflow-wrap: anywhere; color: var(--host-ink); font-size: 12px; }
+.host-review-tasks h3 { margin: 0 0 8px; color: var(--host-ink); font: 1000 14px "Maven Pro",sans-serif; text-shadow: none; }.host-review-task { display: flex; gap: 12px; align-items: flex-start; padding: 11px 0; border-bottom: 1px solid #f0edf6; }.host-review-task > span { display: grid; place-items: center; flex: 0 0 28px; height: 28px; border-radius: 9px; color: var(--host-purple); background: #eee9ff; font-size: 10px; font-weight: 1000; }.host-review-task strong { display: block; color: var(--host-ink); font-size: 12px; }.host-review-task small { display: block; margin-top: 4px; color: var(--host-muted); font-size: 10px; }
+.host-plan-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 27px; padding-top: 17px; border-top: 1px solid var(--host-line); }.host-plan-footer-right { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.host-saved-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 13px; }.host-saved-card { display: flex; align-items: flex-start; gap: 12px; padding: 15px; border: 1px solid var(--host-line); border-radius: 16px; background: #fff; }.host-saved-icon { display: grid; place-items: center; flex: 0 0 39px; width: 39px; height: 39px; border-radius: 12px; color: var(--host-purple); background: #eee9ff; }.host-saved-copy { min-width: 0; flex: 1; }.host-saved-copy h3 { margin: 6px 0; color: var(--host-ink); font: 1000 14px "Maven Pro",sans-serif; text-shadow: none; }.host-saved-copy p { margin: 0 0 9px; color: var(--host-muted); font-size: 11px; line-height: 1.4; }
+@media (max-width: 850px) { .host-app-layout { grid-template-columns: 1fr; }.host-sidebar { display: none; }.host-main { padding: 20px 16px 88px; }.host-mobile-nav { position: fixed; z-index: 20; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(3, 1fr); padding: 8px 8px max(8px, env(safe-area-inset-bottom)); border-top: 1px solid var(--host-line); background: rgba(255,255,255,.96); backdrop-filter: blur(12px); }.host-mobile-nav a { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px; border-radius: 10px; color: #88829b; text-decoration: none; font-size: 9px; font-weight: 900; }.host-mobile-nav a.active { color: var(--host-purple); background: #f1eeff; }.host-page-heading { align-items: flex-start; }.host-page-heading .host-button { padding: 10px; }.host-game-grid,.host-saved-grid { grid-template-columns: 1fr; }.host-plan-layout { grid-template-columns: 1fr; }.host-plan-steps { position: static; padding: 10px; overflow-x: auto; }.host-plan-steps-title,.host-single-venue-note { display: none; }.host-plan-steps { display: flex; gap: 4px; }.host-plan-step { align-items: center; flex: 0 0 auto; width: auto; padding: 8px; }.host-plan-step span:last-child { display: none; }.host-plan-step-number { flex-basis: 30px; width: 30px; height: 30px; }.host-hero-art { opacity: .6; margin-right: -45px; }.host-hero-card { gap: 0; } }
+@media (max-width: 560px) { .host-app-header { padding: 12px 15px; }.host-brand { font-size: 14px; }.host-user-chip > span:last-child { display: none; }.host-main { padding: 18px 13px 85px; }.host-page-heading h1 { font-size: 25px; }.host-page-heading { gap: 10px; }.host-page-heading .host-button { font-size: 0; gap: 0; width: 40px; height: 40px; padding: 0; }.host-page-heading .host-button svg { width: 20px; height: 20px; }.host-hero-card { min-height: 245px; padding: 22px; }.host-hero-copy { max-width: 100%; }.host-hero-copy p { max-width: 80%; }.host-hero-art { position: absolute; right: -30px; bottom: 6px; width: 125px; min-width: 125px; opacity: .45; }.host-two-cols,.host-custom-task-form .host-two-cols,.host-review-grid { grid-template-columns: 1fr; }.host-plan-card { padding: 18px 14px; }.host-task-library-header { flex-direction: column; align-items: flex-start; }.host-task-card { gap: 8px; padding: 10px; }.host-task-title-row { flex-direction: column; gap: 6px; }.host-plan-footer { align-items: stretch; flex-direction: column-reverse; }.host-plan-footer > .host-button,.host-plan-footer-right > .host-button { flex: 1; }.host-plan-footer-right { display: grid; grid-template-columns: 1fr 1fr; }.host-game-card { gap: 10px; padding: 10px; }.host-game-card-art { flex-basis: 55px; min-height: 92px; }.host-game-card-art svg { width: 20px; }.host-game-card-art span { font-size: 23px; }.host-game-actions .host-button { font-size: 10px; padding: 9px; }.host-game-meta { gap: 7px; }.host-review-hero h3 { font-size: 19px; } }
+
+.host-venue-favourite-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 2px 0 8px; font-size: 11px; }.host-button.is-favourited { border-color: #ffc7d9; color: var(--host-pink); background: #fff1f6; }

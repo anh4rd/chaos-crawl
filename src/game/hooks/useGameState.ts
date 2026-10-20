@@ -43,6 +43,12 @@ export interface GameState {
   scheduled_reveal_at:
     | string
     | null;
+
+  join_code?: string;
+  event_name?: string;
+  event_image_url?: string | null;
+  join_open?: boolean;
+  game_status?: "lobby" | "live" | "finished";
 }
 
 
