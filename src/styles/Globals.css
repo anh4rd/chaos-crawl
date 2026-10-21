@@ -1,5 +1,4 @@
 @import url("https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400;500;600;700;800;900&family=Permanent+Marker&display=swap");
-@import ("public/fonts/hardbeat.woff2");
 @import "tailwindcss";
 
 :root {
@@ -76,7 +75,7 @@ h1 {
   margin-block: 0.67em;
   color: var(--black);
   font-size: clamp(2rem, 8vw, 3rem);
-  text-shadow: 2px 2px 0 var(--black);
+  text-shadow: 2px 2px 0 var(--lime);
 }
 
 h2,

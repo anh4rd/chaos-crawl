@@ -108,8 +108,8 @@
   cursor: pointer;
 }
 .cc-join-mode-switch button.is-active { background: #23166E; color: #fff; }
-.cc-player-form { display: grid; gap: 16px; }
-.cc-player-form label { display: grid; gap: 7px; font-weight: 800; font-size: 13px; }
+.cc-player-form { display:grid; gap: 16px; }
+.cc-player-form label { display: inline-block; gap: 7px; font-weight: 800; font-size: 13px; }
 .cc-player-form input {
   width: 100%;
   border: 2px solid #DED6FE;
@@ -122,6 +122,15 @@
   font: inherit;
   font-size: 16px;
 }
+.cc-player-form-join-code {display:flex flow-row wrap; gap: 7px; justify-content: center; align-items: center; }
+.cc-player-form-join-code-label { display: block; margin-bottom: 8px; color: rgba(255,255,255,.8); font-size: 11px; font-weight: 900; letter-spacing: .11em; text-align: center; text-transform: uppercase; }
+.cc-player-form-join-code-boxes { position: relative; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px; margin: 18px 00px 00px; }
+.cc-player-form-join-code-box { display: grid; aspect-ratio: .9 / 1; place-items: center; border: 2px solid transparent; border-radius: 12px; background: #fff; color: var(--chaos-ink); font-family: "Hardbeat", "Trebuchet MS", sans-serif; font-size: clamp(28px, 8vw, 38px); line-height: 1; box-shadow: 0 3px 0 rgba(35,22,110,.18); }
+.cc-player-form-join-code-box--filled { border-color: var(--chaos-lime); }
+.cc-player-form-join-code-input-overlay { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; opacity: .001; cursor: text; }
+.cc-player-form-join-code-boxes:focus-within .cc-player-form-join-code-box { border-color: var(--chaos-lime); box-shadow: 0 0 0 2px rgba(211,251,110,.2); }
+
+.cc-player-form 
 .cc-player-form input:focus { border-color: #5C36FB; box-shadow: 0 0 0 3px rgba(92,54,251,.14); }
 .cc-player-form input::placeholder { color: #AAA6B8; }
 .cc-player-form small { font-size: 11px; color: #797587; font-weight: 500; line-height: 1.35; }

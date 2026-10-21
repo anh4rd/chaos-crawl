@@ -101,18 +101,21 @@ export default function Join() {
         {error && <div className="cc-player-error" role="alert">{error}</div>}
 
         <form onSubmit={(event) => void submit(event)} className="cc-player-form">
-          <label>
+          <label className="cc-player-form-join-code-boxes" htmlFor=".cc-player-form-join-code">
             <span>Six-digit game code</span>
-            <input
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              pattern="[0-9]{6}"
-              maxLength={6}
-              placeholder="123456"
-              value={code}
-              onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-              required
-            />
+            <div className="cc-player-form-join-code-boxes">
+                {Array.from({ length: 6 }, (_, index) => <span className={`cc-player-form-join-code-box ${code[index] ? "cc-player-form-join-code-box--filled" : ""}`} key={index}>{code[index] ?? ""}</span>)}
+                <input
+                  id="join-code"
+                  className="cc-player-form-join-code-input-overlay"
+                  value={code}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  aria-label="Enter six digit game code"
+                  onChange={(event) => { setCode(event.target.value.replace(/\D/g, "").slice(0, 6)); }}
+                />
+              </div>
           </label>
           {mode === "join" && (
             <label>
