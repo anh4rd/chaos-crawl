@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react
 import { Link, useParams } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import {
-  ArrowLeft, ArrowRight, Check, Clipboard, Flag,
-  LoaderCircle, Play, RotateCcw, Users, X,
+  ArrowLeft, ArrowRight, CalendarClock, Check, Clipboard, Flag,
+  LoaderCircle, Play, RotateCcw, Send, Shield, Users, X,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import HostShell from "../components/host/HostShell";
@@ -63,6 +63,19 @@ interface SessionSubmission {
   awarded_points: number;
   submitted_at: string;
 }
+interface SecretMissionAssignment {
+  id: string;
+  session_id: string;
+  player_id: string;
+  challenge_id: string;
+  status: "scheduled" | "sent" | "submitted" | "approved" | "rejected" | "cancelled";
+  scheduled_at: string;
+  sent_at: string | null;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  awarded_points: number;
+  created_at: string;
+}
 export default function HostLiveSession() {
   const { sessionId = "" } = useParams();
   const [session, setSession] = useState<GameSession | null>(null);
@@ -70,6 +83,13 @@ export default function HostLiveSession() {
   const [players, setPlayers] = useState<SessionPlayer[]>([]);
   const [teams, setTeams] = useState<SessionTeam[]>([]);
   const [submissions, setSubmissions] = useState<SessionSubmission[]>([]);
+  const [secretAssignments, setSecretAssignments] = useState<SecretMissionAssignment[]>([]);
+  const [selectedSecretPlayerId, setSelectedSecretPlayerId] = useState("");
+  const [selectedSecretChallengeId, setSelectedSecretChallengeId] = useState("");
+  const [secretScheduleAt, setSecretScheduleAt] = useState("");
+  const [newSecretTitle, setNewSecretTitle] = useState("");
+  const [newSecretDescription, setNewSecretDescription] = useState("");
+  const [newSecretPoints, setNewSecretPoints] = useState(10);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -78,12 +98,17 @@ export default function HostLiveSession() {
 
   const load = useCallback(async () => {
     if (!sessionId) return;
-    const [sessionResult, challengeResult, playerResult, teamResult, submissionResult] = await Promise.all([
+    // Send any scheduled missions whose time has arrived while this game is live.
+    const { error: dispatchError } = await supabase.rpc("cc_host_dispatch_due_secret_missions", { p_session_id: sessionId });
+    if (dispatchError) console.warn("SECRET MISSION DISPATCH:", dispatchError.message);
+
+    const [sessionResult, challengeResult, playerResult, teamResult, submissionResult, secretAssignmentResult] = await Promise.all([
       supabase.from("cc_game_sessions").select("*").eq("id", sessionId).single(),
       supabase.from("cc_game_session_challenges").select("*").eq("session_id", sessionId).order("sort_order", { ascending: true }),
       supabase.from("cc_game_session_players").select("id,name,avatar_url,team_id,score,joined_at,last_seen_at").eq("session_id", sessionId).order("joined_at", { ascending: true }),
       supabase.from("cc_game_session_teams").select("id,name,created_at").eq("session_id", sessionId).order("created_at", { ascending: true }),
       supabase.from("cc_game_session_submissions").select("id,player_id,challenge_id,status,awarded_points,submitted_at").eq("session_id", sessionId).order("submitted_at", { ascending: false }),
+      supabase.from("cc_game_session_secret_assignments").select("id,session_id,player_id,challenge_id,status,scheduled_at,sent_at,submitted_at,reviewed_at,awarded_points,created_at").eq("session_id", sessionId).order("created_at", { ascending: false }),
     ]);
 
     if (sessionResult.error) {
@@ -96,7 +121,8 @@ export default function HostLiveSession() {
     setPlayers((playerResult.data ?? []) as SessionPlayer[]);
     setTeams((teamResult.data ?? []) as SessionTeam[]);
     setSubmissions((submissionResult.data ?? []) as SessionSubmission[]);
-    const loadError = challengeResult.error || playerResult.error || teamResult.error || submissionResult.error;
+    setSecretAssignments((secretAssignmentResult.data ?? []) as SecretMissionAssignment[]);
+    const loadError = challengeResult.error || playerResult.error || teamResult.error || submissionResult.error || secretAssignmentResult.error;
     if (loadError) setError(`Some game details could not load: ${loadError.message}`);
     else setError("");
     setLoading(false);
@@ -227,6 +253,100 @@ export default function HostLiveSession() {
     await load();
   }
 
+  async function createSecretChallenge(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session || !newSecretTitle.trim()) return;
+    setBusy(true); setError(""); setNotice("");
+    const nextSortOrder = Math.max(0, ...challenges.map((item) => Number(item.sort_order ?? 0))) + 1;
+    const { data, error: createError } = await supabase
+      .from("cc_game_session_challenges")
+      .insert({
+        session_id: session.id,
+        kind: "secret",
+        round_number: null,
+        title: newSecretTitle.trim(),
+        description: newSecretDescription.trim(),
+        points: Math.max(0, Number(newSecretPoints) || 0),
+        duration_minutes: 10,
+        sort_order: nextSortOrder,
+        allow_photo_upload: false,
+      })
+      .select("id")
+      .single();
+    setBusy(false);
+    if (createError || !data) {
+      setError(createError?.message ?? "Couldn't add that secret mission.");
+      return;
+    }
+    setNewSecretTitle("");
+    setNewSecretDescription("");
+    setNewSecretPoints(10);
+    setSelectedSecretChallengeId(data.id);
+    setNotice("Secret mission added. Choose a player and send it now or schedule it.");
+    await load();
+  }
+
+  async function assignSecretMission(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session || !selectedSecretPlayerId || !selectedSecretChallengeId) {
+      setError("Choose one player and one secret mission.");
+      return;
+    }
+    if (session.status === "completed") {
+      setError("This game has finished.");
+      return;
+    }
+    let scheduledAt: string;
+    if (secretScheduleAt) {
+      const when = new Date(secretScheduleAt);
+      if (Number.isNaN(when.getTime())) {
+        setError("Choose a valid delivery date and time.");
+        return;
+      }
+      scheduledAt = when.toISOString();
+    } else {
+      scheduledAt = new Date().toISOString();
+    }
+    const targetPlayer = players.find((item) => item.id === selectedSecretPlayerId);
+    setBusy(true); setError(""); setNotice("");
+    const { error: assignError } = await supabase.rpc("cc_host_assign_secret_mission", {
+      p_session_id: session.id,
+      p_player_id: selectedSecretPlayerId,
+      p_challenge_id: selectedSecretChallengeId,
+      p_scheduled_at: scheduledAt,
+    });
+    setBusy(false);
+    if (assignError) {
+      setError(assignError.message);
+      return;
+    }
+    setSecretScheduleAt("");
+    const isFuture = new Date(scheduledAt).getTime() > Date.now() && session.status === "live";
+    setNotice(isFuture
+      ? `Secret mission scheduled for ${targetPlayer?.name ?? "the player"} at ${new Date(scheduledAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.`
+      : `Secret mission ${session.status === "live" ? "sent" : "queued for the start of the game"} to ${targetPlayer?.name ?? "the player"}.`);
+    await load();
+  }
+
+  async function reviewSecretMission(assignment: SecretMissionAssignment, approve: boolean) {
+    const challenge = challenges.find((item) => item.id === assignment.challenge_id);
+    const suggested = Number(challenge?.points ?? 0);
+    const points = approve
+      ? Number(window.prompt(`Points to award for this secret mission (suggested: ${suggested})`, String(suggested)) ?? "-1")
+      : 0;
+    if (approve && (!Number.isFinite(points) || points < 0)) return;
+    setBusy(true); setError(""); setNotice("");
+    const { error: reviewError } = await supabase.rpc("cc_host_review_secret_mission", {
+      p_assignment_id: assignment.id,
+      p_approve: approve,
+      p_points: points,
+    });
+    setBusy(false);
+    if (reviewError) { setError(reviewError.message); return; }
+    setNotice(approve ? `Secret mission approved for ${points} points.` : "Secret mission rejected. The player can try again.");
+    await load();
+  }
+
   const playerById = new Map(players.map((player) => [player.id, player]));
   const challengeById = new Map(challenges.map((challenge) => [challenge.id, challenge]));
   const teamById = new Map(teams.map((team) => [team.id, team]));
@@ -339,6 +459,94 @@ export default function HostLiveSession() {
             ))}
             {players.length === 0 && <p className="cc-helper-text">No players yet. Share the QR code or join code above.</p>}
           </div>
+        </section>
+
+        <section className="cc-session-card cc-session-section cc-secret-management">
+          <div className="cc-session-section-heading">
+            <div>
+              <div className="cc-section-kicker cc-section-kicker--icon"><Shield size={14} /> PRIVATE MISSIONS</div>
+              <h2>Secret missions</h2>
+              <p>Assign each mission to one player. Leave the delivery time blank to send now, or schedule it for later in the game.</p>
+            </div>
+            <span className="cc-count-pill">{secretAssignments.filter((item) => item.status === "scheduled").length} scheduled</span>
+          </div>
+
+          {session.status !== "completed" && (
+            <>
+              <form className="cc-secret-assign-form" onSubmit={(event) => void assignSecretMission(event)}>
+                <label>
+                  <span>Send to one player</span>
+                  <select value={selectedSecretPlayerId} onChange={(event) => setSelectedSecretPlayerId(event.target.value)} required disabled={busy || players.length === 0}>
+                    <option value="">Choose player…</option>
+                    {players.map((player) => <option key={player.id} value={player.id}>{player.name}</option>)}
+                  </select>
+                </label>
+                <label>
+                  <span>Secret mission</span>
+                  <select value={selectedSecretChallengeId} onChange={(event) => setSelectedSecretChallengeId(event.target.value)} required disabled={busy || secretChallenges.length === 0}>
+                    <option value="">Choose mission…</option>
+                    {secretChallenges.map((challenge) => <option key={challenge.id} value={challenge.id}>{challenge.title} · {challenge.points} pts</option>)}
+                  </select>
+                </label>
+                <label className="cc-secret-time-field">
+                  <span><CalendarClock size={14}/> Deliver at (optional)</span>
+                  <input type="datetime-local" value={secretScheduleAt} onChange={(event) => setSecretScheduleAt(event.target.value)} disabled={busy}/>
+                  <small>Leave blank to send immediately, or queue until the game goes live.</small>
+                </label>
+                <button type="submit" className="host-button host-button--lime cc-secret-send-button" disabled={busy || !selectedSecretPlayerId || !selectedSecretChallengeId || players.length === 0 || secretChallenges.length === 0}>
+                  {busy ? <LoaderCircle size={16} className="cc-spin"/> : <Send size={16}/>} Assign secret mission
+                </button>
+              </form>
+
+              <details className="cc-secret-create-details">
+                <summary>Add a custom secret mission to this game</summary>
+                <form className="cc-secret-create-form" onSubmit={(event) => void createSecretChallenge(event)}>
+                  <label><span>Mission title</span><input value={newSecretTitle} onChange={(event) => setNewSecretTitle(event.target.value)} maxLength={100} required placeholder="e.g. Get someone to start a conga line"/></label>
+                  <label><span>Instructions (private to the assigned player)</span><textarea value={newSecretDescription} onChange={(event) => setNewSecretDescription(event.target.value)} rows={3} maxLength={1000} placeholder="What should this one player do?"/></label>
+                  <label><span>Points</span><input type="number" min={0} max={10000} value={newSecretPoints} onChange={(event) => setNewSecretPoints(Number(event.target.value))}/></label>
+                  <button type="submit" className="host-button host-button--secondary" disabled={busy || !newSecretTitle.trim()}><Check size={16}/> Add mission</button>
+                </form>
+              </details>
+            </>
+          )}
+
+          {secretAssignments.length > 0 ? (
+            <div className="cc-secret-assignment-list">
+              {secretAssignments.map((assignment) => {
+                const player = playerById.get(assignment.player_id);
+                const challenge = challengeById.get(assignment.challenge_id);
+                const statusLabel = assignment.status === "scheduled"
+                  ? `Scheduled · ${new Date(assignment.scheduled_at).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })}`
+                  : assignment.status === "sent" ? "Sent to player"
+                  : assignment.status === "submitted" ? "Needs review"
+                  : assignment.status === "approved" ? `Approved · +${assignment.awarded_points} pts`
+                  : assignment.status === "rejected" ? "Rejected · can retry" : "Cancelled";
+                return (
+                  <article className="cc-secret-assignment-row" key={assignment.id}>
+                    <div className="cc-secret-assignment-icon"><Shield size={18}/></div>
+                    <div className="cc-secret-assignment-copy">
+                      <strong>{challenge?.title ?? "Secret mission"}</strong>
+                      <span>For {player?.name ?? "player"}</span>
+                      <small>{statusLabel}</small>
+                    </div>
+                    {assignment.status === "submitted" && (
+                      <div className="cc-submission-actions">
+                        <button type="button" className="host-button host-button--lime" disabled={busy} onClick={() => void reviewSecretMission(assignment, true)}><Check size={15}/> Approve</button>
+                        <button type="button" className="host-button host-button--ghost" disabled={busy} onClick={() => void reviewSecretMission(assignment, false)}><X size={15}/> Retry</button>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="cc-secret-empty">
+              <Shield size={21}/>
+              <p>{secretChallenges.length > 0
+                ? "No secret missions assigned yet. Pick one player and a mission above."
+                : "There are no secret missions in this plan yet. Add one here, or select secret missions in Explore before creating a new game."}</p>
+            </div>
+          )}
         </section>
 
         <section className="cc-session-card cc-session-section">

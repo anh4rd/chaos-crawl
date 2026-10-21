@@ -87,3 +87,55 @@
   .cc-submission-row { grid-template-columns:1fr; }
   .cc-submission-status { justify-self:start; }
 }
+
+/* Secret mission scheduler: private, individually targeted tasks. */
+.cc-section-kicker--icon { display:flex; align-items:center; gap:6px; }
+.cc-secret-management { gap:16px; }
+.cc-secret-assign-form {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);
+  gap:12px;
+  padding:15px;
+  border:1px solid #e9e3f7;
+  border-radius:16px;
+  background:#faf8ff;
+}
+.cc-secret-assign-form label,
+.cc-secret-create-form label { display:grid; gap:7px; min-width:0; color:#37304e; font-size:11px; font-weight:900; }
+.cc-secret-assign-form label > span,
+.cc-secret-create-form label > span { display:flex; align-items:center; gap:5px; }
+.cc-secret-assign-form select,
+.cc-secret-assign-form input,
+.cc-secret-create-form input,
+.cc-secret-create-form textarea {
+  width:100%; min-width:0; min-height:43px; border:1px solid #dcd5ee; border-radius:11px;
+  padding:10px 11px; color:#060f13; background:#fff; font:inherit; font-size:12px; outline:none;
+}
+.cc-secret-assign-form select:focus,
+.cc-secret-assign-form input:focus,
+.cc-secret-create-form input:focus,
+.cc-secret-create-form textarea:focus { border-color:#7554fc; box-shadow:0 0 0 3px rgba(92,54,251,.1); }
+.cc-secret-time-field { grid-column:1 / 2; }
+.cc-secret-time-field small { color:#817b92; font-size:10px; font-weight:500; line-height:1.4; }
+.cc-secret-send-button { align-self:end; justify-content:center; min-height:43px; }
+.cc-secret-create-details { border:1px dashed #dcd5ee; border-radius:14px; padding:12px 14px; }
+.cc-secret-create-details summary { color:#5c36fb; font-size:12px; font-weight:1000; cursor:pointer; }
+.cc-secret-create-form { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr) 90px auto; align-items:end; gap:10px; padding-top:14px; }
+.cc-secret-create-form textarea { resize:vertical; min-height:43px; }
+.cc-secret-create-form > button { justify-content:center; white-space:nowrap; }
+.cc-secret-assignment-list { display:grid; }
+.cc-secret-assignment-row { display:flex; align-items:center; gap:11px; flex-wrap:wrap; padding:12px 0; border-top:1px solid #f0edf7; }
+.cc-secret-assignment-icon { display:grid; place-items:center; flex:0 0 37px; width:37px; height:37px; border-radius:12px; color:#3a247d; background:#fdd3e7; }
+.cc-secret-assignment-copy { display:grid; flex:1; min-width:120px; gap:4px; }
+.cc-secret-assignment-copy strong { color:#23166e; font-size:12px; }
+.cc-secret-assignment-copy span { color:#655d78; font-size:11px; }
+.cc-secret-assignment-copy small { color:#817b92; font-size:10px; }
+.cc-secret-assignment-row .cc-submission-actions { display:flex; gap:7px; flex:0 0 auto; }
+.cc-secret-empty { display:flex; align-items:center; gap:12px; border-radius:13px; padding:14px; background:#f8f5ff; color:#5c36fb; }
+.cc-secret-empty p { margin:0; color:#77718b; font-size:11px; line-height:1.45; }
+@media (max-width: 680px) {
+  .cc-secret-assign-form { grid-template-columns:minmax(0,1fr); }
+  .cc-secret-time-field { grid-column:auto; }
+  .cc-secret-create-form { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+  .cc-secret-create-form > button { grid-column:1 / -1; }
+}

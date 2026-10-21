@@ -33,6 +33,7 @@ export default function App() {
         <Route path="/join" element={<Join />} />
         <Route path="/game" element={<Game />} />
         <Route path="/play/:joinCode" element={<SessionPlayerGame />} />
+        <Route path="/play/:joinCode/:page" element={<SessionPlayerGame />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/vote" element={<Vote />} />
         <Route path="/slideshow" element={<Slideshow />} />
