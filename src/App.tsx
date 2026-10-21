@@ -15,6 +15,7 @@ const HostLogin = lazy(() => import("./pages/HostLogin"));
 const HostHub = lazy(() => import("./pages/HostHub"));
 const HostPlanSetup = lazy(() => import("./pages/HostPlanSetup"));
 const HostSaved = lazy(() => import("./pages/HostSaved"));
+const HostExplore = lazy(() => import("./pages/HostExplore"));
 const HostGuard = lazy(() => import("./components/host/HostGuard"));
 
 export default function App() {
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/host/games/new" element={<HostPlanSetup />} />
           <Route path="/host/games/:id/edit" element={<HostPlanSetup />} />
           <Route path="/host/saved" element={<HostSaved />} />
+          <Route path="/host/explore" element={<HostExplore />} />
           <Route path="/host/games" element={<HostHub />} />
         </Route>
       </Routes>

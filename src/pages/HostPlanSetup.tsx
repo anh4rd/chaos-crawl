@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock3, Heart, MapPin, Plus, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import HostShell from "../components/host/HostShell";
@@ -57,12 +57,31 @@ const taskLibrary: Task[] = [
   { id: "task-handshake", title: "Invent a secret handshake", description: "Create and perform a team handshake that lasts exactly five seconds.", points: 10, minutes: 10, kind: "side", tags: ["team", "performance"] },
   { id: "task-secret-mission", title: "Secret mission", description: "Complete a discreet, harmless mission without telling the other teams what it is.", points: 15, minutes: 20, kind: "secret", tags: ["secret", "sneaky"] },
   { id: "task-sabotage", title: "Friendly sabotage", description: "Give another team a ridiculous distraction using only words. No hiding, damaging or taking their belongings.", points: 10, minutes: 10, kind: "secret", tags: ["silly", "social"] },
+  { id: "task-pineapple-fashion", title: "Pineapple couture", description: "Create the most convincing outfit accessory from safe, available materials. Model it like a serious fashion show.", points: 20, minutes: 12, kind: "main", tags: ["creative", "team", "performance"] },
+  { id: "task-useless-invention", title: "Invent something useless", description: "Pitch a completely unnecessary invention and demonstrate how it solves a problem nobody has.", points: 20, minutes: 10, kind: "main", tags: ["improv", "performance"] },
+  { id: "task-secret-selfie", title: "Album cover energy", description: "Stage a dramatic album cover using only your team and the room around you. Ask before photographing anyone else.", points: 15, minutes: 8, kind: "side", tags: ["photo", "creative"] },
+  { id: "task-silent-director", title: "Silent director", description: "Direct your team into a scene without speaking. The host guesses the scene.", points: 15, minutes: 6, kind: "main", tags: ["team", "quick", "performance"] },
 ];
 
 const today = () => {
   const date = new Date();
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
   return local.toISOString().slice(0, 10);
+};
+
+const catalogueVenuePresets: Record<string, { venueType: string; label: string }> = {
+  "loc-private-room": { venueType: "private-room", label: "Private function room" },
+  "loc-pub-room": { venueType: "pub", label: "Pub or bar with a bookable room" },
+  "loc-home": { venueType: "home", label: "Living room party" },
+  "loc-garden": { venueType: "garden", label: "Garden or beer garden" },
+  "loc-community-hall": { venueType: "hall", label: "Community hall" },
+  "loc-karaoke": { venueType: "other", label: "Private karaoke room" },
+  "loc-arcade": { venueType: "other", label: "Arcade, bowling or activity venue" },
+  "loc-boardgame-cafe": { venueType: "other", label: "Board-game café" },
+  "loc-park": { venueType: "garden", label: "Park or picnic area" },
+  "loc-beach": { venueType: "other", label: "Beach or waterfront spot" },
+  "loc-student-union": { venueType: "pub", label: "Student union or social club" },
+  "loc-hired-studio": { venueType: "other", label: "Hired creative studio" },
 };
 
 const initialForm: PlanForm = {
@@ -119,6 +138,9 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 export default function HostPlanSetup() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const catalogueTaskId = searchParams.get("task");
+  const catalogueVenueId = searchParams.get("venueIdea");
   const editing = Boolean(id);
   const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState<PlanForm>(initialForm);
@@ -133,6 +155,37 @@ export default function HostPlanSetup() {
   const currentStep = steps[stepIndex];
 
   const update = <K extends keyof PlanForm>(key: K, value: PlanForm[K]) => setForm((current) => ({ ...current, [key]: value }));
+
+  // Values passed from Explore prefill a new plan without changing saved plans.
+  useEffect(() => {
+    if (id) return;
+
+    if (catalogueTaskId) {
+      const task = taskLibrary.find((item) => item.id === catalogueTaskId);
+      if (task) {
+        setForm((current) => ({
+          ...current,
+          selectedTaskIds: current.selectedTaskIds.includes(task.id)
+            ? current.selectedTaskIds
+            : [...current.selectedTaskIds, task.id],
+          ...(task.kind === "secret" && task.id === "task-sabotage" ? { sabotage: true } : {}),
+          ...(task.kind === "secret" && task.id !== "task-sabotage" ? { secretMissions: true } : {}),
+          ...(task.kind === "side" ? { sideChallenges: true } : {}),
+        }));
+        setStepIndex(3);
+        setNotice(`Added "${task.title}" to your new plan. You can review the challenge selection here.`);
+      }
+    }
+
+    if (catalogueVenueId) {
+      const venue = catalogueVenuePresets[catalogueVenueId];
+      if (venue) {
+        setForm((current) => ({ ...current, venueType: venue.venueType }));
+        setStepIndex(2);
+        setNotice(`${venue.label} selected. Add the actual venue name and any booking details before saving.`);
+      }
+    }
+  }, [id, catalogueTaskId, catalogueVenueId]);
 
   useEffect(() => {
     let active = true;

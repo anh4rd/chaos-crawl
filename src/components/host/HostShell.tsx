@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Bell, BookOpen, Gamepad2, Heart, Home, LogOut, Plus, Sparkles } from "lucide-react";
+import { Bell, BookOpen, Compass, Gamepad2, Heart, Home, LogOut, Plus, Sparkles } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../../lib/supabase";
 
@@ -47,6 +47,7 @@ export default function HostShell({ children, title, subtitle, showCreate = true
           <div className="host-sidebar-label">YOUR SPACE</div>
           <NavLink to="/host" end className={({ isActive }) => `host-nav-link${isActive ? " is-active" : ""}`}><Home size={18} /> Home</NavLink>
           <NavLink to="/host/games" className={({ isActive }) => `host-nav-link${isActive ? " is-active" : ""}`}><Gamepad2 size={18} /> Your games</NavLink>
+          <NavLink to="/host/explore" className={({ isActive }) => `host-nav-link${isActive ? " is-active" : ""}`}><Compass size={18} /> Explore library</NavLink>
           <NavLink to="/host/saved" className={({ isActive }) => `host-nav-link${isActive ? " is-active" : ""}`}><Heart size={18} /> Saved</NavLink>
           <div className="host-sidebar-divider" />
           <div className="host-sidebar-note">
@@ -75,6 +76,7 @@ export default function HostShell({ children, title, subtitle, showCreate = true
       <nav className="host-mobile-nav" aria-label="Host navigation">
         <NavLink to="/host" end><Home size={18} /><span>Home</span></NavLink>
         <NavLink to="/host/games"><Gamepad2 size={18} /><span>Games</span></NavLink>
+        <NavLink to="/host/explore"><Compass size={18} /><span>Explore</span></NavLink>
         <NavLink to="/host/saved"><Heart size={18} /><span>Saved</span></NavLink>
       </nav>
     </div>

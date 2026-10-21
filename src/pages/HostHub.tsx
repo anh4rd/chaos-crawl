@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { CalendarDays, Clock3, Edit3, LoaderCircle, MapPin, Play, Plus, Sparkles, Users } from "lucide-react";
+import { CalendarDays, Clock3, Compass, Edit3, LoaderCircle, MapPin, Play, Plus, Sparkles, Users } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import HostShell from "../components/host/HostShell";
 import { createOrGetHostGameSession } from "../lib/gameSessions";
@@ -147,7 +147,10 @@ export default function HostHub() {
             <h2>Good times.<br /><span>Bad ideas.</span></h2>
             <p>Build a custom challenge game for your birthday, work do or any gathering that needs a little chaos.</p>
             <div className="host-hero-actions">
+              <div className="host-hero-actions">
               <button type="button" className="host-button host-button--lime" onClick={() => navigate("/host/games/new")}><Plus size={18} /> Plan a new game</button>
+              <button type="button" className="host-button host-button--secondary" onClick={() => navigate("/host/explore")}><Compass size={17} /> Explore ideas</button>
+            </div>
               {(() => {
                 const playable = upcoming.find((game) => game.status === "live") ?? upcoming.find((game) => game.status === "planned");
                 if (!playable) return null;
