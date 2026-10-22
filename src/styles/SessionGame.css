@@ -346,3 +346,43 @@
   .cc-player-rank-avatar { flex-basis: 32px; width: 32px; height: 32px; }
   .cc-player-rank-score strong { font-size: 19px; }
 }
+
+/* Session evidence uploads and the moderated final-vote gallery. */
+.cc-player-evidence-block,
+.cc-player-side-evidence { display:grid; gap:9px; margin:13px 0; width:100%; }
+.cc-player-evidence-tools { display:flex; align-items:center; flex-wrap:wrap; gap:9px; }
+.cc-player-upload-button { position:relative; display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:39px; padding:9px 12px; border:1.5px solid #23166E; border-radius:999px; background:#EDE9FF; color:#23166E; font-size:11px; font-weight:900; cursor:pointer; }
+.cc-player-upload-button input[type="file"] { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
+.cc-player-upload-button:has(input:disabled) { opacity:.55; cursor:not-allowed; }
+.cc-player-evidence-count { color:#817B92; font-size:10px; font-weight:800; }
+.cc-player-evidence-required { margin:0; color:#8D1646; font-size:11px; line-height:1.4; font-weight:800; }
+.cc-player-evidence-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(95px,1fr)); gap:8px; width:100%; }
+.cc-player-evidence-item { overflow:hidden; min-width:0; aspect-ratio:1; border-radius:12px; border:1px solid #DDD5F2; background:#171128; }
+.cc-player-evidence-item img,
+.cc-player-evidence-item video { display:block; width:100%; height:100%; object-fit:cover; }
+.cc-player-secret-card .cc-player-evidence-tools { margin:11px 0; }
+.cc-player-side-evidence { flex:1 0 100%; }
+.cc-player-side-card { flex-wrap:wrap; }
+.cc-player-side-card .cc-player-side-evidence { order:3; }
+.cc-player-final-page { display:grid; gap:14px; }
+.cc-player-final-vote-status { padding:12px 14px; border:1px solid #D9D0FF; border-radius:14px; background:#F3EFFF; color:#3A247D; font-size:12px; line-height:1.4; font-weight:800; }
+.cc-player-final-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:14px; }
+.cc-player-final-card { overflow:hidden; border:2px solid #060F13; border-radius:19px; background:#fff; box-shadow:3px 3px 0 #DCD5F1; }
+.cc-player-final-card.is-voted { border-color:#5C36FB; box-shadow:4px 4px 0 #D3FB6E; }
+.cc-player-final-media { display:grid; place-items:center; width:100%; aspect-ratio:4/3; background:#161124; }
+.cc-player-final-media img,
+.cc-player-final-media video { display:block; width:100%; height:100%; object-fit:contain; }
+.cc-player-final-copy { display:grid; gap:7px; padding:13px; }
+.cc-player-final-category { color:#7554FC; font-size:9px; font-weight:1000; letter-spacing:.1em; }
+.cc-player-final-copy h3 { margin:0; color:#060F13; font-size:16px; line-height:1.15; font-weight:1000; overflow-wrap:anywhere; }
+.cc-player-final-copy p { margin:0; color:#5E5B6B; font-size:11px; }
+.cc-player-final-vote-row { display:flex; align-items:center; justify-content:space-between; gap:9px; min-height:38px; }
+.cc-player-vote-button { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:38px; padding:9px 13px; border:1.5px solid #060F13; border-radius:999px; background:#D3FB6E; color:#23166E; font-size:11px; font-weight:1000; cursor:pointer; }
+.cc-player-vote-button.is-selected { background:#23166E; color:#D3FB6E; }
+.cc-player-vote-button:disabled { opacity:.6; cursor:wait; }
+.cc-player-final-vote-count { color:#5C36FB; font-size:11px; }
+.cc-player-small-status.is-selected { background:#D3FB6E; color:#183E0B; }
+@media (max-width:520px) {
+  .cc-player-final-grid { grid-template-columns:1fr; }
+  .cc-player-final-vote-row { flex-wrap:wrap; }
+}

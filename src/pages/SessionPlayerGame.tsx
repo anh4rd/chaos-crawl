@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { CheckCircle2, Circle, Clock3, Flag, Gamepad2, LoaderCircle, RotateCcw, Trophy, ClipboardList, Users, Crown } from "lucide-react";
+import { CheckCircle2, Circle, Clock3, Gamepad2, LoaderCircle, RotateCcw, Trophy, ClipboardList, Users, Crown, Upload, Heart, Film, Flag } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import "../styles/SessionGame.css";
 
@@ -17,6 +17,13 @@ interface SessionInfo {
   host_chooses_teams: boolean;
   team_size: number;
   player_limit: number;
+  final_gallery_open: boolean;
+  final_voting_open: boolean;
+  final_vote_completed_at: string | null;
+  final_vote_winner_player_id: string | null;
+  final_vote_winner_evidence_id: string | null;
+  final_vote_winner_points: number;
+  final_vote_winner_vote_count: number;
 }
 interface SessionPlayerInfo {
   id: string;
@@ -28,7 +35,7 @@ interface SessionPlayerInfo {
 }
 interface TeamInfo { id: string; name: string; member_count: number; }
 interface LeaderboardEntry { player_id: string; name: string; score: number; team_id: string | null; team_name: string | null; }
-type PlayerPage = "game" | "leaderboard" | "side-challenges";
+type PlayerPage = "game" | "leaderboard" | "side-challenges" | "final";
 interface ChallengeInfo {
   id: string;
   kind: "main" | "side";
@@ -62,6 +69,42 @@ interface SecretMission {
   submitted_at: string | null;
   reviewed_at: string | null;
   awarded_points: number;
+  allow_photo_upload: boolean;
+}
+interface SessionEvidence {
+  id: string;
+  session_id: string;
+  player_id: string;
+  challenge_id: string;
+  secret_assignment_id: string | null;
+  storage_path: string;
+  media_type: "image" | "video";
+  saved_for_final: boolean;
+  created_at: string;
+}
+interface FinalGalleryItem {
+  id: string;
+  player_name: string;
+  challenge_title: string;
+  challenge_kind: "main" | "side" | "secret";
+  media_type: "image" | "video";
+  storage_path: string;
+  vote_count: number | null;
+  is_my_vote: boolean;
+}
+interface FinalGalleryView {
+  gallery_open: boolean;
+  voting_open: boolean;
+  voting_completed: boolean;
+  completed_at: string | null;
+  winner_player_id: string | null;
+  winner_player_name: string | null;
+  winner_evidence_id: string | null;
+  winner_challenge_title: string | null;
+  winner_points: number;
+  winner_vote_count: number;
+  my_vote_id: string | null;
+  items: FinalGalleryItem[];
 }
 function playerStorageKey(code: string) {
   return `chaos-crawl-session-player:${code.replace(/\D/g, "")}`;
@@ -70,12 +113,14 @@ function playerStorageKey(code: string) {
 export default function SessionPlayerGame() {
   const { joinCode = "", page: pageParam } = useParams();
   const navigate = useNavigate();
-  const activePage: PlayerPage = pageParam === "leaderboard" || pageParam === "side-challenges" ? pageParam : "game";
+  const activePage: PlayerPage = pageParam === "leaderboard" || pageParam === "side-challenges" || pageParam === "final" ? pageParam : "game";
   const code = joinCode.replace(/\D/g, "").slice(0, 6);
   const [token, setToken] = useState(() => localStorage.getItem(playerStorageKey(code)));
   const [view, setView] = useState<SessionView | null>(null);
   const [secretMissions, setSecretMissions] = useState<SecretMission[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [evidence, setEvidence] = useState<SessionEvidence[]>([]);
+  const [finalGallery, setFinalGalleryView] = useState<FinalGalleryView | null>(null);
   const [loading, setLoading] = useState(true);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -116,6 +161,16 @@ export default function SessionPlayerGame() {
       setSecretMissions((missionData ?? []) as SecretMission[]);
     }
 
+    const { data: evidenceData, error: evidenceError } = await supabase.rpc("cc_get_player_session_evidence", {
+      p_join_code: code,
+      p_player_token: token,
+    });
+    if (evidenceError) {
+      nextError = nextError || `Your uploads couldn't refresh: ${evidenceError.message}`;
+    } else {
+      setEvidence((evidenceData ?? []) as SessionEvidence[]);
+    }
+
     if (activePage === "leaderboard") {
       const { data: leaderboardData, error: leaderboardError } = await supabase.rpc("cc_get_player_session_leaderboard", {
         p_join_code: code,
@@ -125,6 +180,18 @@ export default function SessionPlayerGame() {
         nextError = nextError || `The leaderboard couldn't refresh: ${leaderboardError.message}`;
       } else {
         setLeaderboard((leaderboardData ?? []) as LeaderboardEntry[]);
+      }
+    }
+
+    if (activePage === "final") {
+      const { data: galleryData, error: galleryError } = await supabase.rpc("cc_get_player_session_final_gallery", {
+        p_join_code: code,
+        p_player_token: token,
+      });
+      if (galleryError) {
+        nextError = nextError || `The final gallery couldn't refresh: ${galleryError.message}`;
+      } else {
+        setFinalGalleryView(galleryData as FinalGalleryView);
       }
     }
 
@@ -144,6 +211,143 @@ export default function SessionPlayerGame() {
     if (!view?.challenge) return null;
     return view.my_submissions.find((item) => item.challenge_id === view.challenge?.id) ?? null;
   }, [view]);
+
+  function mediaUrl(path: string) {
+    return supabase.storage.from("session-evidence").getPublicUrl(path).data.publicUrl;
+  }
+
+  function evidenceForChallenge(challengeId: string) {
+    return evidence.filter((item) => item.challenge_id === challengeId && item.secret_assignment_id === null);
+  }
+
+  function evidenceForSecret(assignmentId: string) {
+    return evidence.filter((item) => item.secret_assignment_id === assignmentId);
+  }
+
+  async function uploadEvidence(
+    event: ChangeEvent<HTMLInputElement>,
+    parent: { type: "challenge"; challenge: ChallengeInfo } | { type: "secret"; mission: SecretMission },
+  ) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file || !view || !token || !code) return;
+
+    // Some browsers (notably on mobile) leave File.type blank for HEIC/MOV and other media.
+    // Infer the type from the extension as a fallback so valid photos/videos are not rejected.
+    const extFromName = file.name.includes(".") ? file.name.split(".").pop()?.toLowerCase() ?? "" : "";
+    const imageExtensions = new Set(["jpg", "jpeg", "png", "gif", "webp", "avif", "heic", "heif", "bmp", "tif", "tiff"]);
+    const videoExtensions = new Set(["mp4", "mov", "qt", "webm", "ogg", "ogv", "3gp", "3g2", "m4v", "mpeg", "mpg", "mp2", "avi", "mkv", "wmv", "flv", "ts", "mts", "m2ts", "asf"]);
+    const mime = (file.type || "").toLowerCase();
+    const mediaType = mime.startsWith("video/") ? "video"
+      : mime.startsWith("image/") ? "image"
+      : videoExtensions.has(extFromName) ? "video"
+      : imageExtensions.has(extFromName) ? "image"
+      : null;
+    if (!mediaType) {
+      setError("Choose a supported image or video (JPG, PNG, HEIC, MP4, MOV, WebM, and similar formats).");
+      return;
+    }
+    const maxBytes = 100 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setError("Files must be 100 MB or smaller. Try a shorter or compressed video.");
+      return;
+    }
+    if (file.size === 0) {
+      setError("That file is empty. Choose another photo or video.");
+      return;
+    }
+
+    const parentKey = parent.type === "challenge" ? parent.challenge.id : parent.mission.assignment_id;
+    if (parent.type === "challenge" && parent.challenge.submission_status === "approved") {
+      setError("This challenge has already been approved, so no more evidence can be added.");
+      return;
+    }
+    if (parent.type === "secret" && parent.mission.status === "approved") {
+      setError("This mission has already been approved, so no more evidence can be added.");
+      return;
+    }
+
+    const allowedExtensions = new Set(["jpg", "jpeg", "png", "gif", "webp", "avif", "heic", "heif", "bmp", "tif", "tiff", "mp4", "mov", "qt", "webm", "ogg", "ogv", "3gp", "3g2", "m4v", "mpeg", "mpg", "mp2", "avi", "mkv", "wmv", "flv", "ts", "mts", "m2ts", "asf"]);
+    const mimeExtension = mime.includes("quicktime") ? "mov"
+      : mime.includes("matroska") ? "mkv"
+      : mime.includes("msvideo") ? "avi"
+      : mime.includes("ms-wmv") ? "wmv"
+      : mime.includes("x-flv") ? "flv"
+      : mime.includes("mp2t") ? "ts"
+      : mime.includes("webm") ? "webm"
+      : mime.includes("ogg") ? "ogv"
+      : mime.includes("3gpp2") ? "3g2"
+      : mime.includes("3gpp") ? "3gp"
+      : mime.includes("m4v") ? "m4v"
+      : mime.includes("mpeg") ? "mpeg"
+      : mime.includes("mp4") ? "mp4"
+      : mime.includes("x-ms-asf") || mime.includes("asf") ? "asf"
+      : mime.includes("png") ? "png"
+      : mime.includes("gif") ? "gif"
+      : mime.includes("webp") ? "webp"
+      : mime.includes("avif") ? "avif"
+      : mime.includes("heic") ? "heic"
+      : mime.includes("heif") ? "heif"
+      : mime.includes("bmp") ? "bmp"
+      : mime.includes("tiff") ? "tiff"
+      : mediaType === "video" ? "mp4" : "jpg";
+    const extIsCompatible = mediaType === "video" ? videoExtensions.has(extFromName) : imageExtensions.has(extFromName);
+    const ext = extIsCompatible && allowedExtensions.has(extFromName) ? extFromName : mimeExtension;
+    const fallbackMimeByExtension: Record<string, string> = {
+      jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp", avif: "image/avif", heic: "image/heic", heif: "image/heif", bmp: "image/bmp", tif: "image/tiff", tiff: "image/tiff",
+      mp4: "video/mp4", mov: "video/quicktime", qt: "video/quicktime", webm: "video/webm", ogg: "video/ogg", ogv: "video/ogg", "3gp": "video/3gpp", "3g2": "video/3gpp2", m4v: "video/x-m4v", mpeg: "video/mpeg", mpg: "video/mpeg", mp2: "video/mpeg", avi: "video/x-msvideo", mkv: "video/x-matroska", wmv: "video/x-ms-wmv", flv: "video/x-flv", ts: "video/mp2t", mts: "video/mp2t", m2ts: "video/mp2t", asf: "video/x-ms-asf",
+    };
+    const allowedStorageMimeTypes = new Set(Object.values(fallbackMimeByExtension));
+    const uploadContentType = allowedStorageMimeTypes.has(mime)
+      && ((mediaType === "video" && mime.startsWith("video/")) || (mediaType === "image" && mime.startsWith("image/")))
+      ? file.type
+      : fallbackMimeByExtension[ext] ?? (mediaType === "video" ? "video/mp4" : "image/jpeg");
+    const storagePath = `${view.session.id}/${view.player.id}/${crypto.randomUUID()}.${ext}`;
+
+    setBusyKey(`upload:${parentKey}`);
+    setError("");
+    const { error: storageError } = await supabase.storage.from("session-evidence").upload(storagePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: uploadContentType,
+    });
+    if (storageError) {
+      setBusyKey(null);
+      setError(`Upload failed: ${storageError.message}. Check the session-evidence Storage bucket and its upload policy.`);
+      return;
+    }
+
+    const { error: registerError } = await supabase.rpc("cc_player_add_session_evidence", {
+      p_join_code: code,
+      p_player_token: token,
+      p_challenge_id: parent.type === "challenge" ? parent.challenge.id : parent.mission.challenge_id,
+      p_secret_assignment_id: parent.type === "secret" ? parent.mission.assignment_id : null,
+      p_storage_path: storagePath,
+      p_media_type: mediaType,
+    });
+    setBusyKey(null);
+    if (registerError) {
+      setError(`The file uploaded but couldn't be attached to this task: ${registerError.message}`);
+      return;
+    }
+    setError("");
+    await loadView();
+  }
+
+  async function voteForFinalMedia(item: FinalGalleryItem) {
+    if (!token || !code) return;
+    setBusyKey(`vote:${item.id}`);
+    setError("");
+    const { error: voteError } = await supabase.rpc("cc_player_vote_session_final_media", {
+      p_join_code: code,
+      p_player_token: token,
+      p_evidence_id: item.id,
+    });
+    setBusyKey(null);
+    if (voteError) { setError(voteError.message); return; }
+    await loadView();
+  }
 
   async function chooseTeam(teamId: string) {
     if (!token || !code) return;
@@ -177,6 +381,10 @@ export default function SessionPlayerGame() {
 
   async function submitChallenge(challenge: ChallengeInfo) {
     if (!token || !code) return;
+    if (challenge.allow_photo_upload && evidenceForChallenge(challenge.id).length === 0) {
+      setError("Upload at least one photo or video before marking this challenge complete.");
+      return;
+    }
     setBusyKey(challenge.id);
     setError("");
     const { error: submitError } = await supabase.rpc("cc_player_submit_session_challenge", {
@@ -191,6 +399,10 @@ export default function SessionPlayerGame() {
 
   async function submitSecretMission(mission: SecretMission) {
     if (!token || !code) return;
+    if (mission.allow_photo_upload && evidenceForSecret(mission.assignment_id).length === 0) {
+      setError("Upload at least one photo or video before submitting this secret mission.");
+      return;
+    }
     setBusyKey(mission.assignment_id);
     setError("");
     const { error: submitError } = await supabase.rpc("cc_player_submit_secret_mission", {
@@ -255,6 +467,9 @@ export default function SessionPlayerGame() {
           <Link to={`/play/${code}/side-challenges`} className={`cc-player-page-tab${activePage === "side-challenges" ? " is-active" : ""}`} aria-current={activePage === "side-challenges" ? "page" : undefined}>
             <ClipboardList size={17}/><span>Side challenges</span>{sideChallenges.length > 0 && <span className="cc-player-nav-count">{sideChallenges.length}</span>}
           </Link>
+          {session.final_gallery_open && <Link to={`/play/${code}/final`} className={`cc-player-page-tab${activePage === "final" ? " is-active" : ""}`} aria-current={activePage === "final" ? "page" : undefined}>
+            <Heart size={17}/><span>Final vote</span>
+          </Link>}
         </nav>
 
         {error && <div className="cc-player-error" role="alert">{error}</div>}
@@ -322,6 +537,19 @@ export default function SessionPlayerGame() {
                           <div className="cc-player-secret-card-top"><span className="cc-player-secret-label">SECRET TASK</span><span className="cc-player-points">+{mission.points} pts</span></div>
                           <h3>{mission.title}</h3>
                           <p>{mission.description}</p>
+                          <div className="cc-player-evidence-tools">
+                            <label className="cc-player-upload-button">
+                              <Upload size={16}/>{busyKey === `upload:${mission.assignment_id}` ? "Uploading…" : "Add photo / video evidence"}
+                              <input type="file" accept="image/*,video/*" disabled={busyKey !== null || mission.status === "approved" || evidenceForSecret(mission.assignment_id).length >= 6} onChange={(event) => void uploadEvidence(event, { type: "secret", mission })}/>
+                            </label>
+                            <span className="cc-player-evidence-count">{evidenceForSecret(mission.assignment_id).length}/6 files</span>
+                          </div>
+                          {evidenceForSecret(mission.assignment_id).length > 0 && <div className="cc-player-evidence-grid">{evidenceForSecret(mission.assignment_id).map((media) => (
+                            <div className="cc-player-evidence-item" key={media.id}>
+                              {media.media_type === "video" ? <video src={mediaUrl(media.storage_path)} controls playsInline preload="metadata" /> : <img src={mediaUrl(media.storage_path)} alt="Your secret mission evidence" loading="lazy" />}
+                            </div>
+                          ))}</div>}
+                          {mission.allow_photo_upload && <p className="cc-player-evidence-required">Photo or video evidence is required before you can submit this mission.</p>}
                           <div className={`cc-player-secret-status cc-player-secret-status--${mission.status}`}>
                             {mission.status === "sent" ? "Mission received — go do your thing"
                               : mission.status === "submitted" ? "Marked complete · waiting for host review"
@@ -340,10 +568,27 @@ export default function SessionPlayerGame() {
                 )}
                 {challenge ? (
                   <section className="cc-player-challenge-card">
-                    <div className="cc-player-challenge-top"><span className="cc-player-eyebrow">YOUR CHALLENGE</span><span className="cc-player-points">+{challenge.points} POINTS</span></div>
+                    <div className="cc-player-challenge-top"><span className="cc-player-eyebrow">YOUR CHALLENGE</span><span className="cc-player-points">+{challenge.points} POINTS ON APPROVAL</span></div>
                     <h2>{challenge.title}</h2>
                     <p>{challenge.description}</p>
-                    <div className="cc-player-challenge-meta"><span><Clock3 size={16}/> {challenge.duration_minutes} min</span>{challenge.allow_photo_upload && <span>Evidence may be requested by the host</span>}</div>
+                    <div className="cc-player-challenge-meta"><span><Clock3 size={16}/> {challenge.duration_minutes} min</span>{challenge.allow_photo_upload && <span>Evidence required</span>}</div>
+                    {challenge.allow_photo_upload && (
+                      <div className="cc-player-evidence-block">
+                        <div className="cc-player-evidence-tools">
+                          <label className="cc-player-upload-button">
+                            <Upload size={16}/>{busyKey === `upload:${challenge.id}` ? "Uploading…" : "Upload photo / video evidence"}
+                            <input type="file" accept="image/*,video/*" disabled={busyKey !== null || currentSubmission?.status === "approved" || evidenceForChallenge(challenge.id).length >= 6} onChange={(event) => void uploadEvidence(event, { type: "challenge", challenge })}/>
+                          </label>
+                          <span className="cc-player-evidence-count">{evidenceForChallenge(challenge.id).length}/6 files</span>
+                        </div>
+                        {evidenceForChallenge(challenge.id).length > 0 && <div className="cc-player-evidence-grid">{evidenceForChallenge(challenge.id).map((media) => (
+                          <div className="cc-player-evidence-item" key={media.id}>
+                            {media.media_type === "video" ? <video src={mediaUrl(media.storage_path)} controls playsInline preload="metadata" /> : <img src={mediaUrl(media.storage_path)} alt="Your challenge evidence" loading="lazy" />}
+                          </div>
+                        ))}</div>}
+                        {evidenceForChallenge(challenge.id).length === 0 && <p className="cc-player-evidence-required">Upload at least one photo or video before marking this challenge complete.</p>}
+                      </div>
+                    )}
                     {currentSubmission?.status === "approved" ? (
                       <div className="cc-player-submission-state is-approved"><CheckCircle2 size={19}/> Approved · +{currentSubmission.awarded_points} points</div>
                     ) : currentSubmission?.status === "submitted" ? (
@@ -402,14 +647,67 @@ export default function SessionPlayerGame() {
                 {sideChallenges.map((item) => {
                   const submitted = view.my_submissions.find((sub) => sub.challenge_id === item.id);
                   return <article className="cc-player-side-card" key={item.id}>
-                    <div className="cc-player-side-card-copy"><div className="cc-player-side-card-top"><h3>{item.title}</h3><span className="cc-player-points">+{item.points} pts</span></div><p>{item.description}</p></div>
-                    {submitted?.status === "approved" ? <span className="cc-player-submission-state is-approved"><CheckCircle2 size={16}/> +{submitted.awarded_points}</span>
+                    <div className="cc-player-side-card-copy"><div className="cc-player-side-card-top"><h3>{item.title}</h3><span className="cc-player-points">Winner: +{item.points} pts</span></div><p>{item.description}</p></div>
+                    {item.allow_photo_upload && <div className="cc-player-side-evidence">
+                      <label className="cc-player-upload-button">
+                        <Upload size={15}/>{busyKey === `upload:${item.id}` ? "Uploading…" : "Upload evidence"}
+                        <input type="file" accept="image/*,video/*" disabled={busyKey !== null || submitted?.status === "approved" || session.status !== "live" || evidenceForChallenge(item.id).length >= 6} onChange={(event) => void uploadEvidence(event, { type: "challenge", challenge: item })}/>
+                      </label>
+                      <span className="cc-player-evidence-count">{evidenceForChallenge(item.id).length}/6</span>
+                      {evidenceForChallenge(item.id).length > 0 && <div className="cc-player-evidence-grid">{evidenceForChallenge(item.id).map((media) => <div className="cc-player-evidence-item" key={media.id}>{media.media_type === "video" ? <video src={mediaUrl(media.storage_path)} controls playsInline preload="metadata" /> : <img src={mediaUrl(media.storage_path)} alt="Your side challenge evidence" loading="lazy" />}</div>)}</div>}
+                      {evidenceForChallenge(item.id).length === 0 && <p className="cc-player-evidence-required">Evidence required to complete this challenge.</p>}
+                    </div>}
+                    {submitted?.status === "approved" ? <span className="cc-player-submission-state is-approved"><CheckCircle2 size={16}/>{submitted.awarded_points > 0
+                      ? `Final vote winner · +${submitted.awarded_points} pts`
+                      : view.session.final_vote_completed_at ? "Approved · no vote points" : "Approved · awaiting final vote"}</span>
                       : submitted?.status === "submitted" ? <span className="cc-player-small-status">Submitted · awaiting review</span>
                       : session.status === "live" ? <button type="button" className="cc-player-small-button" disabled={busyKey !== null || (!player.team_id && session.teams_enabled)} onClick={() => void submitChallenge(item)}>{busyKey === item.id ? <LoaderCircle size={16} className="cc-spin"/> : <Circle size={16}/>} {submitted?.status === "rejected" ? "Try again" : "Done"}</button>
                       : <span className="cc-player-small-status">Not completed</span>}
                   </article>;
                 })}
               </div>
+            )}
+          </section>
+        )}
+
+        {activePage === "final" && (
+          <section className="cc-player-final-page">
+            <div className="cc-player-page-heading">
+              <div><span className="cc-player-eyebrow">THE FINAL ROUND</span><h2>Fan favourite</h2><p>Browse the entries saved by the host and vote for your favourite photo or video.</p></div>
+              <span className="cc-player-count-chip">{finalGallery?.items.length ?? 0} entries</span>
+            </div>
+            {!finalGallery?.gallery_open ? (
+              <div className="cc-player-state-card"><Heart size={24}/><h2>The final vote isn't open yet</h2><p>The host will open the gallery after reviewing the best secret missions and side challenges.</p></div>
+            ) : finalGallery.items.length === 0 ? (
+              <div className="cc-player-state-card"><Film size={24}/><h2>No final entries yet</h2><p>The host hasn't saved any approved photo or video entries for the final round.</p></div>
+            ) : (
+              <>
+                <div className="cc-player-final-vote-status">{finalGallery.voting_open ? "Voting is open — choose one favourite. You can change your vote until voting closes." : "Voting is closed. Here are the final entries."}</div>
+                {finalGallery.voting_completed && <div className="cc-player-final-vote-status">
+                  {finalGallery.winner_player_name
+                    ? <><strong>{finalGallery.winner_player_name} won the final vote!</strong> {finalGallery.winner_challenge_title ? `${finalGallery.winner_challenge_title} · ` : ""}+{finalGallery.winner_points} points awarded automatically from {finalGallery.winner_vote_count} vote{finalGallery.winner_vote_count === 1 ? "" : "s"}.</>
+                    : "Final voting is complete. No eligible votes were cast, so no vote points were awarded."}
+                </div>}
+                <div className="cc-player-final-grid">
+                  {finalGallery.items.map((item) => (
+                    <article className={`cc-player-final-card${item.is_my_vote ? " is-voted" : ""}`} key={item.id}>
+                      <div className="cc-player-final-media">
+                        {item.media_type === "video" ? <video src={mediaUrl(item.storage_path)} controls playsInline preload="metadata" /> : <img src={mediaUrl(item.storage_path)} alt={`${item.player_name}'s entry for ${item.challenge_title}`} loading="lazy" />}
+                      </div>
+                      <div className="cc-player-final-copy">
+                        <span className="cc-player-final-category">{item.challenge_kind === "secret" ? "SECRET MISSION" : item.challenge_kind === "side" ? "SIDE CHALLENGE" : "MAIN CHALLENGE"}</span>
+                        <h3>{item.challenge_title}</h3>
+                        <p>Submitted by <strong>{item.player_name}</strong></p>
+                        <div className="cc-player-final-vote-row">
+                          {finalGallery.voting_open ? <button type="button" className={`cc-player-vote-button${item.is_my_vote ? " is-selected" : ""}`} disabled={busyKey !== null} onClick={() => void voteForFinalMedia(item)}>{busyKey === `vote:${item.id}` ? <LoaderCircle size={16} className="cc-spin"/> : <Heart size={16} fill={item.is_my_vote ? "currentColor" : "none"}/>} {item.is_my_vote ? "Your vote" : "Vote for this"}</button>
+                            : <span className={`cc-player-small-status${item.is_my_vote ? " is-selected" : ""}`}>{item.is_my_vote ? "Your vote" : "Voting closed"}</span>}
+                          {!finalGallery.voting_open && item.vote_count !== null && <strong className="cc-player-final-vote-count">{item.vote_count} vote{item.vote_count === 1 ? "" : "s"}</strong>}
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </>
             )}
           </section>
         )}
