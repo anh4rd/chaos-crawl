@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock3, Heart, MapPin, Plus, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import HostShell from "../components/host/HostShell";
@@ -34,6 +34,9 @@ interface PlanForm {
   evidenceRequired: boolean;
   setupEffort: string;
   equipmentPreference: string;
+  rewardVoting: boolean;
+  rewardHostAwards: boolean;
+  rewardAudienceCheers: boolean;
   voting: boolean;
   votingTiming: string;
   liveFinal: boolean;
@@ -57,31 +60,12 @@ const taskLibrary: Task[] = [
   { id: "task-handshake", title: "Invent a secret handshake", description: "Create and perform a team handshake that lasts exactly five seconds.", points: 10, minutes: 10, kind: "side", tags: ["team", "performance"] },
   { id: "task-secret-mission", title: "Secret mission", description: "Complete a discreet, harmless mission without telling the other teams what it is.", points: 15, minutes: 20, kind: "secret", tags: ["secret", "sneaky"] },
   { id: "task-sabotage", title: "Friendly sabotage", description: "Give another team a ridiculous distraction using only words. No hiding, damaging or taking their belongings.", points: 10, minutes: 10, kind: "secret", tags: ["silly", "social"] },
-  { id: "task-pineapple-fashion", title: "Pineapple couture", description: "Create the most convincing outfit accessory from safe, available materials. Model it like a serious fashion show.", points: 20, minutes: 12, kind: "main", tags: ["creative", "team", "performance"] },
-  { id: "task-useless-invention", title: "Invent something useless", description: "Pitch a completely unnecessary invention and demonstrate how it solves a problem nobody has.", points: 20, minutes: 10, kind: "main", tags: ["improv", "performance"] },
-  { id: "task-secret-selfie", title: "Album cover energy", description: "Stage a dramatic album cover using only your team and the room around you. Ask before photographing anyone else.", points: 15, minutes: 8, kind: "side", tags: ["photo", "creative"] },
-  { id: "task-silent-director", title: "Silent director", description: "Direct your team into a scene without speaking. The host guesses the scene.", points: 15, minutes: 6, kind: "main", tags: ["team", "quick", "performance"] },
 ];
 
 const today = () => {
   const date = new Date();
   const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
   return local.toISOString().slice(0, 10);
-};
-
-const catalogueVenuePresets: Record<string, { venueType: string; label: string }> = {
-  "loc-private-room": { venueType: "private-room", label: "Private function room" },
-  "loc-pub-room": { venueType: "pub", label: "Pub or bar with a bookable room" },
-  "loc-home": { venueType: "home", label: "Living room party" },
-  "loc-garden": { venueType: "garden", label: "Garden or beer garden" },
-  "loc-community-hall": { venueType: "hall", label: "Community hall" },
-  "loc-karaoke": { venueType: "other", label: "Private karaoke room" },
-  "loc-arcade": { venueType: "other", label: "Arcade, bowling or activity venue" },
-  "loc-boardgame-cafe": { venueType: "other", label: "Board-game café" },
-  "loc-park": { venueType: "garden", label: "Park or picnic area" },
-  "loc-beach": { venueType: "other", label: "Beach or waterfront spot" },
-  "loc-student-union": { venueType: "pub", label: "Student union or social club" },
-  "loc-hired-studio": { venueType: "other", label: "Hired creative studio" },
 };
 
 const initialForm: PlanForm = {
@@ -108,6 +92,9 @@ const initialForm: PlanForm = {
   evidenceRequired: false,
   setupEffort: "medium",
   equipmentPreference: "basic",
+  rewardVoting: true,
+  rewardHostAwards: true,
+  rewardAudienceCheers: true,
   voting: true,
   votingTiming: "after-challenges",
   liveFinal: true,
@@ -138,9 +125,6 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 export default function HostPlanSetup() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [searchParams] = useSearchParams();
-  const catalogueTaskId = searchParams.get("task");
-  const catalogueVenueId = searchParams.get("venueIdea");
   const editing = Boolean(id);
   const [stepIndex, setStepIndex] = useState(0);
   const [form, setForm] = useState<PlanForm>(initialForm);
@@ -155,37 +139,6 @@ export default function HostPlanSetup() {
   const currentStep = steps[stepIndex];
 
   const update = <K extends keyof PlanForm>(key: K, value: PlanForm[K]) => setForm((current) => ({ ...current, [key]: value }));
-
-  // Values passed from Explore prefill a new plan without changing saved plans.
-  useEffect(() => {
-    if (id) return;
-
-    if (catalogueTaskId) {
-      const task = taskLibrary.find((item) => item.id === catalogueTaskId);
-      if (task) {
-        setForm((current) => ({
-          ...current,
-          selectedTaskIds: current.selectedTaskIds.includes(task.id)
-            ? current.selectedTaskIds
-            : [...current.selectedTaskIds, task.id],
-          ...(task.kind === "secret" && task.id === "task-sabotage" ? { sabotage: true } : {}),
-          ...(task.kind === "secret" && task.id !== "task-sabotage" ? { secretMissions: true } : {}),
-          ...(task.kind === "side" ? { sideChallenges: true } : {}),
-        }));
-        setStepIndex(3);
-        setNotice(`Added "${task.title}" to your new plan. You can review the challenge selection here.`);
-      }
-    }
-
-    if (catalogueVenueId) {
-      const venue = catalogueVenuePresets[catalogueVenueId];
-      if (venue) {
-        setForm((current) => ({ ...current, venueType: venue.venueType }));
-        setStepIndex(2);
-        setNotice(`${venue.label} selected. Add the actual venue name and any booking details before saving.`);
-      }
-    }
-  }, [id, catalogueTaskId, catalogueVenueId]);
 
   useEffect(() => {
     let active = true;
@@ -317,6 +270,7 @@ export default function HostPlanSetup() {
     if (currentStep.id === "players" && (form.playerCount < 2 || form.playerCount > 100)) return "Choose between 2 and 100 players.";
     if (currentStep.id === "venue" && !form.venueName.trim()) return "Add the name of your venue.";
     if (currentStep.id === "challenges" && selectedTasks.length === 0) return "Choose at least one challenge.";
+    if (currentStep.id === "controls" && !form.rewardVoting && !form.rewardHostAwards && !form.rewardAudienceCheers) return "Enable at least one way to reward points.";
     return "";
   }
 
@@ -385,6 +339,7 @@ export default function HostPlanSetup() {
     if (form.playerCount < 2 || form.playerCount > 100) return "Choose between 2 and 100 players.";
     if (!form.venueName.trim()) return "Add the name of your venue.";
     if (selectedTasks.length === 0) return "Choose at least one challenge.";
+    if (!form.rewardVoting && !form.rewardHostAwards && !form.rewardAudienceCheers) return "Enable at least one way to reward points.";
     return "";
   }
 
@@ -490,8 +445,13 @@ export default function HostPlanSetup() {
           </div>}
 
           {currentStep.id === "controls" && <div className="host-form host-plan-form">
-            <div className="host-plan-option"><div><strong>Voting</strong><p>Let players vote on selected challenges or the grand final.</p></div><button type="button" role="switch" aria-checked={form.voting} className={`host-switch${form.voting ? " is-on" : ""}`} onClick={() => update("voting", !form.voting)}><span/></button></div>
-            {form.voting && <Field label="When should voting happen?"><select value={form.votingTiming} onChange={(e) => update("votingTiming", e.target.value)}><option value="after-challenges">After each challenge</option><option value="live-final">During the live final</option><option value="end">At the end of the game</option></select></Field>}
+            <div className="host-plan-reward-heading"><span className="host-eyebrow">REWARD POINTS</span><h3>How can the host reward players?</h3><p>Enable the methods you want available during the game. The host chooses one whenever it is time to award points.</p></div>
+            <div className="host-plan-option"><div><strong>Player voting</strong><p>Players vote on their favourite player or team. Points go to the winner automatically when the host closes voting.</p></div><button type="button" role="switch" aria-checked={form.rewardVoting} className={`host-switch${form.rewardVoting ? " is-on" : ""}`} onClick={() => update("rewardVoting", !form.rewardVoting)}><span/></button></div>
+            <div className="host-plan-option"><div><strong>Host awards</strong><p>Players see a waiting screen while the host chooses one or more winners.</p></div><button type="button" role="switch" aria-checked={form.rewardHostAwards} className={`host-switch${form.rewardHostAwards ? " is-on" : ""}`} onClick={() => update("rewardHostAwards", !form.rewardHostAwards)}><span/></button></div>
+            <div className="host-plan-option"><div><strong>Audience cheers</strong><p>The host calls player or team names, the audience cheers, and the host records the winner.</p></div><button type="button" role="switch" aria-checked={form.rewardAudienceCheers} className={`host-switch${form.rewardAudienceCheers ? " is-on" : ""}`} onClick={() => update("rewardAudienceCheers", !form.rewardAudienceCheers)}><span/></button></div>
+            {!form.rewardVoting && !form.rewardHostAwards && !form.rewardAudienceCheers && <p className="host-form-error">Enable at least one reward method to continue.</p>}
+            <div className="host-plan-option"><div><strong>Fan-favourite final vote</strong><p>Separately let players vote for a submitted photo or video in the final gallery.</p></div><button type="button" role="switch" aria-checked={form.voting} className={`host-switch${form.voting ? " is-on" : ""}`} onClick={() => update("voting", !form.voting)}><span/></button></div>
+            {form.voting && <Field label="When should the fan-favourite vote happen?"><select value={form.votingTiming} onChange={(e) => update("votingTiming", e.target.value)}><option value="after-challenges">After each challenge</option><option value="live-final">During the live final</option><option value="end">At the end of the game</option></select></Field>}
             <div className="host-plan-option"><div><strong>Live final</strong><p>Finish with a host-led final challenge.</p></div><button type="button" role="switch" aria-checked={form.liveFinal} className={`host-switch${form.liveFinal ? " is-on" : ""}`} onClick={() => update("liveFinal", !form.liveFinal)}><span/></button></div>
             <div className="host-plan-option"><div><strong>Slideshow at the end</strong><p>Show the best photos and moments on a shared screen.</p></div><button type="button" role="switch" aria-checked={form.slideshow} className={`host-switch${form.slideshow ? " is-on" : ""}`} onClick={() => update("slideshow", !form.slideshow)}><span/></button></div>
             <div className="host-plan-option"><div><strong>Challenge timers</strong><p>Give timed tasks a visible countdown.</p></div><button type="button" role="switch" aria-checked={form.taskTimers} className={`host-switch${form.taskTimers ? " is-on" : ""}`} onClick={() => update("taskTimers", !form.taskTimers)}><span/></button></div>
@@ -505,6 +465,7 @@ export default function HostPlanSetup() {
               <div className="host-review-item"><MapPin size={19}/><div><small>Fixed venue</small><strong>{form.venueName}</strong><span>{form.venueAddress || "Address not added"}</span></div></div>
               <div className="host-review-item"><Sparkles size={19}/><div><small>Challenges</small><strong>{selectedTasks.length} selected</strong><span>{form.sideChallenges ? "Side challenges on" : "Main challenges only"}</span></div></div>
               <div className="host-review-item"><Clock3 size={19}/><div><small>Approx. duration</small><strong>{durationLabel(form.startTime, form.endTime)}</strong><span>{form.taskTimers ? "Challenge timers on" : "No timers"}</span></div></div>
+              <div className="host-review-item"><Sparkles size={19}/><div><small>Reward methods</small><strong>{[form.rewardVoting && "Voting", form.rewardHostAwards && "Host awards", form.rewardAudienceCheers && "Audience cheers"].filter(Boolean).join(" · ") || "None enabled"}</strong><span>Host selects the method during live play.</span></div></div>
             </div>
             <div className="host-review-tasks"><h3>Your challenge list</h3>{selectedTasks.map((task, index) => <div className="host-review-task" key={task.id}><span>{String(index + 1).padStart(2,"0")}</span><div><strong>{task.title}</strong><small>{task.kind} · {task.minutes} min · {task.points} points</small></div></div>)}</div>
             <div className="host-info-banner"><ShieldCheck size={20}/><div><strong>Ready to save this plan?</strong><p>This saves your settings and challenge selection to your host account. Live-game launch is a separate step; it won't start the game or notify players yet.</p></div></div>

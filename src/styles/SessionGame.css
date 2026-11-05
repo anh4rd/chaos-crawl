@@ -386,3 +386,78 @@
   .cc-player-final-grid { grid-template-columns:1fr; }
   .cc-player-final-vote-row { flex-wrap:wrap; }
 }
+
+/* Full-screen interstitial used while a host-led reward round is active. */
+.cc-player-reward-screen { display:grid; gap:16px; width:min(100%,820px); margin:22px auto 0; padding:clamp(22px,5vw,42px); border:3px solid #060f13; border-radius:25px; background:#fff; box-shadow:9px 9px 0 #23166e; animation:cc-player-reward-arrive .4s ease-out both; }
+.cc-player-reward-kicker { display:inline-flex; align-items:center; gap:8px; justify-self:start; padding:8px 11px; border-radius:999px; color:#23166e; background:#d3fb6e; font-size:10px; font-weight:1000; letter-spacing:.09em; }
+.cc-player-reward-screen h2 { margin:0; color:#060f13; font-family:"Hard Beat","Maven Pro",system-ui,sans-serif; font-size:clamp(29px,6vw,46px); line-height:.98; }
+.cc-player-reward-intro { margin:0; color:#5d596b; line-height:1.5; font-size:13px; }
+.cc-player-reward-vote-count { display:flex; align-items:baseline; gap:8px; padding:12px 14px; border:1px solid #e5e0f4; border-radius:13px; background:#f7f5ff; }
+.cc-player-reward-vote-count strong { color:#5c36fb; font-size:27px; font-weight:1000; font-variant-numeric:tabular-nums; }
+.cc-player-reward-vote-count span { color:#726b89; font-size:12px; font-weight:800; }
+.cc-player-reward-candidates { display:grid; gap:8px; }
+.cc-player-reward-candidate { display:flex; align-items:center; gap:12px; width:100%; min-height:64px; padding:11px 13px; border:1.5px solid #e5e0f4; border-radius:15px; background:#fff; text-align:left; color:#060f13; cursor:pointer; transition:transform .15s ease,border-color .15s ease,background .15s ease; }
+.cc-player-reward-candidate:hover:not(:disabled) { transform:translateY(-1px); border-color:#5c36fb; }
+.cc-player-reward-candidate.is-voted { border-color:#5c36fb; background:#f1eeff; box-shadow:inset 0 0 0 1px #5c36fb; }
+.cc-player-reward-candidate:disabled { opacity:.75; cursor:default; }
+.cc-player-reward-avatar { display:grid; place-items:center; flex:0 0 38px; width:38px; height:38px; border:1.5px solid #060f13; border-radius:50%; background:#d3fb6e; color:#23166e; font-weight:1000; }
+.cc-player-reward-candidate-copy { display:grid; flex:1; min-width:0; gap:4px; }
+.cc-player-reward-candidate-copy strong { font-size:14px; overflow-wrap:anywhere; }
+.cc-player-reward-candidate-copy small { color:#79738d; font-size:11px; }
+.cc-player-reward-vote-action { display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; min-width:62px; padding:8px 10px; border-radius:10px; color:#fff; background:#5c36fb; font-size:11px; font-weight:1000; }
+.cc-player-reward-candidate.is-voted .cc-player-reward-vote-action { color:#23166e; background:#d3fb6e; }
+.cc-player-reward-footnote { margin:0; color:#79738d; font-size:11px; line-height:1.45; }
+.cc-player-reward-waiting { display:grid; justify-items:center; gap:13px; padding:clamp(12px,4vw,32px) 0; text-align:center; }
+.cc-player-reward-waiting > p { max-width:470px; margin:0; color:#5d596b; line-height:1.55; font-size:14px; }
+.cc-player-reward-orbit { display:grid; place-items:center; width:72px; height:72px; border:2px solid #d9d2ff; border-radius:50%; color:#5c36fb; background:#f3f0ff; animation:cc-player-reward-pulse 1.5s ease-in-out infinite; }
+.cc-player-reward-cheer { display:grid; place-items:center; width:72px; height:72px; border:2px solid #060f13; border-radius:24px; color:#23166e; background:#d3fb6e; font-size:43px; font-weight:1000; transform:rotate(-7deg); }
+.cc-player-reward-stake { padding:11px 17px; border-radius:999px; color:#fff; background:#5c36fb; font-size:11px; font-weight:1000; letter-spacing:.13em; }
+.cc-player-reward-result-icon { display:grid; place-items:center; width:70px; height:70px; border-radius:23px; border:2px solid #060f13; background:#d3fb6e; color:#23166e; animation:cc-player-reward-win .55s cubic-bezier(.18,.8,.3,1.3) both; }
+.cc-player-reward-winner-list { display:grid; gap:8px; }
+.cc-player-reward-winner-list article { display:flex; align-items:center; flex-wrap:wrap; gap:9px; padding:12px 13px; border:1px solid #d9ecbb; border-radius:14px; background:#f6ffe7; animation:cc-reward-score-in .4s ease-out both; }
+.cc-player-reward-winner-list article > span { display:grid; place-items:center; width:33px; height:33px; border-radius:10px; color:#23166e; background:#d3fb6e; }
+.cc-player-reward-winner-list article strong { flex:1; min-width:0; font-size:13px; }
+.cc-player-reward-winner-list article b { color:#285b19; font-size:13px; white-space:nowrap; }
+.cc-player-reward-winner-list article small { width:100%; padding-left:42px; color:#77718b; font-size:10px; }
+.cc-player-reward-scoreboard { display:grid; gap:0; margin-top:3px; padding:15px; border-radius:15px; background:#f8f6ff; }
+.cc-player-reward-scoreboard h3 { margin:0 0 8px; color:#23166e; font-size:16px; font-weight:1000; }
+.cc-player-reward-scoreboard article { display:grid; grid-template-columns:26px minmax(0,1fr) auto; align-items:center; gap:8px; padding:10px 3px; border-top:1px solid #e9e4f6; animation:cc-reward-score-in .45s both ease-out; }
+.cc-player-reward-scoreboard article > span { color:#8c84a5; font-size:11px; font-weight:1000; }
+.cc-player-reward-scoreboard article strong { font-size:12px; overflow-wrap:anywhere; }
+.cc-player-reward-scoreboard article small { color:#79738d; font-size:10px; }
+.cc-player-reward-scoreboard article b { color:#5c36fb; font-size:12px; white-space:nowrap; }
+.cc-player-reward-scoreboard article.is-you { margin-inline:-6px; padding-inline:9px; border-radius:10px; background:#e7e1ff; }
+@keyframes cc-player-reward-arrive { from { opacity:0; transform:translateY(9px) scale(.99); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes cc-player-reward-pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.06); } }
+@keyframes cc-player-reward-win { from { transform:scale(.65) rotate(-12deg); opacity:0; } to { transform:scale(1) rotate(0); opacity:1; } }
+@media (max-width:560px) {
+  .cc-player-reward-screen { margin-top:13px; padding:20px; border-radius:22px; }
+  .cc-player-reward-candidate { gap:9px; padding:9px; }
+  .cc-player-reward-vote-action { min-width:54px; padding:8px; }
+  .cc-player-reward-scoreboard article { grid-template-columns:22px minmax(0,1fr) auto; }
+  .cc-player-reward-scoreboard article small { display:none; }
+}
+@media (prefers-reduced-motion:reduce) { .cc-player-reward-screen,.cc-player-reward-orbit,.cc-player-reward-result-icon,.cc-player-reward-winner-list article,.cc-player-reward-scoreboard article { animation:none; } }
+
+/* Embedded host player mode: the host page owns the navigation and tools, so
+   only the real player profile/challenge/reward content is shown in the frame. */
+.cc-session-player-app.cc-player-embedded {
+  min-height: 0;
+  padding-bottom: 14px;
+  background: transparent;
+  background-image: none;
+}
+.cc-player-embedded .cc-player-game-header,
+.cc-player-embedded .cc-player-page-nav,
+.cc-player-embedded .cc-player-sync-note,
+.cc-player-embedded .cc-player-text-button { display: none !important; }
+.cc-player-embedded .cc-player-game-content {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 14px;
+  gap: 12px;
+}
+.cc-player-embedded .cc-player-profile { border: 2px solid #060f13; box-shadow: 3px 3px 0 #ded6fe; }
+.cc-player-embedded .cc-player-error { margin: 0; }
+.cc-player-embedded .cc-player-reward-screen { margin: 0; }

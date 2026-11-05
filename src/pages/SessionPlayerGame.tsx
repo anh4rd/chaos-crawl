@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { CheckCircle2, Circle, Clock3, Gamepad2, LoaderCircle, RotateCcw, Trophy, ClipboardList, Users, Crown, Upload, Heart, Film, Flag } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import "../styles/SessionGame.css";
@@ -92,6 +92,30 @@ interface FinalGalleryItem {
   vote_count: number | null;
   is_my_vote: boolean;
 }
+interface PlayerRewardCandidate {
+  id: string;
+  name: string;
+  team_name: string | null;
+  score: number;
+  member_count: number | null;
+}
+interface PlayerRewardWinner { id: string; kind: "player" | "team"; name: string; points: number; votes: number; }
+interface PlayerRewardLeaderboardEntry { id: string; name: string; score: number; team_name: string | null; }
+interface PlayerRewardRound {
+  id: string;
+  challenge_id: string;
+  challenge_title: string;
+  method: "voting" | "host_awards" | "audience_cheers";
+  target_kind: "player" | "team";
+  points: number;
+  status: "open" | "completed";
+  votes_cast: number;
+  my_vote_player_id: string | null;
+  my_vote_team_id: string | null;
+  candidates: PlayerRewardCandidate[];
+  winners: PlayerRewardWinner[];
+  leaderboard: PlayerRewardLeaderboardEntry[];
+}
 interface FinalGalleryView {
   gallery_open: boolean;
   voting_open: boolean;
@@ -113,6 +137,8 @@ function playerStorageKey(code: string) {
 export default function SessionPlayerGame() {
   const { joinCode = "", page: pageParam } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const embeddedHostMode = searchParams.get("hostEmbed") === "1";
   const activePage: PlayerPage = pageParam === "leaderboard" || pageParam === "side-challenges" || pageParam === "final" ? pageParam : "game";
   const code = joinCode.replace(/\D/g, "").slice(0, 6);
   const [token, setToken] = useState(() => localStorage.getItem(playerStorageKey(code)));
@@ -121,6 +147,7 @@ export default function SessionPlayerGame() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [evidence, setEvidence] = useState<SessionEvidence[]>([]);
   const [finalGallery, setFinalGalleryView] = useState<FinalGalleryView | null>(null);
+  const [rewardRound, setRewardRound] = useState<PlayerRewardRound | null>(null);
   const [loading, setLoading] = useState(true);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -149,6 +176,16 @@ export default function SessionPlayerGame() {
     if (data) {
       setView(data as SessionView);
       setLastUpdated(new Date());
+    }
+
+    const { data: rewardData, error: rewardError } = await supabase.rpc("cc_player_get_session_reward_round", {
+      p_join_code: code,
+      p_player_token: token,
+    });
+    if (rewardError) {
+      nextError = `Your game loaded, but reward points couldn't refresh: ${rewardError.message}`;
+    } else {
+      setRewardRound((rewardData ?? null) as PlayerRewardRound | null);
     }
 
     const { data: missionData, error: missionError } = await supabase.rpc("cc_get_player_secret_missions", {
@@ -206,6 +243,22 @@ export default function SessionPlayerGame() {
     const id = window.setInterval(() => { if (mounted) void loadView(); }, 3000);
     return () => { mounted = false; window.clearInterval(id); };
   }, [loadView]);
+
+  async function voteInRewardRound(candidateId: string) {
+    if (!rewardRound || !token || !code || busyKey !== null || rewardRound.status !== "open") return;
+    setBusyKey("reward-vote");
+    setError("");
+    const { error: voteError } = await supabase.rpc("cc_player_cast_session_reward_vote", {
+      p_join_code: code,
+      p_player_token: token,
+      p_reward_round_id: rewardRound.id,
+      p_target_player_id: rewardRound.target_kind === "player" ? candidateId : null,
+      p_target_team_id: rewardRound.target_kind === "team" ? candidateId : null,
+    });
+    setBusyKey(null);
+    if (voteError) { setError(voteError.message); return; }
+    await loadView();
+  }
 
   const currentSubmission = useMemo(() => {
     if (!view?.challenge) return null;
@@ -423,7 +476,7 @@ export default function SessionPlayerGame() {
   }
 
   if (loading && !view) {
-    return <main className="cc-session-player-app"><div className="cc-player-loading"><LoaderCircle className="cc-spin" size={26}/> Loading your game…</div></main>;
+    return <main className={`cc-session-player-app${embeddedHostMode ? " cc-player-embedded" : ""}`}><div className="cc-player-loading"><LoaderCircle className="cc-spin" size={26}/> Loading your game…</div></main>;
   }
 
   if (!view) {
@@ -444,11 +497,11 @@ export default function SessionPlayerGame() {
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
 
   return (
-    <main className="cc-session-player-app">
-      <header className="cc-player-game-header">
+    <main className={`cc-session-player-app${embeddedHostMode ? " cc-player-embedded" : ""}`}>
+      {!embeddedHostMode && <header className="cc-player-game-header">
         <Link to="/join" className="cc-player-brand"><span className="cc-player-brand-icon"><Gamepad2 size={21}/></span><span>CHAOS<span>CRAWL</span></span></Link>
         <div className="cc-player-code-pill">GAME {session.join_code}</div>
-      </header>
+      </header>}
 
       <div className="cc-player-game-content">
         <section className="cc-player-profile">
@@ -457,7 +510,7 @@ export default function SessionPlayerGame() {
           <div className="cc-player-score"><strong>{player.score}</strong><span>POINTS</span></div>
         </section>
 
-        <nav className="cc-player-page-nav" aria-label="Game pages">
+        {!embeddedHostMode && <nav className="cc-player-page-nav" aria-label="Game pages">
           <Link to={`/play/${code}/game`} className={`cc-player-page-tab${activePage === "game" ? " is-active" : ""}`} aria-current={activePage === "game" ? "page" : undefined}>
             <Gamepad2 size={17}/><span>Game</span>
           </Link>
@@ -470,11 +523,51 @@ export default function SessionPlayerGame() {
           {session.final_gallery_open && <Link to={`/play/${code}/final`} className={`cc-player-page-tab${activePage === "final" ? " is-active" : ""}`} aria-current={activePage === "final" ? "page" : undefined}>
             <Heart size={17}/><span>Final vote</span>
           </Link>}
-        </nav>
+        </nav>}
 
         {error && <div className="cc-player-error" role="alert">{error}</div>}
 
-        {activePage === "game" && (
+        {rewardRound && (
+          <section className={`cc-player-reward-screen${rewardRound.status === "completed" ? " is-complete" : ""}`} aria-live="polite">
+            <div className="cc-player-reward-kicker"><Trophy size={17}/> REWARD POINTS</div>
+            {rewardRound.status === "open" && rewardRound.method === "voting" && (
+              <>
+                <span className="cc-player-eyebrow">HAVE YOUR SAY</span>
+                <h2>Vote for the winner</h2>
+                <p className="cc-player-reward-intro">{rewardRound.challenge_title} · {rewardRound.points} points at stake. Choose your favourite {rewardRound.target_kind === "team" ? "team" : "player"}. You can change your vote until the host closes voting.</p>
+                <div className="cc-player-reward-vote-count"><strong>{rewardRound.votes_cast}</strong><span>vote{rewardRound.votes_cast === 1 ? "" : "s"} cast so far</span></div>
+                <div className="cc-player-reward-candidates">
+                  {rewardRound.candidates.map((candidate) => {
+                    const votedFor = (rewardRound.target_kind === "player" ? rewardRound.my_vote_player_id : rewardRound.my_vote_team_id) === candidate.id;
+                    return <button type="button" className={`cc-player-reward-candidate${votedFor ? " is-voted" : ""}`} key={candidate.id} disabled={busyKey !== null || rewardRound.status !== "open"} onClick={() => void voteInRewardRound(candidate.id)}>
+                      <span className="cc-player-reward-avatar">{candidate.name.slice(0, 1).toUpperCase()}</span><span className="cc-player-reward-candidate-copy"><strong>{candidate.name}</strong><small>{rewardRound.target_kind === "team" ? `${candidate.member_count ?? 0} players` : candidate.team_name || "Individual player"}</small></span><span className="cc-player-reward-vote-action">{busyKey === "reward-vote" ? <LoaderCircle size={17} className="cc-spin"/> : votedFor ? <CheckCircle2 size={18}/> : "Vote"}</span>
+                    </button>;
+                  })}
+                </div>
+                {rewardRound.my_vote_player_id || rewardRound.my_vote_team_id ? <p className="cc-player-reward-footnote">Your vote is saved. Tap another name to change it.</p> : <p className="cc-player-reward-footnote">Choose one name. Results stay hidden until the host closes voting.</p>}
+              </>
+            )}
+
+            {rewardRound.status === "open" && rewardRound.method === "host_awards" && (
+              <div className="cc-player-reward-waiting"><div className="cc-player-reward-orbit"><LoaderCircle size={30}/></div><span className="cc-player-eyebrow">HOST DECISION</span><h2>Judgement is underway…</h2><p>The host is choosing who deserves the points for <strong>{rewardRound.challenge_title}</strong>. Keep your eyes on the screen.</p><div className="cc-player-reward-stake">{rewardRound.points} POINTS AT STAKE</div></div>
+            )}
+
+            {rewardRound.status === "open" && rewardRound.method === "audience_cheers" && (
+              <div className="cc-player-reward-waiting"><div className="cc-player-reward-cheer">✦</div><span className="cc-player-eyebrow">MAKE SOME NOISE</span><h2>Audience cheers!</h2><p>The host will call out each {rewardRound.target_kind === "team" ? "team" : "player"} in turn. Cheer loudest for your favourite — then the host will record who wins.</p><div className="cc-player-reward-stake">{rewardRound.points} POINTS AT STAKE</div></div>
+            )}
+
+            {rewardRound.status === "completed" && (
+              <>
+                <div className="cc-player-reward-result-icon"><Trophy size={33}/></div><span className="cc-player-eyebrow">RESULTS ARE IN</span><h2>{rewardRound.winners.length ? "Points awarded!" : "No votes this time"}</h2><p className="cc-player-reward-intro">{rewardRound.challenge_title}</p>
+                {rewardRound.winners.length > 0 ? <div className="cc-player-reward-winner-list">{rewardRound.winners.map((winner) => <article key={`${winner.kind}-${winner.id}`}><span><Crown size={18}/></span><strong>{winner.name}</strong><b>+{winner.points} pts</b>{rewardRound.method === "voting" && <small>{winner.votes} vote{winner.votes === 1 ? "" : "s"}</small>}</article>)}</div> : <p className="cc-player-reward-footnote">No eligible votes were cast, so no points were awarded.</p>}
+                <div className="cc-player-reward-scoreboard"><h3>Leaderboard changes</h3>{rewardRound.leaderboard.slice(0, 8).map((entry, index) => <article key={entry.id} style={{ animationDelay: `${index * 70}ms` }} className={entry.id === player.id ? "is-you" : ""}><span>{index + 1}</span><strong>{entry.name}{entry.id === player.id ? " · YOU" : ""}</strong><small>{entry.team_name || "Solo"}</small><b>{entry.score} pts</b></article>)}</div>
+                <p className="cc-player-reward-footnote">Waiting for the host to return everyone to the game…</p>
+              </>
+            )}
+          </section>
+        )}
+
+        {!rewardRound && activePage === "game" && (
           <>
             {session.status === "lobby" && (
               <section className="cc-player-state-card">
@@ -606,7 +699,7 @@ export default function SessionPlayerGame() {
           </>
         )}
 
-        {activePage === "leaderboard" && (
+        {!rewardRound && activePage === "leaderboard" && (
           <section className="cc-player-leaderboard-page">
             <div className="cc-player-page-heading"><div><span className="cc-player-eyebrow">THE RACE IS ON</span><h2>{session.status === "completed" ? "Final leaderboard" : "Leaderboard"}</h2><p>Scores update automatically as the host approves challenges.</p></div><span className="cc-player-count-chip">{leaderboard.length} players</span></div>
             {session.status === "lobby" && <div className="cc-player-page-notice">The leaderboard will start moving when the host starts the game.</div>}
@@ -637,7 +730,7 @@ export default function SessionPlayerGame() {
           </section>
         )}
 
-        {activePage === "side-challenges" && (
+        {!rewardRound && activePage === "side-challenges" && (
           <section className="cc-player-side-page">
             <div className="cc-player-page-heading"><div><span className="cc-player-eyebrow">EXTRA CHAOS</span><h2>Side challenges</h2><p>Complete these alongside the main round for extra points.</p></div><span className="cc-player-count-chip">{sideChallenges.length}</span></div>
             {session.status === "lobby" && <div className="cc-player-page-notice">Side challenges become active when the host starts the game.</div>}
@@ -670,7 +763,7 @@ export default function SessionPlayerGame() {
           </section>
         )}
 
-        {activePage === "final" && (
+        {!rewardRound && activePage === "final" && (
           <section className="cc-player-final-page">
             <div className="cc-player-page-heading">
               <div><span className="cc-player-eyebrow">THE FINAL ROUND</span><h2>Fan favourite</h2><p>Browse the entries saved by the host and vote for your favourite photo or video.</p></div>
@@ -712,8 +805,8 @@ export default function SessionPlayerGame() {
           </section>
         )}
 
-        <div className="cc-player-sync-note"><span className="cc-player-live-dot"/> Live updates enabled {lastUpdated && <span>· synced {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>}</div>
-        <button type="button" className="cc-player-text-button" onClick={() => navigate(`/join?code=${code}&returning=1`)}><RotateCcw size={15}/> Need to rejoin on this device?</button>
+        {!embeddedHostMode && <div className="cc-player-sync-note"><span className="cc-player-live-dot"/> Live updates enabled {lastUpdated && <span>· synced {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>}</div>}
+        {!embeddedHostMode && <button type="button" className="cc-player-text-button" onClick={() => navigate(`/join?code=${code}&returning=1`)}><RotateCcw size={15}/> Need to rejoin on this device?</button>}
       </div>
     </main>
   );
