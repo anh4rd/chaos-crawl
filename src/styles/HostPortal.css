@@ -167,3 +167,24 @@
 .host-plan-reward-heading h3 { margin:0; color:#23166e; font-size:19px; font-weight:1000; }
 .host-plan-reward-heading p { margin:0; max-width:650px; color:#77718b; font-size:12px; line-height:1.5; }
 .host-form-error { margin:0; padding:10px 12px; border-radius:11px; background:#ffe3ed; color:#8d1646; font-size:12px; font-weight:800; }
+/* Super-admin read-only Host Hub preview */
+.host-preview-banner { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:0 0 22px; padding:16px 18px; border:2px solid #5c36fb; border-radius:16px; background:#f4f0ff; color:#25145f; }
+.host-preview-banner > div { display:grid; gap:4px; }
+.host-preview-banner strong { font-size:14px; font-weight:950; }
+.host-preview-banner span { color:#6a6090; font-size:11px; }
+.host-preview-readonly-label { align-self:center; color:#7a7195; font-size:10px; font-weight:900; }
+.host-admin-kicker { display:inline-block; margin-bottom:4px; color:#5c36fb; font-size:9px; font-weight:1000; letter-spacing:.12em; }
+.host-platform-admin-section { margin-top:28px; padding-top:22px; border-top:1px solid #e8e4f1; }
+.host-admin-host-list { display:grid; gap:9px; }
+.host-admin-host-row { display:flex; align-items:center; gap:13px; padding:13px 15px; border:1px solid #e8e4f1; border-radius:15px; background:#fff; }
+.host-admin-avatar { display:grid; place-items:center; flex:0 0 38px; width:38px; height:38px; border-radius:13px; color:#fff; background:#5c36fb; font-size:15px; font-weight:1000; }
+.host-admin-host-copy { display:grid; flex:1; min-width:0; gap:3px; }
+.host-admin-host-copy strong { color:#302451; font-size:12px; font-weight:950; }
+.host-admin-host-copy span,.host-admin-host-copy small { color:#827b96; font-size:10px; overflow-wrap:anywhere; }
+.host-user-chip small { padding:3px 6px; border-radius:5px; color:#fff; background:#5c36fb; font-size:8px; font-weight:1000; letter-spacing:.08em; }
+@media (max-width: 600px) {
+  .host-preview-banner { align-items:stretch; flex-direction:column; }
+  .host-preview-banner .host-button { width:100%; justify-content:center; }
+  .host-admin-host-row { align-items:flex-start; flex-wrap:wrap; }
+  .host-admin-host-row .host-button { width:100%; justify-content:center; }
+}

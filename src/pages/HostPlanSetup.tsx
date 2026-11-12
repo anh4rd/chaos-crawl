@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CalendarDays, Check, CheckCircle2, GripVertical, Heart, ImagePlus, Info, ListChecks, MapPin, Play, Plus, ShieldCheck, Sparkles, Trash2, Upload, Users, WandSparkles } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import HostShell from "../components/host/HostShell";
@@ -11,10 +11,11 @@ type BuilderTab = "players" | "main" | "side" | "secret" | "venue" | "controls" 
 type RewardMode = "voting" | "host-awards" | "audience-cheers";
 type Task = {
   id: string; title: string; description: string; kind: TaskKind; minutes: number; points: number;
+  prepMinutes?: number; performanceMinutes?: number;
   vibe: string[]; accessibility: string[]; equipment: string[]; setup: string; prep: string;
   evidenceRequired: boolean; preGame?: boolean; instructions?: string; tags?: string[];
 };
-type ScheduleItem = { id: string; type: "welcome" | "teams" | "challenge" | "break" | "final" | "pregame" | "pregame-review" | "secret-reveal"; title: string; duration: number; taskId?: string; editable?: boolean };
+type ScheduleItem = { id: string; type: "welcome" | "teams" | "challenge" | "break" | "final" | "pregame" | "pregame-review" | "secret-reveal"; title: string; duration: number; taskId?: string; phase?: "prep" | "performance"; editable?: boolean };
 type Favourite = { id: string; item_type: "task" | "venue"; item_id: string };
 
 interface SetupForm {
@@ -72,7 +73,11 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
 function Toggle({ title, detail, checked, onChange }: { title: string; detail: string; checked: boolean; onChange: (v: boolean) => void }) { return <label className="cc-toggle"><span><strong>{title}</strong><small>{detail}</small></span><input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} /><i /></label>; }
 function timePlus(time: string, minutes: number) { const [h,m] = time.split(":").map(Number); const d = new Date(2000,0,1,h,m + minutes); return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
 export default function HostPlanSetup() {
-  const navigate = useNavigate(); const { id } = useParams(); const editing = Boolean(id);
+  const navigate = useNavigate(); const { id } = useParams(); const [searchParams] = useSearchParams();
+  const communityTaskId = searchParams.get("communityTask");
+  const exploreTaskJson = searchParams.get("exploreTask");
+  const requestedChallengeKind = searchParams.get("challengeKind") === "side" ? "side" : "main";
+  const editing = Boolean(id);
   const [stage, setStage] = useState<"create" | "build">("create");
   const [tab, setTab] = useState<BuilderTab>("players");
   const [form, setForm] = useState<SetupForm>(defaultForm);
@@ -82,7 +87,7 @@ export default function HostPlanSetup() {
   const [accessFilter, setAccessFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [customTitle, setCustomTitle] = useState(""); const [customDesc, setCustomDesc] = useState("");
-  const [loading, setLoading] = useState(Boolean(id)); const [saving, setSaving] = useState(false); const [error, setError] = useState(""); const [notice, setNotice] = useState("");
+  const [loading, setLoading] = useState(Boolean(id || communityTaskId || exploreTaskJson)); const [saving, setSaving] = useState(false); const [error, setError] = useState(""); const [notice, setNotice] = useState("");
   const [dragged, setDragged] = useState<string | null>(null);
 
   const update = <K extends keyof SetupForm>(key: K, value: SetupForm[K]) => setForm(old => ({ ...old, [key]: value }));
@@ -117,11 +122,83 @@ export default function HostPlanSetup() {
           setForm({ ...defaultForm, ...p, name: String(data.name ?? p.name ?? ""), eventDate: String(data.event_date ?? p.eventDate ?? today()), startTime: String(data.start_time ?? p.startTime ?? "18:00").slice(0,5), idealEndTime: String(data.end_time ?? p.idealEndTime ?? "22:00").slice(0,5), playerCount: Number(data.player_count ?? p.playerCount ?? 12), venueName: String(data.venue_name ?? p.venueName ?? ""), selectedMain: Array.isArray(p.selectedMain) ? p.selectedMain : Array.isArray(p.selectedTaskIds) ? p.selectedTaskIds.filter(x => taskLibrary.some(t => t.id === x && t.kind === "main")) : defaultForm.selectedMain, selectedSide: Array.isArray(p.selectedSide) ? p.selectedSide : defaultForm.selectedSide, selectedSecret: Array.isArray(p.selectedSecret) ? p.selectedSecret : defaultForm.selectedSecret, customTasks: Array.isArray(p.customTasks) ? p.customTasks as Task[] : [] });
           setStage("build");
         }
+      } else if (communityTaskId) {
+        const { data: submission, error: communityError } = await supabase
+          .from("cc_catalog_submissions")
+          .select("id,title,description,payload,status")
+          .eq("id", communityTaskId)
+          .eq("item_type", "challenge")
+          .eq("status", "approved")
+          .maybeSingle();
+        if (!live) return;
+        if (communityError || !submission) {
+          setError("That community challenge is no longer available. Return to Explore and choose another one.");
+        } else {
+          const payload = (submission.payload ?? {}) as Record<string, unknown>;
+          const kind: TaskKind = requestedChallengeKind;
+          const task: Task = {
+            id: `community-${submission.id}`,
+            title: String(submission.title),
+            description: String(submission.description ?? ""),
+            kind,
+            minutes: Math.max(1, Number(payload.minutes ?? 10)),
+            prepMinutes: Number(payload.prepMinutes ?? 0) || undefined,
+            performanceMinutes: Number(payload.performanceMinutes ?? 0) || undefined,
+            points: Math.max(0, Number(payload.points ?? 20)),
+            vibe: Array.isArray(payload.tags) ? payload.tags.map(String) : ["community"],
+            accessibility: ["seated-option", "low-noise-option"],
+            equipment: [],
+            setup: payload.setup === "basic" ? "Prepare the basic equipment needed for this challenge." : payload.setup === "some" ? "Some preparation may be needed before this challenge." : "No special setup.",
+            prep: payload.setup === "none" ? "No preparation required." : "Check the challenge setup before the event.",
+            evidenceRequired: kind === "side",
+            tags: Array.isArray(payload.tags) ? payload.tags.map(String) : ["Community"],
+          };
+          setForm((current) => ({
+            ...current,
+            customTasks: [...current.customTasks.filter((item) => item.id !== task.id), task],
+            selectedMain: kind === "main" ? [...new Set([...current.selectedMain, task.id])] : current.selectedMain,
+            selectedSide: kind === "side" ? [...new Set([...current.selectedSide, task.id])] : current.selectedSide,
+            sideChallenges: kind === "side" ? true : current.sideChallenges,
+          }));
+          setNotice(`Added “${task.title}” as a ${kind} challenge. Finish the game details, then find it in ${kind === "main" ? "Main Challenges" : "Side challenges"}.`);
+        }
+      } else if (exploreTaskJson) {
+        try {
+          const idea = JSON.parse(exploreTaskJson) as { id: string; title: string; description: string; points: number; minutes: number; prepMinutes?: number; performanceMinutes?: number; tags?: string[]; setup?: string };
+          const kind: TaskKind = requestedChallengeKind;
+          const task: Task = {
+            id: `explore-${idea.id}`,
+            title: idea.title,
+            description: idea.description,
+            kind,
+            minutes: Math.max(1, Number(idea.minutes) || 10),
+            prepMinutes: Number(idea.prepMinutes ?? 0) || undefined,
+            performanceMinutes: Number(idea.performanceMinutes ?? 0) || undefined,
+            points: Math.max(0, Number(idea.points) || 0),
+            vibe: idea.tags ?? [],
+            accessibility: ["seated-option", "low-noise-option"],
+            equipment: [],
+            setup: idea.setup === "basic" ? "Prepare basic equipment." : idea.setup === "some" ? "Some preparation may be needed." : "No special setup.",
+            prep: "No preparation required.",
+            evidenceRequired: kind === "side",
+            tags: idea.tags ?? [],
+          };
+          setForm((current) => ({
+            ...current,
+            customTasks: [...current.customTasks.filter((item) => item.id !== task.id), task],
+            selectedMain: kind === "main" ? [...new Set([...current.selectedMain, task.id])] : current.selectedMain,
+            selectedSide: kind === "side" ? [...new Set([...current.selectedSide, task.id])] : current.selectedSide,
+            sideChallenges: kind === "side" ? true : current.sideChallenges,
+          }));
+          setNotice(`Added “${task.title}” as a ${kind} challenge. Finish the game details, then find it in ${kind === "main" ? "Main Challenges" : "Side challenges"}.`);
+        } catch {
+          setError("Couldn't add that Explore challenge. Return to Explore and try again.");
+        }
       }
       if (live) setLoading(false);
     })();
     return () => { live = false; };
-  }, [id]);
+  }, [id, communityTaskId, exploreTaskJson, requestedChallengeKind]);
 
   useEffect(() => {
     if (stage !== "build" || form.schedule.length) return;
@@ -199,7 +276,15 @@ export default function HostPlanSetup() {
     if (!task) return;
     if (form.schedule.some(item => item.type === "challenge" && item.taskId === taskId)) { setNotice("That challenge is already in the schedule."); return; }
     update("selectedMain", [...form.selectedMain, taskId]);
-    update("schedule", [...form.schedule, { id: `task-${task.id}-${Date.now()}`, type: "challenge", title: task.title, duration: task.minutes, taskId: task.id, editable: true }]);
+    const stamp = Date.now();
+    if (task.prepMinutes || task.performanceMinutes) {
+      const phases: ScheduleItem[] = [];
+      if (task.prepMinutes) phases.push({ id: `task-${task.id}-prep-${stamp}`, type: "challenge", title: `${task.title} — Player prep`, duration: task.prepMinutes, taskId: task.id, phase: "prep", editable: true });
+      if (task.performanceMinutes) phases.push({ id: `task-${task.id}-performance-${stamp}`, type: "challenge", title: `${task.title} — Player performance`, duration: task.performanceMinutes, taskId: task.id, phase: "performance", editable: true });
+      update("schedule", [...form.schedule, ...phases]);
+    } else {
+      update("schedule", [...form.schedule, { id: `task-${task.id}-${stamp}`, type: "challenge", title: task.title, duration: task.minutes, taskId: task.id, editable: true }]);
+    }
     setNotice(`Added “${task.title}” to the schedule.`);
   }
   function addScheduleItem(type: "break" | "challenge") {
@@ -208,10 +293,17 @@ export default function HostPlanSetup() {
   }
   function deleteScheduleItem(itemId: string) {
     const removed = form.schedule.find(item => item.id === itemId);
-    update("schedule", form.schedule.filter(item => item.id !== itemId));
-    if (removed?.type === "challenge" && removed.taskId) update("selectedMain", form.selectedMain.filter(id => id !== removed.taskId));
+    const nextSchedule = form.schedule.filter(item => item.id !== itemId);
+    update("schedule", nextSchedule);
+    if (removed?.type === "challenge" && removed.taskId && !nextSchedule.some(item => item.type === "challenge" && item.taskId === removed.taskId)) {
+      update("selectedMain", form.selectedMain.filter(id => id !== removed.taskId));
+    }
   }
-  function scheduleTotal() { return form.schedule.reduce((sum, item) => sum + item.duration, 0); }
+  const sideReviewCount = form.sideChallenges ? sideTasks.length : 0;
+  const sideReviewMinutes = sideReviewCount * 5;
+  const sideRewardPoints = form.sideChallenges ? sideTasks.reduce((sum, task) => sum + task.points, 0) : 0;
+  const liveFinalMinutes = form.sideChallenges ? form.finalDuration + sideReviewMinutes : 0;
+  function scheduleTotal() { return form.schedule.reduce((sum, item) => sum + item.duration, 0) + liveFinalMinutes; }
   const calculatedEnd = timePlus(form.startTime, scheduleTotal());
   function validate() {
     if (!form.name.trim()) return "Add a game name."; if (!form.eventDate) return "Choose the event date.";
@@ -265,10 +357,10 @@ export default function HostPlanSetup() {
         {tab === "secret" && <div className="cc-explainer cc-explainer--pink"><ShieldCheck size={18}/><p><strong>Private individual missions.</strong> Create the missions now; assign them to actual players only after those players have joined the game. Evidence is required.</p></div>}
         {tab === "main" && <div className="cc-explainer"><Info size={18}/><p><strong>Challenge library.</strong> Browse, create and favourite ideas here. Favouriting does not add a challenge to the running order; add it from Schedule when you are ready.</p></div>}
         <div className={`cc-builder-columns${tab === "main" ? " cc-library-only" : ""}`}>{tab !== "main" && <section className="cc-rounds-panel"><div className="cc-panel-head"><div><h3>{tab === "side" ? "Selected side challenges" : "Selected secret missions"}</h3><small>Selected items for this game.</small></div><span className="cc-count">{selectedIds.length}</span></div>
-          {selectedIds.map((taskId,index) => { const task=allTasks.find(t=>t.id===taskId); if(!task)return null; return <article key={taskId} className="cc-round-card" draggable onDragStart={() => setDragged(taskId)} onDragOver={e=>e.preventDefault()} onDrop={()=>dropTask(taskId)}><GripVertical size={17} className="cc-grip"/><div className="cc-round-number">{index+1}</div><div className="cc-round-copy"><strong>{task.title}</strong><small>{task.minutes} min · {task.points} pts{task.preGame?" · PRE-GAME":""}</small></div><div className="cc-round-actions"><button title="Move up" onClick={()=>moveTask(taskId,-1)}><ArrowUp size={14}/></button><button title="Move down" onClick={()=>moveTask(taskId,1)}><ArrowDown size={14}/></button></div><button className="cc-icon-button" title="Remove" onClick={()=>selectTask(task)}><Trash2 size={15}/></button></article>; })}
+          {selectedIds.map((taskId,index) => { const task=allTasks.find(t=>t.id===taskId); if(!task)return null; return <article key={taskId} className="cc-round-card" draggable onDragStart={() => setDragged(taskId)} onDragOver={e=>e.preventDefault()} onDrop={()=>dropTask(taskId)}><GripVertical size={17} className="cc-grip"/><div className="cc-round-number">{index+1}</div><div className="cc-round-copy"><strong>{task.title}</strong><small>{tab === "side" ? `${task.points} pts` : `${task.minutes} min · ${task.points} pts`}{task.preGame?" · PRE-GAME":""}</small></div><div className="cc-round-actions"><button title="Move up" onClick={()=>moveTask(taskId,-1)}><ArrowUp size={14}/></button><button title="Move down" onClick={()=>moveTask(taskId,1)}><ArrowDown size={14}/></button></div><button className="cc-icon-button" title="Remove" onClick={()=>selectTask(task)}><Trash2 size={15}/></button></article>; })}
         </section>}<section className="cc-library-panel" id="cc-task-library"><div className="cc-panel-head"><div><h3>Challenge library</h3><small>Favourite tasks first, then filter and add.</small></div><button className={`cc-filter-chip${favouritesOnly?" active":""}`} onClick={()=>setFavouritesOnly(v=>!v)}><Heart size={14}/> Favourites</button></div>
           <input className="cc-search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search challenges…"/><div className="cc-filter-row"><select value={vibeFilter} onChange={e=>setVibeFilter(e.target.value)}><option value="all">All vibes</option>{vibes.map(v=><option key={v} value={v.toLowerCase()}>{v}</option>)}</select><select value={accessFilter} onChange={e=>setAccessFilter(e.target.value)}><option value="all">All accessibility</option><option value="seated-option">Seated option</option><option value="low-noise-option">Low-noise option</option><option value="no-running">No running</option><option value="no-alcohol">No alcohol</option><option value="low-sensory-load">Low sensory load</option><option value="mobility-flexible">Mobility-flexible</option><option value="no-public-interaction">No public interaction</option></select></div>
-          <div className="cc-task-results">{visibleTasks.map(task=>{const selected=selectedIds.includes(task.id);const saved=favourites.some(f=>f.item_type==="task"&&f.item_id===task.id);return <article className={`cc-task-result${selected?" selected":""}`} key={task.id}><div className="cc-task-result-main"><div className="cc-task-result-title"><strong>{task.title}</strong><button className={`cc-heart${saved?" saved":""}`} onClick={()=>void toggleFavourite(task)} aria-label="Favourite"><Heart size={16} fill={saved?"currentColor":"none"}/></button></div><p>{task.description}</p><div className="cc-task-tags"><span>{task.minutes} min</span><span>{task.points} pts</span>{task.preGame&&<span>Pre-game</span>}{task.equipment.length>0&&<span>Equipment</span>}{task.evidenceRequired&&<span>Evidence required</span>}</div></div><button className={`cc-select-task${tab === "main" ? (saved ? " selected" : "") : (selected ? " selected" : "")}`} onClick={()=>tab === "main" ? void toggleFavourite(task) : selectTask(task)}>{tab === "main" ? (saved ? <><Check size={14}/> Favourited</> : <><Heart size={14}/> Favourite</>) : (selected ? <><Check size={14}/> Added</> : <><Plus size={14}/> Add</>)}</button></article>;})}{!visibleTasks.length&&<p className="cc-muted">No matching challenges. Try changing the filters.</p>}</div>
+          <div className="cc-task-results">{visibleTasks.map(task=>{const selected=selectedIds.includes(task.id);const saved=favourites.some(f=>f.item_type==="task"&&f.item_id===task.id);return <article className={`cc-task-result${selected?" selected":""}`} key={task.id}><div className="cc-task-result-main"><div className="cc-task-result-title"><strong>{task.title}</strong><button className={`cc-heart${saved?" saved":""}`} onClick={()=>void toggleFavourite(task)} aria-label="Favourite"><Heart size={16} fill={saved?"currentColor":"none"}/></button></div><p>{task.description}</p><div className="cc-task-tags">{tab !== "side" && <span>{task.minutes} min</span>}<span>{task.points} pts</span>{task.preGame&&<span>Pre-game</span>}{task.equipment.length>0&&<span>Equipment</span>}{task.evidenceRequired&&<span>Evidence required</span>}</div></div><button className={`cc-select-task${tab === "main" ? (saved ? " selected" : "") : (selected ? " selected" : "")}`} onClick={()=>tab === "main" ? void toggleFavourite(task) : selectTask(task)}>{tab === "main" ? (saved ? <><Check size={14}/> Favourited</> : <><Heart size={14}/> Favourite</>) : (selected ? <><Check size={14}/> Added</> : <><Plus size={14}/> Add</>)}</button></article>;})}{!visibleTasks.length&&<p className="cc-muted">No matching challenges. Try changing the filters.</p>}</div>
           <form className="cc-custom-task" onSubmit={addCustomTask}><strong>Create a custom challenge</strong><input value={customTitle} onChange={e=>setCustomTitle(e.target.value)} placeholder="Challenge name"/><input value={customDesc} onChange={e=>setCustomDesc(e.target.value)} placeholder="Short description"/><button className="cc-secondary" disabled={!customTitle.trim()}><Plus size={15}/> Add custom challenge</button></form>
         </section></div>
       </>}
@@ -289,7 +381,7 @@ export default function HostPlanSetup() {
         <Toggle title="Autoplay scheduled rounds" detail="Automatically advance when a timed round finishes." checked={form.autoplay} onChange={v=>update("autoplay",v)}/>
       </section>}
 
-      {tab === "schedule" && <section className="cc-section-card"><div className="cc-schedule-top"><div><h3>Event timeline</h3><p>Breaks are inserted automatically. Change durations or move tasks to adjust the running order.</p></div><div className="cc-end-time"><small>Estimated finish</small><strong>{calculatedEnd}</strong></div></div><div className="cc-form-grid"><Field label="Default break between challenges"><select value={form.breakMinutes} onChange={e=>update("breakMinutes",Number(e.target.value))}><option value={0}>No break</option><option value={10}>10 minutes</option><option value={15}>15 minutes</option><option value={20}>20 minutes</option><option value={30}>30 minutes</option></select></Field><Field label="Live final duration"><select value={form.finalDuration} onChange={e=>update("finalDuration",Number(e.target.value))}><option value={20}>20 minutes</option><option value={30}>30 minutes</option><option value={45}>45 minutes</option><option value={60}>60 minutes</option></select></Field></div><div className="cc-schedule-actions"><Field label="Add a challenge"><select defaultValue="" onChange={e=>{if(e.target.value)addTaskToSchedule(e.target.value);e.currentTarget.value="";}}><option value="">Choose from challenge library…</option>{allTasks.filter(t=>t.kind === "main").map(t=><option key={t.id} value={t.id}>{t.title}</option>)}</select></Field><button type="button" className="cc-secondary" onClick={()=>addScheduleItem("challenge")}><Plus size={15}/> Create challenge</button><button type="button" className="cc-secondary" onClick={()=>addScheduleItem("break")}><Plus size={15}/> Add break</button></div><div className="cc-schedule-list">{form.schedule.map((item,index)=>{const start=form.schedule.slice(0,index).reduce((m,x)=>m+x.duration,0);return <article className={`cc-schedule-item type-${item.type}`} key={item.id} draggable={item.type === "challenge"} onDragStart={()=>setDragged(item.id)} onDragOver={e=>e.preventDefault()} onDrop={()=>{if(!dragged||dragged===item.id)return;const a=[...form.schedule];const from=a.findIndex(x=>x.id===dragged);const to=a.findIndex(x=>x.id===item.id);if(from>=0&&to>=0){const [moved]=a.splice(from,1);a.splice(to,0,moved);update("schedule",a);}setDragged(null);}}><div className="cc-schedule-time"><strong>{item.type === "pregame" ? "BEFORE" : timePlus(form.startTime,start)}</strong><small>{item.type === "pregame" ? "Before arrival" : `${item.duration} min`}</small></div><div className="cc-schedule-detail"><span className="cc-schedule-type">{item.type === "teams" ? "TEAM SELECTION" : item.type.toUpperCase()}</span><>{item.type === "challenge" ? <input className="cc-schedule-title-edit" aria-label={`Edit ${item.title}`} value={item.title} onChange={e=>updateScheduleItem(item.id,{title:e.target.value})}/> : <strong>{item.title}</strong>}{item.taskId&&<small>{allTasks.find(t=>t.id===item.taskId)?.prep}</small>}{item.taskId&&!!allTasks.find(t=>t.id===item.taskId)?.equipment.length&&<small>Equipment: {allTasks.find(t=>t.id===item.taskId)?.equipment.join(", ")}</small>}</></div>{item.type !== "pregame" && <label className="cc-duration-edit">Duration<input type="number" min={1} max={240} value={item.duration} onChange={e=>updateScheduleItem(item.id,{duration:Math.max(1,Number(e.target.value))})}/></label>}<button type="button" className="cc-icon-button" title={`Delete ${item.title}`} aria-label={`Delete ${item.title}`} onClick={()=>deleteScheduleItem(item.id)}><Trash2 size={15}/></button>{item.type==="challenge"&&<div className="cc-schedule-move"><button onClick={()=>{const next=form.schedule[index-1];if(next?.type==="challenge"){const a=[...form.schedule];[a[index-1],a[index]]=[a[index],a[index-1]];update("schedule",a);}}}><ArrowUp size={14}/></button><button onClick={()=>{const next=form.schedule[index+1];if(next?.type==="challenge"){const a=[...form.schedule];[a[index+1],a[index]]=[a[index],a[index+1]];update("schedule",a);}}}><ArrowDown size={14}/></button></div>}</article>;})}</div><div className="cc-explainer"><Info size={18}/><p><strong>Flexible schedule.</strong> If a task overruns, the next breaks and challenges can be pushed back automatically. The host can override the schedule during the live game. Enable strict scheduling to turn on challenge timers.</p></div><Toggle title="Follow a strict schedule" detail="Enable countdown timers for timed challenges." checked={form.strictSchedule} onChange={v=>{update("strictSchedule",v);update("challengeTimers",v);}}/><Toggle title="Autoplay rounds" detail="Automatically advance when each scheduled task ends." checked={form.autoplay} onChange={v=>update("autoplay",v)}/><Toggle title="WhatsApp timing reminders" detail="Prepare timed reminders for players. Automatic sending needs a WhatsApp messaging integration." checked={form.whatsappReminders} onChange={v=>update("whatsappReminders",v)}/></section>}
+      {tab === "schedule" && <section className="cc-section-card"><div className="cc-schedule-top"><div><h3>Event timeline</h3><p>Breaks are inserted automatically. Change durations or move tasks to adjust the running order.</p></div><div className="cc-end-time"><small>Estimated finish</small><strong>{calculatedEnd}</strong></div></div><div className="cc-form-grid"><Field label="Default break between challenges"><select value={form.breakMinutes} onChange={e=>update("breakMinutes",Number(e.target.value))}><option value={0}>No break</option><option value={10}>10 minutes</option><option value={15}>15 minutes</option><option value={20}>20 minutes</option><option value={30}>30 minutes</option></select></Field><Field label="Live final duration"><select value={form.finalDuration} onChange={e=>update("finalDuration",Number(e.target.value))}><option value={20}>20 minutes</option><option value={30}>30 minutes</option><option value={45}>45 minutes</option><option value={60}>60 minutes</option></select></Field></div>{form.sideChallenges && <div className="cc-explainer"><Info size={18}/><p><strong>Final review and rewards add {liveFinalMinutes} minutes.</strong> {form.finalDuration} minutes for the live final, plus {sideReviewCount} side-challenge {sideReviewCount === 1 ? "review" : "reviews"} at 5 minutes each. Up to {sideRewardPoints} challenge points are available to award.</p></div>}<div className="cc-schedule-actions"><Field label="Add a challenge"><select defaultValue="" onChange={e=>{if(e.target.value)addTaskToSchedule(e.target.value);e.currentTarget.value="";}}><option value="">Choose from challenge library…</option>{allTasks.filter(t=>t.kind === "main").map(t=><option key={t.id} value={t.id}>{t.title}</option>)}</select></Field><button type="button" className="cc-secondary" onClick={()=>addScheduleItem("challenge")}><Plus size={15}/> Create challenge</button><button type="button" className="cc-secondary" onClick={()=>addScheduleItem("break")}><Plus size={15}/> Add break</button></div><div className="cc-schedule-list">{form.schedule.map((item,index)=>{const start=form.schedule.slice(0,index).reduce((m,x)=>m+x.duration,0);return <article className={`cc-schedule-item type-${item.type}`} key={item.id} draggable={item.type === "challenge"} onDragStart={()=>setDragged(item.id)} onDragOver={e=>e.preventDefault()} onDrop={()=>{if(!dragged||dragged===item.id)return;const a=[...form.schedule];const from=a.findIndex(x=>x.id===dragged);const to=a.findIndex(x=>x.id===item.id);if(from>=0&&to>=0){const [moved]=a.splice(from,1);a.splice(to,0,moved);update("schedule",a);}setDragged(null);}}><div className="cc-schedule-time"><strong>{item.type === "pregame" ? "BEFORE" : timePlus(form.startTime,start)}</strong><small>{item.type === "pregame" ? "Before arrival" : `${item.duration} min`}</small></div><div className="cc-schedule-detail"><span className="cc-schedule-type">{item.type === "teams" ? "TEAM SELECTION" : item.type.toUpperCase()}</span><>{item.type === "challenge" ? <input className="cc-schedule-title-edit" aria-label={`Edit ${item.title}`} value={item.title} onChange={e=>updateScheduleItem(item.id,{title:e.target.value})}/> : <strong>{item.title}</strong>}{item.taskId&&<small>{allTasks.find(t=>t.id===item.taskId)?.prep}</small>}{item.taskId&&!!allTasks.find(t=>t.id===item.taskId)?.equipment.length&&<small>Equipment: {allTasks.find(t=>t.id===item.taskId)?.equipment.join(", ")}</small>}</></div>{item.type !== "pregame" && <label className="cc-duration-edit">Duration<input type="number" min={1} max={240} value={item.duration} onChange={e=>updateScheduleItem(item.id,{duration:Math.max(1,Number(e.target.value))})}/></label>}<button type="button" className="cc-icon-button" title={`Delete ${item.title}`} aria-label={`Delete ${item.title}`} onClick={()=>deleteScheduleItem(item.id)}><Trash2 size={15}/></button>{item.type==="challenge"&&<div className="cc-schedule-move"><button onClick={()=>{const next=form.schedule[index-1];if(next?.type==="challenge"){const a=[...form.schedule];[a[index-1],a[index]]=[a[index],a[index-1]];update("schedule",a);}}}><ArrowUp size={14}/></button><button onClick={()=>{const next=form.schedule[index+1];if(next?.type==="challenge"){const a=[...form.schedule];[a[index+1],a[index]]=[a[index],a[index+1]];update("schedule",a);}}}><ArrowDown size={14}/></button></div>}</article>;})}</div><div className="cc-explainer"><Info size={18}/><p><strong>Flexible schedule.</strong> If a task overruns, the next breaks and challenges can be pushed back automatically. The host can override the schedule during the live game. Enable strict scheduling to turn on challenge timers.</p></div><Toggle title="Follow a strict schedule" detail="Enable countdown timers for timed challenges." checked={form.strictSchedule} onChange={v=>{update("strictSchedule",v);update("challengeTimers",v);}}/><Toggle title="Autoplay rounds" detail="Automatically advance when each scheduled task ends." checked={form.autoplay} onChange={v=>update("autoplay",v)}/><Toggle title="WhatsApp timing reminders" detail="Prepare timed reminders for players. Automatic sending needs a WhatsApp messaging integration." checked={form.whatsappReminders} onChange={v=>update("whatsappReminders",v)}/></section>}
 
       {tab === "invites" && <section className="cc-section-card"><div className="cc-explainer"><Users size={18}/><p><strong>Invite players before the event.</strong> Players can join early, learn how the app works and see what they need to prepare. The demo uses sample tasks, never your actual game challenges.</p></div><Toggle title="Allow players to join before the event" detail="Create a pre-event player lobby and shareable invite." checked={form.inviteBeforeEvent} onChange={v=>update("inviteBeforeEvent",v)}/><Toggle title="Include an app demo" detail="Show a demo video or guided walkthrough using sample challenges." checked={form.demoEnabled} onChange={v=>update("demoEnabled",v)}/><Field label="Game rules"><textarea rows={4} value={form.rules} onChange={e=>update("rules",e.target.value)}/></Field><div className="cc-prep-list"><h3>What players need to prepare</h3>{preparation.length?preparation.map(t=><div key={t.id}><strong>{t.title}</strong><p>{t.prep}</p></div>):<p className="cc-muted">No preparation notes yet. Add prep details to a challenge to show them here.</p>}</div><div className="cc-prep-list"><h3>Pre-game challenge</h3><Toggle title="Add a challenge to complete before arriving" detail="This appears as a main challenge in the player pre-event portal." checked={form.preGameEnabled} onChange={v=>{update("preGameEnabled",v);if(!v)update("schedule",form.schedule.filter(item=>item.type!=="pregame"&&item.type!=="pregame-review"));else if(form.preGameTaskId)setPreGameTask(form.preGameTaskId,true);}}/>{form.preGameEnabled&&<><Field label="Choose pre-game task"><select value={form.preGameTaskId} onChange={e=>setPreGameTask(e.target.value)}><option value="">Choose a task</option>{allTasks.filter(t=>t.kind==="main").map(t=><option key={t.id} value={t.id}>{t.title}</option>)}</select></Field><form className="cc-custom-task" onSubmit={e=>{e.preventDefault();if(!customTitle.trim())return;const task:Task={id:`pregame-${Date.now()}`,title:customTitle.trim(),description:customDesc.trim()||"Complete this task before arriving.",kind:"main",minutes:10,points:10,vibe:["creative"],accessibility:["seated-option"],equipment:[],setup:"No special setup.",prep:"Complete before the event.",evidenceRequired:true,preGame:true,tags:["Pre-game"]};update("customTasks",[...form.customTasks,task]);update("preGameTaskId",task.id);setCustomTitle("");setCustomDesc("");setNotice("Pre-game task created.");}}><strong>Create a pre-game task</strong><input value={customTitle} onChange={e=>setCustomTitle(e.target.value)} placeholder="Task name"/><input value={customDesc} onChange={e=>setCustomDesc(e.target.value)} placeholder="What should players do?"/><button className="cc-secondary" disabled={!customTitle.trim()}><Plus size={15}/> Create pre-game task</button></form></>}<small>Examples: dress most like the host, make the best entrance, or bring the best item. Players can submit before the event; main challenge evidence remains optional unless the host explicitly requests it.</small></div><div className="cc-prep-list"><h3>Secret mission assignment</h3><p>Missions are created now but recipients are selected only after players have joined. Choose how assignment should work at that point.</p><Field label="Assignment method"><select value={form.secretAssignment} onChange={e=>update("secretAssignment",e.target.value as "auto"|"host")}><option value="auto">Automatically assign after players join</option><option value="host">Host assigns after players join</option></select></Field></div><div className="cc-invite-placeholder"><Info size={18}/><p>The invite portal settings are saved with this plan. A shareable pre-event link is generated when the game session is created; it will show the demo, rules and preparation brief, not the selected challenge library.</p></div></section>}
 

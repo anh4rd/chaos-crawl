@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowRight, BookmarkCheck, Check, Clock3, Compass, Heart, MapPin, Search,
-  Sparkles, Users, Wallet, X,
+  Sparkles, Users, Wallet, X, Plus, Send, ShieldCheck, CheckCircle2, XCircle,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import HostShell from "../components/host/HostShell";
@@ -12,6 +12,19 @@ import "../styles/HostExplore.css";
 type CatalogTab = "tasks" | "locations" | "routes";
 type TaskKind = "main" | "side" | "secret";
 type FavouriteType = "task" | "venue" | "route";
+type SubmissionStatus = "pending" | "approved" | "rejected";
+
+interface CommunitySubmission {
+  id: string;
+  item_type: "challenge" | "venue";
+  title: string;
+  description: string;
+  payload: Record<string, unknown>;
+  status: SubmissionStatus;
+  submitted_by: string;
+  review_note: string | null;
+  created_at: string;
+}
 
 interface CatalogTask {
   id: string;
@@ -19,6 +32,8 @@ interface CatalogTask {
   description: string;
   points: number;
   minutes: number;
+  prepMinutes?: number;
+  performanceMinutes?: number;
   kind: TaskKind;
   tags: string[];
   setup: "none" | "basic" | "some";
@@ -103,6 +118,12 @@ function itemData(item: CatalogTask | LocationIdea | RouteIdea) {
   return JSON.parse(JSON.stringify(item)) as Record<string, unknown>;
 }
 
+const CHALLENGE_TAG_OPTIONS = [
+  "team", "solo", "creative", "performance", "photo", "video", "quick", "social",
+  "improv", "silly", "strategy", "communication", "observation", "music", "drawing",
+  "puzzle", "secret", "indoors", "outdoors", "no prep", "equipment", "low prep",
+] as const;
+
 export default function HostExplore() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<CatalogTab>("tasks");
@@ -113,6 +134,17 @@ export default function HostExplore() {
   const [busyFavourite, setBusyFavourite] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [expandedRoutes, setExpandedRoutes] = useState<string[]>([]);
+  const [submissions, setSubmissions] = useState<CommunitySubmission[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
+  const [showCreateChallenge, setShowCreateChallenge] = useState(false);
+  const [editingSubmission, setEditingSubmission] = useState<CommunitySubmission | null>(null);
+  const [submittingChallenge, setSubmittingChallenge] = useState(false);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [challengeDraft, setChallengeDraft] = useState({
+    title: "", description: "", kind: "main" as TaskKind, points: 20, minutes: 10, prepMinutes: 0, performanceMinutes: 0,
+    tags: ["creative", "team"] as string[], setup: "none" as CatalogTask["setup"],
+  });
 
   const loadFavourites = useCallback(async () => {
     setLoadingFavourites(true);
@@ -136,6 +168,45 @@ export default function HostExplore() {
 
   useEffect(() => { void loadFavourites(); }, [loadFavourites]);
 
+  const loadSubmissions = useCallback(async () => {
+    const [{ data: userData }, { data: adminData, error: adminError }] = await Promise.all([
+      supabase.auth.getUser(),
+      supabase.rpc("cc_is_platform_admin"),
+    ]);
+    if (adminError) {
+      console.warn("Platform-admin check unavailable; community review controls remain hidden.", adminError);
+    }
+    setIsPlatformAdmin(Boolean(adminData));
+    if (!userData.user) return;
+    setCurrentUserId(userData.user.id);
+    const { data, error: queryError } = await supabase
+      .from("cc_catalog_submissions")
+      .select("id,item_type,title,description,payload,status,submitted_by,review_note,created_at")
+      .order("created_at", { ascending: false });
+    if (queryError) {
+      setError("Community submissions need the catalogue moderation migration. Run 20261112_community_catalog_and_host_view_as.sql in Supabase.");
+      return;
+    }
+    setSubmissions((data ?? []) as CommunitySubmission[]);
+  }, []);
+
+  useEffect(() => { void loadSubmissions(); }, [loadSubmissions]);
+
+  const communityTasks = useMemo<CatalogTask[]>(() => submissions
+    .filter((submission) => submission.item_type === "challenge" && submission.status === "approved")
+    .map((submission) => ({
+      id: `community-${submission.id}`,
+      title: submission.title,
+      description: submission.description,
+      points: Number(submission.payload.points ?? 20),
+      minutes: Number(submission.payload.minutes ?? 10),
+      prepMinutes: Number(submission.payload.prepMinutes ?? 0) || undefined,
+      performanceMinutes: Number(submission.payload.performanceMinutes ?? 0) || undefined,
+      kind: (submission.payload.kind === "side" || submission.payload.kind === "secret" ? submission.payload.kind : "main") as TaskKind,
+      tags: Array.isArray(submission.payload.tags) ? submission.payload.tags.map(String) : ["community"],
+      setup: submission.payload.setup === "basic" || submission.payload.setup === "some" ? submission.payload.setup : "none",
+    })), [submissions]);
+
   const categories = useMemo(() => {
     if (tab === "tasks") return ["all", "main", "side", "secret", "quick", "team", "creative", "no prep"];
     if (tab === "locations") return ["all", "one venue", "outdoors", "budget", "performance", "large groups"];
@@ -144,13 +215,13 @@ export default function HostExplore() {
 
   const visibleTasks = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return tasks.filter((item) => {
+    return [...tasks, ...communityTasks].filter((item) => {
       const searchable = [item.title, item.description, item.kind, ...item.tags].join(" ").toLowerCase();
       const searchMatch = !q || searchable.includes(q);
       const categoryMatch = category === "all" || (category === item.kind || item.tags.some((tag) => tag.toLowerCase().includes(category)));
       return searchMatch && categoryMatch;
     });
-  }, [search, category]);
+  }, [search, category, communityTasks]);
 
   const visibleLocations = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -219,8 +290,12 @@ export default function HostExplore() {
     if (saved) setFavourites((current) => [...current, saved as HostFavourite]);
   }
 
-  function addTaskToPlan(task: CatalogTask) {
-    navigate(`/host/games/new?task=${encodeURIComponent(task.id)}`);
+  function addTaskToPlan(task: CatalogTask, kind: "main" | "side") {
+    if (task.id.startsWith("community-")) {
+      navigate(`/host/games/new?communityTask=${encodeURIComponent(task.id.slice("community-".length))}&challengeKind=${kind}`);
+      return;
+    }
+    navigate(`/host/games/new?exploreTask=${encodeURIComponent(JSON.stringify(task))}&challengeKind=${kind}`);
   }
 
   function useLocationIdea(location: LocationIdea) {
@@ -231,24 +306,142 @@ export default function HostExplore() {
     setExpandedRoutes((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
   }
 
+  async function submitChallenge(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmittingChallenge(true);
+    setError("");
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData.user) {
+      setError("Your session has expired. Please log in again.");
+      setSubmittingChallenge(false);
+      return;
+    }
+    const payload = {
+      kind: challengeDraft.kind,
+      points: Math.max(0, Math.min(100, Number(challengeDraft.points) || 0)),
+      minutes: Math.max(1, Math.min(180, Number(challengeDraft.minutes) || 1)),
+      prepMinutes: Math.max(0, Math.min(180, Number(challengeDraft.prepMinutes) || 0)),
+      performanceMinutes: Math.max(0, Math.min(180, Number(challengeDraft.performanceMinutes) || 0)),
+      tags: challengeDraft.tags.slice(0, 8),
+      setup: challengeDraft.setup,
+    };
+    const query = editingSubmission
+      ? supabase.from("cc_catalog_submissions").update({
+          title: challengeDraft.title.trim(),
+          description: challengeDraft.description.trim(),
+          payload,
+        }).eq("id", editingSubmission.id).eq("status", "approved")
+      : supabase.from("cc_catalog_submissions").insert({
+          item_type: "challenge",
+          title: challengeDraft.title.trim(),
+          description: challengeDraft.description.trim(),
+          payload,
+          status: "pending",
+          submitted_by: userData.user.id,
+        });
+    const { error: insertError } = await query;
+    setSubmittingChallenge(false);
+    if (insertError) {
+      setError(insertError.message);
+      return;
+    }
+    setChallengeDraft({ title: "", description: "", kind: "main", points: 20, minutes: 10, prepMinutes: 0, performanceMinutes: 0, tags: ["creative", "team"], setup: "none" });
+    setEditingSubmission(null);
+    setShowCreateChallenge(false);
+    await loadSubmissions();
+  }
+
+  function editCommunityChallenge(submission: CommunitySubmission) {
+    setEditingSubmission(submission);
+    setChallengeDraft({
+      title: submission.title,
+      description: submission.description,
+      kind: (submission.payload.kind === "side" || submission.payload.kind === "secret" ? submission.payload.kind : "main") as TaskKind,
+      points: Number(submission.payload.points ?? 20),
+      minutes: Number(submission.payload.minutes ?? 10),
+      prepMinutes: Number(submission.payload.prepMinutes ?? 0),
+      performanceMinutes: Number(submission.payload.performanceMinutes ?? 0),
+      tags: Array.isArray(submission.payload.tags) ? submission.payload.tags.map(String).slice(0, 8) : ["creative", "team"],
+      setup: submission.payload.setup === "basic" || submission.payload.setup === "some" ? submission.payload.setup : "none",
+    });
+    setShowCreateChallenge(true);
+  }
+
+  async function deleteCommunityChallenge(submission: CommunitySubmission) {
+    if (!isPlatformAdmin || !window.confirm(`Delete “${submission.title}” from the shared challenge library?`)) return;
+    setReviewingId(submission.id);
+    setError("");
+    const { error: deleteError } = await supabase.from("cc_catalog_submissions").delete().eq("id", submission.id).eq("status", "approved");
+    setReviewingId(null);
+    if (deleteError) {
+      setError(deleteError.message);
+      return;
+    }
+    await loadSubmissions();
+  }
+
+  async function reviewSubmission(submission: CommunitySubmission, status: "approved" | "rejected") {
+    setReviewingId(submission.id);
+    setError("");
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData.user || !isPlatformAdmin) {
+      setError("Only a platform administrator can review submissions.");
+      setReviewingId(null);
+      return;
+    }
+    const { error: updateError } = await supabase.from("cc_catalog_submissions").update({
+      status,
+      reviewed_by: userData.user.id,
+      reviewed_at: new Date().toISOString(),
+    }).eq("id", submission.id).eq("status", "pending");
+    setReviewingId(null);
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+    await loadSubmissions();
+  }
+
+  const pendingSubmissions = submissions.filter((submission) => submission.status === "pending");
+  const mySubmissions = submissions.filter((submission) => submission.submitted_by === currentUserId && submission.status !== "approved");
   const itemCount = tab === "tasks" ? visibleTasks.length : tab === "locations" ? visibleLocations.length : visibleRoutes.length;
 
   return (
-    <HostShell title="Explore the library" subtitle="Premade challenges, venue inspiration and route templates to get your next game moving." showCreate>
+    <HostShell title="Explore the library" subtitle="Browse ideas, save inspiration and contribute challenges to the shared catalogue." showCreate>
       <section className="host-explore-hero">
         <div className="host-explore-hero-copy">
           <span className="host-eyebrow host-eyebrow--light">YOUR NEXT GOOD BAD IDEA</span>
           <h2>Steal a little inspiration.</h2>
-          <p>Browse ready-to-use tasks, places to host and route templates. Save the good stuff for later.</p>
+          <p>Browse ready-to-use tasks, places to host and route templates. Create your own challenges and submit them to the community library.</p>
         </div>
         <div className="host-explore-hero-art" aria-hidden="true"><Sparkles size={52}/><span>IDEAS<br/>INSIDE</span></div>
       </section>
 
       {error && <div className="host-alert host-alert--error" role="alert">{error}</div>}
 
+      {isPlatformAdmin && pendingSubmissions.length > 0 && (
+        <section className="host-community-review">
+          <div className="host-community-section-heading"><div><span className="host-community-kicker"><ShieldCheck size={14}/> PLATFORM MODERATION</span><h2>Community review queue <span>{pendingSubmissions.length}</span></h2><p>Approve safe, clear contributions to publish them to every host's Explore library.</p></div></div>
+          <div className="host-community-review-list">
+            {pendingSubmissions.map((submission) => (
+              <article className="host-community-review-card" key={submission.id}>
+                <div><span className="host-community-type">{submission.item_type}</span><h3>{submission.title}</h3><p>{submission.description}</p>
+                  {submission.item_type === "challenge" && <small>{String(submission.payload.kind ?? "main")} · {String(submission.payload.minutes ?? 10)} min · {String(submission.payload.points ?? 20)} points</small>}
+                  <small>Submitted {new Date(submission.created_at).toLocaleDateString()}</small>
+                </div>
+                <div className="host-community-review-actions">
+                  <button type="button" className="host-button host-button--lime" disabled={reviewingId === submission.id} onClick={() => void reviewSubmission(submission, "approved")}><CheckCircle2 size={15}/> Approve</button>
+                  <button type="button" className="host-button host-button--secondary" disabled={reviewingId === submission.id} onClick={() => void reviewSubmission(submission, "rejected")}><XCircle size={15}/> Reject</button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
+
       <div className="host-explore-toolbar">
         <div className="host-explore-tabs" role="tablist" aria-label="Explore catalogue">
-          <button type="button" role="tab" aria-selected={tab === "tasks"} className={tab === "tasks" ? "is-active" : ""} onClick={() => { setTab("tasks"); setCategory("all"); }}><Sparkles size={16}/> Tasks <span>{tasks.length}</span></button>
+          <button type="button" role="tab" aria-selected={tab === "tasks"} className={tab === "tasks" ? "is-active" : ""} onClick={() => { setTab("tasks"); setCategory("all"); }}><Sparkles size={16}/> Tasks <span>{tasks.length + communityTasks.length}</span></button>
           <button type="button" role="tab" aria-selected={tab === "locations"} className={tab === "locations" ? "is-active" : ""} onClick={() => { setTab("locations"); setCategory("all"); }}><MapPin size={16}/> Locations <span>{locations.length}</span></button>
           <button type="button" role="tab" aria-selected={tab === "routes"} className={tab === "routes" ? "is-active" : ""} onClick={() => { setTab("routes"); setCategory("all"); }}><Compass size={16}/> Routes <span>{routes.length}</span></button>
         </div>
@@ -264,22 +457,26 @@ export default function HostExplore() {
       </div>
 
       <div className="host-explore-results">
-        <div className="host-explore-results-heading"><div><h2>{tab === "tasks" ? "Ready-made challenges" : tab === "locations" ? "Places to play" : "Route templates"}</h2><p>{tab === "tasks" ? "Filter by vibe, effort and style. Add a challenge to a new game plan." : tab === "locations" ? "Find a setting that fits your group, budget and energy." : "Adapt these structures to your own city. They are templates, not verified mapped routes."}</p></div><span>{itemCount} {itemCount === 1 ? "result" : "results"}</span></div>
+        <div className="host-explore-results-heading"><div><h2>{tab === "tasks" ? "Ready-made challenges" : tab === "locations" ? "Places to play" : "Route templates"}</h2><p>{tab === "tasks" ? "Browse the shared catalogue or submit an original challenge for review." : tab === "locations" ? "Find a setting that fits your group, budget and energy." : "Adapt these structures to your own city. They are templates, not verified mapped routes."}</p></div><div className="host-explore-heading-actions"><span>{itemCount} {itemCount === 1 ? "result" : "results"}</span>{tab === "tasks" && <button type="button" className="host-button host-button--primary" onClick={() => setShowCreateChallenge(true)}><Plus size={16}/> Create challenge</button>}</div></div>
 
         {loadingFavourites && <div className="host-explore-loading">Checking your saved items…</div>}
 
         {tab === "tasks" && <div className="host-explore-grid">
           {visibleTasks.map((task) => {
             const saved = isSaved("task", task.id);
+            const communitySubmission = task.id.startsWith("community-") ? submissions.find((submission) => submission.id === task.id.slice("community-".length)) : undefined;
             return <article className="host-explore-card" key={task.id}>
               <div className="host-explore-card-top"><span className={`host-explore-type host-explore-type--${task.kind}`}>{task.kind === "main" ? "Main challenge" : task.kind === "side" ? "Side challenge" : "Secret mission"}</span><button type="button" className={`host-explore-save${saved ? " is-saved" : ""}`} disabled={busyFavourite === `task:${task.id}`} onClick={() => void toggleFavourite("task", task.id, task)} aria-label={saved ? `Unsave ${task.title}` : `Save ${task.title}`} title={saved ? "Saved" : "Save for later"}>{saved ? <BookmarkCheck size={18}/> : <Heart size={18}/>}</button></div>
               <h3>{task.title}</h3><p>{task.description}</p>
-              <div className="host-explore-metadata"><span><Clock3 size={14}/>{task.minutes} min</span><span><Sparkles size={14}/>{task.points} points</span><span><Wallet size={14}/>{task.setup === "none" ? "No kit" : task.setup === "basic" ? "Basic kit" : "Some prep"}</span></div>
+              <div className="host-explore-metadata">{task.prepMinutes || task.performanceMinutes ? <><span><Clock3 size={14}/>Prep {task.prepMinutes ?? 0} min</span><span><Clock3 size={14}/>Performance {task.performanceMinutes ?? 0} min</span></> : <span><Clock3 size={14}/>{task.minutes} min</span>}<span><Sparkles size={14}/>{task.points} points</span><span><Wallet size={14}/>{task.setup === "none" ? "No kit" : task.setup === "basic" ? "Basic kit" : "Some prep"}</span></div>
               <div className="host-explore-tags">{task.tags.slice(0,4).map((tag) => <span key={tag}>{tag}</span>)}</div>
-              <button type="button" className="host-button host-button--primary host-explore-use" onClick={() => addTaskToPlan(task)}><PlusIcon/> Add to a new plan <ArrowRight size={15}/></button>
+              {isPlatformAdmin && communitySubmission && <div className="host-community-review-actions host-explore-admin-actions"><button type="button" className="host-button host-button--secondary" onClick={() => editCommunityChallenge(communitySubmission)}>Edit challenge</button><button type="button" className="host-button host-button--secondary" disabled={reviewingId === communitySubmission.id} onClick={() => void deleteCommunityChallenge(communitySubmission)}>Delete</button></div>}
+              <div className="host-explore-use-options"><button type="button" className="host-button host-button--primary" onClick={() => addTaskToPlan(task, "main")}><PlusIcon/> Add as main</button><button type="button" className="host-button host-button--secondary" onClick={() => addTaskToPlan(task, "side")}><PlusIcon/> Add as side</button></div>
             </article>;
           })}
         </div>}
+
+        {tab === "tasks" && mySubmissions.length > 0 && <section className="host-my-submissions"><div className="host-community-section-heading"><div><h3>Your submissions</h3><p>Approved challenges appear in the shared library. Pending items are only visible to you and moderators.</p></div></div><div className="host-my-submissions-list">{mySubmissions.map((submission) => <div className="host-my-submission" key={submission.id}><div><strong>{submission.title}</strong><small>{submission.item_type} · submitted {new Date(submission.created_at).toLocaleDateString()}</small>{submission.review_note && <small>{submission.review_note}</small>}</div><span className={`host-submission-status host-submission-status--${submission.status}`}>{submission.status}</span></div>)}</div></section>}
 
         {tab === "locations" && <div className="host-explore-grid">
           {visibleLocations.map((location) => {
@@ -313,6 +510,41 @@ export default function HostExplore() {
 
         {!itemCount && <div className="host-empty-state"><Search size={24}/><h3>No matches</h3><p>Try a different search or clear your filters.</p><button type="button" className="host-button host-button--secondary" onClick={() => { setSearch(""); setCategory("all"); }}>Clear filters</button></div>}
       </div>
+
+      {showCreateChallenge && (
+        <div className="host-community-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowCreateChallenge(false); }}>
+          <section className="host-community-modal" role="dialog" aria-modal="true" aria-labelledby="host-create-challenge-title">
+            <div className="host-community-modal-heading"><div><span className="host-community-kicker">{editingSubmission ? "PLATFORM ADMIN" : "COMMUNITY CONTRIBUTION"}</span><h2 id="host-create-challenge-title">{editingSubmission ? "Edit challenge" : "Create a challenge"}</h2><p>{editingSubmission ? "Update this approved challenge in the shared Explore library." : "Share an original idea. It will be checked before appearing in Explore for other hosts."}</p></div><button type="button" className="host-explore-save" onClick={() => { setShowCreateChallenge(false); setEditingSubmission(null); }} aria-label="Close"><X size={18}/></button></div>
+            <form className="host-community-form" onSubmit={(event) => void submitChallenge(event)}>
+              <label><span>Challenge title</span><input required maxLength={80} value={challengeDraft.title} onChange={(event) => setChallengeDraft((draft) => ({ ...draft, title: event.target.value }))} placeholder="Give it a memorable name"/></label>
+              <label><span>How does it work?</span><textarea required maxLength={1200} rows={4} value={challengeDraft.description} onChange={(event) => setChallengeDraft((draft) => ({ ...draft, description: event.target.value }))} placeholder="Explain the challenge and any rules or safety considerations."/></label>
+              <div className="host-community-form-grid">
+                <label><span>Challenge type</span><select value={challengeDraft.kind} onChange={(event) => setChallengeDraft((draft) => ({ ...draft, kind: event.target.value as TaskKind }))}><option value="main">Main challenge</option><option value="side">Side challenge</option><option value="secret">Secret mission</option></select></label>
+                <label><span>Points</span><input type="number" min="0" max="100" value={challengeDraft.points} onChange={(event) => setChallengeDraft((draft) => ({ ...draft, points: Number(event.target.value) }))}/></label>
+                <label><span>Minutes</span><input type="number" min="1" max="180" value={challengeDraft.minutes} onChange={(event) => setChallengeDraft((draft) => ({ ...draft, minutes: Number(event.target.value) }))}/></label>
+                <label><span>Player prep (optional)</span><input type="number" min="0" max="180" value={challengeDraft.prepMinutes ?? 0} onChange={(event) => setChallengeDraft((draft) => ({ ...draft, prepMinutes: Number(event.target.value) }))}/></label>
+                <label><span>Player performance (optional)</span><input type="number" min="0" max="180" value={challengeDraft.performanceMinutes ?? 0} onChange={(event) => setChallengeDraft((draft) => ({ ...draft, performanceMinutes: Number(event.target.value) }))}/></label>
+                <label><span>Equipment</span><select value={challengeDraft.setup} onChange={(event) => setChallengeDraft((draft) => ({ ...draft, setup: event.target.value as CatalogTask["setup"] }))}><option value="none">No kit</option><option value="basic">Basic kit</option><option value="some">Some prep</option></select></label>
+              </div>
+              <fieldset className="host-community-tag-fieldset">
+                <legend>Tags <small>Choose up to 8 that describe your challenge</small></legend>
+                <div className="host-community-tag-options">
+                  {CHALLENGE_TAG_OPTIONS.map((tag) => {
+                    const selected = challengeDraft.tags.includes(tag);
+                    const disabled = !selected && challengeDraft.tags.length >= 8;
+                    return <button key={tag} type="button" className={`host-community-tag-option${selected ? " is-selected" : ""}`} aria-pressed={selected} disabled={disabled} onClick={() => setChallengeDraft((draft) => ({ ...draft, tags: selected ? draft.tags.filter((item) => item !== tag) : [...draft.tags, tag] }))}>
+                      {selected ? <Check size={13}/> : <PlusIcon/>}{tag}
+                    </button>;
+                  })}
+                </div>
+                <small className="host-community-tag-count">{challengeDraft.tags.length}/8 selected</small>
+              </fieldset>
+              {!editingSubmission && <div className="host-community-submit-note"><ShieldCheck size={16}/><span>Submissions are private until approved by the Chaos Crawl team. Approved challenges become visible to all hosts.</span></div>}
+              <div className="host-community-modal-actions"><button type="button" className="host-button host-button--secondary" onClick={() => { setShowCreateChallenge(false); setEditingSubmission(null); }}>Cancel</button><button type="submit" className="host-button host-button--primary" disabled={submittingChallenge}>{submittingChallenge ? (editingSubmission ? "Saving…" : "Submitting…") : editingSubmission ? <><Check size={15}/> Save changes</> : <><Send size={15}/> Submit for review</>}</button></div>
+            </form>
+          </section>
+        </div>
+      )}
     </HostShell>
   );
 }
