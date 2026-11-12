@@ -1,500 +1,304 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Check, CheckCircle2, Clock3, Heart, MapPin, Plus, ShieldCheck, Sparkles, Users } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CalendarDays, Check, CheckCircle2, GripVertical, Heart, ImagePlus, Info, ListChecks, MapPin, Play, Plus, ShieldCheck, Sparkles, Trash2, Upload, Users, WandSparkles } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import HostShell from "../components/host/HostShell";
 import "../styles/HostPortal.css";
+import "../styles/HostSetupBuilder.css";
 
-type StepId = "overview" | "players" | "venue" | "challenges" | "controls" | "review";
 type TaskKind = "main" | "side" | "secret";
-type Task = { id: string; title: string; description: string; points: number; minutes: number; kind: TaskKind; tags: string[] };
-type Fav = { id: string; item_type: "task" | "venue"; item_id: string };
+type BuilderTab = "players" | "main" | "side" | "secret" | "venue" | "controls" | "schedule" | "review" | "invites" | "launch";
+type RewardMode = "voting" | "host-awards" | "audience-cheers";
+type Task = {
+  id: string; title: string; description: string; kind: TaskKind; minutes: number; points: number;
+  vibe: string[]; accessibility: string[]; equipment: string[]; setup: string; prep: string;
+  evidenceRequired: boolean; preGame?: boolean; instructions?: string; tags?: string[];
+};
+type ScheduleItem = { id: string; type: "welcome" | "teams" | "challenge" | "break" | "final" | "pregame" | "pregame-review" | "secret-reveal"; title: string; duration: number; taskId?: string; editable?: boolean };
+type Favourite = { id: string; item_type: "task" | "venue"; item_id: string };
 
-interface PlanForm {
-  name: string;
-  eventDate: string;
-  startTime: string;
-  endTime: string;
-  vibe: string;
-  playerCount: number;
-  hostParticipates: boolean;
-  teamsEnabled: boolean;
-  hostChoosesTeams: boolean;
-  teamSize: number;
-  ageGroup: string;
-  alcohol: string;
-  accessibilityNotes: string;
-  venueName: string;
-  venueAddress: string;
-  venueType: string;
-  venueBooking: string;
-  sideChallenges: boolean;
-  secretMissions: boolean;
-  sabotage: boolean;
-  evidenceRequired: boolean;
-  setupEffort: string;
-  equipmentPreference: string;
-  rewardVoting: boolean;
-  rewardHostAwards: boolean;
-  rewardAudienceCheers: boolean;
-  voting: boolean;
-  votingTiming: string;
-  liveFinal: boolean;
-  slideshow: boolean;
-  taskTimers: boolean;
-  playerReadyCheck: boolean;
-  selectedTaskIds: string[];
-  customTasks: Task[];
+interface SetupForm {
+  name: string; eventDate: string; startTime: string; idealEndTime: string; playerCount: number;
+  gamePhotoUrl: string; hostParticipates: boolean; teamsEnabled: boolean; teamSize: number | null;
+  teamSetup: "host" | "players" | "later"; accessibility: string[]; ageGroup: string; alcohol: string;
+  venueName: string; venueAddress: string; venueNotes: string;
+  selectedMain: string[]; selectedSide: string[]; selectedSecret: string[]; customTasks: Task[];
+  rewardModes: RewardMode[]; decideRewardInGame: boolean; sideChallenges: boolean; secretMissions: boolean;
+  slideshow: boolean; liveFinal: boolean; strictSchedule: boolean; challengeTimers: boolean; autoplay: boolean;
+  whatsappReminders: boolean; autoAssignSecrets: boolean; secretAssignment: "auto" | "host";
+  preGameTaskId: string; preGameEnabled: boolean; inviteBeforeEvent: boolean; demoEnabled: boolean;
+  rules: string; schedule: ScheduleItem[]; breakMinutes: number; finalDuration: number; secretRevealMode: "scheduled" | "random"; secretRevealAfterMinutes: number;
 }
 
+const today = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
 const taskLibrary: Task[] = [
-  { id: "task-best-thing", title: "Obtain the best thing", description: "Find or make the best small object you can using only what's available at the venue. Present your case to the host.", points: 25, minutes: 15, kind: "main", tags: ["indoors", "improv", "no prep"] },
-  { id: "task-best-noise", title: "Make the best noise", description: "Create a noise that will make the host laugh. No shouting at strangers or disrupting other guests.", points: 15, minutes: 5, kind: "main", tags: ["quick", "performance"] },
-  { id: "task-human-statue", title: "Become a human statue", description: "As a team, make the most convincing statue of a famous landmark or a very confusing situation.", points: 20, minutes: 8, kind: "main", tags: ["team", "photo"] },
-  { id: "task-party-ad", title: "Advertise this party", description: "Make a 15-second advert for the party using three random words chosen by the host.", points: 20, minutes: 10, kind: "main", tags: ["video", "team"] },
-  { id: "task-portrait", title: "Draw the host", description: "Draw the host with your non-dominant hand. The host judges the results.", points: 15, minutes: 8, kind: "main", tags: ["creative", "equipment helpful"] },
-  { id: "task-paper-tower", title: "The tallest tiny tower", description: "Build the tallest freestanding tower from the items the host supplies. Keep it safe and easy to clear away.", points: 20, minutes: 10, kind: "main", tags: ["equipment", "team"] },
-  { id: "task-secret-toast", title: "The suspicious toast", description: "Get a teammate to make a dramatic toast without telling them why.", points: 10, minutes: 10, kind: "side", tags: ["secret", "social"] },
-  { id: "task-secret-word", title: "Sneak in the word", description: "Use the word 'pineapple' naturally in three conversations with your own team.", points: 10, minutes: 15, kind: "side", tags: ["secret", "no prep"] },
-  { id: "task-team-laugh", title: "Make your team laugh", description: "Make every teammate laugh without touching them or using your phone.", points: 10, minutes: 5, kind: "side", tags: ["quick", "team"] },
-  { id: "task-handshake", title: "Invent a secret handshake", description: "Create and perform a team handshake that lasts exactly five seconds.", points: 10, minutes: 10, kind: "side", tags: ["team", "performance"] },
-  { id: "task-secret-mission", title: "Secret mission", description: "Complete a discreet, harmless mission without telling the other teams what it is.", points: 15, minutes: 20, kind: "secret", tags: ["secret", "sneaky"] },
-  { id: "task-sabotage", title: "Friendly sabotage", description: "Give another team a ridiculous distraction using only words. No hiding, damaging or taking their belongings.", points: 10, minutes: 10, kind: "secret", tags: ["silly", "social"] },
+  { id: "pineapple", title: "Conceal a pineapple", description: "Hide a pineapple somewhere on your person and get a photo or video.", kind: "main", minutes: 20, points: 20, vibe: ["silly", "creative"], accessibility: ["standing", "mobility-flexible"], equipment: ["Pineapple"], setup: "Give each team a pineapple or agree what counts as a pineapple.", prep: "Collect pineapples before the round.", evidenceRequired: false, tags: ["Photo optional", "Team"] },
+  { id: "best-costume", title: "Best costume (bin bags)", description: "Create a costume using only bin bags.", kind: "main", minutes: 20, points: 20, vibe: ["creative", "silly"], accessibility: ["seated-option", "standing"], equipment: ["Bin bags (x3+)", "Tape", "Scissors"], setup: "Put a bundle of bin bags, tape and scissors at the challenge station.", prep: "Have materials ready at the next venue.", evidenceRequired: false, tags: ["Prep required", "Team"] },
+  { id: "best-entrance", title: "Make the best entrance", description: "Make an unforgettable entrance to the party.", kind: "main", minutes: 5, points: 15, vibe: ["performance", "silly"], accessibility: ["seated-option", "low-noise-option"], equipment: [], setup: "Choose a safe, clear entrance area.", prep: "Tell players to prepare an entrance before they arrive.", evidenceRequired: false, preGame: true, tags: ["Pre-game", "Preparation"] },
+  { id: "talent-show", title: "One-minute talent show", description: "Perform a one-minute act for the group.", kind: "main", minutes: 25, points: 25, vibe: ["performance", "creative"], accessibility: ["seated-option", "low-noise-option"], equipment: ["Optional props", "Speaker"], setup: "Make a small performance space and check sound levels.", prep: "Players should prepare an act before the event.", evidenceRequired: false, tags: ["Prep required", "Performance"] },
+  { id: "best-noise", title: "Make the best noise", description: "Create a noise that will make the host laugh without disrupting other guests.", kind: "main", minutes: 5, points: 15, vibe: ["silly", "performance"], accessibility: ["low-noise-option", "seated-option"], equipment: [], setup: "No special setup.", prep: "No preparation required.", evidenceRequired: false, tags: ["Quick"] },
+  { id: "team-handshake", title: "Invent a secret handshake", description: "Create and perform a team handshake that lasts exactly five seconds.", kind: "side", minutes: 10, points: 10, vibe: ["creative", "social"], accessibility: ["seated-option"], equipment: [], setup: "No special setup.", prep: "No preparation required.", evidenceRequired: true, tags: ["Team"] },
+  { id: "team-toast", title: "The suspicious toast", description: "Get a teammate to make a dramatic toast without telling them why.", kind: "side", minutes: 10, points: 10, vibe: ["social", "silly"], accessibility: ["low-noise-option"], equipment: [], setup: "No special setup.", prep: "No preparation required.", evidenceRequired: true, tags: ["Optional"] },
+  { id: "team-laugh", title: "Make your team laugh", description: "Make every teammate laugh without touching them or using your phone.", kind: "side", minutes: 5, points: 10, vibe: ["silly", "social"], accessibility: ["seated-option", "low-noise-option"], equipment: [], setup: "No special setup.", prep: "No preparation required.", evidenceRequired: true, tags: ["Quick"] },
+  { id: "secret-word", title: "Sneak in the word", description: "Use the word 'pineapple' naturally in three conversations with your own team.", kind: "secret", minutes: 15, points: 15, vibe: ["social", "sneaky"], accessibility: ["seated-option", "low-noise-option"], equipment: [], setup: "Assign privately to one player.", prep: "No preparation required.", evidenceRequired: true, tags: ["Individual"] },
+  { id: "secret-toast", title: "The suspicious toast", description: "Get a teammate to make a dramatic toast without telling them why.", kind: "secret", minutes: 15, points: 15, vibe: ["social", "sneaky"], accessibility: ["seated-option"], equipment: [], setup: "Assign privately to one player.", prep: "No preparation required.", evidenceRequired: true, tags: ["Individual"] },
+];
+const defaultForm: SetupForm = {
+  name: "", eventDate: today(), startTime: "18:00", idealEndTime: "22:00", playerCount: 12, gamePhotoUrl: "",
+  hostParticipates: true, teamsEnabled: true, teamSize: null, teamSetup: "later", accessibility: [], ageGroup: "adults", alcohol: "no",
+  venueName: "", venueAddress: "", venueNotes: "", selectedMain: [], selectedSide: ["team-handshake", "team-laugh"], selectedSecret: [], customTasks: [],
+  rewardModes: [], decideRewardInGame: true, sideChallenges: true, secretMissions: false, slideshow: true, liveFinal: true,
+  strictSchedule: false, challengeTimers: false, autoplay: false, whatsappReminders: false, autoAssignSecrets: true, secretAssignment: "auto",
+  preGameTaskId: "", preGameEnabled: false, inviteBeforeEvent: true, demoEnabled: true,
+  rules: "Be kind, keep challenges safe, respect venue staff and other guests, and don't damage or take anyone's belongings.",
+  schedule: [], breakMinutes: 15, finalDuration: 30, secretRevealMode: "scheduled", secretRevealAfterMinutes: 30,
+};
+const accessOptions = ["Seated option", "Low-noise option", "No running", "No alcohol", "Low sensory load", "Mobility-flexible", "No public interaction"];
+const vibes = ["Silly", "Creative", "Performance", "Social", "Competitive", "Sneaky"];
+const tabItems: { id: BuilderTab; label: string; description: string }[] = [
+  { id: "players", label: "Players & teams", description: "Set team rules and accessibility requirements." },
+  { id: "main", label: "Main Challenges", description: "Browse and favourite challenges to add to your schedule later." },
+  { id: "side", label: "Side challenges", description: "Optional tasks; evidence is reviewed and voted on in the live final." },
+  { id: "secret", label: "Secret missions", description: "Private individual tasks; evidence is required and failed or caught missions earn no points." },
+  { id: "venue", label: "Venue", description: "Venue details are saved here; advanced venue planning can be added later." },
+  { id: "controls", label: "Game settings", description: "Choose reward methods and game behaviour." },
+  { id: "schedule", label: "Schedule", description: "Arrange the event timeline and timings." },
+  { id: "review", label: "Review", description: "Review player activity and submissions once the game is running." },
+  { id: "invites", label: "Invites", description: "Set up player invitations and a pre-game challenge." },
+  { id: "launch", label: "Review & Launch", description: "Check the plan and prepare to launch." },
 ];
 
-const today = () => {
-  const date = new Date();
-  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return local.toISOString().slice(0, 10);
-};
-
-const initialForm: PlanForm = {
-  name: "",
-  eventDate: today(),
-  startTime: "18:00",
-  endTime: "22:00",
-  vibe: "chaotic",
-  playerCount: 12,
-  hostParticipates: true,
-  teamsEnabled: true,
-  hostChoosesTeams: false,
-  teamSize: 4,
-  ageGroup: "adults",
-  alcohol: "no",
-  accessibilityNotes: "",
-  venueName: "",
-  venueAddress: "",
-  venueType: "private-room",
-  venueBooking: "already-booked",
-  sideChallenges: true,
-  secretMissions: false,
-  sabotage: false,
-  evidenceRequired: false,
-  setupEffort: "medium",
-  equipmentPreference: "basic",
-  rewardVoting: true,
-  rewardHostAwards: true,
-  rewardAudienceCheers: true,
-  voting: true,
-  votingTiming: "after-challenges",
-  liveFinal: true,
-  slideshow: false,
-  taskTimers: true,
-  playerReadyCheck: true,
-  selectedTaskIds: ["task-best-thing", "task-best-noise", "task-human-statue", "task-party-ad", "task-secret-toast", "task-team-laugh"],
-  customTasks: [],
-};
-
-const steps: { id: StepId; title: string; label: string; helper: string }[] = [
-  { id: "overview", title: "Let's set the scene", label: "Overview", helper: "The basics of your event." },
-  { id: "players", title: "Who's playing?", label: "Players", helper: "Set up your group and teams." },
-  { id: "venue", title: "One venue. Maximum chaos.", label: "Venue", helper: "This version stays in one place." },
-  { id: "challenges", title: "Choose your challenges", label: "Challenges", helper: "Mix main rounds with optional side missions." },
-  { id: "controls", title: "Make it your game", label: "Game controls", helper: "Choose how the game runs." },
-  { id: "review", title: "Ready to cause trouble?", label: "Review", helper: "Check everything before saving your plan." },
-];
-
-function ChoicePill({ selected, children, onClick }: { selected: boolean; children: ReactNode; onClick: () => void }) {
-  return <button type="button" className={`host-choice-pill${selected ? " is-selected" : ""}`} aria-pressed={selected} onClick={onClick}>{children}</button>;
-}
-
-function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
-  return <label className="host-field"><span>{label}</span>{children}{hint && <small>{hint}</small>}</label>;
-}
-
+function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) { return <label className="cc-field"><span>{label}</span>{children}{hint && <small>{hint}</small>}</label>; }
+function Toggle({ title, detail, checked, onChange }: { title: string; detail: string; checked: boolean; onChange: (v: boolean) => void }) { return <label className="cc-toggle"><span><strong>{title}</strong><small>{detail}</small></span><input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} /><i /></label>; }
+function timePlus(time: string, minutes: number) { const [h,m] = time.split(":").map(Number); const d = new Date(2000,0,1,h,m + minutes); return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; }
 export default function HostPlanSetup() {
-  const navigate = useNavigate();
-  const { id } = useParams();
-  const editing = Boolean(id);
-  const [stepIndex, setStepIndex] = useState(0);
-  const [form, setForm] = useState<PlanForm>(initialForm);
-  const [loading, setLoading] = useState(Boolean(id));
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [filter, setFilter] = useState<"all" | TaskKind>("all");
-  const [customTitle, setCustomTitle] = useState("");
-  const [customDescription, setCustomDescription] = useState("");
-  const [favourites, setFavourites] = useState<Fav[]>([]);
-  const currentStep = steps[stepIndex];
+  const navigate = useNavigate(); const { id } = useParams(); const editing = Boolean(id);
+  const [stage, setStage] = useState<"create" | "build">("create");
+  const [tab, setTab] = useState<BuilderTab>("players");
+  const [form, setForm] = useState<SetupForm>(defaultForm);
+  const [favourites, setFavourites] = useState<Favourite[]>([]);
+  const [favouritesOnly, setFavouritesOnly] = useState(false);
+  const [vibeFilter, setVibeFilter] = useState("all");
+  const [accessFilter, setAccessFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [customTitle, setCustomTitle] = useState(""); const [customDesc, setCustomDesc] = useState("");
+  const [loading, setLoading] = useState(Boolean(id)); const [saving, setSaving] = useState(false); const [error, setError] = useState(""); const [notice, setNotice] = useState("");
+  const [dragged, setDragged] = useState<string | null>(null);
 
-  const update = <K extends keyof PlanForm>(key: K, value: PlanForm[K]) => setForm((current) => ({ ...current, [key]: value }));
+  const update = <K extends keyof SetupForm>(key: K, value: SetupForm[K]) => setForm(old => ({ ...old, [key]: value }));
+  const allTasks = useMemo(() => [...taskLibrary, ...form.customTasks], [form.customTasks]);
+  const selectedIds = tab === "side" ? form.selectedSide : tab === "secret" ? form.selectedSecret : [];
+  const selectedTasks = allTasks.filter(t => form.selectedMain.includes(t.id) || form.selectedSide.includes(t.id) || form.selectedSecret.includes(t.id) || (form.preGameEnabled && form.preGameTaskId === t.id));
+  const visibleTasks = allTasks.filter(t => t.kind === (tab === "main" ? "main" : tab === "side" ? "side" : "secret"))
+    .filter(t => !favouritesOnly || favourites.some(f => f.item_type === "task" && f.item_id === t.id))
+    .filter(t => vibeFilter === "all" || t.vibe.includes(vibeFilter))
+    .filter(t => accessFilter === "all" || t.accessibility.includes(accessFilter))
+    .filter(t => form.accessibility.every(a => t.accessibility.includes(a)))
+    .filter(t => `${t.title} ${t.description} ${t.equipment.join(" ")}`.toLowerCase().includes(search.toLowerCase()));
+  const selectedMainTasks = form.selectedMain.map(taskId => allTasks.find(t => t.id === taskId)).filter(Boolean) as Task[];
+  const sideTasks = form.selectedSide.map(taskId => allTasks.find(t => t.id === taskId)).filter(Boolean) as Task[];
+  const secretTasks = form.selectedSecret.map(taskId => allTasks.find(t => t.id === taskId)).filter(Boolean) as Task[];
+  const equipment = [...new Set(selectedTasks.flatMap(t => t.equipment))];
+  const preparation = selectedTasks.filter(t => t.prep && !/no preparation required/i.test(t.prep));
 
   useEffect(() => {
-    let active = true;
-    async function load() {
-      const { data: authData } = await supabase.auth.getUser();
-      if (!authData.user) {
-        if (active) { setError("Your host session has expired. Please log in again."); setLoading(false); }
-        return;
+    let live = true;
+    (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) { if (live) { setError("Your host session has expired. Please log in again."); setLoading(false); } return; }
+      const { data: favs } = await supabase.from("host_favourites").select("id,item_type,item_id").eq("host_id", auth.user.id);
+      if (live) setFavourites((favs ?? []) as Favourite[]);
+      if (id) {
+        const { data, error: loadError } = await supabase.from("host_games").select("*").eq("id", id).eq("host_id", auth.user.id).maybeSingle();
+        if (!live) return;
+        if (loadError || !data) setError("Couldn't load this game plan.");
+        else {
+          const p = (data.plan_data ?? {}) as Partial<SetupForm> & Record<string, unknown>;
+          setForm({ ...defaultForm, ...p, name: String(data.name ?? p.name ?? ""), eventDate: String(data.event_date ?? p.eventDate ?? today()), startTime: String(data.start_time ?? p.startTime ?? "18:00").slice(0,5), idealEndTime: String(data.end_time ?? p.idealEndTime ?? "22:00").slice(0,5), playerCount: Number(data.player_count ?? p.playerCount ?? 12), venueName: String(data.venue_name ?? p.venueName ?? ""), selectedMain: Array.isArray(p.selectedMain) ? p.selectedMain : Array.isArray(p.selectedTaskIds) ? p.selectedTaskIds.filter(x => taskLibrary.some(t => t.id === x && t.kind === "main")) : defaultForm.selectedMain, selectedSide: Array.isArray(p.selectedSide) ? p.selectedSide : defaultForm.selectedSide, selectedSecret: Array.isArray(p.selectedSecret) ? p.selectedSecret : defaultForm.selectedSecret, customTasks: Array.isArray(p.customTasks) ? p.customTasks as Task[] : [] });
+          setStage("build");
+        }
       }
-
-      const { data: favData } = await supabase.from("host_favourites").select("id, item_type, item_id").eq("host_id", authData.user.id);
-      if (active) setFavourites((favData ?? []) as Fav[]);
-
-      if (!id) { if (active) setLoading(false); return; }
-      const { data, error: loadError } = await supabase.from("host_games").select("*").eq("id", id).eq("host_id", authData.user.id).maybeSingle();
-      if (!active) return;
-      if (loadError || !data) {
-        setError("Couldn't find that game plan. It may have been deleted or belong to another account.");
-        setLoading(false);
-        return;
-      }
-      const raw = (data.plan_data ?? {}) as Partial<PlanForm>;
-      setForm({
-        ...initialForm,
-        ...raw,
-        name: String(data.name ?? raw.name ?? ""),
-        eventDate: String(data.event_date ?? raw.eventDate ?? today()),
-        startTime: String(data.start_time ?? raw.startTime ?? "18:00").slice(0, 5),
-        endTime: String(data.end_time ?? raw.endTime ?? "22:00").slice(0, 5),
-        playerCount: Number(data.player_count ?? raw.playerCount ?? 12),
-        venueName: String(data.venue_name ?? raw.venueName ?? ""),
-        selectedTaskIds: Array.isArray(raw.selectedTaskIds) ? raw.selectedTaskIds : initialForm.selectedTaskIds,
-        customTasks: Array.isArray(raw.customTasks) ? raw.customTasks : [],
-      });
-      setLoading(false);
-    }
-    void load();
-    return () => { active = false; };
+      if (live) setLoading(false);
+    })();
+    return () => { live = false; };
   }, [id]);
 
-  const tasks = useMemo(() => [...taskLibrary, ...form.customTasks], [form.customTasks]);
-  const visibleTasks = tasks.filter((task) => filter === "all" || task.kind === filter).filter((task) => {
-    if (task.kind === "side" && !form.sideChallenges) return false;
-    if (task.kind === "secret" && !form.secretMissions && !form.sabotage) return false;
-    if (task.id === "task-sabotage" && !form.sabotage) return false;
-    return true;
-  });
-  const selectedTasks = tasks.filter((task) => form.selectedTaskIds.includes(task.id));
-
-  function toggleTask(taskId: string) {
-    update("selectedTaskIds", form.selectedTaskIds.includes(taskId) ? form.selectedTaskIds.filter((id) => id !== taskId) : [...form.selectedTaskIds, taskId]);
-  }
+  useEffect(() => {
+    if (stage !== "build" || form.schedule.length) return;
+    const preTask = allTasks.find(t => t.id === form.preGameTaskId);
+    const items: ScheduleItem[] = [
+      ...(form.preGameEnabled && preTask ? [{ id: "pregame", type: "pregame" as const, title: `Pre-game: ${preTask.title}`, duration: 0, taskId: preTask.id }] : []),
+      { id: "welcome", type: "welcome", title: "Game begins & welcome", duration: 10 },
+      ...(form.teamsEnabled ? [{ id: "teams", type: "teams" as const, title: "Team selection", duration: 15 }] : []),
+      ...(form.preGameEnabled && form.preGameTaskId ? [{ id: "pregame-review", type: "pregame-review" as const, title: "Review & vote on pre-game challenge", duration: 15 }] : []),
+      ...(form.secretMissions && form.selectedSecret.length && form.secretRevealMode === "scheduled" ? [{ id: "secret-reveal", type: "secret-reveal" as const, title: "Reveal secret missions", duration: 0 }] : []),
+    ];
+    update("schedule", items);
+    // Initialise the timeline once. Subsequent edits are intentionally preserved.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage]);
 
   async function toggleFavourite(task: Task) {
-    const { data: authData } = await supabase.auth.getUser();
-    if (!authData.user) { setError("Please log in again."); return; }
-    const existing = favourites.find((fav) => fav.item_type === "task" && fav.item_id === task.id);
-    if (existing) {
-      const { error: deleteError } = await supabase.from("host_favourites").delete().eq("id", existing.id);
-      if (deleteError) { setError(deleteError.message); return; }
-      setFavourites((current) => current.filter((fav) => fav.id !== existing.id));
-    } else {
-      const { data, error: insertError } = await supabase.from("host_favourites").insert({
-        host_id: authData.user.id, item_type: "task", item_id: task.id,
-        item_data: { title: task.title, description: task.description, points: task.points, minutes: task.minutes, kind: task.kind, tags: task.tags },
-      }).select("id, item_type, item_id").single();
-      if (insertError) { setError(insertError.message); return; }
-      if (data) setFavourites((current) => [...current, data as Fav]);
+    const { data: auth } = await supabase.auth.getUser(); if (!auth.user) { setError("Please log in again."); return; }
+    const found = favourites.find(f => f.item_type === "task" && f.item_id === task.id);
+    if (found) { const { error: e } = await supabase.from("host_favourites").delete().eq("id", found.id); if (e) setError(e.message); else setFavourites(f => f.filter(x => x.id !== found.id)); }
+    else { const { data, error: e } = await supabase.from("host_favourites").insert({ host_id: auth.user.id, item_type: "task", item_id: task.id, item_data: task }).select("id,item_type,item_id").single(); if (e) setError(e.message); else if (data) setFavourites(f => [...f, data as Favourite]); }
+  }
+  function selectTask(task: Task) {
+    const key = task.kind === "main" ? "selectedMain" : task.kind === "side" ? "selectedSide" : "selectedSecret";
+    const list = form[key];
+    const removing = list.includes(task.id);
+    update(key, removing ? list.filter(x => x !== task.id) : [...list, task.id]);
+    if (task.kind === "secret" && !removing && form.secretRevealMode === "scheduled" && !form.schedule.some(item => item.type === "secret-reveal")) {
+      update("schedule", [...form.schedule, { id: "secret-reveal", type: "secret-reveal", title: "Reveal secret missions", duration: 0 }]);
     }
+    if (task.kind === "secret" && removing && list.length === 1) update("schedule", form.schedule.filter(item => item.type !== "secret-reveal"));
+  }
+  function moveTask(taskId: string, direction: -1 | 1) {
+    const index = form.selectedMain.indexOf(taskId); const next = index + direction; if (index < 0 || next < 0 || next >= form.selectedMain.length) return;
+    const arr = [...form.selectedMain]; [arr[index], arr[next]] = [arr[next], arr[index]]; update("selectedMain", arr);
+  }
+  function dropTask(targetId: string) {
+    if (!dragged || dragged === targetId) return;
+    const arr = [...form.selectedMain]; const from = arr.indexOf(dragged); const to = arr.indexOf(targetId); if (from < 0 || to < 0) return;
+    arr.splice(from, 1); arr.splice(to, 0, dragged); update("selectedMain", arr); setDragged(null);
+  }
+  function addCustomTask(e: FormEvent) {
+    e.preventDefault(); if (!customTitle.trim()) return;
+    const kind: TaskKind = tab === "side" ? "side" : tab === "secret" ? "secret" : "main";
+    const task: Task = { id: `custom-${Date.now()}`, title: customTitle.trim(), description: customDesc.trim() || "Custom challenge created by the host.", kind, minutes: 15, points: 10, vibe: ["creative"], accessibility: ["seated-option"], equipment: [], setup: "Add setup instructions.", prep: "No preparation required.", evidenceRequired: kind !== "main" };
+    update("customTasks", [...form.customTasks, task]); if (tab === "main") void toggleFavourite(task); else selectTask(task); setCustomTitle(""); setCustomDesc("");
+  }
+  async function uploadGamePhoto(file: File) {
+    if (!file.type.startsWith("image/")) { setError("Choose an image file."); return; }
+    if (file.size > 8 * 1024 * 1024) { setError("Game images must be 8 MB or smaller."); return; }
+    const { data: auth } = await supabase.auth.getUser(); if (!auth.user) { setError("Please log in again."); return; }
+    const path = `${auth.user.id}/${id ?? `draft-${Date.now()}`}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,"-")}`;
+    const { error: uploadError } = await supabase.storage.from("game-assets").upload(path, file, { upsert: true, contentType: file.type });
+    if (uploadError) { setError(`Photo upload failed: ${uploadError.message}. Create the game-assets storage bucket using the included migration.`); return; }
+    const { data } = supabase.storage.from("game-assets").getPublicUrl(path); update("gamePhotoUrl", data.publicUrl); setNotice("Game photo uploaded.");
   }
 
-  async function toggleVenueFavourite() {
-    const venueName = form.venueName.trim();
-    if (!venueName) {
-      setError("Enter a venue name before saving it.");
-      return;
-    }
-    const { data: authData } = await supabase.auth.getUser();
-    if (!authData.user) {
-      setError("Please log in again.");
-      return;
-    }
-    const itemId = venueName.toLowerCase().replace(/\\s+/g, "-");
-    const existing = favourites.find((fav) => fav.item_type === "venue" && fav.item_id === itemId);
-    if (existing) {
-      const { error: deleteError } = await supabase.from("host_favourites").delete().eq("id", existing.id);
-      if (deleteError) { setError(deleteError.message); return; }
-      setFavourites((current) => current.filter((fav) => fav.id !== existing.id));
-      setNotice("Venue removed from saved items.");
-      return;
-    }
-    const { data, error: insertError } = await supabase.from("host_favourites").insert({
-      host_id: authData.user.id,
-      item_type: "venue",
-      item_id: itemId,
-      item_data: { name: venueName, venueType: form.venueType, address: form.venueAddress.trim() || null },
-    }).select("id, item_type, item_id").single();
-    if (insertError) { setError(insertError.message); return; }
-    if (data) setFavourites((current) => [...current, data as Fav]);
-    setNotice("Venue saved to your favourites.");
+  function updateScheduleItem(itemId: string, patch: Partial<ScheduleItem>) { update("schedule", form.schedule.map(item => item.id === itemId ? { ...item, ...patch } : item)); }
+  function setPreGameTask(taskId: string, enabled = form.preGameEnabled) {
+    update("preGameTaskId", taskId);
+    const task = allTasks.find(item => item.id === taskId);
+    const withoutPreGame = form.schedule.filter(item => item.type !== "pregame" && item.type !== "pregame-review");
+    if (!task || !enabled) { update("schedule", withoutPreGame); return; }
+    const welcomeIndex = withoutPreGame.findIndex(item => item.type === "welcome");
+    const insertAt = welcomeIndex >= 0 ? welcomeIndex + 1 : 0;
+    const additions: ScheduleItem[] = [
+      { id: "pregame", type: "pregame", title: `Pre-game: ${task.title}`, duration: 0, taskId: task.id },
+      { id: "pregame-review", type: "pregame-review", title: "Review & vote on pre-game challenge", duration: 15 },
+    ];
+    withoutPreGame.splice(insertAt, 0, ...additions);
+    update("schedule", withoutPreGame);
   }
-
-  function addCustomTask(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const title = customTitle.trim();
-    if (!title) return;
-    const newTask: Task = {
-      id: `custom-${Date.now()}`,
-      title,
-      description: customDescription.trim() || "Custom challenge created by the host.",
-      points: 10,
-      minutes: 10,
-      kind: filter === "side" ? "side" : filter === "secret" ? "secret" : "main",
-      tags: ["custom"],
-    };
-    update("customTasks", [...form.customTasks, newTask]);
-    update("selectedTaskIds", [...form.selectedTaskIds, newTask.id]);
-    setCustomTitle("");
-    setCustomDescription("");
-    setNotice("Custom challenge added to your plan.");
+  function addTaskToSchedule(taskId: string) {
+    const task = allTasks.find(t => t.id === taskId);
+    if (!task) return;
+    if (form.schedule.some(item => item.type === "challenge" && item.taskId === taskId)) { setNotice("That challenge is already in the schedule."); return; }
+    update("selectedMain", [...form.selectedMain, taskId]);
+    update("schedule", [...form.schedule, { id: `task-${task.id}-${Date.now()}`, type: "challenge", title: task.title, duration: task.minutes, taskId: task.id, editable: true }]);
+    setNotice(`Added “${task.title}” to the schedule.`);
   }
-
-  function validateCurrent(): string {
-    if (currentStep.id === "overview") {
-      if (!form.name.trim()) return "Give your game a name.";
-      if (!form.eventDate) return "Choose the date of your event.";
-      if (form.endTime <= form.startTime) return "The end time needs to be later than the start time.";
-    }
-    if (currentStep.id === "players" && (form.playerCount < 2 || form.playerCount > 100)) return "Choose between 2 and 100 players.";
-    if (currentStep.id === "venue" && !form.venueName.trim()) return "Add the name of your venue.";
-    if (currentStep.id === "challenges" && selectedTasks.length === 0) return "Choose at least one challenge.";
-    if (currentStep.id === "controls" && !form.rewardVoting && !form.rewardHostAwards && !form.rewardAudienceCheers) return "Enable at least one way to reward points.";
+  function addScheduleItem(type: "break" | "challenge") {
+    if (type === "break") update("schedule", [...form.schedule, { id: `break-${Date.now()}`, type: "break", title: "Break", duration: 15 }]);
+    else update("schedule", [...form.schedule, { id: `custom-schedule-${Date.now()}`, type: "challenge", title: "New challenge", duration: 15, editable: true }]);
+  }
+  function deleteScheduleItem(itemId: string) {
+    const removed = form.schedule.find(item => item.id === itemId);
+    update("schedule", form.schedule.filter(item => item.id !== itemId));
+    if (removed?.type === "challenge" && removed.taskId) update("selectedMain", form.selectedMain.filter(id => id !== removed.taskId));
+  }
+  function scheduleTotal() { return form.schedule.reduce((sum, item) => sum + item.duration, 0); }
+  const calculatedEnd = timePlus(form.startTime, scheduleTotal());
+  function validate() {
+    if (!form.name.trim()) return "Add a game name."; if (!form.eventDate) return "Choose the event date.";
+    if (form.playerCount < 2 || form.playerCount > 100) return "Choose an approximate player count between 2 and 100.";
+    if (!form.schedule.some(item => item.type === "challenge")) return "Add at least one main challenge to the Schedule.";
+    if (form.sideChallenges && !form.selectedSide.length) return "Add at least one side challenge or turn side challenges off.";
+    if (form.secretMissions && !form.selectedSecret.length) return "Add at least one secret mission or turn secret missions off.";
+    if (form.sideChallenges && (!form.liveFinal || !form.slideshow)) return "Side challenges require a live final and slideshow. These have been enabled automatically.";
     return "";
   }
-
-  async function savePlan(status: "draft" | "planned") {
-    const validationError = status === "planned" ? validateAll() : "";
-    if (validationError) { setError(validationError); setStepIndex(steps.findIndex((step) => step.id === (validationError.includes("venue") ? "venue" : validationError.includes("challenge") ? "challenges" : validationError.includes("players") ? "players" : "overview"))); return; }
-    setSaving(true);
-    setError("");
-    setNotice("");
-    const { data: authData, error: authError } = await supabase.auth.getUser();
-    if (authError || !authData.user) {
-      setSaving(false);
-      setError("Your host session expired. Log in again before saving.");
-      return;
-    }
-    const planData = {
-      version: 1,
-      ...form,
-      selectedTasks,
-      locationMode: "single-venue",
-      noVenueChanges: true,
-    };
-    const payload = {
-      name: form.name.trim() || "Untitled chaos",
-      host_id: authData.user.id,
-      event_date: form.eventDate || null,
-      start_time: form.startTime || null,
-      end_time: form.endTime || null,
-      player_count: Number(form.playerCount),
-      venue_name: form.venueName.trim() || null,
-      status,
-      plan_data: planData,
-    };
-
-    let savedId = id;
-    let saveError: Error | null = null;
-    if (id) {
-      const { error: updateError } = await supabase.from("host_games").update({
-        name: payload.name, event_date: payload.event_date, start_time: payload.start_time, end_time: payload.end_time,
-        player_count: payload.player_count, venue_name: payload.venue_name, status, plan_data: payload.plan_data,
-      }).eq("id", id).eq("host_id", authData.user.id);
-      if (updateError) saveError = updateError;
-    } else {
-      const { data, error: insertError } = await supabase.from("host_games").insert(payload).select("id").single();
-      if (insertError) saveError = insertError;
-      else savedId = data?.id ? String(data.id) : undefined;
-    }
-    setSaving(false);
-    if (saveError || !savedId) {
-      console.error("SAVE HOST PLAN ERROR", saveError);
-      setError(saveError?.message ?? "The plan couldn't be saved. Try again.");
-      return;
-    }
-    if (status === "draft") {
-      setNotice("Draft saved.");
-      if (!id) navigate(`/host/games/${savedId}/edit`, { replace: true });
-    } else {
-      navigate("/host?created=1", { replace: true });
-    }
+  async function save(status: "draft" | "planned") {
+    const issue = status === "planned" ? validate() : ""; if (issue) { setError(issue); return; }
+    setSaving(true); setError(""); setNotice("");
+    const { data: auth } = await supabase.auth.getUser(); if (!auth.user) { setSaving(false); setError("Your host session expired. Log in again."); return; }
+    const planData = { version: 3, ...form, selectedTasks: selectedTasks, selectedTaskIds: [...form.selectedMain, ...form.selectedSide, ...form.selectedSecret], locationMode: "single-venue", noVenueChanges: true, estimatedEndTime: calculatedEnd, generatedEquipment: equipment, generatedPreparation: preparation.map(t => ({ title: t.title, prep: t.prep })) };
+    const payload = { name: form.name.trim() || "Untitled chaos", host_id: auth.user.id, event_date: form.eventDate || null, start_time: form.startTime || null, end_time: form.idealEndTime || calculatedEnd, player_count: form.playerCount, venue_name: form.venueName.trim() || null, status, plan_data: planData };
+    let savedId = id; let saveError: Error | null = null;
+    if (id) { const { error } = await supabase.from("host_games").update({ name: payload.name, event_date: payload.event_date, start_time: payload.start_time, end_time: payload.end_time, player_count: payload.player_count, venue_name: payload.venue_name, status, plan_data: payload.plan_data }).eq("id", id).eq("host_id", auth.user.id); if (error) saveError = error; }
+    else { const { data, error } = await supabase.from("host_games").insert(payload).select("id").single(); if (error) saveError = error; else savedId = data?.id ? String(data.id) : undefined; }
+    setSaving(false); if (saveError || !savedId) { setError(saveError?.message ?? "Couldn't save the game plan."); return; }
+    if (status === "draft") { setNotice("Draft saved."); if (!id) navigate(`/host/games/${savedId}/edit`, { replace: true }); }
+    else navigate("/host?created=1", { replace: true });
   }
 
-  function validateAll(): string {
-    if (!form.name.trim()) return "Give your game a name.";
-    if (!form.eventDate) return "Choose the date of your event.";
-    if (form.endTime <= form.startTime) return "The end time needs to be later than the start time.";
-    if (form.playerCount < 2 || form.playerCount > 100) return "Choose between 2 and 100 players.";
-    if (!form.venueName.trim()) return "Add the name of your venue.";
-    if (selectedTasks.length === 0) return "Choose at least one challenge.";
-    if (!form.rewardVoting && !form.rewardHostAwards && !form.rewardAudienceCheers) return "Enable at least one way to reward points.";
-    return "";
-  }
-
-  const next = () => {
-    const problem = validateCurrent();
-    if (problem) { setError(problem); return; }
-    setError("");
-    setNotice("");
-    setStepIndex((current) => Math.min(current + 1, steps.length - 1));
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-  const back = () => { setError(""); setNotice(""); if (stepIndex === 0) navigate("/host"); else setStepIndex((current) => current - 1); window.scrollTo({ top: 0, behavior: "smooth" }); };
-
-  if (loading) return <HostShell title={editing ? "Edit game plan" : "Create a game"} subtitle="Getting your plan ready…" showCreate={false}><div className="host-empty-state">Loading your plan…</div></HostShell>;
-
-  return (
-    <HostShell title={editing ? "Edit your game plan" : "Plan a new game"} subtitle="A few choices now. A lot of chaos later." showCreate={false}>
-      <div className="host-plan-layout">
-        <aside className="host-plan-steps">
-          <div className="host-plan-steps-title">YOUR GAME PLAN</div>
-          {steps.map((step, index) => <button key={step.id} type="button" className={`host-plan-step${index === stepIndex ? " is-active" : ""}${index < stepIndex ? " is-done" : ""}`} onClick={() => { if (index < stepIndex) { setStepIndex(index); setError(""); } }}>
-            <span className="host-plan-step-number">{index < stepIndex ? <Check size={16}/> : index + 1}</span>
-            <span><strong>{step.label}</strong><small>{step.helper}</small></span>
-          </button>)}
-          <div className="host-single-venue-note"><MapPin size={19}/><div><strong>Stationary party mode</strong><p>Your guests stay in one venue. No pub crawl or route planning required.</p></div></div>
-        </aside>
-
-        <section className="host-plan-card">
-          <div className="host-plan-card-heading"><span className="host-eyebrow">STEP {stepIndex + 1} OF {steps.length}</span><h2>{currentStep.title}</h2><p>{currentStep.helper}</p></div>
-          {error && <div className="host-alert host-alert--error" role="alert">{error}</div>}
-          {notice && <div className="host-alert host-alert--success" role="status">{notice}</div>}
-
-          {currentStep.id === "overview" && <div className="host-form host-plan-form">
-            <Field label="Name your game"><input value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="e.g. Iona's birthday chaos" required /></Field>
-            <div className="host-two-cols">
-              <Field label="Game date"><input type="date" min={today()} value={form.eventDate} onChange={(e) => update("eventDate", e.target.value)} required /></Field>
-              <Field label="Vibe"><select value={form.vibe} onChange={(e) => update("vibe", e.target.value)}><option value="chaotic">Chaotic & ridiculous</option><option value="competitive">Competitive</option><option value="chilled">Chilled & social</option><option value="creative">Creative</option><option value="wild">Unpredictable</option></select></Field>
-              <Field label="Start time"><input type="time" value={form.startTime} onChange={(e) => update("startTime", e.target.value)} required /></Field>
-              <Field label="End time"><input type="time" value={form.endTime} onChange={(e) => update("endTime", e.target.value)} required /></Field>
-            </div>
-          </div>}
-
-          {currentStep.id === "players" && <div className="host-form host-plan-form">
-            <Field label="How many people are playing?" hint="Include yourself if you plan to play."><input type="number" min={2} max={100} value={form.playerCount} onChange={(e) => update("playerCount", Number(e.target.value))} /></Field>
-            <div className="host-plan-option"><div><strong>Host joins the game</strong><p>You'll compete alongside everyone else.</p></div><button type="button" role="switch" aria-checked={form.hostParticipates} className={`host-switch${form.hostParticipates ? " is-on" : ""}`} onClick={() => update("hostParticipates", !form.hostParticipates)}><span/></button></div>
-            <div className="host-plan-option"><div><strong>Use teams</strong><p>Players compete in teams rather than individually.</p></div><button type="button" role="switch" aria-checked={form.teamsEnabled} className={`host-switch${form.teamsEnabled ? " is-on" : ""}`} onClick={() => update("teamsEnabled", !form.teamsEnabled)}><span/></button></div>
-            {form.teamsEnabled && <>
-              <Field label="Players per team"><select value={form.teamSize} onChange={(e) => update("teamSize", Number(e.target.value))}><option value={2}>2 players</option><option value={3}>3 players</option><option value={4}>4 players</option><option value={5}>5 players</option><option value={6}>6 players</option></select></Field>
-              <div className="host-plan-option"><div><strong>Host assigns teams</strong><p>Choose teams for everyone from the host dashboard.</p></div><button type="button" role="switch" aria-checked={form.hostChoosesTeams} className={`host-switch${form.hostChoosesTeams ? " is-on" : ""}`} onClick={() => update("hostChoosesTeams", !form.hostChoosesTeams)}><span/></button></div>
-            </>}
-            <div className="host-two-cols">
-              <Field label="Player age group"><select value={form.ageGroup} onChange={(e) => update("ageGroup", e.target.value)}><option value="adults">Over 18</option><option value="under-18">Under 18</option><option value="mixed">Mixed ages</option></select></Field>
-              <Field label="Alcohol at the event?"><select value={form.alcohol} onChange={(e) => update("alcohol", e.target.value)}><option value="no">No alcohol-based tasks</option><option value="yes">Alcohol is okay</option><option value="mixed">Keep it optional</option></select></Field>
-            </div>
-            <Field label="Accessibility or inclusion notes" hint="Optional. Used to help you pick suitable challenges."><textarea rows={3} value={form.accessibilityNotes} onChange={(e) => update("accessibilityNotes", e.target.value)} placeholder="e.g. seated alternatives, low-noise activities…" /></Field>
-          </div>}
-
-          {currentStep.id === "venue" && <div className="host-form host-plan-form">
-            <div className="host-info-banner"><MapPin size={20}/><div><strong>One fixed location</strong><p>We'll plan rounds and timings around this venue. Guests won't need to travel between locations.</p></div></div>
-            <Field label="Venue name"><input value={form.venueName} onChange={(e) => update("venueName", e.target.value)} placeholder="e.g. The function room" required /></Field>
-            <Field label="Venue address (optional)"><input value={form.venueAddress} onChange={(e) => update("venueAddress", e.target.value)} placeholder="Street, town or a private address" /></Field>
-            <div className="host-venue-favourite-row">
-              <span className="host-muted">Save this venue to your host favourites.</span>
-              <button type="button" className={`host-button host-button--secondary${favourites.some((fav) => fav.item_type === "venue" && fav.item_id === form.venueName.trim().toLowerCase().replace(/\\s+/g, "-")) ? " is-favourited" : ""}`} onClick={() => void toggleVenueFavourite()} disabled={!form.venueName.trim()}>
-                <Heart size={16} fill={favourites.some((fav) => fav.item_type === "venue" && fav.item_id === form.venueName.trim().toLowerCase().replace(/\\s+/g, "-")) ? "currentColor" : "none"} />
-                {favourites.some((fav) => fav.item_type === "venue" && fav.item_id === form.venueName.trim().toLowerCase().replace(/\\s+/g, "-")) ? "Saved venue" : "Save venue"}
-              </button>
-            </div>
-            <div className="host-two-cols">
-              <Field label="What kind of space?"><select value={form.venueType} onChange={(e) => update("venueType", e.target.value)}><option value="private-room">Private / function room</option><option value="home">Someone's home</option><option value="pub">Pub or bar</option><option value="garden">Garden / outdoor space</option><option value="hall">Community hall</option><option value="other">Other</option></select></Field>
-              <Field label="Booking status"><select value={form.venueBooking} onChange={(e) => update("venueBooking", e.target.value)}><option value="already-booked">Already booked</option><option value="need-to-book">Need to book</option><option value="private">Private venue</option><option value="free">No booking needed</option></select></Field>
-            </div>
-            <div className="host-muted-panel"><ShieldCheck size={18}/><p>This planner won't suggest a route or add extra stops. You can still create different rounds, timed challenges and a grand final at the same venue.</p></div>
-          </div>}
-
-          {currentStep.id === "challenges" && <div className="host-plan-form">
-            <div className="host-plan-option"><div><strong>Side challenges</strong><p>Optional missions players can complete between rounds.</p></div><button type="button" role="switch" aria-checked={form.sideChallenges} className={`host-switch${form.sideChallenges ? " is-on" : ""}`} onClick={() => update("sideChallenges", !form.sideChallenges)}><span/></button></div>
-            <div className="host-plan-option"><div><strong>Secret missions</strong><p>Give players hidden objectives during the party.</p></div><button type="button" role="switch" aria-checked={form.secretMissions} className={`host-switch${form.secretMissions ? " is-on" : ""}`} onClick={() => update("secretMissions", !form.secretMissions)}><span/></button></div>
-            <div className="host-plan-option"><div><strong>Friendly sabotage</strong><p>Allow harmless distractions between teams.</p></div><button type="button" role="switch" aria-checked={form.sabotage} className={`host-switch${form.sabotage ? " is-on" : ""}`} onClick={() => update("sabotage", !form.sabotage)}><span/></button></div>
-            <div className="host-plan-option"><div><strong>Evidence required</strong><p>Ask players to upload a photo or video to prove completion.</p></div><button type="button" role="switch" aria-checked={form.evidenceRequired} className={`host-switch${form.evidenceRequired ? " is-on" : ""}`} onClick={() => update("evidenceRequired", !form.evidenceRequired)}><span/></button></div>
-            <div className="host-two-cols">
-              <Field label="Setup effort"><select value={form.setupEffort} onChange={(e) => update("setupEffort", e.target.value)}><option value="low">Low prep</option><option value="medium">A little prep</option><option value="high">Big production</option></select></Field>
-              <Field label="Equipment"><select value={form.equipmentPreference} onChange={(e) => update("equipmentPreference", e.target.value)}><option value="none">No equipment</option><option value="basic">Basic props</option><option value="anything">Anything goes</option></select></Field>
-            </div>
-            <div className="host-task-library-header"><div><h3>Pick your challenges</h3><p>{selectedTasks.length} selected · defaults are a starting point, not a commitment.</p></div><div className="host-task-filters">{(["all", "main", "side", "secret"] as const).map((kind) => <ChoicePill key={kind} selected={filter === kind} onClick={() => setFilter(kind)}>{kind === "all" ? "All" : kind === "main" ? "Main" : kind === "side" ? "Side" : "Secret"}</ChoicePill>)}</div></div>
-            <div className="host-task-list">
-              {visibleTasks.map((task) => {
-                const selected = form.selectedTaskIds.includes(task.id);
-                const saved = favourites.some((fav) => fav.item_type === "task" && fav.item_id === task.id);
-                return <article className={`host-task-card${selected ? " is-selected" : ""}`} key={task.id}>
-                  <button type="button" className={`host-task-select${selected ? " is-selected" : ""}`} aria-pressed={selected} onClick={() => toggleTask(task.id)}>{selected ? <Check size={16}/> : <Plus size={16}/>}</button>
-                  <div className="host-task-copy"><div className="host-task-title-row"><h4>{task.title}</h4><span className="host-tag">+{task.points} pts</span></div><p>{task.description}</p><div className="host-task-meta"><span><Clock3 size={13}/>{task.minutes} min</span><span className="host-tag">{task.kind}</span>{task.tags.slice(0, 2).map((tag) => <span className="host-task-tag" key={tag}>{tag}</span>)}</div></div>
-                  <button type="button" className={`host-favourite-button${saved ? " is-saved" : ""}`} title={saved ? "Remove from saved" : "Save challenge"} aria-label={saved ? `Unsave ${task.title}` : `Save ${task.title}`} onClick={() => void toggleFavourite(task)}><Heart size={18} fill={saved ? "currentColor" : "none"}/></button>
-                </article>;
-              })}
-              {!visibleTasks.length && <p className="host-muted">No challenges in this filter. Enable that task type above, or add a custom challenge below.</p>}
-            </div>
-            <form className="host-custom-task-form" onSubmit={addCustomTask}>
-              <h3>Create a custom challenge</h3>
-              <div className="host-two-cols"><input value={customTitle} onChange={(e) => setCustomTitle(e.target.value)} placeholder="Challenge name" aria-label="Challenge name" /><input value={customDescription} onChange={(e) => setCustomDescription(e.target.value)} placeholder="Short description (optional)" aria-label="Challenge description" /></div>
-              <button className="host-button host-button--secondary" type="submit" disabled={!customTitle.trim()}><Plus size={16}/> Add challenge</button>
-            </form>
-          </div>}
-
-          {currentStep.id === "controls" && <div className="host-form host-plan-form">
-            <div className="host-plan-reward-heading"><span className="host-eyebrow">REWARD POINTS</span><h3>How can the host reward players?</h3><p>Enable the methods you want available during the game. The host chooses one whenever it is time to award points.</p></div>
-            <div className="host-plan-option"><div><strong>Player voting</strong><p>Players vote on their favourite player or team. Points go to the winner automatically when the host closes voting.</p></div><button type="button" role="switch" aria-checked={form.rewardVoting} className={`host-switch${form.rewardVoting ? " is-on" : ""}`} onClick={() => update("rewardVoting", !form.rewardVoting)}><span/></button></div>
-            <div className="host-plan-option"><div><strong>Host awards</strong><p>Players see a waiting screen while the host chooses one or more winners.</p></div><button type="button" role="switch" aria-checked={form.rewardHostAwards} className={`host-switch${form.rewardHostAwards ? " is-on" : ""}`} onClick={() => update("rewardHostAwards", !form.rewardHostAwards)}><span/></button></div>
-            <div className="host-plan-option"><div><strong>Audience cheers</strong><p>The host calls player or team names, the audience cheers, and the host records the winner.</p></div><button type="button" role="switch" aria-checked={form.rewardAudienceCheers} className={`host-switch${form.rewardAudienceCheers ? " is-on" : ""}`} onClick={() => update("rewardAudienceCheers", !form.rewardAudienceCheers)}><span/></button></div>
-            {!form.rewardVoting && !form.rewardHostAwards && !form.rewardAudienceCheers && <p className="host-form-error">Enable at least one reward method to continue.</p>}
-            <div className="host-plan-option"><div><strong>Fan-favourite final vote</strong><p>Separately let players vote for a submitted photo or video in the final gallery.</p></div><button type="button" role="switch" aria-checked={form.voting} className={`host-switch${form.voting ? " is-on" : ""}`} onClick={() => update("voting", !form.voting)}><span/></button></div>
-            {form.voting && <Field label="When should the fan-favourite vote happen?"><select value={form.votingTiming} onChange={(e) => update("votingTiming", e.target.value)}><option value="after-challenges">After each challenge</option><option value="live-final">During the live final</option><option value="end">At the end of the game</option></select></Field>}
-            <div className="host-plan-option"><div><strong>Live final</strong><p>Finish with a host-led final challenge.</p></div><button type="button" role="switch" aria-checked={form.liveFinal} className={`host-switch${form.liveFinal ? " is-on" : ""}`} onClick={() => update("liveFinal", !form.liveFinal)}><span/></button></div>
-            <div className="host-plan-option"><div><strong>Slideshow at the end</strong><p>Show the best photos and moments on a shared screen.</p></div><button type="button" role="switch" aria-checked={form.slideshow} className={`host-switch${form.slideshow ? " is-on" : ""}`} onClick={() => update("slideshow", !form.slideshow)}><span/></button></div>
-            <div className="host-plan-option"><div><strong>Challenge timers</strong><p>Give timed tasks a visible countdown.</p></div><button type="button" role="switch" aria-checked={form.taskTimers} className={`host-switch${form.taskTimers ? " is-on" : ""}`} onClick={() => update("taskTimers", !form.taskTimers)}><span/></button></div>
-            <div className="host-plan-option"><div><strong>Player ready check</strong><p>Confirm the group is ready before starting.</p></div><button type="button" role="switch" aria-checked={form.playerReadyCheck} className={`host-switch${form.playerReadyCheck ? " is-on" : ""}`} onClick={() => update("playerReadyCheck", !form.playerReadyCheck)}><span/></button></div>
-          </div>}
-
-          {currentStep.id === "review" && <div className="host-review-summary">
-            <div className="host-review-hero"><Sparkles size={24}/><div><span className="host-eyebrow host-eyebrow--light">YOUR PLAN</span><h3>{form.name || "Untitled chaos"}</h3><p>{dateLabelForReview(form.eventDate)} · {form.startTime}–{form.endTime}</p></div></div>
-            <div className="host-review-grid">
-              <div className="host-review-item"><Users size={19}/><div><small>Players</small><strong>{form.playerCount} people</strong><span>{form.teamsEnabled ? `Teams of ${form.teamSize}` : "Individual play"}</span></div></div>
-              <div className="host-review-item"><MapPin size={19}/><div><small>Fixed venue</small><strong>{form.venueName}</strong><span>{form.venueAddress || "Address not added"}</span></div></div>
-              <div className="host-review-item"><Sparkles size={19}/><div><small>Challenges</small><strong>{selectedTasks.length} selected</strong><span>{form.sideChallenges ? "Side challenges on" : "Main challenges only"}</span></div></div>
-              <div className="host-review-item"><Clock3 size={19}/><div><small>Approx. duration</small><strong>{durationLabel(form.startTime, form.endTime)}</strong><span>{form.taskTimers ? "Challenge timers on" : "No timers"}</span></div></div>
-              <div className="host-review-item"><Sparkles size={19}/><div><small>Reward methods</small><strong>{[form.rewardVoting && "Voting", form.rewardHostAwards && "Host awards", form.rewardAudienceCheers && "Audience cheers"].filter(Boolean).join(" · ") || "None enabled"}</strong><span>Host selects the method during live play.</span></div></div>
-            </div>
-            <div className="host-review-tasks"><h3>Your challenge list</h3>{selectedTasks.map((task, index) => <div className="host-review-task" key={task.id}><span>{String(index + 1).padStart(2,"0")}</span><div><strong>{task.title}</strong><small>{task.kind} · {task.minutes} min · {task.points} points</small></div></div>)}</div>
-            <div className="host-info-banner"><ShieldCheck size={20}/><div><strong>Ready to save this plan?</strong><p>This saves your settings and challenge selection to your host account. Live-game launch is a separate step; it won't start the game or notify players yet.</p></div></div>
-          </div>}
-
-          <div className="host-plan-footer">
-            <button type="button" className="host-button host-button--ghost" onClick={back}><ArrowLeft size={17}/>{stepIndex === 0 ? "Cancel" : "Back"}</button>
-            <div className="host-plan-footer-right">
-              <button type="button" className="host-button host-button--secondary" onClick={() => void savePlan("draft")} disabled={saving}>{saving ? "Saving…" : "Save draft"}</button>
-              {stepIndex < steps.length - 1 ? <button type="button" className="host-button host-button--primary" onClick={next}>Continue <ArrowRight size={17}/></button> : <button type="button" className="host-button host-button--primary" disabled={saving} onClick={() => void savePlan("planned")}>{saving ? "Saving…" : "Save game plan"} <CheckCircle2 size={17}/></button>}
-            </div>
-          </div>
-        </section>
+  if (loading) return <HostShell title="Create a game" subtitle="Getting your setup ready…" showCreate={false}><div className="host-empty-state">Loading…</div></HostShell>;
+  const header = stage === "create" ? (editing ? "Edit game" : "Create a game") : "Build your game";
+  return <HostShell title={header} subtitle={stage === "create" ? "Start with the essentials. You can build the experience next." : "Choose challenges, build the schedule and prepare your players."} showCreate={false}>
+    {error && <div className="host-alert host-alert--error" role="alert">{error}</div>}{notice && <div className="host-alert host-alert--success" role="status">{notice}</div>}
+    {stage === "create" ? <section className="cc-create-card">
+      <div className="cc-step-kicker"><Sparkles size={16}/> STEP 1 · GAME BASICS</div><h2>Let's set the scene</h2><p className="cc-muted">Just the essentials. The detailed planning happens in the next step.</p>
+      <div className="cc-photo-field">
+        <div className="cc-photo-preview">{form.gamePhotoUrl ? <img src={form.gamePhotoUrl} alt="Game cover"/> : <ImagePlus size={34}/>}</div>
+        <div><strong>Game photo</strong><p>Add a photo or graphic to personalise the player welcome screen.</p><label className="cc-upload-button"><Upload size={15}/> Choose image<input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) void uploadGamePhoto(f); }}/></label></div>
       </div>
-    </HostShell>
-  );
-}
+      <div className="cc-form-grid"><Field label="Game name"><input value={form.name} onChange={e => update("name",e.target.value)} placeholder="e.g. Iona's birthday chaos"/></Field><Field label="Event date"><input type="date" min={today()} value={form.eventDate} onChange={e => update("eventDate",e.target.value)}/></Field><Field label="Start time"><input type="time" value={form.startTime} onChange={e => update("startTime",e.target.value)}/></Field><Field label="Ideal end time" hint="A target, not a hard stop. The schedule will estimate the finish time."><input type="time" value={form.idealEndTime} onChange={e => update("idealEndTime",e.target.value)}/></Field><Field label="Approximate number of players"><input type="number" min={2} max={100} value={form.playerCount} onChange={e => update("playerCount",Number(e.target.value))}/></Field></div>
+      <div className="cc-footer"><button className="cc-primary" onClick={() => { if (!form.name.trim()) { setError("Give your game a name."); return; } setError(""); setStage("build"); }}>Build my game <ArrowRight size={17}/></button></div>
+    </section> : <div className="cc-builder">
+      <aside className="cc-builder-sidebar"><div className="cc-sidebar-title">YOUR GAME</div>{tabItems.map(item => <button key={item.id} className={`cc-sidebar-tab${tab===item.id?" active":""}`} onClick={() => {setTab(item.id);setError("");}}><span>{item.label}</span><small>{item.description}</small></button>)}<div className="cc-sidebar-summary"><strong>{selectedMainTasks.length} main</strong><strong>{sideTasks.length} side</strong><strong>{secretTasks.length} secret</strong></div></aside>
+      <main className="cc-builder-main"><div className="cc-builder-heading"><div><span className="cc-step-kicker">STEP 2 · BUILD YOUR EXPERIENCE</span><h2>{tabItems.find(t=>t.id===tab)?.label}</h2><p>{tabItems.find(t=>t.id===tab)?.description}</p></div><button className="cc-text-button" onClick={() => setStage("create")}><ArrowLeft size={15}/> Game basics</button></div>
 
-function dateLabelForReview(value: string) {
-  if (!value) return "Date TBC";
-  return new Date(`${value}T12:00:00`).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
-}
-function durationLabel(start: string, end: string) {
-  const [sh, sm] = start.split(":").map(Number);
-  const [eh, em] = end.split(":").map(Number);
-  let mins = eh * 60 + em - (sh * 60 + sm);
-  if (mins < 0) mins += 1440;
-  if (mins < 60) return `${mins} min`;
-  const hours = Math.floor(mins / 60);
-  const remainder = mins % 60;
-  return remainder ? `${hours}h ${remainder}m` : `${hours}h`;
+      {tab === "players" && <section className="cc-section-card">
+        <div className="cc-form-grid"><Field label="Approximate player count"><input type="number" min={2} max={100} value={form.playerCount} onChange={e=>update("playerCount",Number(e.target.value))}/></Field><Field label="Age group"><select value={form.ageGroup} onChange={e=>update("ageGroup",e.target.value)}><option value="adults">Adults</option><option value="under-18">Under 18</option><option value="mixed">Mixed ages</option></select></Field><Field label="Alcohol at the event"><select value={form.alcohol} onChange={e=>update("alcohol",e.target.value)}><option value="no">No alcohol-based tasks</option><option value="yes">Alcohol is okay</option><option value="mixed">Keep it optional</option></select></Field></div>
+        <Toggle title="Host joins the game" detail="You will appear as a player and can complete challenges too." checked={form.hostParticipates} onChange={v=>update("hostParticipates",v)}/>
+        <Toggle title="Use teams" detail="Players compete in teams instead of individually." checked={form.teamsEnabled} onChange={v=>update("teamsEnabled",v)}/>
+        {form.teamsEnabled && <><Field label="Players per team"><select value={form.teamSize ?? "later"} onChange={e=>update("teamSize",e.target.value === "later" ? null : Number(e.target.value))}><option value="later">Decide during the game</option>{[2,3,4,5,6].map(n=><option key={n} value={n}>{n} players</option>)}</select></Field><Field label="Who assigns teams?"><select value={form.teamSetup} onChange={e=>update("teamSetup",e.target.value as SetupForm["teamSetup"])}><option value="later">Decide during the game</option><option value="host">Host assigns teams</option><option value="players">Players choose teams</option></select></Field><div className="cc-explainer"><Users size={18}/><p>If you choose host assignment, you'll pick teams during the game after everyone has joined. You don't need to decide the teams now.</p></div></>}
+        <Field label="Accessibility requirements" hint="Challenges will be filtered using their accessibility information."><select multiple value={form.accessibility} onChange={e=>update("accessibility",Array.from(e.target.selectedOptions).map(o=>o.value))}>{accessOptions.map((v,i)=><option key={v} value={["seated-option","low-noise-option","no-running","no-alcohol","low-sensory-load","mobility-flexible","no-public-interaction"][i]}>{v}</option>)}</select></Field>
+      </section>}
+
+      {(tab === "main" || tab === "side" || tab === "secret") && <>
+        {tab === "side" && <div className="cc-explainer"><Info size={18}/><p><strong>Optional challenges.</strong> Players can complete these alongside the main game. Evidence is required, and submissions are reviewed and voted on during the live final.</p></div>}
+        {tab === "secret" && <div className="cc-explainer cc-explainer--pink"><ShieldCheck size={18}/><p><strong>Private individual missions.</strong> Create the missions now; assign them to actual players only after those players have joined the game. Evidence is required.</p></div>}
+        {tab === "main" && <div className="cc-explainer"><Info size={18}/><p><strong>Challenge library.</strong> Browse, create and favourite ideas here. Favouriting does not add a challenge to the running order; add it from Schedule when you are ready.</p></div>}
+        <div className={`cc-builder-columns${tab === "main" ? " cc-library-only" : ""}`}>{tab !== "main" && <section className="cc-rounds-panel"><div className="cc-panel-head"><div><h3>{tab === "side" ? "Selected side challenges" : "Selected secret missions"}</h3><small>Selected items for this game.</small></div><span className="cc-count">{selectedIds.length}</span></div>
+          {selectedIds.map((taskId,index) => { const task=allTasks.find(t=>t.id===taskId); if(!task)return null; return <article key={taskId} className="cc-round-card" draggable onDragStart={() => setDragged(taskId)} onDragOver={e=>e.preventDefault()} onDrop={()=>dropTask(taskId)}><GripVertical size={17} className="cc-grip"/><div className="cc-round-number">{index+1}</div><div className="cc-round-copy"><strong>{task.title}</strong><small>{task.minutes} min · {task.points} pts{task.preGame?" · PRE-GAME":""}</small></div><div className="cc-round-actions"><button title="Move up" onClick={()=>moveTask(taskId,-1)}><ArrowUp size={14}/></button><button title="Move down" onClick={()=>moveTask(taskId,1)}><ArrowDown size={14}/></button></div><button className="cc-icon-button" title="Remove" onClick={()=>selectTask(task)}><Trash2 size={15}/></button></article>; })}
+        </section>}<section className="cc-library-panel" id="cc-task-library"><div className="cc-panel-head"><div><h3>Challenge library</h3><small>Favourite tasks first, then filter and add.</small></div><button className={`cc-filter-chip${favouritesOnly?" active":""}`} onClick={()=>setFavouritesOnly(v=>!v)}><Heart size={14}/> Favourites</button></div>
+          <input className="cc-search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search challenges…"/><div className="cc-filter-row"><select value={vibeFilter} onChange={e=>setVibeFilter(e.target.value)}><option value="all">All vibes</option>{vibes.map(v=><option key={v} value={v.toLowerCase()}>{v}</option>)}</select><select value={accessFilter} onChange={e=>setAccessFilter(e.target.value)}><option value="all">All accessibility</option><option value="seated-option">Seated option</option><option value="low-noise-option">Low-noise option</option><option value="no-running">No running</option><option value="no-alcohol">No alcohol</option><option value="low-sensory-load">Low sensory load</option><option value="mobility-flexible">Mobility-flexible</option><option value="no-public-interaction">No public interaction</option></select></div>
+          <div className="cc-task-results">{visibleTasks.map(task=>{const selected=selectedIds.includes(task.id);const saved=favourites.some(f=>f.item_type==="task"&&f.item_id===task.id);return <article className={`cc-task-result${selected?" selected":""}`} key={task.id}><div className="cc-task-result-main"><div className="cc-task-result-title"><strong>{task.title}</strong><button className={`cc-heart${saved?" saved":""}`} onClick={()=>void toggleFavourite(task)} aria-label="Favourite"><Heart size={16} fill={saved?"currentColor":"none"}/></button></div><p>{task.description}</p><div className="cc-task-tags"><span>{task.minutes} min</span><span>{task.points} pts</span>{task.preGame&&<span>Pre-game</span>}{task.equipment.length>0&&<span>Equipment</span>}{task.evidenceRequired&&<span>Evidence required</span>}</div></div><button className={`cc-select-task${tab === "main" ? (saved ? " selected" : "") : (selected ? " selected" : "")}`} onClick={()=>tab === "main" ? void toggleFavourite(task) : selectTask(task)}>{tab === "main" ? (saved ? <><Check size={14}/> Favourited</> : <><Heart size={14}/> Favourite</>) : (selected ? <><Check size={14}/> Added</> : <><Plus size={14}/> Add</>)}</button></article>;})}{!visibleTasks.length&&<p className="cc-muted">No matching challenges. Try changing the filters.</p>}</div>
+          <form className="cc-custom-task" onSubmit={addCustomTask}><strong>Create a custom challenge</strong><input value={customTitle} onChange={e=>setCustomTitle(e.target.value)} placeholder="Challenge name"/><input value={customDesc} onChange={e=>setCustomDesc(e.target.value)} placeholder="Short description"/><button className="cc-secondary" disabled={!customTitle.trim()}><Plus size={15}/> Add custom challenge</button></form>
+        </section></div>
+      </>}
+
+      {tab === "secret" && <section className="cc-section-card"><h3>Mission reveal timing</h3><p>Choose whether reveals happen at a planned point in the game or at a random time.</p><Field label="Reveal method"><select value={form.secretRevealMode} onChange={e=>{const mode=e.target.value as SetupForm["secretRevealMode"];update("secretRevealMode",mode);if(mode==="random")update("schedule",form.schedule.filter(item=>item.type!=="secret-reveal"));else if(form.selectedSecret.length&&!form.schedule.some(item=>item.type==="secret-reveal"))update("schedule",[...form.schedule,{id:"secret-reveal",type:"secret-reveal",title:"Reveal secret missions",duration:0}]);}}><option value="scheduled">Scheduled reveal</option><option value="random">Random reveal</option></select></Field>{form.secretRevealMode === "scheduled" && <Field label="Reveal after the game starts (minutes)"><input type="number" min={0} max={600} value={form.secretRevealAfterMinutes} onChange={e=>update("secretRevealAfterMinutes",Math.max(0,Number(e.target.value)))}/></Field>}<div className="cc-explainer cc-explainer--pink"><Info size={18}/><p>Player assignment happens after joining, from the host's live game controls. Scheduled reveals are automatically shown in the Schedule; random reveals are not given a fixed slot.</p></div></section>}
+
+      {tab === "venue" && <section className="cc-section-card"><div className="cc-explainer"><MapPin size={18}/><p>Venue planning will be expanded later. For now, save the main venue so the host and players know where the game is happening.</p></div><div className="cc-form-grid"><Field label="Venue name"><input value={form.venueName} onChange={e=>update("venueName",e.target.value)} placeholder="Venue name"/></Field><Field label="Address"><input value={form.venueAddress} onChange={e=>update("venueAddress",e.target.value)} placeholder="Address or postcode"/></Field></div><Field label="Venue notes"><textarea value={form.venueNotes} onChange={e=>update("venueNotes",e.target.value)} rows={3} placeholder="Access instructions, room details, booking notes…"/></Field></section>}
+
+      {tab === "controls" && <section className="cc-section-card">
+        <div className="cc-explainer"><WandSparkles size={18}/><p><strong>Reward methods are separate from the side-challenge final.</strong> Choose which methods the host can use for ordinary reward rounds. Side challenges always have their own final vote at the end.</p></div>
+        <Toggle title="Decide reward method during the game" detail="Recommended. The host chooses voting, host awards or audience cheers when a reward round happens." checked={form.decideRewardInGame} onChange={v=>{update("decideRewardInGame",v);if(v)update("rewardModes",[]);}}/>
+        {!form.decideRewardInGame && <div className="cc-reward-options"><p>Enable one or more methods:</p>{([ ["voting","Player voting"],["host-awards","Host awards"],["audience-cheers","Audience cheers"] ] as [RewardMode,string][]).map(([value,label])=><label key={value}><input type="checkbox" checked={form.rewardModes.includes(value)} onChange={e=>update("rewardModes",e.target.checked?[...form.rewardModes,value]:form.rewardModes.filter(x=>x!==value))}/><span>{label}</span></label>)}</div>}
+        <div className="cc-final-required"><CheckCircle2/><div><strong>Fan-favourite final vote</strong><p>{form.sideChallenges ? "Required because side challenges are enabled. It always happens at the end of the game." : "This becomes compulsory automatically if you enable side challenges."}</p></div><span>Always on with side challenges</span></div>
+        <Toggle title="Side challenges" detail="Optional tasks with evidence, review, slideshow and final voting." checked={form.sideChallenges} onChange={v=>{update("sideChallenges",v);if(v){update("liveFinal",true);update("slideshow",true);}}}/>
+        {form.sideChallenges&&<div className="cc-explainer"><Info size={18}/><p>The live final and TV slideshow are automatically enabled. The host gathers everyone around the screen to review side-challenge evidence before the final vote.</p></div>}
+        <Toggle title="Secret missions" detail="Individual private tasks. Every player needs an assigned mission and evidence is required." checked={form.secretMissions} onChange={v=>update("secretMissions",v)}/>
+        <Toggle title="Strict schedule" detail="Turns on challenge timers and makes the schedule the default running order." checked={form.strictSchedule} onChange={v=>{update("strictSchedule",v);update("challengeTimers",v);}}/>
+        <Toggle title="Autoplay scheduled rounds" detail="Automatically advance when a timed round finishes." checked={form.autoplay} onChange={v=>update("autoplay",v)}/>
+      </section>}
+
+      {tab === "schedule" && <section className="cc-section-card"><div className="cc-schedule-top"><div><h3>Event timeline</h3><p>Breaks are inserted automatically. Change durations or move tasks to adjust the running order.</p></div><div className="cc-end-time"><small>Estimated finish</small><strong>{calculatedEnd}</strong></div></div><div className="cc-form-grid"><Field label="Default break between challenges"><select value={form.breakMinutes} onChange={e=>update("breakMinutes",Number(e.target.value))}><option value={0}>No break</option><option value={10}>10 minutes</option><option value={15}>15 minutes</option><option value={20}>20 minutes</option><option value={30}>30 minutes</option></select></Field><Field label="Live final duration"><select value={form.finalDuration} onChange={e=>update("finalDuration",Number(e.target.value))}><option value={20}>20 minutes</option><option value={30}>30 minutes</option><option value={45}>45 minutes</option><option value={60}>60 minutes</option></select></Field></div><div className="cc-schedule-actions"><Field label="Add a challenge"><select defaultValue="" onChange={e=>{if(e.target.value)addTaskToSchedule(e.target.value);e.currentTarget.value="";}}><option value="">Choose from challenge library…</option>{allTasks.filter(t=>t.kind === "main").map(t=><option key={t.id} value={t.id}>{t.title}</option>)}</select></Field><button type="button" className="cc-secondary" onClick={()=>addScheduleItem("challenge")}><Plus size={15}/> Create challenge</button><button type="button" className="cc-secondary" onClick={()=>addScheduleItem("break")}><Plus size={15}/> Add break</button></div><div className="cc-schedule-list">{form.schedule.map((item,index)=>{const start=form.schedule.slice(0,index).reduce((m,x)=>m+x.duration,0);return <article className={`cc-schedule-item type-${item.type}`} key={item.id} draggable={item.type === "challenge"} onDragStart={()=>setDragged(item.id)} onDragOver={e=>e.preventDefault()} onDrop={()=>{if(!dragged||dragged===item.id)return;const a=[...form.schedule];const from=a.findIndex(x=>x.id===dragged);const to=a.findIndex(x=>x.id===item.id);if(from>=0&&to>=0){const [moved]=a.splice(from,1);a.splice(to,0,moved);update("schedule",a);}setDragged(null);}}><div className="cc-schedule-time"><strong>{item.type === "pregame" ? "BEFORE" : timePlus(form.startTime,start)}</strong><small>{item.type === "pregame" ? "Before arrival" : `${item.duration} min`}</small></div><div className="cc-schedule-detail"><span className="cc-schedule-type">{item.type === "teams" ? "TEAM SELECTION" : item.type.toUpperCase()}</span><>{item.type === "challenge" ? <input className="cc-schedule-title-edit" aria-label={`Edit ${item.title}`} value={item.title} onChange={e=>updateScheduleItem(item.id,{title:e.target.value})}/> : <strong>{item.title}</strong>}{item.taskId&&<small>{allTasks.find(t=>t.id===item.taskId)?.prep}</small>}{item.taskId&&!!allTasks.find(t=>t.id===item.taskId)?.equipment.length&&<small>Equipment: {allTasks.find(t=>t.id===item.taskId)?.equipment.join(", ")}</small>}</></div>{item.type !== "pregame" && <label className="cc-duration-edit">Duration<input type="number" min={1} max={240} value={item.duration} onChange={e=>updateScheduleItem(item.id,{duration:Math.max(1,Number(e.target.value))})}/></label>}<button type="button" className="cc-icon-button" title={`Delete ${item.title}`} aria-label={`Delete ${item.title}`} onClick={()=>deleteScheduleItem(item.id)}><Trash2 size={15}/></button>{item.type==="challenge"&&<div className="cc-schedule-move"><button onClick={()=>{const next=form.schedule[index-1];if(next?.type==="challenge"){const a=[...form.schedule];[a[index-1],a[index]]=[a[index],a[index-1]];update("schedule",a);}}}><ArrowUp size={14}/></button><button onClick={()=>{const next=form.schedule[index+1];if(next?.type==="challenge"){const a=[...form.schedule];[a[index+1],a[index]]=[a[index],a[index+1]];update("schedule",a);}}}><ArrowDown size={14}/></button></div>}</article>;})}</div><div className="cc-explainer"><Info size={18}/><p><strong>Flexible schedule.</strong> If a task overruns, the next breaks and challenges can be pushed back automatically. The host can override the schedule during the live game. Enable strict scheduling to turn on challenge timers.</p></div><Toggle title="Follow a strict schedule" detail="Enable countdown timers for timed challenges." checked={form.strictSchedule} onChange={v=>{update("strictSchedule",v);update("challengeTimers",v);}}/><Toggle title="Autoplay rounds" detail="Automatically advance when each scheduled task ends." checked={form.autoplay} onChange={v=>update("autoplay",v)}/><Toggle title="WhatsApp timing reminders" detail="Prepare timed reminders for players. Automatic sending needs a WhatsApp messaging integration." checked={form.whatsappReminders} onChange={v=>update("whatsappReminders",v)}/></section>}
+
+      {tab === "invites" && <section className="cc-section-card"><div className="cc-explainer"><Users size={18}/><p><strong>Invite players before the event.</strong> Players can join early, learn how the app works and see what they need to prepare. The demo uses sample tasks, never your actual game challenges.</p></div><Toggle title="Allow players to join before the event" detail="Create a pre-event player lobby and shareable invite." checked={form.inviteBeforeEvent} onChange={v=>update("inviteBeforeEvent",v)}/><Toggle title="Include an app demo" detail="Show a demo video or guided walkthrough using sample challenges." checked={form.demoEnabled} onChange={v=>update("demoEnabled",v)}/><Field label="Game rules"><textarea rows={4} value={form.rules} onChange={e=>update("rules",e.target.value)}/></Field><div className="cc-prep-list"><h3>What players need to prepare</h3>{preparation.length?preparation.map(t=><div key={t.id}><strong>{t.title}</strong><p>{t.prep}</p></div>):<p className="cc-muted">No preparation notes yet. Add prep details to a challenge to show them here.</p>}</div><div className="cc-prep-list"><h3>Pre-game challenge</h3><Toggle title="Add a challenge to complete before arriving" detail="This appears as a main challenge in the player pre-event portal." checked={form.preGameEnabled} onChange={v=>{update("preGameEnabled",v);if(!v)update("schedule",form.schedule.filter(item=>item.type!=="pregame"&&item.type!=="pregame-review"));else if(form.preGameTaskId)setPreGameTask(form.preGameTaskId,true);}}/>{form.preGameEnabled&&<><Field label="Choose pre-game task"><select value={form.preGameTaskId} onChange={e=>setPreGameTask(e.target.value)}><option value="">Choose a task</option>{allTasks.filter(t=>t.kind==="main").map(t=><option key={t.id} value={t.id}>{t.title}</option>)}</select></Field><form className="cc-custom-task" onSubmit={e=>{e.preventDefault();if(!customTitle.trim())return;const task:Task={id:`pregame-${Date.now()}`,title:customTitle.trim(),description:customDesc.trim()||"Complete this task before arriving.",kind:"main",minutes:10,points:10,vibe:["creative"],accessibility:["seated-option"],equipment:[],setup:"No special setup.",prep:"Complete before the event.",evidenceRequired:true,preGame:true,tags:["Pre-game"]};update("customTasks",[...form.customTasks,task]);update("preGameTaskId",task.id);setCustomTitle("");setCustomDesc("");setNotice("Pre-game task created.");}}><strong>Create a pre-game task</strong><input value={customTitle} onChange={e=>setCustomTitle(e.target.value)} placeholder="Task name"/><input value={customDesc} onChange={e=>setCustomDesc(e.target.value)} placeholder="What should players do?"/><button className="cc-secondary" disabled={!customTitle.trim()}><Plus size={15}/> Create pre-game task</button></form></>}<small>Examples: dress most like the host, make the best entrance, or bring the best item. Players can submit before the event; main challenge evidence remains optional unless the host explicitly requests it.</small></div><div className="cc-prep-list"><h3>Secret mission assignment</h3><p>Missions are created now but recipients are selected only after players have joined. Choose how assignment should work at that point.</p><Field label="Assignment method"><select value={form.secretAssignment} onChange={e=>update("secretAssignment",e.target.value as "auto"|"host")}><option value="auto">Automatically assign after players join</option><option value="host">Host assigns after players join</option></select></Field></div><div className="cc-invite-placeholder"><Info size={18}/><p>The invite portal settings are saved with this plan. A shareable pre-event link is generated when the game session is created; it will show the demo, rules and preparation brief, not the selected challenge library.</p></div></section>}
+
+      {tab === "review" && <section className="cc-section-card"><div className="cc-explainer"><Info size={18}/><p><strong>Submission review happens during the live game.</strong> Once you launch a session, use the Host Controls and Review tools there to inspect player submissions, approve evidence and manage scores.</p></div><p>Before launch, use Review & Launch for the final plan checks.</p></section>}
+
+      {tab === "launch" && <section className="cc-section-card"><div className="cc-review-hero"><Sparkles size={23}/><div><small>GAME PLAN</small><h3>{form.name || "Untitled chaos"}</h3><p>{form.eventDate} · Starts {form.startTime} · Ideal finish {form.idealEndTime} · Estimated finish {calculatedEnd}</p></div></div><div className="cc-review-grid"><div><Users/><strong>{form.playerCount} players approx.</strong><small>{form.teamsEnabled ? form.teamSize ? `Teams of ${form.teamSize}` : "Team size decided later" : "Individual play"}</small></div><div><ListChecks/><strong>{selectedMainTasks.length} main challenges</strong><small>{sideTasks.length} side · {secretTasks.length} secret</small></div><div><CalendarDays/><strong>{form.schedule.length} schedule items</strong><small>{form.strictSchedule?"Strict timers on":"Flexible timing"}</small></div><div><MapPin/><strong>{form.venueName || "Venue TBC"}</strong><small>{form.venueAddress || "Address not added"}</small></div></div><div className="cc-review-block"><h3>Equipment list</h3>{equipment.length?<ul>{equipment.map(item=><li key={item}>{item}</li>)}</ul>:<p>No specific equipment listed.</p>}</div><div className="cc-review-block"><h3>Preparation for players</h3>{preparation.length?preparation.map(t=><p key={t.id}><strong>{t.title}:</strong> {t.prep}</p>):<p>No advance preparation required.</p>}</div><div className="cc-review-block"><h3>Reward methods</h3><p>{form.decideRewardInGame?"Host decides during the game":form.rewardModes.length?form.rewardModes.join(", "):"No reward method selected"}</p><p>{form.sideChallenges?"Compulsory live final, slideshow and fan-favourite vote enabled.":"No side-challenge final required."}</p></div><div className="cc-explainer"><ShieldCheck size={18}/><p>Saving a plan does not launch the game. Player invitations and the pre-event portal become available when a session is created from this plan.</p></div><div className="cc-explainer"><Play size={18}/><p><strong>Host game demo</strong><br/>The current project has a live-session player preview, but not a safe standalone demo route. I have not linked this button to a real session because that would create a live game rather than a demo.</p></div></section>}
+
+      <div className="cc-builder-footer"><button className="cc-secondary" onClick={()=>setStage("create")}><ArrowLeft size={16}/> Game basics</button><div><button className="cc-secondary" disabled={saving} onClick={()=>void save("draft")}>Save draft</button><button className="cc-primary" disabled={saving} onClick={()=>void save("planned")}>{saving?"Saving…":"Save game plan"}<CheckCircle2 size={16}/></button></div></div>
+      </main>
+    </div>}
+  </HostShell>;
 }

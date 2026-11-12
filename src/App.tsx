@@ -12,6 +12,9 @@ const SessionPlayerGame = lazy(() => import("./pages/SessionPlayerGame"));
 const HostLiveSession = lazy(() => import("./pages/HostLiveSession"));
 
 const HostLogin = lazy(() => import("./pages/HostLogin"));
+const InviteLanding = lazy(() => import("./pages/InviteLanding"));
+const PlayerDemo = lazy(() => import("./pages/PlayerDemo"));
+const SuperAdmin = lazy(() => import("./pages/SuperAdmin"));
 const HostHub = lazy(() => import("./pages/HostHub"));
 const HostPlanSetup = lazy(() => import("./pages/HostPlanSetup"));
 const HostSaved = lazy(() => import("./pages/HostSaved"));
@@ -31,6 +34,8 @@ export default function App() {
         {/* Existing player and live-game routes remain unchanged. */}
         <Route path="/" element={<Join />} />
         <Route path="/join" element={<Join />} />
+        <Route path="/invite/:joinCode" element={<InviteLanding />} />
+        <Route path="/demo/player" element={<PlayerDemo />} />
         <Route path="/game" element={<Game />} />
         <Route path="/play/:joinCode" element={<SessionPlayerGame />} />
         <Route path="/play/:joinCode/:page" element={<SessionPlayerGame />} />
@@ -49,6 +54,7 @@ export default function App() {
           <Route path="/host/games/:id/edit" element={<HostPlanSetup />} />
           <Route path="/host/saved" element={<HostSaved />} />
           <Route path="/host/explore" element={<HostExplore />} />
+          <Route path="/host/super-admin" element={<SuperAdmin />} />
           <Route path="/host/games" element={<HostHub />} />
         </Route>
       </Routes>

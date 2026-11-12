@@ -11,6 +11,7 @@ import HostShell from "../components/host/HostShell";
 import "../styles/HostPortal.css";
 import "../styles/HostSessions.css";
 import "../styles/HostLiveGameRedesign.css";
+import GuidedTour, { type GuidedTourStep } from "../components/tour/GuidedTour";
 
 type SessionStatus = "lobby" | "live" | "completed";
 type RewardMethod = "voting" | "host_awards" | "audience_cheers";
@@ -152,6 +153,20 @@ export default function HostLiveSession() {
   const [leaderboardScope, setLeaderboardScope] = useState<"players" | "teams">("players");
   const [hostPlayerName, setHostPlayerName] = useState("Host");
   const [hostPlayerViewUrl, setHostPlayerViewUrl] = useState<string | null>(null);
+  const [hostTourOpen, setHostTourOpen] = useState(false);
+
+  const hostTourSteps: GuidedTourStep[] = [
+    { target: '[data-tour="host-overview"]', title: "Your live game overview", body: "The game code, live status and player count help you keep track of the session. Share the code or QR from Host Controls when people are joining.", page: "game" },
+    { target: '[data-tour="host-sections"]', title: "The same game sections", body: "These tabs mirror the player experience: Game, Leaderboard, Side Challenges and Reward Round. The Host Controls tab contains the tools players cannot access.", page: "game" },
+    { target: '[data-tour="host-player-game"]', title: "The player experience", body: "This is the same game screen players use. If host participation is enabled, join the roster here and complete challenges, upload evidence and follow the game like everyone else.", page: "game" },
+    { target: '[data-tour="host-leaderboard"]', title: "Leaderboard", body: "Switch between player and team rankings, check scores and assign teams while the game is in the lobby.", page: "leaderboard" },
+    { target: '[data-tour="host-side-review"]', title: "Side challenges", body: "See side-challenge submissions, review evidence and save approved entries for the final gallery. Their points are not awarded at submission or approval.", page: "side-challenges" },
+    { target: '[data-tour="host-controls-tab"]', title: "Host-only controls", body: "This tab contains tools players cannot access: start or finish the game, navigate rounds, manage teams, review submissions and schedule secret missions.", page: "host-controls" },
+    { target: '[data-tour="host-start-controls"]', title: "Start and manage the game", body: "Share the join code and QR, check who has joined, assign teams and start the game when everyone is ready. During play, use the round controls to move the game along.", page: "host-controls" },
+    { target: '[data-tour="host-review"]', title: "Review main challenges", body: "Open submitted photos or videos, approve or reject the work and assign main-challenge points here. Side-challenge points are handled separately after voting.", page: "host-controls" },
+    { target: '[data-tour="host-reward"]', title: "Run a reward round", body: "Choose an enabled method, set the points, run voting or select winners, then show the results and return everyone to the game.", page: "reward-round" },
+  ];
+  const navigateHostTour = useCallback((page: string) => { setActiveTab(page as HostTab); }, []);
 
   const load = useCallback(async () => {
     if (!sessionId) return;
@@ -657,7 +672,7 @@ export default function HostLiveSession() {
   return (
     <HostShell title={session.name} subtitle={`${session.venue_name || "Single venue"} · ${session.status === "lobby" ? "Waiting room" : session.status === "live" ? "Live game" : "Completed"}`} showCreate={false}>
       <div className="cc-session-page cc-host-game-redesign cc-host-live-integrated">
-        <div className="cc-session-topbar">
+        <div className="cc-session-topbar" data-tour="host-overview">
           <Link to="/host" className="cc-session-back"><ArrowLeft size={17}/> Host Hub</Link>
           <div className="cc-host-topbar-right">
             <span className="cc-host-controls-badge"><span className="cc-host-controls-dot"/> HOST CONTROLS</span>
@@ -680,16 +695,17 @@ export default function HostLiveSession() {
         {error && <div className="host-alert host-alert--error" role="alert">{error}</div>}
         {notice && <div className="host-alert host-alert--success" role="status">{notice}</div>}
 
-        <nav className="cc-host-game-tabs" aria-label="Game sections">
+        <div className="cc-host-tour-action"><button type="button" className="cc-tour-help-button cc-tour-help-button--host" onClick={() => setHostTourOpen(true)}>✦ Take the host tour</button></div>
+        <nav className="cc-host-game-tabs" data-tour="host-sections" aria-label="Game sections">
           <button type="button" className={activeTab === "game" ? "is-active" : ""} aria-current={activeTab === "game" ? "page" : undefined} onClick={() => setActiveTab("game")}><Gamepad2 size={18}/><span>Game</span></button>
           <button type="button" className={activeTab === "leaderboard" ? "is-active" : ""} aria-current={activeTab === "leaderboard" ? "page" : undefined} onClick={() => setActiveTab("leaderboard")}><Medal size={18}/><span>Leaderboard</span></button>
           <button type="button" className={activeTab === "side-challenges" ? "is-active" : ""} aria-current={activeTab === "side-challenges" ? "page" : undefined} onClick={() => setActiveTab("side-challenges")}><ClipboardList size={18}/><span>Side challenges</span>{submissions.filter((item) => item.status === "submitted" && challengeById.get(item.challenge_id)?.kind !== "main").length > 0 && <b className="cc-host-tab-badge">{submissions.filter((item) => item.status === "submitted" && challengeById.get(item.challenge_id)?.kind !== "main").length}</b>}</button>
           <button type="button" className={activeTab === "reward-round" ? "is-active" : ""} aria-current={activeTab === "reward-round" ? "page" : undefined} onClick={() => setActiveTab("reward-round")}><Star size={18}/><span>Reward round</span></button>
-          <button type="button" className={`cc-host-controls-tab${activeTab === "host-controls" ? " is-active" : ""}`} aria-current={activeTab === "host-controls" ? "page" : undefined} onClick={() => setActiveTab("host-controls")}><Shield size={18}/><span>Host controls</span></button>
+          <button type="button" data-tour="host-controls-tab" className={`cc-host-controls-tab${activeTab === "host-controls" ? " is-active" : ""}`} aria-current={activeTab === "host-controls" ? "page" : undefined} onClick={() => setActiveTab("host-controls")}><Shield size={18}/><span>Host controls</span></button>
         </nav>
 
 {activeTab === "game" && (
-        <section className="cc-session-card cc-session-section cc-host-shared-game-card">
+        <section className="cc-session-card cc-session-section cc-host-shared-game-card" data-tour="host-player-game">
           <div className="cc-session-section-heading cc-host-shared-game-heading">
             <div><div className="cc-section-kicker">PLAYER EXPERIENCE</div><h2>Game</h2><p>You're in the same game space as players. Host-only actions live in their own tab.</p></div>
             <button type="button" className="host-button cc-host-control-shortcut" onClick={() => setActiveTab("host-controls")}><Shield size={15}/> Host controls</button>
@@ -752,7 +768,7 @@ export default function HostLiveSession() {
             {session.teams_enabled && <p className="cc-helper-text">{session.host_chooses_teams ? "You'll assign teams below." : "Players can pick or create a team in the lobby."}</p>}
           </section>
 
-          <section className="cc-session-card cc-live-controls">
+          <section className="cc-session-card cc-live-controls" data-tour="host-start-controls">
             <div className="cc-section-kicker">GAME CONTROL</div>
             {session.status === "lobby" ? (
               <>
@@ -802,7 +818,7 @@ export default function HostLiveSession() {
 
 {activeTab === "leaderboard" && renderHostPlayerTab("leaderboard")}
         {activeTab === "leaderboard" && (
-        <section className="cc-session-card cc-session-section">
+        <section className="cc-session-card cc-session-section" data-tour="host-leaderboard">
           <div className="cc-session-section-heading"><div><div className="cc-section-kicker">{session.teams_enabled ? "TEAM SETUP" : "PLAYER LOBBY"}</div><h2>{session.teams_enabled ? "Players & teams" : "Players"}</h2><p>{session.teams_enabled ? (session.host_chooses_teams ? "Assign players to teams." : "See who has joined and which teams they picked.") + ` Team limit: ${session.team_size} players.` : "Everyone who joins this game appears here."}</p></div><span className="cc-count-pill">{players.length} players</span></div>
           {session.teams_enabled && session.host_chooses_teams && session.status === "lobby" && (
             <form className="cc-create-team-form" onSubmit={(event) => void createTeam(event)}>
@@ -839,7 +855,7 @@ export default function HostLiveSession() {
         )}
 
 {activeTab === "reward-round" && (
-        <section className="cc-session-card cc-session-section cc-reward-points-section">
+        <section className="cc-session-card cc-session-section cc-reward-points-section" data-tour="host-reward">
           <div className="cc-session-section-heading">
             <div><div className="cc-section-kicker">REWARD POINTS</div><h2>Reward points</h2><p>Choose how to decide the winner. Player voting awards points automatically; host awards and audience cheers are confirmed manually.</p></div>
             <span className="cc-count-pill">{enabledRewardMethods.length} methods enabled</span>
@@ -1029,7 +1045,7 @@ export default function HostLiveSession() {
         )}
 
         {activeTab === "host-controls" && (
-          <section className="cc-session-card cc-session-section cc-host-main-review-card">
+          <section className="cc-session-card cc-session-section cc-host-main-review-card" data-tour="host-review">
             <div className="cc-session-section-heading"><div><div className="cc-section-kicker">HOST REVIEW</div><h2>Main challenge submissions</h2><p>Review evidence from the main rounds and assign points when approving.</p></div><span className="cc-count-pill">{submissions.filter((item) => item.status === "submitted" && challengeById.get(item.challenge_id)?.kind === "main").length} pending</span></div>
             {submissions.filter((item) => challengeById.get(item.challenge_id)?.kind === "main").length === 0 ? <p className="cc-helper-text">Main challenge submissions will appear here as players submit them.</p> : (
               <div className="cc-submission-list">{submissions.filter((item) => challengeById.get(item.challenge_id)?.kind === "main").map((submission) => {
@@ -1074,7 +1090,7 @@ export default function HostLiveSession() {
         )}
 
         {activeTab === "side-challenges" && (
-          <section className="cc-session-card cc-session-section cc-host-side-review-card">
+          <section className="cc-session-card cc-session-section cc-host-side-review-card" data-tour="host-side-review">
             <div className="cc-session-section-heading"><div><div className="cc-section-kicker">SUBMISSION REVIEW</div><h2>Review side challenges</h2><p>Approve evidence for side challenges here. Side-challenge points are awarded only when final voting closes.</p></div><span className="cc-count-pill">{submissions.filter((item) => item.status === "submitted" && challengeById.get(item.challenge_id)?.kind === "side").length} pending</span></div>
             {submissions.filter((item) => challengeById.get(item.challenge_id)?.kind === "side").length === 0 ? <p className="cc-helper-text">Side-challenge submissions will appear here when players send them.</p> : (
               <div className="cc-submission-list">
@@ -1094,6 +1110,7 @@ export default function HostLiveSession() {
           </section>
         )}
       </div>
+      {hostTourOpen && <GuidedTour steps={hostTourSteps} onNavigate={navigateHostTour} onClose={() => setHostTourOpen(false)} label="HOST TOUR"/>}
     </HostShell>
   );
 }

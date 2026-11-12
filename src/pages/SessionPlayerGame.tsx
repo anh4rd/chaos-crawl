@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { CheckCircle2, Circle, Clock3, Gamepad2, LoaderCircle, RotateCcw, Trophy, ClipboardList, Users, Crown, Upload, Heart, Film, Flag } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import "../styles/SessionGame.css";
+import GuidedTour, { type GuidedTourStep } from "../components/tour/GuidedTour";
 
 type SessionStatus = "lobby" | "live" | "completed";
 interface SessionInfo {
@@ -153,6 +154,7 @@ export default function SessionPlayerGame() {
   const [error, setError] = useState("");
   const [teamName, setTeamName] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [tourOpen, setTourOpen] = useState(false);
 
   useEffect(() => {
     setToken(localStorage.getItem(playerStorageKey(code)));
@@ -488,6 +490,16 @@ export default function SessionPlayerGame() {
   }
 
   const { session, player, teams, challenge, side_challenges: sideChallenges } = view;
+  const playerTourSteps: GuidedTourStep[] = [
+    { target: '[data-tour="player-profile"]', title: "Your player card", body: "Your avatar, team and points live here. Your score updates as approved challenges and reward rounds are completed.", page: "game" },
+    { target: '[data-tour="player-navigation"]', title: "Move around the game", body: "Use these tabs to switch between your current challenge, the leaderboard, side challenges and the final vote when it opens.", page: "game" },
+    { target: '[data-tour="player-challenge"]', title: "Your main challenge", body: "Read the task, instructions and time allowance. The evidence label tells you whether a photo or video is required before you can submit.", page: "game" },
+    { target: '[data-tour="player-upload"]', title: "Upload and submit", body: "Tap the upload control to add a photo or video. Once you've completed the task, mark it complete; your host reviews it before any main-challenge points are awarded.", page: "game" },
+    { target: '[data-tour="player-leaderboard"]', title: "Track the leaderboard", body: "See how you rank against other players and how your team is doing. Scores refresh as the host approves work and awards points.", page: "leaderboard" },
+    { target: '[data-tour="player-side-challenges"]', title: "Find extra challenges", body: "Side challenges are optional tasks you can complete alongside the main round. Open one, add evidence if requested, then submit it for review. Their reward points are settled after the final vote.", page: "side-challenges" },
+    ...(session.final_gallery_open ? [{ target: '[data-tour="player-final"]', title: "Vote in the final gallery", body: "When the host opens the gallery, browse the approved photos and videos and vote for your favourite. The winning entry receives its configured points when voting closes.", page: "final" }] : []),
+  ];
+  const navigatePlayerTour = useCallback((page: string) => { if (page !== activePage) navigate(`/play/${code}/${page}`); }, [activePage, code, navigate]);
   const teamSelectionAllowed = session.teams_enabled && !session.host_chooses_teams && (session.status === "lobby" || (session.status === "live" && !player.team_id));
   const teamLeaderboard = teams
     .map((team) => ({
@@ -504,13 +516,14 @@ export default function SessionPlayerGame() {
       </header>}
 
       <div className="cc-player-game-content">
-        <section className="cc-player-profile">
+        <section className="cc-player-profile" data-tour="player-profile">
           <div className="cc-player-avatar-large">{player.name.slice(0, 1).toUpperCase()}</div>
           <div className="cc-player-profile-copy"><span className="cc-player-eyebrow">PLAYER</span><h1>{player.name}</h1><p>{player.team_name || (session.teams_enabled ? "Choose your team" : "Solo player")}</p></div>
           <div className="cc-player-score"><strong>{player.score}</strong><span>POINTS</span></div>
         </section>
+        {!embeddedHostMode && <div className="cc-player-tour-row"><button type="button" className="cc-tour-help-button" onClick={() => setTourOpen(true)}>✦ How to play / Take a tour</button></div>}
 
-        {!embeddedHostMode && <nav className="cc-player-page-nav" aria-label="Game pages">
+        {!embeddedHostMode && <nav className="cc-player-page-nav" data-tour="player-navigation" aria-label="Game pages">
           <Link to={`/play/${code}/game`} className={`cc-player-page-tab${activePage === "game" ? " is-active" : ""}`} aria-current={activePage === "game" ? "page" : undefined}>
             <Gamepad2 size={17}/><span>Game</span>
           </Link>
@@ -660,13 +673,13 @@ export default function SessionPlayerGame() {
                   </section>
                 )}
                 {challenge ? (
-                  <section className="cc-player-challenge-card">
+                  <section className="cc-player-challenge-card" data-tour="player-challenge">
                     <div className="cc-player-challenge-top"><span className="cc-player-eyebrow">YOUR CHALLENGE</span><span className="cc-player-points">+{challenge.points} POINTS ON APPROVAL</span></div>
                     <h2>{challenge.title}</h2>
                     <p>{challenge.description}</p>
                     <div className="cc-player-challenge-meta"><span><Clock3 size={16}/> {challenge.duration_minutes} min</span>{challenge.allow_photo_upload && <span>Evidence required</span>}</div>
                     {challenge.allow_photo_upload && (
-                      <div className="cc-player-evidence-block">
+                      <div className="cc-player-evidence-block" data-tour="player-upload">
                         <div className="cc-player-evidence-tools">
                           <label className="cc-player-upload-button">
                             <Upload size={16}/>{busyKey === `upload:${challenge.id}` ? "Uploading…" : "Upload photo / video evidence"}
@@ -700,7 +713,7 @@ export default function SessionPlayerGame() {
         )}
 
         {!rewardRound && activePage === "leaderboard" && (
-          <section className="cc-player-leaderboard-page">
+          <section className="cc-player-leaderboard-page" data-tour="player-leaderboard">
             <div className="cc-player-page-heading"><div><span className="cc-player-eyebrow">THE RACE IS ON</span><h2>{session.status === "completed" ? "Final leaderboard" : "Leaderboard"}</h2><p>Scores update automatically as the host approves challenges.</p></div><span className="cc-player-count-chip">{leaderboard.length} players</span></div>
             {session.status === "lobby" && <div className="cc-player-page-notice">The leaderboard will start moving when the host starts the game.</div>}
             {leaderboard.length === 0 ? <div className="cc-player-state-card"><h2>No players yet</h2><p>Once players join, their scores will appear here.</p></div> : (
@@ -731,7 +744,7 @@ export default function SessionPlayerGame() {
         )}
 
         {!rewardRound && activePage === "side-challenges" && (
-          <section className="cc-player-side-page">
+          <section className="cc-player-side-page" data-tour="player-side-challenges">
             <div className="cc-player-page-heading"><div><span className="cc-player-eyebrow">EXTRA CHAOS</span><h2>Side challenges</h2><p>Complete these alongside the main round for extra points.</p></div><span className="cc-player-count-chip">{sideChallenges.length}</span></div>
             {session.status === "lobby" && <div className="cc-player-page-notice">Side challenges become active when the host starts the game.</div>}
             {session.status === "completed" && <div className="cc-player-page-notice">The game has ended. Here's how your side challenges finished.</div>}
@@ -764,7 +777,7 @@ export default function SessionPlayerGame() {
         )}
 
         {!rewardRound && activePage === "final" && (
-          <section className="cc-player-final-page">
+          <section className="cc-player-final-page" data-tour="player-final">
             <div className="cc-player-page-heading">
               <div><span className="cc-player-eyebrow">THE FINAL ROUND</span><h2>Fan favourite</h2><p>Browse the entries saved by the host and vote for your favourite photo or video.</p></div>
               <span className="cc-player-count-chip">{finalGallery?.items.length ?? 0} entries</span>
@@ -808,6 +821,7 @@ export default function SessionPlayerGame() {
         {!embeddedHostMode && <div className="cc-player-sync-note"><span className="cc-player-live-dot"/> Live updates enabled {lastUpdated && <span>· synced {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>}</div>}
         {!embeddedHostMode && <button type="button" className="cc-player-text-button" onClick={() => navigate(`/join?code=${code}&returning=1`)}><RotateCcw size={15}/> Need to rejoin on this device?</button>}
       </div>
+      {tourOpen && <GuidedTour steps={playerTourSteps} onNavigate={navigatePlayerTour} onClose={() => setTourOpen(false)} label="PLAYER TOUR"/>}
     </main>
   );
 }

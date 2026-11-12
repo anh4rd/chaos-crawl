@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { CalendarDays, Clock3, Compass, Edit3, LoaderCircle, MapPin, Play, Plus, Sparkles, Users } from "lucide-react";
+import { CalendarDays, Clock3, Compass, Copy, Edit3, LoaderCircle, MapPin, Play, Plus, ShieldCheck, Sparkles, Users } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import HostShell from "../components/host/HostShell";
 import { createOrGetHostGameSession } from "../lib/gameSessions";
@@ -35,11 +35,15 @@ function GameCard({
   onEdit,
   onPlay,
   playing,
+  onInvite,
+  inviting,
 }: {
   game: HostGame;
   onEdit: (id: string) => void;
   onPlay: (game: HostGame) => void;
   playing: boolean;
+  onInvite: (game: HostGame) => void;
+  inviting: boolean;
 }) {
   const completed = game.status === "completed" || (game.event_date ? new Date(`${game.event_date}T23:59:59`).getTime() < Date.now() : false);
   const canPlay = game.status === "planned" || game.status === "live";
@@ -59,6 +63,11 @@ function GameCard({
           <button type="button" className="host-button host-button--secondary" onClick={() => onEdit(game.id)}>
             <Edit3 size={15} /> {completed ? "View plan" : game.status === "draft" ? "Continue setup" : "Edit plan"}
           </button>
+          {canPlay && game.plan_data?.inviteBeforeEvent !== false && (
+            <button type="button" className="host-button host-button--secondary" onClick={() => onInvite(game)} disabled={inviting}>
+              {inviting ? <LoaderCircle size={15} className="host-button-spinner" /> : <Copy size={15} />} {inviting ? "Preparing…" : "Copy invite"}
+            </button>
+          )}
           {canPlay && (
             <button
               type="button"
@@ -84,6 +93,9 @@ export default function HostHub() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [invitingId, setInvitingId] = useState<string | null>(null);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [inviteNotice, setInviteNotice] = useState("");
   const view: "home" | "games" = location.pathname === "/host/games" ? "games" : "home";
 
   const loadGames = useCallback(async () => {
@@ -95,7 +107,11 @@ export default function HostHub() {
       setError("Your session has expired. Please log in again.");
       return;
     }
-    const { data, error: queryError } = await supabase.from("host_games").select("*").eq("host_id", userData.user.id).order("created_at", { ascending: false });
+    const [{ data, error: queryError }, { data: adminFlag }] = await Promise.all([
+      supabase.from("host_games").select("*").eq("host_id", userData.user.id).order("created_at", { ascending: false }),
+      supabase.rpc("cc_is_platform_admin"),
+    ]);
+    setIsSuperAdmin(adminFlag === true);
     setLoading(false);
     if (queryError) {
       console.error("LOAD HOST GAMES ERROR", queryError);
@@ -110,6 +126,24 @@ export default function HostHub() {
   const upcoming = games.filter((game) => game.status !== "completed" && (!game.event_date || new Date(`${game.event_date}T23:59:59`).getTime() >= Date.now()));
   const past = games.filter((game) => game.status === "completed" || (game.event_date && new Date(`${game.event_date}T23:59:59`).getTime() < Date.now()));
   const editGame = (id: string) => navigate(`/host/games/${id}/edit`);
+
+
+
+  async function invitePlayers(game: HostGame) {
+    setInvitingId(game.id); setInviteNotice(""); setError("");
+    try {
+      const session = await createOrGetHostGameSession(game.id);
+      const inviteUrl = `${window.location.origin}${import.meta.env.BASE_URL}#/invite/${session.join_code}`;
+      try {
+        await navigator.clipboard.writeText(inviteUrl);
+        setInviteNotice(`Invite link copied for ${game.name}.`);
+      } catch {
+        window.prompt("Copy this player invitation link:", inviteUrl);
+      }
+    } catch (inviteError) {
+      setError(inviteError instanceof Error ? inviteError.message : "Couldn't prepare the invite link.");
+    } finally { setInvitingId(null); }
+  }
 
   async function playGame(game: HostGame) {
     if (game.status !== "planned" && game.status !== "live") {
@@ -133,7 +167,7 @@ export default function HostHub() {
   return (
     <HostShell title={view === "home" ? "Your Host Hub" : "Your games"} subtitle={view === "home" ? "Your next great idea starts here." : "All your game plans, in one place."}>
       {searchParams.get("created") === "1" && <div className="host-alert host-alert--success">Game plan saved. You can edit it any time before the event.</div>}
-      {error && <div className="host-alert host-alert--error">{error}</div>}
+      {error && <div className="host-alert host-alert--error">{error}</div>}\n      {inviteNotice && <div className="host-alert host-alert--success">{inviteNotice}</div>}\n      {isSuperAdmin && <button type="button" className="host-button host-button--secondary" onClick={() => navigate("/host/super-admin")}><ShieldCheck size={16}/> Super Admin · All games</button>}
 
       <div className="host-tabs" role="tablist" aria-label="Game list view">
         <button type="button" role="tab" aria-selected={view === "home"} className={view === "home" ? "is-active" : ""} onClick={() => navigate("/host")}>Overview</button>
@@ -175,16 +209,16 @@ export default function HostHub() {
       <section className="host-list-section">
         <div className="host-section-heading"><div><h2>{view === "home" ? "Upcoming games" : "All plans"}</h2><p>{view === "home" ? "Pick up where you left off." : "Edit drafts or review plans you've saved."}</p></div>{view === "home" && <button type="button" className="host-text-button" onClick={() => navigate("/host/games")}>View all →</button>}</div>
         {loading ? <div className="host-empty-state">Loading your games…</div> : view === "games" ? (
-          games.length ? <div className="host-game-grid">{games.map((game) => <GameCard key={game.id} game={game} onEdit={editGame} onPlay={playGame} playing={playingId === game.id} />)}</div> : <div className="host-empty-state"><Sparkles size={25}/><h3>No games yet</h3><p>Your saved game plans will appear here.</p><button className="host-button host-button--primary" onClick={() => navigate("/host/games/new")} type="button"><Plus size={17}/> Create your first game</button></div>
+          games.length ? <div className="host-game-grid">{games.map((game) => <GameCard key={game.id} game={game} onEdit={editGame} onPlay={playGame} playing={playingId === game.id} onInvite={invitePlayers} inviting={invitingId === game.id} />)}</div> : <div className="host-empty-state"><Sparkles size={25}/><h3>No games yet</h3><p>Your saved game plans will appear here.</p><button className="host-button host-button--primary" onClick={() => navigate("/host/games/new")} type="button"><Plus size={17}/> Create your first game</button></div>
         ) : (
-          upcoming.length ? <div className="host-game-grid">{upcoming.slice(0, 3).map((game) => <GameCard key={game.id} game={game} onEdit={editGame} onPlay={playGame} playing={playingId === game.id} />)}</div> : <div className="host-empty-state"><Sparkles size={25}/><h3>It's quiet… suspiciously quiet.</h3><p>Start with a few details. You can sort out the challenges next.</p><button className="host-button host-button--primary" onClick={() => navigate("/host/games/new")} type="button"><Plus size={17}/> Create your first game</button></div>
+          upcoming.length ? <div className="host-game-grid">{upcoming.slice(0, 3).map((game) => <GameCard key={game.id} game={game} onEdit={editGame} onPlay={playGame} playing={playingId === game.id} onInvite={invitePlayers} inviting={invitingId === game.id} />)}</div> : <div className="host-empty-state"><Sparkles size={25}/><h3>It's quiet… suspiciously quiet.</h3><p>Start with a few details. You can sort out the challenges next.</p><button className="host-button host-button--primary" onClick={() => navigate("/host/games/new")} type="button"><Plus size={17}/> Create your first game</button></div>
         )}
       </section>
 
       {view === "home" && past.length > 0 && (
         <section className="host-list-section">
           <div className="host-section-heading"><div><h2>Past games</h2><p>Previous plans and results.</p></div></div>
-          <div className="host-game-grid">{past.slice(0, 3).map((game) => <GameCard key={game.id} game={game} onEdit={editGame} onPlay={playGame} playing={playingId === game.id} />)}</div>
+          <div className="host-game-grid">{past.slice(0, 3).map((game) => <GameCard key={game.id} game={game} onEdit={editGame} onPlay={playGame} playing={playingId === game.id} onInvite={invitePlayers} inviting={invitingId === game.id} />)}</div>
         </section>
       )}
     </HostShell>
