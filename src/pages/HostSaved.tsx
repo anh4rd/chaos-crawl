@@ -3,6 +3,7 @@ import { Heart, MapPin, Trash2, ClipboardList, Compass } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import HostShell from "../components/host/HostShell";
 import "../styles/HostPortal.css";
+import "../styles/HostTheme.css";
 
 interface HostFavourite {
   id: string;

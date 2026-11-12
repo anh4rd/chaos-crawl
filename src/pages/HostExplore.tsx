@@ -8,6 +8,7 @@ import { supabase } from "../lib/supabase";
 import HostShell from "../components/host/HostShell";
 import "../styles/HostPortal.css";
 import "../styles/HostPlanning.css";
+import "../styles/HostTheme.css";
 
 type CatalogTab = "tasks" | "locations" | "routes";
 type TaskKind = "main" | "side" | "secret";

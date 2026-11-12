@@ -1,8 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Bell, BookOpen, Compass, Gamepad2, Heart, Home, LogOut, Plus, Sparkles, CircleHelp } from "lucide-react";
+import { Compass, Gamepad2, Heart, Home, LogOut, Plus, Sparkles, CircleHelp } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../../lib/supabase";
+import "../../styles/HostTheme.css";
 
 interface HostShellProps {
   children: ReactNode;
@@ -12,10 +13,10 @@ interface HostShellProps {
   previewUser?: { id: string; displayName: string; email: string };
   readOnlyPreview?: boolean;
   contextPanel?: ReactNode;
-  hideSidebar?: boolean;
+  sidebar?: ReactNode;
 }
 
-export default function HostShell({ children, title, subtitle, showCreate = true, previewUser, readOnlyPreview = false, contextPanel, hideSidebar = false }: HostShellProps) {
+export default function HostShell({ children, title, subtitle, showCreate = true, previewUser, readOnlyPreview = false, contextPanel, sidebar }: HostShellProps) {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
 
@@ -54,24 +55,9 @@ export default function HostShell({ children, title, subtitle, showCreate = true
         </div>
       </header>
 
-      <div className={`host-app-layout${hideSidebar ? " host-app-layout--no-sidebar" : ""}`}>
-        {!hideSidebar && <aside className="host-sidebar">
-          <div className="host-sidebar-label">YOUR SPACE</div>
-          <NavLink to={homeHref} end className={({ isActive }) => `host-nav-link${isActive ? " is-active" : ""}`}><Home size={18} /> Home</NavLink>
-          {!readOnlyPreview && <>
-            <NavLink to="/host/games" className={({ isActive }) => `host-nav-link${isActive ? " is-active" : ""}`}><Gamepad2 size={18} /> Your games</NavLink>
-            <NavLink to="/host/explore" className={({ isActive }) => `host-nav-link${isActive ? " is-active" : ""}`}><Compass size={18} /> Explore library</NavLink>
-            <NavLink to="/host/saved" className={({ isActive }) => `host-nav-link${isActive ? " is-active" : ""}`}><Heart size={18} /> Saved</NavLink>
-            <div className="host-sidebar-divider" />
-            <div className="host-sidebar-note">
-              <span className="host-mini-icon"><BookOpen size={17} /></span>
-              <strong>Need inspiration?</strong>
-              <p>Pick a vibe and we'll help you turn it into a game plan.</p>
-              <button className="host-text-button" type="button" onClick={() => navigate("/host/games/new")}>Plan a game <span>→</span></button>
-            </div>
-            <button className="host-nav-link host-nav-link--quiet" type="button" onClick={() => window.location.assign("mailto:hello@chaoscrawl.app")}><Bell size={18} /> Help & feedback</button>
-          </>}
-        </aside>}
+      <div className={`host-app-layout${sidebar ? " host-app-layout--setup-sidebar" : " host-app-layout--no-sidebar"}${contextPanel ? "" : " host-app-layout--no-context"}`}>
+        <img className="host-mascot-decoration" src={`${import.meta.env.BASE_URL}${encodeURIComponent("Mischievous Chaos Monster Logo.png")}`} alt="" aria-hidden="true" />
+        {sidebar && <aside className="host-sidebar host-sidebar--setup">{sidebar}</aside>}
 
         <main className="host-main">
           {(title || subtitle || showCreate) && (

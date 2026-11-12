@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase";
 import HostShell from "../components/host/HostShell";
 import "../styles/HostPortal.css";
 import "../styles/HostPlanning.css";
+import "../styles/HostTheme.css";
 
 type TaskKind = "main" | "side" | "secret";
 type BuilderTab = "players" | "main" | "side" | "secret" | "venue" | "controls" | "schedule" | "review" | "invites" | "launch";
@@ -340,6 +341,38 @@ export default function HostPlanSetup() {
     { label: "Review & launch", done: false },
   ];
   const completedSetup = setupChecks.filter(item => item.done).length;
+  const activeTabIndex = tabItems.findIndex(item => item.id === tab);
+  const previousTab = activeTabIndex > 0 ? tabItems[activeTabIndex - 1] : null;
+  const nextTab = activeTabIndex >= 0 ? tabItems[activeTabIndex + 1] ?? null : null;
+  function goToPreviousSection() {
+    setError("");
+    if (stage === "create" || activeTabIndex === 0) {
+      setStage("create");
+      return;
+    }
+    if (previousTab) setTab(previousTab.id);
+  }
+  function goToNextSection() {
+    setError("");
+    if (stage === "create") {
+      if (!form.name.trim()) { setError("Give your game a name."); return; }
+      setStage("build");
+      setTab("players");
+      return;
+    }
+    if (nextTab) setTab(nextTab.id);
+    else void save("planned");
+  }
+  const setupSidebar = <nav className="host-setup-sidebar" aria-label="Game setup steps">
+    <div className="host-setup-sidebar-title">YOUR GAME</div>
+    <button type="button" className={`host-setup-step${stage === "create" ? " is-active" : " is-done"}`} onClick={() => setStage("create")}>
+      <span className="host-setup-step-number">{stage === "build" ? <Check size={15}/> : "1"}</span>
+      <span><strong>Game basics</strong><small>Name, date and player count</small></span>
+    </button>
+    <div className="host-setup-sidebar-divider" />
+    {stage === "create" ? <div className="host-setup-next-step"><span className="host-setup-step-number">2</span><span><strong>Build your game</strong><small>Add challenges, set the schedule and prepare players.</small></span></div> : tabItems.map((item, index) => <button key={item.id} type="button" className={`host-setup-step${tab === item.id ? " is-active" : ""}`} onClick={() => { setTab(item.id); setError(""); }}><span className="host-setup-step-number">{index + 2}</span><span><strong>{item.label}</strong><small>{item.description}</small></span></button>)}
+    {stage === "build" && <div className="host-setup-sidebar-summary"><strong>{selectedMainTasks.length} main</strong><strong>{sideTasks.length} side</strong><strong>{secretTasks.length} secret</strong></div>}
+  </nav>;
   const contextPanel = <div className="host-game-context">
     <section className="host-context-card host-context-overview">
       <div className="host-context-ribbon">GAME OVERVIEW</div>
@@ -352,11 +385,11 @@ export default function HostPlanSetup() {
       <strong className="host-context-progress-count">{completedSetup} of {setupChecks.length} complete</strong>
       <div className="host-context-progress-track"><span style={{width:`${completedSetup / setupChecks.length * 100}%`}}/></div>
       <ul>{setupChecks.map((item,index)=><li key={item.label} className={item.done ? "is-complete" : ""}><span className="host-context-check">{item.done ? "✓" : index + 1}</span>{item.label}</li>)}</ul>
-      <button type="button" className="host-context-continue" onClick={()=>{ if(stage === "create") setStage("build"); else if(tab === "launch") void save("planned"); else setTab("launch"); }}>{stage === "create" ? "Continue to Players & Teams →" : "Continue to Review & Launch →"}</button>
+      <button type="button" className="host-context-continue" onClick={goToNextSection}>{stage === "create" ? "Next: Players & Teams →" : nextTab ? `Next: ${nextTab.label} →` : "Save game plan →"}</button>
     </section>
     <div className="host-context-tip"><Sparkles size={17}/><span><strong>Little by little.</strong> You can save a draft and come back whenever inspiration strikes.</span></div>
   </div>;
-  return <HostShell title={header} subtitle={stage === "create" ? "Start with the essentials. You can build the experience next." : "Choose challenges, build the schedule and prepare your players."} showCreate={false} contextPanel={contextPanel} hideSidebar>
+  return <HostShell title={header} subtitle={stage === "create" ? "Start with the essentials. You can build the experience next." : "Choose challenges, build the schedule and prepare your players."} showCreate={false} contextPanel={contextPanel} sidebar={setupSidebar}>
     {error && <div className="host-alert host-alert--error" role="alert">{error}</div>}{notice && <div className="host-alert host-alert--success" role="status">{notice}</div>}
     {stage === "create" ? <section className="cc-create-card">
       <div className="cc-step-kicker"><Sparkles size={16}/> STEP 1 · GAME BASICS</div><h2>Let's set the scene</h2><p className="cc-muted">Just the essentials. The detailed planning happens in the next step.</p>
@@ -365,9 +398,11 @@ export default function HostPlanSetup() {
         <div><strong>Game photo</strong><p>Add a photo or graphic to personalise the player welcome screen.</p><label className="cc-upload-button"><Upload size={15}/> Choose image<input type="file" accept="image/*" onChange={e => { const f = e.target.files?.[0]; if (f) void uploadGamePhoto(f); }}/></label></div>
       </div>
       <div className="cc-form-grid"><Field label="Game name"><input value={form.name} onChange={e => update("name",e.target.value)} placeholder="e.g. Iona's birthday chaos"/></Field><Field label="Event date"><input type="date" min={today()} value={form.eventDate} onChange={e => update("eventDate",e.target.value)}/></Field><Field label="Start time"><input type="time" value={form.startTime} onChange={e => update("startTime",e.target.value)}/></Field><Field label="Ideal end time" hint="A target, not a hard stop. The schedule will estimate the finish time."><input type="time" value={form.idealEndTime} onChange={e => update("idealEndTime",e.target.value)}/></Field><Field label="Approximate number of players"><input type="number" min={2} max={100} value={form.playerCount} onChange={e => update("playerCount",Number(e.target.value))}/></Field></div>
-      <div className="cc-footer"><button className="cc-primary" onClick={() => { if (!form.name.trim()) { setError("Give your game a name."); return; } setError(""); setStage("build"); }}>Build my game <ArrowRight size={17}/></button></div>
+      <nav className="cc-section-navigation" aria-label="Game setup navigation">
+        <button type="button" className="cc-secondary" disabled><ArrowLeft size={16}/> Back</button>
+        <button type="button" className="cc-primary" onClick={goToNextSection}>Next: Players &amp; Teams <ArrowRight size={17}/></button>
+      </nav>
     </section> : <div className="cc-builder">
-      <aside className="cc-builder-sidebar"><div className="cc-sidebar-title">YOUR GAME</div>{tabItems.map(item => <button key={item.id} className={`cc-sidebar-tab${tab===item.id?" active":""}`} onClick={() => {setTab(item.id);setError("");}}><span>{item.label}</span><small>{item.description}</small></button>)}<div className="cc-sidebar-summary"><strong>{selectedMainTasks.length} main</strong><strong>{sideTasks.length} side</strong><strong>{secretTasks.length} secret</strong></div></aside>
       <main className="cc-builder-main"><div className="cc-builder-heading"><div><span className="cc-step-kicker">STEP 2 · BUILD YOUR EXPERIENCE</span><h2>{tabItems.find(t=>t.id===tab)?.label}</h2><p>{tabItems.find(t=>t.id===tab)?.description}</p></div><button className="cc-text-button" onClick={() => setStage("create")}><ArrowLeft size={15}/> Game basics</button></div>
 
       {tab === "players" && <section className="cc-section-card">
@@ -415,7 +450,13 @@ export default function HostPlanSetup() {
 
       {tab === "launch" && <section className="cc-section-card"><div className="cc-review-hero"><Sparkles size={23}/><div><small>GAME PLAN</small><h3>{form.name || "Untitled chaos"}</h3><p>{form.eventDate} · Starts {form.startTime} · Ideal finish {form.idealEndTime} · Estimated finish {calculatedEnd}</p></div></div><div className="cc-review-grid"><div><Users/><strong>{form.playerCount} players approx.</strong><small>{form.teamsEnabled ? form.teamSize ? `Teams of ${form.teamSize}` : "Team size decided later" : "Individual play"}</small></div><div><ListChecks/><strong>{selectedMainTasks.length} main challenges</strong><small>{sideTasks.length} side · {secretTasks.length} secret</small></div><div><CalendarDays/><strong>{form.schedule.length} schedule items</strong><small>{form.strictSchedule?"Strict timers on":"Flexible timing"}</small></div><div><MapPin/><strong>{form.venueName || "Venue TBC"}</strong><small>{form.venueAddress || "Address not added"}</small></div></div><div className="cc-review-block"><h3>Equipment list</h3>{equipment.length?<ul>{equipment.map(item=><li key={item}>{item}</li>)}</ul>:<p>No specific equipment listed.</p>}</div><div className="cc-review-block"><h3>Preparation for players</h3>{preparation.length?preparation.map(t=><p key={t.id}><strong>{t.title}:</strong> {t.prep}</p>):<p>No advance preparation required.</p>}</div><div className="cc-review-block"><h3>Reward methods</h3><p>{form.decideRewardInGame?"Host decides during the game":form.rewardModes.length?form.rewardModes.join(", "):"No reward method selected"}</p><p>{form.sideChallenges?"Compulsory live final, slideshow and fan-favourite vote enabled.":"No side-challenge final required."}</p></div><div className="cc-explainer"><ShieldCheck size={18}/><p>Saving a plan does not launch the game. Player invitations and the pre-event portal become available when a session is created from this plan.</p></div><div className="cc-explainer"><Play size={18}/><p><strong>Host game demo</strong><br/>The current project has a live-session player preview, but not a safe standalone demo route. I have not linked this button to a real session because that would create a live game rather than a demo.</p></div></section>}
 
-      <div className="cc-builder-footer"><button className="cc-secondary" onClick={()=>setStage("create")}><ArrowLeft size={16}/> Game basics</button><div><button className="cc-secondary" disabled={saving} onClick={()=>void save("draft")}>Save draft</button><button className="cc-primary" disabled={saving} onClick={()=>void save("planned")}>{saving?"Saving…":"Save game plan"}<CheckCircle2 size={16}/></button></div></div>
+      <nav className="cc-section-navigation" aria-label="Game setup navigation">
+        <button type="button" className="cc-secondary" onClick={goToPreviousSection}><ArrowLeft size={16}/> Back{previousTab ? `: ${previousTab.label}` : ": Game basics"}</button>
+        <div className="cc-section-navigation-actions">
+          <button type="button" className="cc-secondary" disabled={saving} onClick={()=>void save("draft")}>Save draft</button>
+          <button type="button" className="cc-primary" disabled={saving} onClick={goToNextSection}>{saving ? "Saving…" : nextTab ? `Next: ${nextTab.label}` : "Save game plan"}{nextTab ? <ArrowRight size={16}/> : <CheckCircle2 size={16}/>}</button>
+        </div>
+      </nav>
       </main>
     </div>}
   </HostShell>;

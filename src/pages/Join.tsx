@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowRight, CheckCircle2, Gamepad2, LoaderCircle, RotateCcw, Users } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import ChaosMonster from "../../public/chaos-logo.png";
 import "../styles/PlayerGame.css";
 
 type JoinMode = "join" | "rejoin";
@@ -77,6 +78,14 @@ export default function Join() {
         <span className="cc-player-brand-icon"><Gamepad2 size={22}/></span>
         <span>CHAOS<span>CRAWL</span></span>
       </header>
+      <div className="self-stretch px-4 marginy:-100px inline-flex flex-col justify-center items-center overflow-hidden">
+    <img className="w-56 h-fit origin-top-left rotate-[-7deg]" src={ChaosMonster} />
+    <div className="w-56 inline-flex justify-start items-center">
+        <div className="w-72 pt-4 inline-flex flex-col justify-center items-start">
+            <div className="origin-top-left rotate-[-4deg] text-center justify-start"><span className="text-colour-text-fill-white text-7xl font-normal font-['Hard_Beat'] uppercase leading-[70px] [text-shadow:_4px_4px_0px_rgb(6_15_19_/_1.00)]">join</span><span className="text-colour-text-fill-white text-6xl font-normal font-['Hard_Beat'] uppercase leading-[64px] [text-shadow:_4px_4px_0px_rgb(6_15_19_/_1.00)]"> <br/></span><span className="text-colour-text-fill-white text-4xl font-normal font-['Hard_Beat'] uppercase leading-10 [text-shadow:_4px_4px_0px_rgb(6_15_19_/_1.00)]">the chaos</span></div>
+        </div>
+    </div>
+</div>
 
       <section className="cc-player-auth-card">
         <div className="cc-player-mascot" aria-hidden="true">✦</div>

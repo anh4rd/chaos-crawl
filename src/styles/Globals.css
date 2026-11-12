@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400;500;600;700;800;900&family=Permanent+Marker&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -6,12 +6,12 @@
   --purple-mid: #7554fc;
   --purple-dark: #23166e;
   --pink: #fb377a;
-  --lime: #d3fb6e;
+  --lime: #e5ff00;
   --yellow: #ffe600;
   --black: #060f13;
   --white: #ffffff;
 
-  font-family: "Maven Pro", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Quicksand", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--black);
   background-color: var(--purple);
   font-synthesis: none;
@@ -47,7 +47,7 @@ body {
 }
 
 h1 {
-  font-family: "hardbeat";
+  font-family: "Hardbeat";
   line-height: 1;
   font-size:40px;
   letter-spacing: 0;
@@ -56,7 +56,7 @@ h1 {
 }
 
 h2 {
-  font-family: "hardbeat";
+  font-family: "Hardbeat";
   line-height: 1;
   font-size: 24px;
   letter-spacing: -0.02em;
@@ -65,7 +65,7 @@ h2 {
 }
 
 h3 {
-  font-family: "hardbeat";
+  font-family: "Hardbeat";
   line-height: 1;
   font-size:40px;
 

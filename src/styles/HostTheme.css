@@ -1,0 +1,232 @@
+/* Shared comic-book styling for every screen inside the host portal. */
+.host-portal.host-app:has(.host-page-heading) {
+  min-height: 100vh;
+  background-color: #4822d4;
+  background-image:
+    radial-gradient(circle at 77% 38%, rgba(151,119,255,.9), transparent 28%),
+    repeating-conic-gradient(from 2deg at 77% 38%, rgba(255,255,255,.09) 0deg 8deg, transparent 8deg 16deg),
+    linear-gradient(115deg, #2b1688 0%, #5630e8 55%, #7653ff 100%);
+  background-attachment: fixed;
+  background-size: cover;
+}
+.host-portal.host-app .host-app-layout { background: transparent; }
+.host-portal.host-app .host-main { min-width: 0; background: transparent; }
+.host-portal.host-app .host-sidebar {
+  position: relative;
+  isolation: isolate;
+  border-right: 0;
+  background: transparent;
+}
+.host-portal.host-app .host-sidebar::before {
+  position: absolute;
+  z-index: -1;
+  inset: 28px 10px 24px;
+  border: 2px solid #080817;
+  border-radius: 22px;
+  background: rgba(255,255,255,.94);
+  box-shadow: 4px 5px 0 #23166e;
+  content: "";
+}
+.host-portal.host-app .host-sidebar-label { color: #5c36fb; }
+.host-portal.host-app .host-nav-link { color: #23166e; }
+.host-portal.host-app .host-nav-link:not(.is-active):hover { background: #eee9ff; }
+.host-portal.host-app .host-sidebar-note {
+  border: 2px solid #23166e;
+  background: #eee9ff;
+  box-shadow: 3px 3px 0 #23166e;
+}
+.host-portal.host-app .host-context-rail { border-left: 0; background: transparent; }
+
+.host-portal.host-app .host-page-heading h1,
+.host-portal.host-app .host-section-heading h2,
+.host-portal.host-app .host-explore-results-heading h2 {
+  color: #fff;
+  -webkit-text-stroke: 1px #080817;
+  text-shadow: 3px 3px 0 #080817, 5px 5px 0 #23166e;
+}
+.host-portal.host-app .host-page-heading p,
+.host-portal.host-app .host-section-heading p,
+.host-portal.host-app .host-explore-results-heading p {
+  color: #f3edff;
+  text-shadow: 1px 2px 0 rgba(35,22,110,.55);
+}
+.host-portal.host-app .host-section-heading .host-text-button { color: #d3fb6e; text-shadow: 1px 2px 0 #23166e; }
+
+.host-portal.host-app .host-plan-steps,
+.host-portal.host-app .host-plan-card,
+.host-portal.host-app .cc-create-card,
+.host-portal.host-app .cc-builder-main,
+.host-portal.host-app .host-saved-card,
+.host-portal.host-app .host-explore-card {
+  border: 2.5px solid #080817;
+  border-radius: 20px;
+  box-shadow: 4px 4px 0 #23166e;
+}
+.host-portal.host-app .host-plan-steps,
+.host-portal.host-app .host-plan-card,
+.host-portal.host-app .cc-create-card,
+.host-portal.host-app .cc-builder-main,
+.host-portal.host-app .host-saved-card,
+.host-portal.host-app .host-explore-card { background-color: rgba(255,255,255,.97); }
+.host-portal.host-app .host-plan-step.is-active { border: 2px solid #080817; background: #d3fb6e; box-shadow: 2px 2px 0 #080817; }
+.host-portal.host-app .host-plan-step.is-active .host-plan-step-number { border-color: #080817; background: #5c36fb; }
+
+.host-portal.host-app .host-explore-hero {
+  border: 3px solid #080817;
+  border-radius: 23px;
+  box-shadow: 4px 5px 0 #23166e;
+}
+.host-portal.host-app .host-explore-tabs { border: 2px solid #23166e; background: #2c167f; }
+.host-portal.host-app .host-explore-tabs button { color: #fff; }
+.host-portal.host-app .host-explore-tabs button > span { background: #5c36fb; color: #fff; }
+.host-portal.host-app .host-explore-tabs button.is-active { border: 2px solid #080817; color: #080817; background: #d3fb6e; box-shadow: 2px 2px 0 #080817; }
+.host-portal.host-app .host-explore-categories button,
+.host-portal.host-app .host-explore-search,
+.host-portal.host-app .host-filter-chip,
+.host-portal.host-app .cc-filter-chip,
+.host-portal.host-app .host-tabs button,
+.host-portal.host-app .host-saved-card .host-icon-button {
+  border-color: #080817;
+}
+.host-portal.host-app .host-explore-categories button.is-active { background: #5c36fb; color: #fff; }
+
+.host-portal.host-app .host-button,
+.host-portal.host-app .cc-primary,
+.host-portal.host-app .cc-secondary,
+.host-portal.host-app .cc-upload-button,
+.host-portal.host-app .cc-add-round,
+.host-portal.host-app .cc-select-task {
+  border: 2px solid #080817;
+  border-radius: 13px;
+  box-shadow: 3px 3px 0 #080817;
+  font-weight: 1000;
+}
+.host-portal.host-app .host-button--primary,
+.host-portal.host-app .cc-upload-button { color: #fff; background: #fb377a; }
+.host-portal.host-app .host-button--secondary,
+.host-portal.host-app .cc-secondary,
+.host-portal.host-app .cc-select-task { color: #23166e; background: #fff; }
+.host-portal.host-app .host-button--lime,
+.host-portal.host-app .cc-primary { color: #080817; background: #d3fb6e; }
+.host-portal.host-app .host-button:focus-visible,
+.host-portal.host-app .cc-primary:focus-visible,
+.host-portal.host-app .cc-secondary:focus-visible,
+.host-portal.host-app .cc-upload-button:focus-within,
+.host-portal.host-app .cc-select-task:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+.host-portal.host-app .host-saved-card { gap: 14px; }
+.host-portal.host-app .host-saved-icon { border: 2px solid #080817; background: #d3fb6e; }
+.host-portal.host-app .host-explore-save { border: 2px solid #080817; box-shadow: 2px 2px 0 #23166e; }
+.host-portal.host-app .host-explore-card:hover { transform: translateY(-2px); box-shadow: 5px 7px 0 #23166e; }
+
+.host-portal.host-app .host-mobile-nav {
+  border-top: 3px solid #080817;
+  background: #24116f;
+}
+.host-portal.host-app .host-mobile-nav a.active { background: #d3fb6e; color: #080817; }
+
+.host-portal.host-app .host-app-layout {
+  position: relative;
+  z-index: 2;
+}
+.host-portal.host-app .host-app-layout--no-sidebar { grid-template-columns: minmax(0,1fr) 300px; }
+.host-portal.host-app .host-app-layout--no-sidebar.host-app-layout--no-context { grid-template-columns: minmax(0,1fr); }
+.host-portal.host-app .host-app-layout--no-sidebar .host-main { grid-column: 1; }
+.host-portal.host-app .host-app-layout--no-sidebar .host-context-rail { grid-column: 2; }
+.host-portal.host-app .host-app-layout--setup-sidebar { grid-template-columns: 255px minmax(0,1fr) 300px; }
+.host-portal.host-app .host-app-layout--setup-sidebar .host-sidebar--setup { grid-column: 1; }
+.host-portal.host-app .host-app-layout--setup-sidebar .host-main { grid-column: 2; }
+.host-portal.host-app .host-app-layout--setup-sidebar .host-context-rail { grid-column: 3; }
+.host-portal.host-app .cc-builder { grid-template-columns: minmax(0,1fr); }
+.host-portal.host-app .host-sidebar--setup { min-width: 0; }
+.host-portal.host-app .host-mascot-decoration {
+  position: fixed;
+  z-index: 3;
+  bottom: -22px;
+  left: -38px;
+  width: clamp(145px, 17vw, 215px);
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+.host-portal.host-app .host-app-layout--no-sidebar .host-main { padding-bottom: 180px; }
+.host-portal.host-app .host-app-layout--setup-sidebar .host-sidebar--setup { padding-bottom: 170px; }
+.host-setup-sidebar {
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 14px;
+}
+.host-setup-sidebar-title { padding: 3px 8px 9px; color: #5c36fb; font-size: 11px; font-weight: 1000; letter-spacing: .12em; }
+.host-setup-step,
+.host-setup-next-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  width: 100%;
+  min-width: 0;
+  padding: 9px 8px;
+  border: 2px solid transparent;
+  border-radius: 13px;
+  color: #23166e;
+  background: transparent;
+  text-align: left;
+}
+.host-setup-step { cursor: pointer; }
+.host-setup-step.is-active { border-color: #080817; background: #d3fb6e; box-shadow: 2px 2px 0 #080817; color: #080817; }
+.host-setup-step.is-done .host-setup-step-number { border-color: #080817; background: #d3fb6e; }
+.host-setup-step > span:last-child,
+.host-setup-next-step > span:last-child { display: grid; min-width: 0; gap: 2px; }
+.host-setup-step strong,
+.host-setup-next-step strong { font-size: 12px; line-height: 1.25; }
+.host-setup-step small,
+.host-setup-next-step small { color: #716b8e; font-size: 9px; line-height: 1.35; }
+.host-setup-step.is-active small { color: #35275f; }
+.host-setup-step-number {
+  display: grid;
+  flex: 0 0 24px;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #b7a9e9;
+  border-radius: 50%;
+  background: #fff;
+  color: #35275f;
+  font-size: 10px;
+  font-weight: 1000;
+}
+.host-setup-sidebar-divider { height: 1px; margin: 4px 8px; background: #ded7f5; }
+.host-setup-sidebar-summary { display: flex; flex-wrap: wrap; gap: 5px; padding: 8px 3px 2px; }
+.host-setup-sidebar-summary strong { padding: 5px 7px; border-radius: 8px; color: #fff; background: #5c36fb; font-size: 9px; }
+.cc-section-navigation { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 24px; padding-top: 16px; border-top: 1px solid #ded7f5; }
+.cc-section-navigation-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; }
+.cc-section-navigation button { min-height: 42px; }
+.cc-section-navigation button:disabled { opacity: .45; cursor: not-allowed; }
+@media (max-width: 1250px) and (min-width: 901px) {
+  .host-portal.host-app .host-app-layout--no-sidebar { grid-template-columns: minmax(0,1fr); }
+  .host-portal.host-app .host-app-layout--no-sidebar .host-context-rail { display: flex; grid-column: 1; grid-row: 2; padding: 0 25px 25px; }
+  .host-portal.host-app .host-app-layout--setup-sidebar { grid-template-columns: 230px minmax(0,1fr); }
+  .host-portal.host-app .host-app-layout--setup-sidebar .host-context-rail { display: flex; grid-column: 2; grid-row: 2; padding: 0 25px 25px; }
+}
+@media (max-width: 900px) {
+  .host-portal.host-app .host-app-layout--no-sidebar { grid-template-columns: minmax(0,1fr); }
+  .host-portal.host-app .host-app-layout--no-sidebar .host-context-rail { display: flex; grid-column: 1; grid-row: 2; }
+  .host-portal.host-app .host-app-layout--setup-sidebar { grid-template-columns: minmax(0,1fr); }
+  .host-portal.host-app .host-app-layout--setup-sidebar .host-sidebar--setup { display: block; grid-column: 1; grid-row: 1; min-height: 0; padding: 8px 13px; }
+  .host-portal.host-app .host-app-layout--setup-sidebar .host-main { grid-column: 1; grid-row: 2; }
+  .host-portal.host-app .host-app-layout--setup-sidebar .host-context-rail { display: flex; grid-column: 1; grid-row: 3; }
+  .host-portal.host-app .host-sidebar::before { display: none; }
+  .host-setup-sidebar { display: flex; align-items: stretch; gap: 6px; overflow-x: auto; padding: 8px; border: 2px solid #080817; border-radius: 15px; background: rgba(255,255,255,.96); box-shadow: 3px 3px 0 #23166e; }
+  .host-setup-sidebar-title,.host-setup-sidebar-divider,.host-setup-sidebar-summary { display: none; }
+  .host-setup-step,.host-setup-next-step { flex: 0 0 145px; align-items: center; width: 145px; padding: 7px; }
+  .host-setup-step small,.host-setup-next-step small { display: none; }
+  .host-portal.host-app .host-mascot-decoration { bottom: 50px; left: -24px; width: clamp(125px, 30vw, 165px); }
+  .host-portal.host-app .host-app-layout--no-sidebar .host-main { padding-bottom: 165px; }
+  .host-portal.host-app .host-page-heading h1 { -webkit-text-stroke-width: .7px; }
+}
+@media (max-width: 560px) {
+  .cc-section-navigation { align-items: stretch; flex-direction: column; }
+  .cc-section-navigation > button,
+  .cc-section-navigation-actions > button { flex: 1; justify-content: center; }
+  .cc-section-navigation-actions { display: flex; }
+}
