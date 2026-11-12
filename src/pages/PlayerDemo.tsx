@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Gamepad2, Trophy, ClipboardList, Heart, Upload, Clock3, Camera, Sparkles } from "lucide-react";
 import GuidedTour, { type GuidedTourStep } from "../components/tour/GuidedTour";
-import "../styles/SessionGame.css";
+import "../styles/PlayerGame.css";
 import "../styles/GuidedTour.css";
 
 const steps: GuidedTourStep[] = [

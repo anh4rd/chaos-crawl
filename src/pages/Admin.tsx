@@ -30,7 +30,7 @@ import { updateGameState } from "../lib/gameApi";
 import { awardScore } from "../lib/scoreApi";
 import { deletePlayer, renamePlayer } from "../lib/playerApi";
 import { supabase } from "../lib/supabase";
-import "../styles/HostV2.css";
+import "../styles/HostPlanning.css";
 
 type HostTab = "live" | "challenges" | "scores" | "players";
 type ScoreTarget = "player" | "team";

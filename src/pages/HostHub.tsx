@@ -5,7 +5,7 @@ import { supabase } from "../lib/supabase";
 import HostShell from "../components/host/HostShell";
 import { createOrGetHostGameSession } from "../lib/gameSessions";
 import "../styles/HostPortal.css";
-import "../styles/HostHubPlayGame.css";
+import "../styles/HostPlanning.css";
 
 interface HostDirectoryEntry {
   host_id: string;
@@ -30,7 +30,13 @@ interface HostGame {
   player_count: number;
   venue_name: string | null;
   status: "draft" | "planned" | "live" | "completed";
-  plan_data: Record<string, unknown>;
+}
+
+const HOST_GAME_SUMMARY_FIELDS = "id,name,event_date,start_time,end_time,player_count,venue_name,status";
+
+function localDateKey() {
+  const date = new Date();
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
 function dateLabel(value: string | null) {
@@ -117,7 +123,20 @@ export default function HostHub() {
       return;
     }
 
-    const { data: adminData, error: adminError } = await supabase.rpc("cc_is_platform_admin");
+    const dateKey = localDateKey();
+    const gamesRequest = view === "games"
+      ? supabase.from("host_games").select(HOST_GAME_SUMMARY_FIELDS).eq("host_id", userData.user.id).order("created_at", { ascending: false })
+      : Promise.all([
+          supabase.from("host_games").select(HOST_GAME_SUMMARY_FIELDS).eq("host_id", userData.user.id).neq("status", "completed").or(`event_date.is.null,event_date.gte.${dateKey}`).order("created_at", { ascending: false }).limit(3),
+          supabase.from("host_games").select(HOST_GAME_SUMMARY_FIELDS).eq("host_id", userData.user.id).or(`status.eq.completed,event_date.lt.${dateKey}`).order("created_at", { ascending: false }).limit(3),
+        ]).then(([upcomingResult, pastResult]) => ({
+          data: [...(upcomingResult.data ?? []), ...(pastResult.data ?? [])],
+          error: upcomingResult.error ?? pastResult.error,
+        }));
+    const [{ data: adminData, error: adminError }, gamesResult] = await Promise.all([
+      supabase.rpc("cc_is_platform_admin"),
+      gamesRequest,
+    ]);
     const platformAdmin = !adminError && Boolean(adminData);
     setIsPlatformAdmin(platformAdmin);
 
@@ -143,7 +162,7 @@ export default function HostHub() {
     }
 
     setViewingHost(null);
-    const { data, error: queryError } = await supabase.from("host_games").select("*").eq("host_id", userData.user.id).order("created_at", { ascending: false });
+    const { data, error: queryError } = gamesResult;
     if (queryError) {
       setLoading(false);
       console.error("LOAD HOST GAMES ERROR", queryError);
@@ -151,7 +170,9 @@ export default function HostHub() {
       return;
     }
     setGames((data ?? []) as HostGame[]);
-    if (platformAdmin) {
+    setLoading(false);
+    if (platformAdmin && view === "home") {
+      setHostDirectory([]);
       const { data: hosts, error: hostsError } = await supabase.rpc("cc_super_admin_list_hosts");
       if (hostsError) {
         console.warn("Could not load host directory", hostsError);
@@ -159,8 +180,7 @@ export default function HostHub() {
         setHostDirectory((hosts ?? []) as HostDirectoryEntry[]);
       }
     }
-    setLoading(false);
-  }, [viewAsHostId]);
+  }, [viewAsHostId, view]);
   useEffect(() => { void loadGames(); }, [loadGames]);
 
   const upcoming = games.filter((game) => game.status !== "completed" && (!game.event_date || new Date(`${game.event_date}T23:59:59`).getTime() >= Date.now()));

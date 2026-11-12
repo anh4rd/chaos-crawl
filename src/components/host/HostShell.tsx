@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Bell, BookOpen, Compass, Gamepad2, Heart, Home, LogOut, Plus, Sparkles } from "lucide-react";
+import { Bell, BookOpen, Compass, Gamepad2, Heart, Home, LogOut, Plus, Sparkles, CircleHelp } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../../lib/supabase";
 
@@ -11,9 +11,11 @@ interface HostShellProps {
   showCreate?: boolean;
   previewUser?: { id: string; displayName: string; email: string };
   readOnlyPreview?: boolean;
+  contextPanel?: ReactNode;
+  hideSidebar?: boolean;
 }
 
-export default function HostShell({ children, title, subtitle, showCreate = true, previewUser, readOnlyPreview = false }: HostShellProps) {
+export default function HostShell({ children, title, subtitle, showCreate = true, previewUser, readOnlyPreview = false, contextPanel, hideSidebar = false }: HostShellProps) {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
 
@@ -39,14 +41,21 @@ export default function HostShell({ children, title, subtitle, showCreate = true
           <span className="host-brand-mark"><Sparkles size={21} /></span>
           <span>CHAOS<span className="host-brand-accent">CRAWL</span></span>
         </Link>
+        <nav className="host-top-nav" aria-label="Main navigation">
+          <NavLink to="/host/games/new" className={({isActive}) => `host-top-link${isActive ? " is-active" : ""}`}><Plus size={17}/> Plan game</NavLink>
+          <NavLink to="/host/games" className={({isActive}) => `host-top-link${isActive ? " is-active" : ""}`}><Gamepad2 size={17}/> My games</NavLink>
+          <NavLink to="/host/explore" className={({isActive}) => `host-top-link${isActive ? " is-active" : ""}`}><Compass size={17}/> Explore</NavLink>
+          <NavLink to="/host/saved" className={({isActive}) => `host-top-link${isActive ? " is-active" : ""}`}><Heart size={17}/> Saved</NavLink>
+        </nav>
         <div className="host-header-right">
+          <CircleHelp size={21} className="host-header-help" />
           <div className="host-user-chip"><span className="host-user-avatar">{displayName.slice(0, 1).toUpperCase()}</span><span>{displayName}</span>{readOnlyPreview && <small>PREVIEW</small>}</div>
           {!readOnlyPreview && <button type="button" className="host-icon-button" aria-label="Sign out" title="Sign out" onClick={() => void signOut()}><LogOut size={18} /></button>}
         </div>
       </header>
 
-      <div className="host-app-layout">
-        <aside className="host-sidebar">
+      <div className={`host-app-layout${hideSidebar ? " host-app-layout--no-sidebar" : ""}`}>
+        {!hideSidebar && <aside className="host-sidebar">
           <div className="host-sidebar-label">YOUR SPACE</div>
           <NavLink to={homeHref} end className={({ isActive }) => `host-nav-link${isActive ? " is-active" : ""}`}><Home size={18} /> Home</NavLink>
           {!readOnlyPreview && <>
@@ -62,7 +71,7 @@ export default function HostShell({ children, title, subtitle, showCreate = true
             </div>
             <button className="host-nav-link host-nav-link--quiet" type="button" onClick={() => window.location.assign("mailto:hello@chaoscrawl.app")}><Bell size={18} /> Help & feedback</button>
           </>}
-        </aside>
+        </aside>}
 
         <main className="host-main">
           {(title || subtitle || showCreate) && (
@@ -76,6 +85,7 @@ export default function HostShell({ children, title, subtitle, showCreate = true
           )}
           {children}
         </main>
+        {contextPanel && <aside className="host-context-rail">{contextPanel}</aside>}
       </div>
 
       {!readOnlyPreview && <nav className="host-mobile-nav" aria-label="Host navigation">

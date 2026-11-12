@@ -188,3 +188,134 @@
   .host-admin-host-row { align-items:flex-start; flex-wrap:wrap; }
   .host-admin-host-row .host-button { width:100%; justify-content:center; }
 }
+/* Chaos comic-control-room desktop refresh. Scoped to Host Hub only. */
+.host-app { background: radial-gradient(ellipse at 75% 5%, rgba(211,251,110,.24), transparent 28%), linear-gradient(135deg,#eee9ff 0%,#f8f6ff 48%,#e8e1ff 100%); }
+.host-app-header { position:relative; z-index:5; min-height:82px; padding:12px clamp(18px,2.5vw,38px); gap:22px; background:linear-gradient(105deg,#5c36fb 0%,#4725d8 60%,#6e4bff 100%); border-bottom:3px solid #23166e; box-shadow:0 4px 0 rgba(35,22,110,.18); }
+.host-brand { font-size:clamp(20px,2vw,27px); letter-spacing:-.04em; font-style:italic; text-shadow:2px 2px 0 #23166e; white-space:nowrap; }
+.host-brand-mark { width:44px;height:44px;border:2px solid #080817;border-radius:14px;box-shadow:3px 3px 0 #080817; }
+.host-brand-accent { color:#d3fb6e; }
+.host-top-nav { display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;padding:6px;border:2px solid rgba(20,9,75,.55);border-radius:22px;background:#2b167f;box-shadow:inset 0 2px 0 rgba(255,255,255,.12); }
+.host-top-link { display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border:2px solid transparent;border-radius:16px;color:#fff;text-decoration:none;font-size:13px;font-weight:1000;white-space:nowrap; }
+.host-top-link.is-active { color:#090817;background:#d3fb6e;border-color:#090817;box-shadow:0 3px 0 #090817; }
+.host-header-right { gap:15px; }
+.host-header-help { color:white; }
+.host-user-chip { font-size:13px; }
+.host-user-avatar { width:40px;height:40px;border:2px solid #090817;color:#090817;background:#d3fb6e;box-shadow:2px 2px 0 #090817; }
+.host-icon-button { border:2px solid rgba(255,255,255,.65);border-radius:13px; }
+.host-app-layout { grid-template-columns:238px minmax(0,1fr) 300px;align-items:start;gap:0;max-width:1920px;margin:0 auto;min-height:calc(100svh - 82px); }
+.host-sidebar { position:sticky;top:0;min-height:calc(100svh - 82px);padding:25px 14px 22px;background:linear-gradient(180deg,#fff 0%,#f5f1ff 100%);border-right:2px solid #d8ceff; }
+.host-sidebar-label { color:#5c36fb;font-size:10px; }
+.host-nav-link { margin:2px 0;padding:13px 12px;border:2px solid transparent;border-radius:14px;color:#23166e;font-size:13px;font-weight:1000; }
+.host-nav-link svg { stroke-width:2.6; }
+.host-nav-link.is-active { border-color:#080817;color:#080817;background:#d3fb6e;box-shadow:3px 3px 0 #080817; }
+.host-sidebar-note { border:2px solid #23166e;border-radius:17px;background:#eee9ff;box-shadow:3px 3px 0 #23166e; }
+.host-main { width:100%;max-width:none;padding:clamp(22px,2.3vw,36px); }
+.host-page-heading { margin-bottom:24px; }
+.host-page-heading h1 { color:#100b2d;font-size:clamp(30px,3vw,42px);font-weight:1000;letter-spacing:-.055em;text-transform:uppercase;text-shadow:2px 2px 0 #d3fb6e; }
+.host-page-heading p { color:#5d527e;font-size:14px;font-weight:700; }
+.host-button { border:2px solid #080817;border-radius:13px;font-weight:1000;box-shadow:3px 3px 0 #080817; }
+.host-button--primary { color:#fff;background:#fb377a; }
+.host-button--secondary { color:#23166e;background:#fff; }
+.host-button--lime { color:#080817;background:#d3fb6e; }
+.host-tabs { border:2px solid #23166e;border-radius:16px;background:#2c167f; }
+.host-tabs button { color:#fff; }
+.host-tabs button.is-active { color:#080817;background:#d3fb6e;box-shadow:2px 2px 0 #080817; }
+.host-hero-card { border:3px solid #080817;border-radius:24px;box-shadow:5px 5px 0 #23166e,0 16px 34px rgba(35,22,110,.18); }
+.host-game-card,.host-empty-state,.host-list-section > .host-admin-host-list { border:2px solid #080817;border-radius:19px;box-shadow:3px 3px 0 #23166e; }
+.host-context-rail { position:sticky;top:0;display:flex;flex-direction:column;gap:15px;max-height:calc(100svh - 82px);overflow:auto;padding:25px 17px 24px 8px; }
+.host-game-context { display:flex;flex-direction:column;gap:15px; }
+.host-context-card { padding:17px;border:2px solid #080817;border-radius:20px;background:rgba(255,255,255,.94);box-shadow:4px 4px 0 #23166e; }
+.host-context-ribbon { display:inline-flex;width:max-content;max-width:100%;margin:-3px 0 13px;padding:7px 12px;border:2px solid #080817;border-radius:8px 14px 8px 14px;color:#080817;background:#d3fb6e;font-size:12px;font-weight:1000;font-style:italic;transform:rotate(-1deg); }
+.host-context-art { display:flex;align-items:center;justify-content:center;gap:10px;min-height:86px;margin-bottom:11px;border:2px solid #080817;border-radius:15px;color:#d3fb6e;background:repeating-conic-gradient(from 15deg at 50% 50%,#6847f4 0deg 12deg,#5c36fb 12deg 25deg);text-shadow:2px 2px 0 #080817; }
+.host-context-art span { color:#fff;font-size:26px;font-weight:1000;font-style:italic;-webkit-text-stroke:.7px #080817; }
+.host-context-card h3 { margin:4px 0 11px;color:#160d40;font-size:17px;font-weight:1000;overflow-wrap:anywhere; }
+.host-context-card ul { display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none; }
+.host-context-card li { display:flex;align-items:center;gap:9px;color:#35275f;font-size:12px;font-weight:800; }
+.host-context-card li svg { flex:0 0 auto;color:#5c36fb; }
+.host-context-progress-count { display:block;margin:0 0 9px;color:#23166e;font-size:13px; }
+.host-context-progress-track { height:13px;overflow:hidden;margin-bottom:16px;border:2px solid #080817;border-radius:20px;background:#eee9ff; }
+.host-context-progress-track span { display:block;height:100%;border-right:2px solid #080817;border-radius:20px;background:#d3fb6e;transition:width .2s ease; }
+.host-context-progress ul { gap:11px; }
+.host-context-progress li { color:#5c5472;font-size:12px; }
+.host-context-check { display:grid;flex:0 0 22px;place-items:center;width:22px;height:22px;border:2px solid #23166e;border-radius:50%;color:#23166e;font-size:10px;font-weight:1000; }
+.host-context-progress li.is-complete { color:#23166e;text-decoration:line-through; }
+.host-context-progress li.is-complete .host-context-check { border-color:#080817;color:#080817;background:#d3fb6e; }
+.host-context-continue { width:100%;min-height:52px;margin-top:18px;padding:11px 13px;border:2px solid #080817;border-radius:15px;color:#fff;background:#fb377a;box-shadow:3px 3px 0 #080817;font-size:13px;font-weight:1000; }
+.host-context-tip { display:flex;gap:9px;padding:13px;border:2px dashed #8e7be4;border-radius:15px;color:#493c70;background:#f3efff;font-size:11px;line-height:1.45; }
+.host-context-tip svg { flex:0 0 auto;color:#5c36fb; }
+.host-context-tip strong { color:#23166e; }
+.host-mobile-nav { display:none; }
+@media (max-width:1250px) { .host-app-layout { grid-template-columns:215px minmax(0,1fr); }.host-context-rail { display:none; }.host-top-link { padding:10px 11px;font-size:12px; } }
+@media (max-width:900px) { .host-app-header { flex-wrap:wrap; }.host-top-nav { order:3;width:100%;justify-content:space-around; }.host-top-link { flex:1; }.host-app-layout { grid-template-columns:1fr; }.host-sidebar { display:none; }.host-main { padding:22px 18px 90px; }.host-mobile-nav { display:grid; } }
+@media (max-width:560px) { .host-app-header { min-height:66px;gap:8px;padding:9px 13px; }.host-top-nav { gap:2px;padding:4px;border-radius:15px; }.host-top-link { gap:4px;padding:9px 5px;font-size:10px; }.host-top-link svg { width:15px;height:15px; }.host-header-help { display:none; }.host-user-chip > span:last-child { display:none; }.host-main { padding:18px 13px 88px; }.host-page-heading h1 { font-size:25px; } }
+@media (min-width:1251px) { .host-app-layout--no-sidebar { grid-template-columns:minmax(0,1fr) 300px; } }
+@media (max-width:1250px) and (min-width:901px) { .host-app-layout--no-sidebar { grid-template-columns:minmax(0,1fr); } }
+/* CHAOS desktop art direction â€” match the approved comic-control-room reference. */
+@media (min-width: 901px) {
+  .host-app { background: radial-gradient(ellipse at 78% 12%,rgba(211,251,110,.17),transparent 23%),repeating-conic-gradient(from 8deg at 64% 43%,rgba(117,83,255,.055) 0deg 10deg,transparent 10deg 22deg),linear-gradient(135deg,#4e2bea 0%,#714cff 48%,#4d2be0 100%); }
+  .host-app-header { min-height:88px; padding:12px 30px; display:grid; grid-template-columns:minmax(230px,1fr) auto minmax(230px,1fr); background:linear-gradient(100deg,#5c36fb,#4824d8 55%,#6c48ff); border-bottom:4px solid #080817; box-shadow:0 4px 0 rgba(8,8,23,.25); }
+  .host-brand { color:#fff; font-size:27px; font-weight:1000; font-style:italic; text-shadow:3px 3px 0 #080817; }
+  .host-brand-mark { border:2px solid #080817; border-radius:14px; color:#080817; background:#d3fb6e; box-shadow:3px 3px 0 #080817; }
+  .host-brand-accent { color:#d3fb6e; }
+  .host-top-nav { justify-self:center; min-width:500px; padding:6px; border:2px solid #160b55; border-radius:24px; background:#291477; box-shadow:inset 0 2px 0 rgba(255,255,255,.14); }
+  .host-top-link { padding:12px 17px; color:#fff; font-size:13px; font-weight:1000; }
+  .host-top-link.is-active { border:2px solid #080817; color:#080817; background:#d3fb6e; box-shadow:0 3px 0 #080817; }
+  .host-header-right { justify-self:end; }
+  .host-user-avatar { border:2px solid #080817; color:#080817; background:#d3fb6e; box-shadow:2px 2px 0 #080817; }
+  .host-app-layout { grid-template-columns:250px minmax(500px,1fr) 320px; max-width:1920px; min-height:calc(100svh - 88px); background:transparent; }
+  .host-sidebar { position:sticky; top:0; min-height:calc(100svh - 88px); padding:30px 15px; border-right:3px solid #080817; background:linear-gradient(180deg,#f8f5ff,#e8e1ff); }
+  .host-sidebar-label { margin:0 12px 15px; color:#5c36fb; font-size:10px; font-weight:1000; letter-spacing:.16em; }
+  .host-nav-link { margin:4px 0; padding:14px 13px; border:2px solid transparent; border-radius:15px; color:#23166e; font-size:13px; font-weight:1000; }
+  .host-nav-link.is-active { border:2px solid #080817; color:#080817; background:#d3fb6e; box-shadow:3px 3px 0 #080817; }
+  .host-sidebar-note { margin:24px 4px; padding:17px; border:2px solid #080817; border-radius:18px; background:#eee9ff; box-shadow:4px 4px 0 #080817; }
+  .host-main { max-width:none; padding:30px clamp(24px,2.2vw,40px) 50px; }
+  .host-page-heading { margin-bottom:24px; }
+  .host-page-heading h1 { color:#fff; font-size:clamp(34px,3vw,46px); font-weight:1000; letter-spacing:-.055em; text-shadow:3px 3px 0 #080817,-1px -1px 0 #080817,1px -1px 0 #080817,-1px 1px 0 #080817,1px 1px 0 #080817,5px 5px 0 #d3fb6e; }
+  .host-page-heading p { color:#f2edff; font-size:14px; font-weight:800; text-shadow:1px 1px 0 rgba(35,22,110,.5); }
+  .host-button { min-height:44px; padding:10px 16px; border:2px solid #080817; border-radius:14px; box-shadow:3px 3px 0 #080817; font-weight:1000; }
+  .host-button--primary { color:#fff; background:#fb377a; }
+  .host-button--secondary { color:#23166e; background:#fff; }
+  .host-button--lime { color:#080817; background:#d3fb6e; }
+  .host-tabs { border:2px solid #080817; border-radius:16px; background:#2b167f; box-shadow:3px 3px 0 #080817; }
+  .host-tabs button { color:#fff; font-weight:1000; }
+  .host-tabs button.is-active { color:#080817; background:#d3fb6e; box-shadow:2px 2px 0 #080817; }
+  .host-hero-card { min-height:340px; padding:40px; border:3px solid #080817; border-radius:25px; background:radial-gradient(ellipse at 82% 48%,rgba(151,125,255,.65),transparent 42%),repeating-conic-gradient(from 8deg at 80% 48%,rgba(255,255,255,.09) 0deg 10deg,transparent 10deg 22deg),linear-gradient(112deg,#2c167f 0%,#5c36fb 58%,#7857ff 100%); box-shadow:5px 5px 0 #080817,0 16px 34px rgba(18,7,77,.25); }
+  .host-hero-copy { max-width:600px; }
+  .host-hero-copy h2 { color:#fff; font-size:clamp(42px,4vw,58px); font-weight:1000; line-height:.98; letter-spacing:-.06em; text-shadow:3px 3px 0 #080817; }
+  .host-hero-copy h2 span { color:#d3fb6e; }
+  .host-hero-copy p { max-width:540px; color:#f1ebff; font-size:13px; font-weight:700; line-height:1.6; }
+  .host-hero-art { min-width:210px; color:#d3fb6e; }
+  .host-hero-art b { padding:12px 18px; border:3px solid #080817; border-radius:18px; color:#d3fb6e; background:#fb377a; box-shadow:4px 4px 0 #080817; font-size:35px; font-weight:1000; text-shadow:2px 2px 0 #080817; transform:rotate(-7deg); }
+  .host-section-heading h2 { color:#fff; font-size:19px; font-weight:1000; text-shadow:2px 2px 0 #080817; }
+  .host-section-heading p { color:#e8e0ff; font-weight:700; }
+  .host-text-button { color:#d3fb6e; font-weight:1000; }
+  .host-game-card,.host-empty-state { border:3px solid #080817; border-radius:20px; background:#fff; box-shadow:4px 4px 0 #080817; }
+  .host-game-card-art { border:2px solid #080817; border-radius:15px; background:repeating-conic-gradient(from 10deg at 50% 50%,#6847f4 0deg 12deg,#5c36fb 12deg 25deg); }
+  .host-game-card h3 { color:#130d34; font-size:18px; font-weight:1000; }
+  .host-context-rail { position:sticky; top:0; max-height:calc(100svh - 88px); overflow:auto; padding:27px 18px 30px 8px; }
+  .host-context-card { padding:18px; border:3px solid #080817; border-radius:21px; background:#fff; box-shadow:4px 4px 0 #080817; }
+  .host-context-ribbon { border:2px solid #080817; border-radius:9px 15px 9px 15px; color:#080817; background:#d3fb6e; box-shadow:2px 2px 0 #080817; font-size:13px; }
+  .host-context-art { min-height:115px; border:2px solid #080817; border-radius:17px; background:repeating-conic-gradient(from 15deg at 50% 50%,#6847f4 0deg 12deg,#5c36fb 12deg 25deg); }
+  .host-context-art span { color:#fff; font-size:31px; font-weight:1000; -webkit-text-stroke:1px #080817; text-shadow:3px 3px 0 #080817; }
+  .host-context-card h3 { color:#160d40; font-size:19px; font-weight:1000; }
+  .host-context-progress-track { height:15px; border:2px solid #080817; background:#eee9ff; }
+  .host-context-progress-track span { border-right:2px solid #080817; background:#d3fb6e; }
+  .host-context-check { border:2px solid #080817; }
+  .host-context-progress li.is-complete .host-context-check { background:#d3fb6e; }
+  .host-context-continue { border:2px solid #080817; border-radius:15px; background:#fb377a; box-shadow:3px 3px 0 #080817; font-size:14px; }
+  .host-context-tip { border:2px dashed #d3fb6e; color:#fff; background:#2b167f; }
+  .host-context-tip strong { color:#d3fb6e; }
+}
+@media (min-width:901px) and (max-width:1250px) {
+  .host-app-layout { grid-template-columns:215px minmax(0,1fr); }
+  .host-context-rail { display:none; }
+}
+@media (max-width:900px) {
+  .host-app { background:linear-gradient(145deg,#5c36fb,#4020c7); }
+  .host-app-header { background:linear-gradient(100deg,#5c36fb,#4824d8); border-bottom:3px solid #080817; }
+  .host-page-heading h1 { color:#fff; text-shadow:2px 2px 0 #080817,3px 3px 0 #d3fb6e; }
+  .host-page-heading p { color:#f1ebff; }
+  .host-section-heading h2 { color:#fff; text-shadow:2px 2px 0 #080817; }
+  .host-section-heading p { color:#eee7ff; }
+  .host-game-card { border:2px solid #080817; box-shadow:3px 3px 0 #080817; }
+}

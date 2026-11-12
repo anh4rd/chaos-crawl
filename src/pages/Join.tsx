@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowRight, CheckCircle2, Gamepad2, LoaderCircle, RotateCcw, Users } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import "../styles/SessionGame.css";
+import "../styles/PlayerGame.css";
 
 type JoinMode = "join" | "rejoin";
 interface JoinResult {

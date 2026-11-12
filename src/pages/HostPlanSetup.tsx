@@ -4,7 +4,7 @@ import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, CalendarDays, Check, CheckCi
 import { supabase } from "../lib/supabase";
 import HostShell from "../components/host/HostShell";
 import "../styles/HostPortal.css";
-import "../styles/HostSetupBuilder.css";
+import "../styles/HostPlanning.css";
 
 type TaskKind = "main" | "side" | "secret";
 type BuilderTab = "players" | "main" | "side" | "secret" | "venue" | "controls" | "schedule" | "review" | "invites" | "launch";
@@ -330,7 +330,33 @@ export default function HostPlanSetup() {
 
   if (loading) return <HostShell title="Create a game" subtitle="Getting your setup ready…" showCreate={false}><div className="host-empty-state">Loading…</div></HostShell>;
   const header = stage === "create" ? (editing ? "Edit game" : "Create a game") : "Build your game";
-  return <HostShell title={header} subtitle={stage === "create" ? "Start with the essentials. You can build the experience next." : "Choose challenges, build the schedule and prepare your players."} showCreate={false}>
+  const setupChecks = [
+    { label: "Game details", done: Boolean(form.name.trim() && form.eventDate) },
+    { label: "Players & teams", done: form.playerCount >= 2 },
+    { label: "Main challenges", done: selectedMainTasks.length > 0 },
+    { label: "Secret missions", done: !form.secretMissions || secretTasks.length > 0 },
+    { label: "Schedule", done: form.schedule.some(item => item.type === "challenge") },
+    { label: "Invites", done: form.inviteBeforeEvent },
+    { label: "Review & launch", done: false },
+  ];
+  const completedSetup = setupChecks.filter(item => item.done).length;
+  const contextPanel = <div className="host-game-context">
+    <section className="host-context-card host-context-overview">
+      <div className="host-context-ribbon">GAME OVERVIEW</div>
+      <div className="host-context-art"><Sparkles size={34}/><span>CHAOS!</span></div>
+      <h3>{form.name || "Your new game"}</h3>
+      <ul><li><CalendarDays size={15}/>{form.eventDate || "Date to be confirmed"}</li><li><Users size={15}/>{form.playerCount} players (target)</li><li><MapPin size={15}/>{form.venueName || "Venue not set"}</li></ul>
+    </section>
+    <section className="host-context-card host-context-progress">
+      <div className="host-context-ribbon">SETUP PROGRESS</div>
+      <strong className="host-context-progress-count">{completedSetup} of {setupChecks.length} complete</strong>
+      <div className="host-context-progress-track"><span style={{width:`${completedSetup / setupChecks.length * 100}%`}}/></div>
+      <ul>{setupChecks.map((item,index)=><li key={item.label} className={item.done ? "is-complete" : ""}><span className="host-context-check">{item.done ? "✓" : index + 1}</span>{item.label}</li>)}</ul>
+      <button type="button" className="host-context-continue" onClick={()=>{ if(stage === "create") setStage("build"); else if(tab === "launch") void save("planned"); else setTab("launch"); }}>{stage === "create" ? "Continue to Players & Teams →" : "Continue to Review & Launch →"}</button>
+    </section>
+    <div className="host-context-tip"><Sparkles size={17}/><span><strong>Little by little.</strong> You can save a draft and come back whenever inspiration strikes.</span></div>
+  </div>;
+  return <HostShell title={header} subtitle={stage === "create" ? "Start with the essentials. You can build the experience next." : "Choose challenges, build the schedule and prepare your players."} showCreate={false} contextPanel={contextPanel} hideSidebar>
     {error && <div className="host-alert host-alert--error" role="alert">{error}</div>}{notice && <div className="host-alert host-alert--success" role="status">{notice}</div>}
     {stage === "create" ? <section className="cc-create-card">
       <div className="cc-step-kicker"><Sparkles size={16}/> STEP 1 · GAME BASICS</div><h2>Let's set the scene</h2><p className="cc-muted">Just the essentials. The detailed planning happens in the next step.</p>

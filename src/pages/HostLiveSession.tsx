@@ -9,8 +9,7 @@ import {
 import { supabase } from "../lib/supabase";
 import HostShell from "../components/host/HostShell";
 import "../styles/HostPortal.css";
-import "../styles/HostSessions.css";
-import "../styles/HostLiveGameRedesign.css";
+import "../styles/HostLiveGame.css";
 import GuidedTour, { type GuidedTourStep } from "../components/tour/GuidedTour";
 
 type SessionStatus = "lobby" | "live" | "completed";
@@ -645,6 +644,8 @@ export default function HostLiveSession() {
   }
 
   const playerById = new Map(players.map((player) => [player.id, player]));
+  const hostPlayer = session?.host_player_id ? playerById.get(session.host_player_id) : undefined;
+  const hostRank = hostPlayer ? [...players].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name)).findIndex((player) => player.id === hostPlayer.id) + 1 : null;
   const challengeById = new Map(challenges.map((challenge) => [challenge.id, challenge]));
   const teamById = new Map(teams.map((team) => [team.id, team]));
   const finalVoteWinner = session?.final_vote_winner_player_id
@@ -679,6 +680,16 @@ export default function HostLiveSession() {
             <span className={`cc-session-status cc-session-status--${session.status}`}>{session.status === "lobby" ? "LOBBY" : session.status === "live" ? "LIVE" : "COMPLETED"}</span>
           </div>
         </div>
+
+        <section className="cc-host-mobile-profile" aria-label="Host and game details">
+          <Link to="/host" className="cc-host-mobile-brand">Chaos</Link>
+          <div className="cc-host-mobile-player">
+            <span className="cc-host-mobile-avatar">{hostPlayer?.avatar_url ? <img src={hostPlayer.avatar_url} alt=""/> : (hostPlayer?.name || "H").slice(0, 1).toUpperCase()}</span>
+            <span className="cc-host-mobile-player-copy"><strong>{hostPlayer?.name || "Host"}</strong><b>HOST</b><small>{hostPlayer ? "Playing in this game" : session.name}</small></span>
+            <span className="cc-host-mobile-score">{hostPlayer ? <><strong>🏆 {hostPlayer.score}</strong><small>★ #{hostRank}</small></> : <><strong>{players.length} joined</strong><small>players</small></>}</span>
+          </div>
+          <div className="cc-host-mobile-code"><span><small>GAME CODE</small><strong>{session.join_code}</strong></span><button type="button" aria-label="Copy game code" onClick={() => void copyCode()}><Clipboard size={18}/></button></div>
+        </section>
 
         <section className="cc-host-live-intro" aria-label="Live game overview">
           <div className="cc-host-live-intro-copy">
@@ -750,6 +761,7 @@ export default function HostLiveSession() {
               )}
             </div>
           )}
+          {session.status === "live" && mainRounds[session.current_round_number] && <article className="cc-host-next-challenge"><span>▶ NEXT CHALLENGE</span><strong>{mainRounds[session.current_round_number].title}</strong><small>{mainRounds[session.current_round_number].description}</small></article>}
         </section>
         )}
 

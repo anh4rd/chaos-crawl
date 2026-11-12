@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type FormE
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { CheckCircle2, Circle, Clock3, Gamepad2, LoaderCircle, RotateCcw, Trophy, ClipboardList, Users, Crown, Upload, Heart, Film, Flag } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import "../styles/SessionGame.css";
+import "../styles/PlayerGame.css";
 import GuidedTour, { type GuidedTourStep } from "../components/tour/GuidedTour";
 
 type SessionStatus = "lobby" | "live" | "completed";
@@ -266,6 +266,7 @@ export default function SessionPlayerGame() {
     if (!view?.challenge) return null;
     return view.my_submissions.find((item) => item.challenge_id === view.challenge?.id) ?? null;
   }, [view]);
+  const navigatePlayerTour = useCallback((page: string) => { if (page !== activePage) navigate(`/play/${code}/${page}`); }, [activePage, code, navigate]);
 
   function mediaUrl(path: string) {
     return supabase.storage.from("session-evidence").getPublicUrl(path).data.publicUrl;
@@ -499,7 +500,6 @@ export default function SessionPlayerGame() {
     { target: '[data-tour="player-side-challenges"]', title: "Find extra challenges", body: "Side challenges are optional tasks you can complete alongside the main round. Open one, add evidence if requested, then submit it for review. Their reward points are settled after the final vote.", page: "side-challenges" },
     ...(session.final_gallery_open ? [{ target: '[data-tour="player-final"]', title: "Vote in the final gallery", body: "When the host opens the gallery, browse the approved photos and videos and vote for your favourite. The winning entry receives its configured points when voting closes.", page: "final" }] : []),
   ];
-  const navigatePlayerTour = useCallback((page: string) => { if (page !== activePage) navigate(`/play/${code}/${page}`); }, [activePage, code, navigate]);
   const teamSelectionAllowed = session.teams_enabled && !session.host_chooses_teams && (session.status === "lobby" || (session.status === "live" && !player.team_id));
   const teamLeaderboard = teams
     .map((team) => ({

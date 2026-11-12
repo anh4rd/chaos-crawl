@@ -4,7 +4,7 @@ import { ArrowLeft, RefreshCw, Search, ShieldCheck, Users, Gamepad2, CalendarDay
 import { supabase } from "../lib/supabase";
 import HostShell from "../components/host/HostShell";
 import "../styles/HostPortal.css";
-import "../styles/SuperAdmin.css";
+import "../styles/HostPlanning.css";
 
 interface AdminGame {
   game_id: string; name: string; host_email: string | null; status: string;
