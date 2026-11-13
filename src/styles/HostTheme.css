@@ -198,7 +198,7 @@
 .host-setup-sidebar-divider { height: 1px; margin: 4px 8px; background: #ded7f5; }
 .host-setup-sidebar-summary { display: flex; flex-wrap: wrap; gap: 5px; padding: 8px 3px 2px; }
 .host-setup-sidebar-summary strong { padding: 5px 7px; border-radius: 8px; color: #fff; background: #5c36fb; font-size: 9px; }
-.cc-section-navigation { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 24px; padding-top: 16px; border-top: 1px solid #ded7f5; }
+.cc-section-navigation { position: fixed; z-index: 8; right: 50%; bottom: calc(12px + env(safe-area-inset-bottom)); display: flex; width: min(calc(100% - 40px), 310px); justify-content: space-around; gap: 2px; padding: 5px; border: 1px solid rgba(255,255,255,.14); border-radius: 18px; background: #24136f; box-shadow: 0 5px 18px rgba(31,15,104,.28); transform: translateX(50%); }
 .cc-section-navigation-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 9px; }
 .cc-section-navigation button { min-height: 42px; }
 .cc-section-navigation button:disabled { opacity: .45; cursor: not-allowed; }
@@ -224,8 +224,8 @@
   .host-portal.host-app .host-app-layout--no-sidebar .host-main { padding-bottom: 165px; }
   .host-portal.host-app .host-page-heading h1 { -webkit-text-stroke-width: .7px; }
 }
-@media (max-width: 560px) {
-  .cc-section-navigation { align-items: stretch; flex-direction: column; }
+@media (max-width: 393px) {
+  .cc-section-navigation { display:flex; align-items: stretch; flex-direction: column; }
   .cc-section-navigation > button,
   .cc-section-navigation-actions > button { flex: 1; justify-content: center; }
   .cc-section-navigation-actions { display: flex; }

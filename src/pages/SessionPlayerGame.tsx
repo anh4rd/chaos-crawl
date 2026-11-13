@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { CheckCircle2, Circle, Clock3, Gamepad2, LoaderCircle, RotateCcw, Trophy, ClipboardList, Users, Crown, Upload, Heart, Film, Flag, Copy, Check, Star } from "lucide-react";
+import { CheckCircle2, Circle, Gamepad2, LoaderCircle, RotateCcw, Trophy, ClipboardList, Users, Crown, Upload, Heart, Film, Flag, Check } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { challengeIcon } from "../lib/challengeVisuals";
+import SessionMainChallengeCard from "../components/session/SessionMainChallengeCard";
+import { SessionGameTitlebar, SessionPlayerProfile } from "../components/session/SessionGameChrome";
 import "../styles/PlayerGame.css";
 import GuidedTour, { type GuidedTourStep } from "../components/tour/GuidedTour";
 
@@ -58,6 +60,7 @@ interface SessionView {
   side_challenges: ChallengeInfo[];
   my_submissions: Array<{ challenge_id: string; status: "submitted" | "approved" | "rejected"; awarded_points: number }>;
 }
+interface SharedGameTimer { session_id: string; round_number: number; remaining_seconds: number; is_running: boolean; is_on_break: boolean; resume_round_number: number | null; break_ends_at: string | null; updated_at: string; }
 interface SecretMission {
   assignment_id: string;
   challenge_id: string;
@@ -146,6 +149,8 @@ export default function SessionPlayerGame() {
   const [token, setToken] = useState(() => localStorage.getItem(playerStorageKey(code)));
   const [view, setView] = useState<SessionView | null>(null);
   const [secretMissions, setSecretMissions] = useState<SecretMission[]>([]);
+  const [activeSecretMissionId, setActiveSecretMissionId] = useState<string | null>(null);
+  const [dismissedSecretMissionKeys, setDismissedSecretMissionKeys] = useState<string[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [playerRank, setPlayerRank] = useState<number | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -156,11 +161,27 @@ export default function SessionPlayerGame() {
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [teamName, setTeamName] = useState("");
+  const [gamePhotoUrl, setGamePhotoUrl] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [tourOpen, setTourOpen] = useState(false);
+  const [sharedTimer, setSharedTimer] = useState<SharedGameTimer | null>(null);
+  const [sharedTimerError, setSharedTimerError] = useState("");
+  const [timerNow, setTimerNow] = useState(Date.now());
 
   useEffect(() => {
     setToken(localStorage.getItem(playerStorageKey(code)));
+  }, [code]);
+
+  useEffect(() => {
+    if (!code) return;
+    let active = true;
+    setGamePhotoUrl(null);
+    void supabase.rpc("cc_get_public_game_invite", { p_join_code: code }).then(({ data, error: photoError }) => {
+      if (!active || photoError || !data) return;
+      const invite = data as { game_photo_url?: string | null };
+      setGamePhotoUrl(invite.game_photo_url ?? null);
+    });
+    return () => { active = false; };
   }, [code]);
 
   const loadView = useCallback(async () => {
@@ -248,6 +269,50 @@ export default function SessionPlayerGame() {
     const id = window.setInterval(() => { if (mounted) void loadView(); }, 3000);
     return () => { mounted = false; window.clearInterval(id); };
   }, [loadView]);
+
+  useEffect(() => {
+    const sessionId = view?.session.id;
+    if (!sessionId || view?.session.status !== "live" || activePage !== "game") {
+      setSharedTimer(null);
+      setSharedTimerError("");
+      return;
+    }
+    let mounted = true;
+    const refreshTimer = async () => {
+      const { data, error: timerError } = await supabase.from("cc_game_session_timers")
+        .select("session_id,round_number,remaining_seconds,is_running,is_on_break,resume_round_number,break_ends_at,updated_at")
+        .eq("session_id", sessionId).maybeSingle();
+      if (mounted) {
+        setSharedTimer((data as SharedGameTimer | null) ?? null);
+        setSharedTimerError(timerError ? "The shared timer is unavailable. Please ask the host to check the live timer connection." : "");
+      }
+    };
+    void refreshTimer();
+    const interval = window.setInterval(() => void refreshTimer(), 2000);
+    return () => { mounted = false; window.clearInterval(interval); };
+  }, [activePage, view?.session.id, view?.session.status]);
+
+  useEffect(() => {
+    if (!sharedTimer?.is_running) return;
+    const interval = window.setInterval(() => setTimerNow(Date.now()), 1000);
+    return () => window.clearInterval(interval);
+  }, [sharedTimer?.is_running]);
+
+  useEffect(() => {
+    const playerId = view?.player.id;
+    if (!playerId || activePage !== "game" || view?.session.status !== "live" || rewardRound || sharedTimer?.is_on_break) return;
+    const storageKey = `chaos-crawl-seen-secret-missions:${code}:${playerId}`;
+    let seenIds: string[] = [];
+    try {
+      const parsed = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
+      if (Array.isArray(parsed)) seenIds = parsed.map(String);
+    } catch { /* Use in-memory dismissal if local storage is unavailable. */ }
+    const seen = new Set([...seenIds, ...dismissedSecretMissionKeys
+      .filter((key) => key.startsWith(`${storageKey}:`))
+      .map((key) => key.slice(storageKey.length + 1))]);
+    const unseenMission = secretMissions.find((mission) => !seen.has(mission.assignment_id));
+    setActiveSecretMissionId(unseenMission?.assignment_id ?? null);
+  }, [activePage, code, dismissedSecretMissionKeys, rewardRound, secretMissions, sharedTimer?.is_on_break, view?.player.id, view?.session.status]);
 
   useEffect(() => {
     if (!code || !token || !view?.player.id) return;
@@ -492,6 +557,20 @@ export default function SessionPlayerGame() {
     await loadView();
   }
 
+  function playSecretMission(mission: SecretMission) {
+    const playerId = view?.player.id;
+    if (!playerId) return;
+    const storageKey = `chaos-crawl-seen-secret-missions:${code}:${playerId}`;
+    const dismissalKey = `${storageKey}:${mission.assignment_id}`;
+    setDismissedSecretMissionKeys((keys) => keys.includes(dismissalKey) ? keys : [...keys, dismissalKey]);
+    try {
+      const parsed = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
+      const seenIds = Array.isArray(parsed) ? parsed.map(String) : [];
+      localStorage.setItem(storageKey, JSON.stringify([...new Set([...seenIds, mission.assignment_id])]));
+    } catch { /* The mission remains dismissed for this visit. */ }
+    setActiveSecretMissionId(null);
+  }
+
   async function copyGameCode() {
     try {
       await navigator.clipboard.writeText(code);
@@ -538,21 +617,19 @@ export default function SessionPlayerGame() {
       score: leaderboard.filter((entry) => entry.team_id === team.id).reduce((total, entry) => total + entry.score, 0),
     }))
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+  const activeSecretMission = secretMissions.find((mission) => mission.assignment_id === activeSecretMissionId) ?? null;
+  const sharedTimerSeconds = sharedTimer && (sharedTimer.is_on_break || sharedTimer.round_number === session.current_round_number)
+    ? Math.max(0, sharedTimer.remaining_seconds - (sharedTimer.is_running ? Math.floor((timerNow - new Date(sharedTimer.updated_at).getTime()) / 1000) : 0))
+    : Math.max(0, Number(challenge?.duration_minutes ?? 0) * 60);
+  const sharedTimerLabel = `${Math.floor(sharedTimerSeconds / 60).toString().padStart(2, "0")}:${(sharedTimerSeconds % 60).toString().padStart(2, "0")}`;
 
   return (
     <main className={`cc-session-player-app${embeddedHostMode ? " cc-player-embedded" : ""}`}>
-      {!embeddedHostMode && <header className="cc-player-game-header">
-        <div className="cc-player-system-bar"><span>Chaos</span><span aria-hidden="true">▮▮▮ ◉ ▰</span></div>
-        <section className="cc-player-profile" data-tour="player-profile">
-          <div className="cc-player-avatar-large">{player.avatar_url ? <img src={player.avatar_url} alt=""/> : player.name.slice(0, 1).toUpperCase()}</div>
-          <div className="cc-player-profile-copy"><h1>{player.name}</h1><p>{player.team_name || (session.teams_enabled ? "Choose your team" : "Solo player")}</p></div>
-          <div className="cc-player-score"><span className="cc-player-score-points"><Star size={18} fill="currentColor"/><strong>{player.score}</strong></span><span className="cc-player-score-rank"><Trophy size={17} fill="currentColor"/> #{playerRank ?? "—"}</span></div>
-        </section>
-      </header>}
+      {!embeddedHostMode && <SessionPlayerProfile viewerRole="player" name={player.name} subtitle={player.team_name || (session.teams_enabled ? "Choose your team" : "Solo player")} avatarUrl={player.avatar_url} score={player.score} rank={playerRank ?? null}/>}
 
       <div className="cc-player-game-content">
-        {embeddedHostMode && <section className="cc-player-profile" data-tour="player-profile"><div className="cc-player-avatar-large">{player.avatar_url ? <img src={player.avatar_url} alt=""/> : player.name.slice(0, 1).toUpperCase()}</div><div className="cc-player-profile-copy"><h1>{player.name}</h1><p>{player.team_name || (session.teams_enabled ? "Choose your team" : "Solo player")}</p></div><div className="cc-player-score"><span className="cc-player-score-points"><Star size={18} fill="currentColor"/><strong>{player.score}</strong></span><span className="cc-player-score-rank"><Trophy size={17} fill="currentColor"/> #{playerRank ?? "—"}</span></div></section>}
-        <section className="cc-player-game-titlebar"><div className="cc-player-game-icon" aria-hidden="true">🎉</div><div className="cc-player-game-name"><strong>{session.name}</strong><small>GAME</small></div><div className="cc-player-game-code"><span><small>GAME CODE</small><strong>{session.join_code}</strong></span><button type="button" onClick={() => void copyGameCode()} aria-label="Copy game code" title="Copy game code">{copiedCode ? <Check size={19}/> : <Copy size={19}/>}</button></div></section>
+        {embeddedHostMode && <SessionPlayerProfile viewerRole="player" name={player.name} subtitle={player.team_name || (session.teams_enabled ? "Choose your team" : "Solo player")} avatarUrl={player.avatar_url} score={player.score} rank={playerRank ?? null}/>}
+        <SessionGameTitlebar name={session.name} code={session.join_code} photoUrl={gamePhotoUrl} copied={copiedCode} onCopy={() => void copyGameCode()}/>
         {!embeddedHostMode && <div className="cc-player-tour-row"><button type="button" className="cc-tour-help-button" onClick={() => setTourOpen(true)}>✦ How to play / Take a tour</button></div>}
 
         {!embeddedHostMode && <nav className="cc-player-page-nav" data-tour="player-navigation" aria-label="Game pages">
@@ -567,7 +644,7 @@ export default function SessionPlayerGame() {
           </Link>
         </nav>}
 
-        {error && <div className="cc-player-error" role="alert">{error}</div>}
+        {(error || sharedTimerError) && <div className="cc-player-error" role="alert">{error || sharedTimerError}</div>}
 
         {rewardRound && (
           <section className={`cc-player-reward-screen${rewardRound.status === "completed" ? " is-complete" : ""}`} aria-live="polite">
@@ -661,15 +738,53 @@ export default function SessionPlayerGame() {
 
             {session.status === "live" && (
               <>
-                <section className="cc-player-live-label"><span className="cc-player-live-dot"/> ROUND {session.current_round_number} <span>OF {session.round_count}</span></section>
+                {sharedTimer?.is_on_break ? (
+                  <section className="cc-player-state-card cc-player-break-card" aria-live="polite">
+                    <span className="cc-player-eyebrow">☕ BREAK TIME</span>
+                    <h2>Take a breather</h2>
+                    <strong className="cc-player-break-countdown">{sharedTimerLabel}</strong>
+                    {sharedTimer.is_running && sharedTimer.break_ends_at
+                      ? <p>Playing is scheduled to resume at <strong>{new Date(sharedTimer.break_ends_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</strong>.</p>
+                      : <p>The break timer is paused. The host will let you know when the game is ready to continue.</p>}
+                    {sharedTimer.resume_round_number && <div className="cc-player-break-next">Up next · Round {sharedTimer.resume_round_number}</div>}
+                  </section>
+                ) : challenge ? (
+                  <SessionMainChallengeCard viewerRole="player" title={challenge.title} description={challenge.description} points={challenge.points} round={session.current_round_number} roundCount={session.round_count} durationMinutes={challenge.duration_minutes} timerLabel={sharedTimerLabel} timerCaption={sharedTimer?.is_on_break ? "BREAK" : sharedTimer?.is_running ? "TIME LEFT" : sharedTimer ? "READY" : "TIME"} actionTourTarget="player-upload">
+                        {challenge.allow_photo_upload && (
+                          <div className="cc-player-evidence-block" data-tour="player-upload">
+                            <div className="cc-player-evidence-tools">
+                              <label className="cc-player-upload-button">
+                                <Upload size={16}/>{busyKey === `upload:${challenge.id}` ? "Uploading…" : "Upload Evidence"}
+                                <input type="file" accept="image/*,video/*" disabled={busyKey !== null || currentSubmission?.status === "approved" || evidenceForChallenge(challenge.id).length >= 6} onChange={(event) => void uploadEvidence(event, { type: "challenge", challenge })}/>
+                              </label>
+                              <span className="cc-player-evidence-count">{evidenceForChallenge(challenge.id).length}/6 files</span>
+                            </div>
+                            {evidenceForChallenge(challenge.id).length > 0 && <div className="cc-player-evidence-grid">{evidenceForChallenge(challenge.id).map((media) => (
+                              <div className="cc-player-evidence-item" key={media.id}>
+                                {media.media_type === "video" ? <video src={mediaUrl(media.storage_path)} controls playsInline preload="metadata" /> : <img src={mediaUrl(media.storage_path)} alt="Your challenge evidence" loading="lazy" />}
+                              </div>
+                            ))}</div>}
+                            {evidenceForChallenge(challenge.id).length === 0 && <p className="cc-player-evidence-required">Upload at least one photo or video before marking this challenge complete.</p>}
+                          </div>
+                        )}
+                        {currentSubmission?.status === "approved" ? (
+                          <div className="cc-player-submission-state is-approved"><CheckCircle2 size={19}/> Approved · +{currentSubmission.awarded_points} points</div>
+                        ) : currentSubmission?.status === "submitted" ? (
+                          <div className="cc-player-submission-state"><CheckCircle2 size={19}/> Submitted · waiting for host review</div>
+                        ) : (
+                          <button type="button" className="cc-player-primary-button" disabled={busyKey !== null || !player.team_id && session.teams_enabled} onClick={() => void submitChallenge(challenge)}>
+                            {busyKey === challenge.id ? <LoaderCircle size={19} className="cc-spin"/> : <CheckCircle2 size={19}/>} Mark challenge complete
+                          </button>
+                        )}
+                        {session.teams_enabled && !player.team_id && <p className="cc-player-hint">Wait for the host to assign your team before submitting.</p>}
+                  </SessionMainChallengeCard>
+                ) : <section className="cc-player-state-card"><h2>Challenge not ready yet</h2><p>Ask the host to select a round.</p></section>}
                 {secretMissions.length > 0 && (
                   <section className="cc-player-secret-section" aria-label="Your private secret missions">
-                    <div className="cc-player-secret-heading"><span className="cc-player-secret-icon" aria-hidden="true">{challengeIcon(secretMissions[0]?.title ?? "Secret mission", secretMissions[0]?.description ?? "")}</span><div><span className="cc-player-eyebrow">JUST FOR YOU</span><h2>Your secret mission{secretMissions.length === 1 ? "" : "s"}</h2></div><span className="cc-player-secret-badge">PRIVATE</span></div>
-                    <p className="cc-player-secret-intro">These missions were sent to you by the host. Keep them under wraps.</p>
                     <div className="cc-player-secret-list">
                       {secretMissions.map((mission) => (
                         <article className="cc-player-secret-card" key={mission.assignment_id}>
-                          <div className="cc-player-secret-card-top"><span className="cc-player-secret-label">SECRET TASK</span><span className="cc-player-points">+{mission.points} pts</span></div>
+                          <div className="cc-player-secret-card-top"><span className="cc-player-secret-label">SECRET MISSION</span><span className="cc-player-points">+{mission.points} pts</span></div>
                           <span className="cc-player-secret-art" aria-hidden="true">{challengeIcon(mission.title, mission.description)}</span>
                           <h3>{mission.title}</h3>
                           <p>{mission.description}</p>
@@ -702,41 +817,6 @@ export default function SessionPlayerGame() {
                     </div>
                   </section>
                 )}
-                {challenge ? (
-                  <section className="cc-player-challenge-card" data-tour="player-challenge">
-                    <div className="cc-player-challenge-top"><span className="cc-player-challenge-kind">MAIN CHALLENGE</span><span className="cc-player-round-chip">ROUND {session.current_round_number} / {session.round_count}</span></div>
-                    <div className="cc-player-challenge-heading"><div><h2>{challenge.title}</h2><span className="cc-player-challenge-award">+{challenge.points} POINTS</span></div><span className="cc-player-challenge-art" aria-hidden="true">{challengeIcon(challenge.title, challenge.description)}</span></div>
-                    <p>{challenge.description}</p>
-                    <div className="cc-player-challenge-meta"><span className="cc-player-time-chip"><span>TIME</span><strong><Clock3 size={15}/>{challenge.duration_minutes}:00</strong></span>{challenge.allow_photo_upload && <span className="cc-player-evidence-tag">Evidence required</span>}</div>
-                    {challenge.allow_photo_upload && (
-                      <div className="cc-player-evidence-block" data-tour="player-upload">
-                        <div className="cc-player-evidence-tools">
-                          <label className="cc-player-upload-button">
-                            <Upload size={16}/>{busyKey === `upload:${challenge.id}` ? "Uploading…" : "Upload Evidence"}
-                            <input type="file" accept="image/*,video/*" disabled={busyKey !== null || currentSubmission?.status === "approved" || evidenceForChallenge(challenge.id).length >= 6} onChange={(event) => void uploadEvidence(event, { type: "challenge", challenge })}/>
-                          </label>
-                          <span className="cc-player-evidence-count">{evidenceForChallenge(challenge.id).length}/6 files</span>
-                        </div>
-                        {evidenceForChallenge(challenge.id).length > 0 && <div className="cc-player-evidence-grid">{evidenceForChallenge(challenge.id).map((media) => (
-                          <div className="cc-player-evidence-item" key={media.id}>
-                            {media.media_type === "video" ? <video src={mediaUrl(media.storage_path)} controls playsInline preload="metadata" /> : <img src={mediaUrl(media.storage_path)} alt="Your challenge evidence" loading="lazy" />}
-                          </div>
-                        ))}</div>}
-                        {evidenceForChallenge(challenge.id).length === 0 && <p className="cc-player-evidence-required">Upload at least one photo or video before marking this challenge complete.</p>}
-                      </div>
-                    )}
-                    {currentSubmission?.status === "approved" ? (
-                      <div className="cc-player-submission-state is-approved"><CheckCircle2 size={19}/> Approved · +{currentSubmission.awarded_points} points</div>
-                    ) : currentSubmission?.status === "submitted" ? (
-                      <div className="cc-player-submission-state"><CheckCircle2 size={19}/> Submitted · waiting for host review</div>
-                    ) : (
-                      <button type="button" className="cc-player-primary-button" disabled={busyKey !== null || !player.team_id && session.teams_enabled} onClick={() => void submitChallenge(challenge)}>
-                        {busyKey === challenge.id ? <LoaderCircle size={19} className="cc-spin"/> : <CheckCircle2 size={19}/>} Mark challenge complete
-                      </button>
-                    )}
-                    {session.teams_enabled && !player.team_id && <p className="cc-player-hint">Wait for the host to assign your team before submitting.</p>}
-                  </section>
-                ) : <section className="cc-player-state-card"><h2>Challenge not ready yet</h2><p>Ask the host to select a round.</p></section>}
               </>
             )}
           </>
@@ -852,6 +932,20 @@ export default function SessionPlayerGame() {
         {!embeddedHostMode && <div className="cc-player-sync-note"><span className="cc-player-live-dot"/> Live updates enabled {lastUpdated && <span>· synced {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>}</div>}
         {!embeddedHostMode && <button type="button" className="cc-player-text-button" onClick={() => navigate(`/join?code=${code}&returning=1`)}><RotateCcw size={15}/> Need to rejoin on this device?</button>}
       </div>
+      {activeSecretMission && activePage === "game" && session.status === "live" && !rewardRound && (
+        <div className="cc-player-secret-modal-backdrop">
+          <section className="cc-player-secret-modal" role="dialog" aria-modal="true" aria-labelledby="cc-player-secret-modal-title" aria-describedby="cc-player-secret-modal-description">
+            <div className="cc-player-secret-modal-top">
+              <span className="cc-player-secret-modal-label">SECRET<br/>MISSION</span>
+              <span className="cc-player-secret-modal-art" aria-hidden="true">{challengeIcon(activeSecretMission.title, activeSecretMission.description)}</span>
+            </div>
+            <h2 id="cc-player-secret-modal-title">{activeSecretMission.title}</h2>
+            <p id="cc-player-secret-modal-description">{activeSecretMission.description}</p>
+            <div className="cc-player-secret-modal-points">+{activeSecretMission.points} points</div>
+            <button type="button" className="cc-player-secret-modal-play" onClick={() => playSecretMission(activeSecretMission)}>Play <Check size={17}/></button>
+          </section>
+        </div>
+      )}
       {tourOpen && <GuidedTour steps={playerTourSteps} onNavigate={navigatePlayerTour} onClose={() => setTourOpen(false)} label="PLAYER TOUR"/>}
     </main>
   );

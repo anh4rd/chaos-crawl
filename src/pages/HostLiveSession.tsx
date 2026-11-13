@@ -1,16 +1,18 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import {
   ArrowLeft, ArrowRight, CalendarClock, Check, Clipboard, Flag,
   LoaderCircle, Play, RotateCcw, Send, Shield, Users, X, Heart, Trophy, Crown, Sparkles,
-  Gamepad2, Medal, ClipboardList, Star, UserRound,
+  Gamepad2, Medal, ClipboardList, Plus, Pause, Pencil,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { challengeIcon } from "../lib/challengeVisuals";
-import HostShell from "../components/host/HostShell";
+import SessionMainChallengeCard from "../components/session/SessionMainChallengeCard";
+import { SessionGameTitlebar, SessionPlayerProfile } from "../components/session/SessionGameChrome";
 import "../styles/HostPortal.css";
 import "../styles/HostLiveGame.css";
+import "../styles/PlayerGame.css";
 import GuidedTour, { type GuidedTourStep } from "../components/tour/GuidedTour";
 
 type SessionStatus = "lobby" | "live" | "completed";
@@ -57,6 +59,8 @@ interface SessionChallenge {
   sort_order: number;
   allow_photo_upload: boolean;
 }
+interface GameScheduleItem { id?: string; type: string; title: string; duration: number; taskId?: string; phase?: string; }
+interface PlannedTaskInfo { id?: string; title?: string; equipment?: string[]; setup?: string; prep?: string; }
 interface SessionPlayer {
   id: string;
   name: string;
@@ -131,6 +135,7 @@ export default function HostLiveSession() {
   const [rewardVotes, setRewardVotes] = useState<SessionRewardVote[]>([]);
   const [rewardAwards, setRewardAwards] = useState<SessionRewardAward[]>([]);
   const [showRewardSetup, setShowRewardSetup] = useState(false);
+  const [showRewardOverlay, setShowRewardOverlay] = useState(false);
   const [rewardChallengeId, setRewardChallengeId] = useState("");
   const [rewardMethod, setRewardMethod] = useState<RewardMethod>("voting");
   const [rewardTargetKind, setRewardTargetKind] = useState<RewardTargetKind>("player");
@@ -150,10 +155,40 @@ export default function HostLiveSession() {
   const [notice, setNotice] = useState("");
   const [teamName, setTeamName] = useState("");
   const [activeTab, setActiveTab] = useState<HostTab>("game");
+  const [lobbyStep, setLobbyStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(() => {
+    const saved = Number(localStorage.getItem(`chaos-crawl-host-flow:${sessionId}`));
+    return saved >= 1 && saved <= 6 ? saved as 1 | 2 | 3 | 4 | 5 | 6 : 1;
+  });
+  const [hostJoinChoice, setHostJoinChoice] = useState<boolean | null>(null);
+  const [hostAvatarFile, setHostAvatarFile] = useState<File | null>(null);
+  const [hostAvatarPreview, setHostAvatarPreview] = useState("");
+  const [selectedLobbyPlayerId, setSelectedLobbyPlayerId] = useState("");
+  const [teamNameEdits, setTeamNameEdits] = useState<Record<string, string>>({});
+  const [teamPhotoUrls, setTeamPhotoUrls] = useState<Record<string, string>>({});
   const [leaderboardScope, setLeaderboardScope] = useState<"players" | "teams">("players");
   const [hostPlayerName, setHostPlayerName] = useState("Host");
-  const [hostPlayerViewUrl, setHostPlayerViewUrl] = useState<string | null>(null);
+  const [hostDisplayName, setHostDisplayName] = useState("Host");
+  const [gamePhotoUrl, setGamePhotoUrl] = useState<string | null>(null);
+  const [hostBreakActive, setHostBreakActive] = useState(false);
+  const [roundClockSeconds, setRoundClockSeconds] = useState(0);
+  const [roundClockRunning, setRoundClockRunning] = useState(false);
+  const [hydratedRoundClockKey, setHydratedRoundClockKey] = useState("");
   const [hostTourOpen, setHostTourOpen] = useState(false);
+  const [autoplayEnabled, setAutoplayEnabled] = useState(false);
+  const [autoplayOverridden, setAutoplayOverridden] = useState(false);
+  const [overridePrompt, setOverridePrompt] = useState<null | { kind: "start" } | { kind: "round"; round: number; forceBreak?: boolean }>(null);
+  const [gameSchedule, setGameSchedule] = useState<GameScheduleItem[]>([]);
+  const [plannedTasks, setPlannedTasks] = useState<PlannedTaskInfo[]>([]);
+  const [editingBreakChallenge, setEditingBreakChallenge] = useState<SessionChallenge | null>(null);
+  const [editChallengeTitle, setEditChallengeTitle] = useState("");
+  const [editChallengeDescription, setEditChallengeDescription] = useState("");
+  const [editChallengeEquipment, setEditChallengeEquipment] = useState("");
+  const [editChallengeDuration, setEditChallengeDuration] = useState(15);
+  const [editChallengePoints, setEditChallengePoints] = useState(10);
+  const [editChallengeEvidence, setEditChallengeEvidence] = useState(false);
+  const [defaultBreakMinutes, setDefaultBreakMinutes] = useState(0);
+  const [breakResumeRound, setBreakResumeRound] = useState<number | null>(null);
+  const breakAdvanceRequested = useRef(false);
 
   const hostTourSteps: GuidedTourStep[] = [
     { target: '[data-tour="host-overview"]', title: "Your live game overview", body: "The game code, live status and player count help you keep track of the session. Share the code or QR from Host Controls when people are joining.", page: "game" },
@@ -215,6 +250,49 @@ export default function HostLiveSession() {
   }, [sessionId]);
 
   useEffect(() => {
+    let alive = true;
+    void supabase.auth.getUser().then(({ data }) => {
+      if (!alive) return;
+      const name = String(data.user?.user_metadata?.display_name ?? data.user?.email?.split("@")[0] ?? "Host");
+      setHostDisplayName(name);
+      setHostPlayerName(name);
+    });
+    return () => { alive = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!session?.host_game_id) return;
+    let alive = true;
+    void supabase.from("host_games").select("plan_data").eq("id", session.host_game_id).maybeSingle().then(({ data }) => {
+      if (!alive) return;
+      const planData = data?.plan_data as { gamePhotoUrl?: string | null; teamPhotoUrls?: Record<string, string>; autoplay?: boolean; breakMinutes?: number; schedule?: GameScheduleItem[]; selectedTasks?: PlannedTaskInfo[] } | null;
+      setGamePhotoUrl(planData?.gamePhotoUrl ?? null);
+      setTeamPhotoUrls(planData?.teamPhotoUrls ?? {});
+      setAutoplayEnabled(Boolean(planData?.autoplay));
+      setDefaultBreakMinutes(Math.max(0, Number(planData?.breakMinutes) || 0));
+      setGameSchedule(Array.isArray(planData?.schedule) ? planData.schedule : []);
+      setPlannedTasks(Array.isArray(planData?.selectedTasks) ? planData.selectedTasks : []);
+    });
+    return () => { alive = false; };
+  }, [session?.host_game_id]);
+
+  useEffect(() => {
+    setAutoplayOverridden(localStorage.getItem(`chaos-crawl-host-autoplay-override:${sessionId}`) === "1");
+  }, [sessionId]);
+
+  useEffect(() => {
+    if (session) setHostJoinChoice(session.host_participates);
+  }, [session?.id]);
+
+  useEffect(() => {
+    setTeamNameEdits((current) => Object.fromEntries(teams.map((team) => [team.id, current[team.id] ?? team.name])));
+    if (!players.some((player) => player.id === selectedLobbyPlayerId)) {
+      const nextPlayer = players.find((player) => !player.team_id) ?? players[0];
+      setSelectedLobbyPlayerId(nextPlayer?.id ?? "");
+    }
+  }, [players, selectedLobbyPlayerId, teams]);
+
+  useEffect(() => {
     let mounted = true;
     const initial = async () => { if (mounted) await load(); };
     void initial();
@@ -230,6 +308,78 @@ export default function HostLiveSession() {
   const sideChallenges = challenges.filter((item) => item.kind === "side");
   const secretChallenges = challenges.filter((item) => item.kind === "secret");
   const currentChallenge = mainRounds.find((item) => item.round_number === session?.current_round_number);
+  const nextBreakChallenge = mainRounds.find((item) => item.round_number === (breakResumeRound ?? (session?.current_round_number ?? 0) + 1));
+  const nextBreakTask = nextBreakChallenge ? plannedTasks.find((task) => gameSchedule.some((item) => item.type === "challenge" && item.taskId === task.id && (item.title === nextBreakChallenge.title || item.title.startsWith(task.title ?? "")))) ?? plannedTasks.find((task) => (task.title ?? "").toLowerCase() === nextBreakChallenge.title.toLowerCase()) : undefined;
+  const breakStartAt = hostBreakActive && roundClockRunning ? new Date(Date.now() + roundClockSeconds * 1000) : null;
+  const nextRoundStartAt = breakStartAt ? new Date(breakStartAt.getTime()) : null;
+  const nextRoundEndAt = nextRoundStartAt && nextBreakChallenge ? new Date(nextRoundStartAt.getTime() + Math.max(0, Number(nextBreakChallenge.duration_minutes) || 0) * 60_000) : null;
+  const readyTeamsCount = teams.filter((team) => players.some((player) => player.team_id === team.id)).length;
+  const unassignedPlayers = players.filter((player) => !player.team_id);
+  function plannedBreakAfter(roundNumber: number) {
+    if (roundNumber >= mainRounds.length) return 0;
+    const currentRound = mainRounds.find((round) => Number(round.round_number) === roundNumber);
+    if (!currentRound) return defaultBreakMinutes;
+    const normalize = (title: string) => title.toLowerCase().replace(/\s*[-–—]\s*(player prep|player performance)$/i, "").trim();
+    const currentTitle = normalize(currentRound.title);
+    let scheduleIndex = gameSchedule.findIndex((item) => item.type === "challenge" && normalize(item.title) === currentTitle);
+    if (scheduleIndex < 0) scheduleIndex = gameSchedule.findIndex((item) => item.type === "challenge" && (normalize(item.title).startsWith(currentTitle) || currentTitle.startsWith(normalize(item.title))));
+    if (scheduleIndex >= 0) {
+      let planned = 0;
+      for (let index = scheduleIndex + 1; index < gameSchedule.length; index += 1) {
+        const item = gameSchedule[index];
+        if (item.type === "challenge") break;
+        if (item.type === "break") planned += Math.max(0, Number(item.duration) || 0);
+      }
+      if (planned > 0) return planned;
+    }
+    return defaultBreakMinutes;
+  }
+  const upcomingBreakMinutes = session && session.status === "live" ? plannedBreakAfter(session.current_round_number) : 0;
+  const roundClockKey = session?.id && session.status === "live" ? `${session.id}:${session.current_round_number}` : "";
+  const roundClockStorageKey = roundClockKey ? `chaos-crawl-host-round-clock:${roundClockKey}` : "";
+  const roundClockText = `${Math.floor(roundClockSeconds / 60).toString().padStart(2, "0")}:${(roundClockSeconds % 60).toString().padStart(2, "0")}`;
+  useEffect(() => {
+    if (!roundClockStorageKey || !currentChallenge) return;
+    let seconds = Math.max(0, Number(currentChallenge.duration_minutes) || 0) * 60;
+    let running = false;
+    let onBreak = false;
+    let resumeRound: number | null = null;
+    try {
+      const saved = JSON.parse(localStorage.getItem(roundClockStorageKey) ?? "null") as { seconds?: number; running?: boolean; onBreak?: boolean; resumeRound?: number | null; updatedAt?: number } | null;
+      if (saved && Number.isFinite(saved.seconds)) {
+        seconds = Math.max(0, Number(saved.seconds));
+        running = Boolean(saved.running);
+        onBreak = Boolean(saved.onBreak);
+        resumeRound = saved.resumeRound ?? null;
+        if (running && Number.isFinite(saved.updatedAt)) seconds = Math.max(0, seconds - Math.floor((Date.now() - Number(saved.updatedAt)) / 1000));
+      }
+    } catch { /* Start a fresh host-side clock if browser storage is unavailable. */ }
+    setRoundClockSeconds(seconds);
+    setRoundClockRunning(running && seconds > 0);
+    setHostBreakActive(onBreak);
+    setBreakResumeRound(resumeRound);
+    setHydratedRoundClockKey(roundClockKey);
+    void saveSharedTimer(Number(currentChallenge.round_number ?? session?.current_round_number ?? 1), seconds, running && seconds > 0, onBreak, resumeRound);
+  }, [roundClockKey, roundClockStorageKey, currentChallenge?.duration_minutes]);
+  useEffect(() => {
+    if (!roundClockRunning || !roundClockKey) return;
+    const interval = window.setInterval(() => setRoundClockSeconds((seconds) => Math.max(0, seconds - 1)), 1000);
+    return () => window.clearInterval(interval);
+  }, [roundClockKey, roundClockRunning]);
+  useEffect(() => {
+    if (roundClockRunning && roundClockSeconds === 0) setRoundClockRunning(false);
+  }, [roundClockRunning, roundClockSeconds]);
+  useEffect(() => {
+    if (!session || session.status !== "live" || busy || !hostBreakActive || roundClockSeconds !== 0 || !breakResumeRound || breakAdvanceRequested.current) return;
+    breakAdvanceRequested.current = true;
+    void moveToRound(breakResumeRound);
+  }, [breakResumeRound, busy, hostBreakActive, roundClockSeconds, session?.id, session?.status]);
+  useEffect(() => {
+    if (!roundClockStorageKey || hydratedRoundClockKey !== roundClockKey) return;
+    try {
+      localStorage.setItem(roundClockStorageKey, JSON.stringify({ seconds: roundClockSeconds, running: roundClockRunning, onBreak: hostBreakActive, resumeRound: breakResumeRound, updatedAt: Date.now() }));
+    } catch { /* The timer continues for this visit without persistence. */ }
+  }, [breakResumeRound, hostBreakActive, hydratedRoundClockKey, roundClockKey, roundClockRunning, roundClockSeconds, roundClockStorageKey]);
   const activeRewardRound = rewardRounds.find((item) => item.released_at === null && (item.status === "open" || item.status === "completed")) ?? null;
   useEffect(() => { if (activeRewardRound) setRewardFinalPoints(activeRewardRound.points); }, [activeRewardRound?.id]);
   const activeRewardVotes = activeRewardRound ? rewardVotes.filter((item) => item.reward_round_id === activeRewardRound.id) : [];
@@ -245,29 +395,32 @@ export default function HostLiveSession() {
     ? `${window.location.origin}${window.location.pathname}#/join?code=${session.join_code}`
     : "";
 
-  function embeddedPlayerUrl(joinCode: string, page: "game" | "leaderboard" | "side-challenges" | "final" = "game") {
-    // Preserve Vite deployments such as /chaos-crawl/ and keep the player
-    // experience inside the HashRouter instead of navigating to the domain root.
-    const configuredBase = import.meta.env.BASE_URL || "/";
-    const basePath = configuredBase.endsWith("/") ? configuredBase : `${configuredBase}/`;
-    return `${window.location.origin}${basePath}#/play/${joinCode}/${page}?hostEmbed=1`;
+  function goToLobbyStep(step: 1 | 2 | 3 | 4 | 5 | 6) {
+    setLobbyStep(step);
+    localStorage.setItem(`chaos-crawl-host-flow:${sessionId}`, String(step));
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  useEffect(() => {
-    // If the host has already joined and this browser still has the player's
-    // token, restore the embedded player experience after refresh.
-    if (!session?.host_participates || !session.host_player_id) {
-      setHostPlayerViewUrl(null);
-      return;
+  async function setHostParticipation(participates: boolean): Promise<boolean> {
+    if (!session) return false;
+    setBusy(true); setError(""); setNotice("");
+    const { error: updateError } = await supabase.from("cc_game_sessions")
+      .update({ host_participates: participates })
+      .eq("id", session.id);
+    setBusy(false);
+    if (updateError) { setError(updateError.message); return false; }
+    setHostJoinChoice(participates);
+    setSession({ ...session, host_participates: participates });
+    if (participates) {
+      await openHostPlayerView();
+    } else {
+      setNotice("You’ll host the game without joining the player list.");
     }
-    const code = session.join_code.replace(/\D/g, "");
-    if (localStorage.getItem(`chaos-crawl-session-player:${code}`)) {
-      setHostPlayerViewUrl(embeddedPlayerUrl(session.join_code));
-    }
-  }, [session?.host_participates, session?.host_player_id, session?.join_code]);
+    return true;
+  }
 
   async function openHostPlayerView() {
-    if (!session || !session.host_participates) return;
+    if (!session) return;
     setBusy(true); setError(""); setNotice("");
     const { data, error: joinError } = await supabase.rpc("cc_host_join_as_player", {
       p_session_id: session.id,
@@ -286,49 +439,134 @@ export default function HostLiveSession() {
       return;
     }
     localStorage.setItem(`chaos-crawl-session-player:${joinCode.replace(/\D/g, "")}`, playerToken);
-    setHostPlayerViewUrl(embeddedPlayerUrl(joinCode));
+    let avatarUrl: string | null = null;
+    if (hostAvatarFile) {
+      const extension = hostAvatarFile.name.split(".").pop()?.replace(/[^a-z0-9]/gi, "") || "jpg";
+      const path = `host-avatars/${session.id}/${Date.now()}.${extension}`;
+      const { error: avatarUploadError } = await supabase.storage.from("game-assets").upload(path, hostAvatarFile, { upsert: true, contentType: hostAvatarFile.type });
+      if (avatarUploadError) setError(`You joined, but your profile photo couldn't upload: ${avatarUploadError.message}`);
+      else avatarUrl = supabase.storage.from("game-assets").getPublicUrl(path).data.publicUrl;
+    }
     setActiveTab("game");
-    setNotice(`You're in the game${result?.name ? ` as ${result.name}` : " as Host"}. Host tools remain available in the Host Controls tab.`);
+    setNotice(`You're in the game${result?.name ? ` as ${result.name}` : " as Host"}.`);
+    await load();
+    if (avatarUrl) {
+      const { data: refreshedSession } = await supabase.from("cc_game_sessions").select("host_player_id").eq("id", session.id).maybeSingle();
+      if (refreshedSession?.host_player_id) {
+        await supabase.from("cc_game_session_players").update({ avatar_url: avatarUrl }).eq("id", refreshedSession.host_player_id).eq("session_id", session.id);
+        await load();
+      }
+    }
+  }
+
+  async function updatePlayersPerTeam(size: number) {
+    if (!session || !Number.isFinite(size)) return;
+    setBusy(true); setError(""); setNotice("");
+    const { error: sizeError } = await supabase.from("cc_game_sessions").update({ team_size: size }).eq("id", session.id);
+    setBusy(false);
+    if (sizeError) { setError(sizeError.message); return; }
+    setSession({ ...session, team_size: size });
+    setNotice(`Team capacity updated to ${size} players.`);
     await load();
   }
 
-  function renderHostPlayerTab(page: "leaderboard" | "side-challenges" | "final") {
-    if (!session?.host_participates || !hostPlayerViewUrl) return null;
-    const pageTitle = page === "leaderboard" ? "Leaderboard" : page === "side-challenges" ? "Side challenges" : "Final vote";
-    return (
-      <section className="cc-host-embedded-player-shell cc-host-embedded-player-shell--tab">
-        <div className="cc-host-embedded-player-bar"><span><i/> PLAYER EXPERIENCE · {pageTitle.toUpperCase()}</span><button type="button" onClick={() => setActiveTab("host-controls")}>Open host controls <ArrowRight size={14}/></button></div>
-        <iframe key={`${session.id}-${page}`} className="cc-host-embedded-player-frame" title={`${pageTitle} player experience for ${session.name}`} src={embeddedPlayerUrl(session.join_code, page)} />
-      </section>
-    );
+  function startOverrideReasons() {
+    const reasons: string[] = [];
+    if (autoplayEnabled) reasons.push("You are taking control from autoplay.");
+    if (players.length === 0) reasons.push("No players have joined yet.");
+    if (session?.teams_enabled && teams.length === 0) reasons.push("No teams have been created.");
+    if (session?.teams_enabled && unassignedPlayers.length > 0) reasons.push(`${unassignedPlayers.length} player${unassignedPlayers.length === 1 ? " is" : "s are"} not assigned to a team.`);
+    if (session?.host_participates && !session.host_player_id) reasons.push("You selected host participation but have not joined as a player.");
+    return reasons;
   }
 
-  async function startGame() {
+  async function startGame(confirmedOverride = false) {
     if (!session) return;
-    if (session.host_participates && !session.host_player_id) {
-      setError("Host participation is enabled. Join as a player before starting so you appear on the roster and can be assigned to a team.");
-      return;
-    }
     if (players.length === 0) {
-      setError("Wait for at least one player to join before starting.");
+      setError("At least one player must join before you can start the game.");
       return;
     }
-    if (session.teams_enabled && players.some((player) => !player.team_id)) {
-      setError("Make sure every player has a team before starting, or disable teams in the plan.");
+    if (session.teams_enabled && (teams.length === 0 || unassignedPlayers.length > 0)) {
+      setError("Every player must be assigned to a team before you can start. Assign the remaining players, then try again.");
       return;
     }
-    if (!window.confirm(`Start "${session.name}"? Everyone currently in the lobby will see Round 1.`)) return;
+    if (!confirmedOverride && startOverrideReasons().length > 0) {
+      setOverridePrompt({ kind: "start" });
+      return;
+    }
     setBusy(true); setError(""); setNotice("");
+    if (session.host_participates && !session.host_player_id && confirmedOverride) {
+      const { error: participationError } = await supabase.from("cc_game_sessions").update({ host_participates: false }).eq("id", session.id);
+      if (participationError) { setBusy(false); setError(participationError.message); return; }
+      setSession({ ...session, host_participates: false });
+    }
     const { error: startError } = await supabase.rpc("cc_host_start_game_session", { p_session_id: session.id });
     setBusy(false);
     if (startError) { setError(startError.message); return; }
-    setNotice("Game started. Players will see Round 1.");
+    if (autoplayEnabled && confirmedOverride) {
+      localStorage.setItem(`chaos-crawl-host-autoplay-override:${sessionId}`, "1");
+      setAutoplayOverridden(true);
+    }
+    const firstRound = mainRounds.find((round) => round.round_number === 1) ?? mainRounds[0];
+    if (firstRound) {
+      const key = `chaos-crawl-host-round-clock:${session.id}:${firstRound.round_number}`;
+      localStorage.setItem(key, JSON.stringify({ seconds: Math.max(0, Number(firstRound.duration_minutes) || 0) * 60, running: true, onBreak: false, updatedAt: Date.now() }));
+      await saveSharedTimer(Number(firstRound.round_number ?? 1), Math.max(0, Number(firstRound.duration_minutes) || 0) * 60, true, false);
+    }
+    setNotice(confirmedOverride ? "Game started with host control. Round 1 timing starts now, and the remaining schedule follows from this start time." : "Game started. Players will see Round 1.");
     await load();
   }
 
-  async function moveToRound(nextRound: number) {
+  function runStartRoundControl() {
+    if (session?.status === "lobby") {
+      void startGame();
+      return;
+    }
+    if (!session || !currentChallenge) return;
+    const nextRunning = !roundClockRunning;
+    const seconds = roundClockSeconds > 0 ? roundClockSeconds : hostBreakActive ? 0 : Math.max(0, Number(currentChallenge.duration_minutes) || 0) * 60;
+    setRoundClockSeconds(seconds);
+    setRoundClockRunning(nextRunning && seconds > 0);
+    void saveSharedTimer(session.current_round_number, seconds, nextRunning && seconds > 0, hostBreakActive, breakResumeRound);
+    setNotice(nextRunning ? (hostBreakActive ? "Break timer resumed. Players can see the updated resume time." : "Round timer started.") : (hostBreakActive ? "Break timer paused. Players will see that the break is paused." : "Round timer paused."));
+  }
+
+  async function startScheduledBreak(nextRound: number, minutes: number, confirmedOverride = false) {
+    if (!session || busy || minutes <= 0) return;
+    const seconds = Math.round(minutes * 60);
+    breakAdvanceRequested.current = false;
+    setHostBreakActive(true);
+    setBreakResumeRound(nextRound);
+    setRoundClockSeconds(seconds);
+    setRoundClockRunning(true);
+    setError(""); setNotice("");
+    if (roundClockStorageKey) {
+      localStorage.setItem(roundClockStorageKey, JSON.stringify({ seconds, running: true, onBreak: true, resumeRound: nextRound, updatedAt: Date.now() }));
+    }
+    await saveSharedTimer(session.current_round_number, seconds, true, true, nextRound);
+    if (confirmedOverride && autoplayEnabled) {
+      localStorage.setItem(`chaos-crawl-host-autoplay-override:${sessionId}`, "1");
+      setAutoplayOverridden(true);
+    }
+    const resumeAt = new Date(Date.now() + seconds * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    setNotice(`Break started for ${minutes} minutes. The next round is scheduled to resume at ${resumeAt}.`);
+  }
+
+  function openPointReview() {
+    setShowRewardSetup(!activeRewardRound);
+    setShowRewardOverlay(true);
+  }
+
+  async function moveToRound(nextRound: number, confirmedOverride = false, forceBreakMinutes = 0) {
     if (!session || busy) return;
     if (activeRewardRound) { setError("Complete or cancel the reward flow before moving to another round."); return; }
+    if (!hostBreakActive && nextRound > session.current_round_number) {
+      const breakMinutes = forceBreakMinutes || plannedBreakAfter(session.current_round_number);
+      if (breakMinutes > 0) {
+        await startScheduledBreak(nextRound, breakMinutes, confirmedOverride);
+        return;
+      }
+    }
     setBusy(true); setError(""); setNotice("");
     const { error: roundError } = await supabase.rpc("cc_host_set_game_session_round", {
       p_session_id: session.id,
@@ -336,8 +574,60 @@ export default function HostLiveSession() {
     });
     setBusy(false);
     if (roundError) { setError(roundError.message); return; }
-    setNotice(`Moved everyone to Round ${nextRound}. You can move backwards or forwards at any time.`);
+    if (confirmedOverride && autoplayEnabled) {
+      localStorage.setItem(`chaos-crawl-host-autoplay-override:${sessionId}`, "1");
+      setAutoplayOverridden(true);
+    }
+    const targetRound = mainRounds.find((round) => round.round_number === nextRound);
+    const clockKey = `chaos-crawl-host-round-clock:${session.id}:${nextRound}`;
+    localStorage.setItem(clockKey, JSON.stringify({ seconds: Math.max(0, Number(targetRound?.duration_minutes) || 0) * 60, running: false, onBreak: false, updatedAt: Date.now() }));
+    await saveSharedTimer(nextRound, Math.max(0, Number(targetRound?.duration_minutes) || 0) * 60, false, false, null);
+    setHostBreakActive(false);
+    setBreakResumeRound(null);
+    breakAdvanceRequested.current = false;
+    setNotice(`Round ${nextRound} is ready. Announce the challenge, then start its timer when everyone is set. Later timings will follow from this change.`);
     await load();
+  }
+
+  async function saveSharedTimer(roundNumber: number, remainingSeconds: number, isRunning: boolean, isOnBreak: boolean, resumeRoundNumber: number | null = null) {
+    if (!session) return;
+    const seconds = Math.max(0, Math.floor(remainingSeconds));
+    const { error: timerError } = await supabase.from("cc_game_session_timers").upsert({
+      session_id: session.id,
+      round_number: roundNumber,
+      remaining_seconds: seconds,
+      is_running: isRunning,
+      is_on_break: isOnBreak,
+      resume_round_number: isOnBreak ? resumeRoundNumber : null,
+      break_ends_at: isOnBreak && isRunning ? new Date(Date.now() + seconds * 1000).toISOString() : null,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "session_id" });
+    if (timerError) setError(`The host timer changed, but players could not receive the timer update: ${timerError.message}`);
+  }
+
+  function requestMoveToRound(nextRound: number) {
+    if (autoplayEnabled && !autoplayOverridden) {
+      setOverridePrompt({ kind: "round", round: nextRound });
+      return;
+    }
+    void moveToRound(nextRound);
+  }
+
+  function requestStartBreak() {
+    if (!session || session.status !== "live" || session.current_round_number >= mainRounds.length) return;
+    const nextRound = session.current_round_number + 1;
+    if (autoplayEnabled && !autoplayOverridden) {
+      setOverridePrompt({ kind: "round", round: nextRound, forceBreak: true });
+      return;
+    }
+    void moveToRound(nextRound, false, plannedBreakAfter(session.current_round_number) || 15);
+  }
+
+  function confirmHostOverride() {
+    const prompt = overridePrompt;
+    setOverridePrompt(null);
+    if (prompt?.kind === "start") void startGame(true);
+    if (prompt?.kind === "round") void moveToRound(prompt.round, true, prompt.forceBreak ? plannedBreakAfter(session?.current_round_number ?? 0) || 15 : 0);
   }
 
   async function finishGame() {
@@ -378,6 +668,27 @@ export default function HostLiveSession() {
     setSelectedRewardWinnerIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
   }
 
+  async function castHostRewardVote(candidateId: string) {
+    if (!session || !activeRewardRound || !session.host_player_id || activeRewardRound.status !== "open" || activeRewardRound.reward_method !== "voting" || busy) return;
+    const playerToken = localStorage.getItem(`chaos-crawl-session-player:${session.join_code.replace(/\D/g, "")}`);
+    if (!playerToken) {
+      setError("Your host player login is missing. Rejoin the game as a player before casting your vote.");
+      return;
+    }
+    setBusy(true); setError(""); setNotice("");
+    const { error: voteError } = await supabase.rpc("cc_player_cast_session_reward_vote", {
+      p_join_code: session.join_code,
+      p_player_token: playerToken,
+      p_reward_round_id: activeRewardRound.id,
+      p_target_player_id: activeRewardRound.target_kind === "player" ? candidateId : null,
+      p_target_team_id: activeRewardRound.target_kind === "team" ? candidateId : null,
+    });
+    setBusy(false);
+    if (voteError) { setError(voteError.message); return; }
+    setNotice("Your host vote has been counted.");
+    await load();
+  }
+
   async function completeRewardRound() {
     if (!activeRewardRound || busy) return;
     const manual = activeRewardRound.reward_method !== "voting";
@@ -408,6 +719,7 @@ export default function HostLiveSession() {
     setBusy(false);
     if (releaseError) { setError(releaseError.message); return; }
     setNotice("Everyone has been returned to the game.");
+    setShowRewardOverlay(false);
     await load();
   }
 
@@ -418,6 +730,7 @@ export default function HostLiveSession() {
     setBusy(false);
     if (cancelError) { setError(cancelError.message); return; }
     setNotice("Reward flow cancelled. No points were awarded.");
+    setShowRewardOverlay(false);
     await load();
   }
 
@@ -443,6 +756,36 @@ export default function HostLiveSession() {
     setTeamName("");
     setNotice(`Team "${cleanName}" created.`);
     await load();
+  }
+
+  async function renameTeam(team: SessionTeam) {
+    const name = (teamNameEdits[team.id] ?? team.name).trim();
+    if (!session || !name || name === team.name) return;
+    setBusy(true); setError(""); setNotice("");
+    const { error: renameError } = await supabase.from("cc_game_session_teams").update({ name }).eq("id", team.id).eq("session_id", session.id);
+    setBusy(false);
+    if (renameError) { setError(renameError.message); return; }
+    setNotice(`Team renamed to ${name}.`);
+    await load();
+  }
+
+  async function uploadTeamPhoto(team: SessionTeam, file: File) {
+    if (!session?.host_game_id) { setError("This game is not linked to a saved plan, so team photos cannot be saved."); return; }
+    setBusy(true); setError(""); setNotice("");
+    const extension = file.name.split(".").pop()?.replace(/[^a-z0-9]/gi, "") || "jpg";
+    const path = `team-photos/${session.id}/${team.id}-${Date.now()}.${extension}`;
+    const { error: uploadError } = await supabase.storage.from("game-assets").upload(path, file, { upsert: true, contentType: file.type });
+    if (uploadError) { setBusy(false); setError(uploadError.message); return; }
+    const url = supabase.storage.from("game-assets").getPublicUrl(path).data.publicUrl;
+    const { data: gameData, error: gameError } = await supabase.from("host_games").select("plan_data").eq("id", session.host_game_id).eq("host_id", session.host_id).maybeSingle();
+    if (gameError) { setBusy(false); setError(gameError.message); return; }
+    const planData = (gameData?.plan_data ?? {}) as Record<string, unknown>;
+    const previousPhotos = (planData.teamPhotoUrls ?? {}) as Record<string, string>;
+    const { error: saveError } = await supabase.from("host_games").update({ plan_data: { ...planData, teamPhotoUrls: { ...previousPhotos, [team.id]: url } } }).eq("id", session.host_game_id).eq("host_id", session.host_id);
+    setBusy(false);
+    if (saveError) { setError(saveError.message); return; }
+    setTeamPhotoUrls((photos) => ({ ...photos, [team.id]: url }));
+    setNotice(`Photo saved for ${team.name}.`);
   }
 
   async function assignTeam(player: SessionPlayer, teamId: string) {
@@ -549,6 +892,47 @@ export default function HostLiveSession() {
     }
   }
 
+  function openBreakChallengeEditor(challenge: SessionChallenge) {
+    setEditingBreakChallenge(challenge);
+    setEditChallengeTitle(challenge.title);
+    setEditChallengeDescription(challenge.description);
+    setEditChallengeEquipment((nextBreakTask?.equipment ?? []).join(", "));
+    setEditChallengeDuration(Math.max(1, challenge.duration_minutes || 15));
+    setEditChallengePoints(Math.max(0, challenge.points || 0));
+    setEditChallengeEvidence(challenge.allow_photo_upload);
+  }
+
+  async function saveBreakChallengeEdit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!session || !editingBreakChallenge || !editChallengeTitle.trim()) return;
+    setBusy(true); setError(""); setNotice("");
+    const equipment = editChallengeEquipment.split(",").map((item) => item.trim()).filter(Boolean);
+    const { error: challengeError } = await supabase.from("cc_game_session_challenges").update({
+      title: editChallengeTitle.trim(),
+      description: editChallengeDescription.trim(),
+      duration_minutes: Math.max(1, Number(editChallengeDuration) || 1),
+      points: Math.max(0, Number(editChallengePoints) || 0),
+      allow_photo_upload: editChallengeEvidence,
+    }).eq("id", editingBreakChallenge.id).eq("session_id", session.id);
+    if (challengeError) {
+      setBusy(false); setError(`Couldn't update this challenge: ${challengeError.message}`); return;
+    }
+    let saveNotice = `Round ${editingBreakChallenge.round_number} updated.`;
+    if (session.host_game_id && nextBreakTask?.id) {
+      const { data: gameData } = await supabase.from("host_games").select("plan_data").eq("id", session.host_game_id).maybeSingle();
+      const planData = (gameData?.plan_data ?? {}) as Record<string, unknown>;
+      const selectedTasks = Array.isArray(planData.selectedTasks) ? planData.selectedTasks as PlannedTaskInfo[] : [];
+      const updatedTasks = selectedTasks.map((task) => task.id === nextBreakTask.id ? { ...task, title: editChallengeTitle.trim(), description: editChallengeDescription.trim(), minutes: Math.max(1, Number(editChallengeDuration) || 1), points: Math.max(0, Number(editChallengePoints) || 0), equipment } : task);
+      const { error: planError } = await supabase.from("host_games").update({ plan_data: { ...planData, selectedTasks: updatedTasks } }).eq("id", session.host_game_id).eq("host_id", session.host_id);
+      if (planError) saveNotice = "Challenge updated for this game. Its saved plan equipment could not be updated.";
+      else setPlannedTasks(updatedTasks);
+    }
+    setBusy(false);
+    setNotice(saveNotice);
+    setEditingBreakChallenge(null);
+    await load();
+  }
+
   async function createSecretChallenge(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!session || !newSecretTitle.trim()) return;
@@ -646,7 +1030,9 @@ export default function HostLiveSession() {
 
   const playerById = new Map(players.map((player) => [player.id, player]));
   const hostPlayer = session?.host_player_id ? playerById.get(session.host_player_id) : undefined;
-  const hostRank = hostPlayer ? [...players].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name)).findIndex((player) => player.id === hostPlayer.id) + 1 : null;
+  const rankedPlayers = [...players].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+  const headerPlayer = hostPlayer ?? rankedPlayers[0];
+  const headerRank = headerPlayer ? rankedPlayers.findIndex((player) => player.id === headerPlayer.id) + 1 : null;
   const challengeById = new Map(challenges.map((challenge) => [challenge.id, challenge]));
   const teamById = new Map(teams.map((team) => [team.id, team]));
   const finalVoteWinner = session?.final_vote_winner_player_id
@@ -660,37 +1046,128 @@ export default function HostLiveSession() {
     : undefined;
 
   if (loading) {
-    return <HostShell title="Your live game" subtitle="Preparing your control panel…" showCreate={false}>
-      <div className="host-empty-state"><LoaderCircle className="cc-spin" size={24}/> Loading your game session…</div>
-    </HostShell>;
+    return <main className="host-portal cc-host-live-standalone"><div className="cc-host-standalone-loading"><LoaderCircle className="cc-spin" size={24}/> Loading your game session…</div></main>;
   }
   if (!session) {
-    return <HostShell title="Game not found" subtitle="This session may have been removed." showCreate={false}>
+    return <main className="host-portal cc-host-live-standalone"><section className="cc-host-standalone-error">
       {error && <div className="host-alert host-alert--error">{error}</div>}
       <Link className="host-button host-button--primary" to="/host">Back to Host Hub</Link>
-    </HostShell>;
+    </section></main>;
   }
 
+  const lobbyFlow = (
+    <section className="cc-host-lobby-flow" aria-label={`Game setup step ${lobbyStep} of 6`}>
+      <header className="cc-host-lobby-step-heading">
+        <span>STEP {lobbyStep} OF 6</span>
+        <div className="cc-host-lobby-progress"><i style={{ width: `${lobbyStep / 6 * 100}%` }}/></div>
+        <h1>{(["Share the invite", "Join your game", "Players & teams", "Choose your teams", "Name your teams", "Ready to start"] as const)[lobbyStep - 1]}</h1>
+        <p>{(["Share the game link, code or QR so players can join.", "Decide whether you’d like to play alongside everyone.", "See who has joined and set the team capacity.", "Move players into teams and check who is ready.", "Give each team a name and picture.", "Gather everyone, explain the rules and start the game."] as const)[lobbyStep - 1]}</p>
+      </header>
+
+      {lobbyStep === 1 && <div className="cc-host-lobby-card cc-host-invite-step">
+        <div className="cc-host-lobby-game-mark">{gamePhotoUrl ? <img src={gamePhotoUrl} alt=""/> : <span aria-hidden="true">🎉</span>}</div>
+        <h2>{session.name}</h2>
+        <p>Share this link with your players to join the game.</p>
+        <a className="cc-host-invite-link" href={joinUrl} target="_blank" rel="noreferrer">{joinUrl}<span>↗</span></a>
+        <div className="cc-host-invite-code-row"><span>GAME CODE <strong>{session.join_code}</strong></span><button type="button" onClick={() => void copyCode()}><Clipboard size={16}/> Copy code</button></div>
+        <div className="cc-host-invite-qr"><QRCodeSVG value={joinUrl} size={190} level="M" marginSize={3}/></div>
+        <strong className="cc-host-joined-count">{players.length} player{players.length === 1 ? "" : "s"} joined so far</strong>
+      </div>}
+
+      {lobbyStep === 2 && <div className="cc-host-lobby-card cc-host-join-step">
+        <div className="cc-host-lobby-game-mark">{gamePhotoUrl ? <img src={gamePhotoUrl} alt=""/> : <span aria-hidden="true">🎉</span>}</div>
+        <h2>{session.name}</h2>
+        <h3>Would you like to join the game?</h3>
+        <p>Join the player list, choose a team and play along. You can still use every host control.</p>
+        <label className="cc-host-avatar-upload">
+          <span className="cc-host-avatar-preview">{hostAvatarPreview ? <img src={hostAvatarPreview} alt="Profile preview"/> : <Users size={27}/>}</span>
+          <span><strong>Upload a profile picture</strong><small>Optional · JPG, PNG or WebP</small></span>
+          <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0] ?? null; setHostAvatarFile(file); setHostAvatarPreview(file ? URL.createObjectURL(file) : ""); }}/>
+        </label>
+        <div className="cc-host-lobby-choice-row">
+          <button type="button" className={`cc-host-lobby-choice${hostJoinChoice === true ? " is-selected" : ""}`} disabled={busy} onClick={() => void setHostParticipation(true)}>{busy ? <LoaderCircle size={16} className="cc-spin"/> : <Gamepad2 size={16}/>} Yes, I’ll play</button>
+          <button type="button" className={`cc-host-lobby-choice${hostJoinChoice === false ? " is-selected" : ""}`} disabled={busy} onClick={() => void setHostParticipation(false)}><Shield size={16}/> No, I’ll host</button>
+        </div>
+        {hostPlayer && <p className="cc-host-lobby-confirmation">You’re in as <strong>{hostPlayer.name}</strong>.</p>}
+      </div>}
+
+      {lobbyStep === 3 && <div className="cc-host-lobby-card cc-host-roster-step">
+        <div className="cc-host-lobby-counts"><div><strong>{players.length}</strong><span>Players joined</span></div><div><strong>{session.teams_enabled ? teams.length : 0}</strong><span>Teams ready</span></div></div>
+        <div className="cc-host-lobby-player-list">{players.length ? players.map((player) => <div className="cc-host-lobby-player-row" key={player.id}><span className="cc-host-lobby-player-avatar">{player.avatar_url ? <img src={player.avatar_url} alt=""/> : player.name.slice(0, 1).toUpperCase()}</span><strong>{player.name}{player.id === hostPlayer?.id ? " (You)" : ""}</strong><span>{session.teams_enabled ? teamById.get(player.team_id ?? "")?.name ?? "Not in a team" : "Ready"}</span></div>) : <p className="cc-host-lobby-empty">Players will appear here as they join using your code or link.</p>}</div>
+        {session.teams_enabled ? <label className="cc-host-team-size-field"><span>Players per team</span><select value={session.team_size} disabled={busy} onChange={(event) => void updatePlayersPerTeam(Number(event.target.value))}>{[...new Set([session.team_size, 2, 3, 4, 5, 6, 8, 10, 12])].sort((a, b) => a - b).map((size) => <option key={size} value={size}>{size} players</option>)}</select></label> : <p className="cc-host-lobby-note">This game is set up for individual players.</p>}
+      </div>}
+
+      {lobbyStep === 4 && <div className="cc-host-lobby-card cc-host-team-select-step">
+        {!session.teams_enabled ? <><h2>Playing solo</h2><p>Teams are turned off for this game. Continue to the waiting screen when everyone is ready.</p></> : <>
+          <div className="cc-host-lobby-counts"><div><strong>{players.length}</strong><span>Players joined</span></div><div><strong>{readyTeamsCount}/{teams.length}</strong><span>Teams with players</span></div></div>
+          <label className="cc-host-player-picker"><span>Choose a player to move</span><select value={selectedLobbyPlayerId} onChange={(event) => setSelectedLobbyPlayerId(event.target.value)}><option value="">Select a player…</option>{players.map((player) => <option key={player.id} value={player.id}>{player.name}{player.team_id ? ` · ${teamById.get(player.team_id)?.name ?? "In a team"}` : " · Unassigned"}</option>)}</select></label>
+          <div className="cc-host-unassigned-tray" aria-label="Players not yet in a team">{unassignedPlayers.map((player) => <button type="button" className={`cc-host-unassigned-player${player.id === selectedLobbyPlayerId ? " is-selected" : ""}`} key={player.id} onClick={() => setSelectedLobbyPlayerId(player.id)}><span>{player.avatar_url ? <img src={player.avatar_url} alt=""/> : player.name.slice(0, 1).toUpperCase()}</span><strong>{player.name}</strong></button>)}{unassignedPlayers.length === 0 && <p>Everyone is in a team. Choose a player above to move them.</p>}</div>
+          <div className="cc-host-team-cards">{teams.map((team) => {
+            const members = players.filter((player) => player.team_id === team.id);
+            const selectedPlayer = players.find((player) => player.id === selectedLobbyPlayerId);
+            const isMember = selectedPlayer?.team_id === team.id;
+            const full = members.length >= session.team_size && !isMember;
+            return <article className="cc-host-lobby-team-card" key={team.id}>
+              <header><div><span className="cc-host-lobby-team-icon">{teamPhotoUrls[team.id] ? <img src={teamPhotoUrls[team.id]} alt=""/> : <Users size={21}/>}</span><strong>{team.name}</strong></div><span>{members.length}/{session.team_size}</span></header>
+              <div className="cc-host-lobby-team-members">{members.map((player) => <button type="button" key={player.id} className={player.id === selectedLobbyPlayerId ? "is-selected" : ""} onClick={() => setSelectedLobbyPlayerId(player.id)}><span>{player.avatar_url ? <img src={player.avatar_url} alt=""/> : player.name.slice(0, 1).toUpperCase()}</span><strong>{player.name}</strong></button>)}{members.length === 0 && <p>Waiting for players</p>}</div>
+              <button type="button" className={`cc-host-team-join-button${isMember ? " is-leave" : ""}`} disabled={busy || !selectedPlayer || (full && !isMember)} onClick={() => selectedPlayer && void assignTeam(selectedPlayer, isMember ? "" : team.id)}>{isMember ? "Leave team" : full ? "Team full" : selectedPlayer ? `Add ${selectedPlayer.name}` : "Choose a player above"}</button>
+            </article>;
+          })}</div>
+          <form className="cc-host-add-team-form" onSubmit={(event) => void createTeam(event)}><input aria-label="New team name" value={teamName} onChange={(event) => setTeamName(event.target.value)} placeholder={`Team ${teams.length + 1}`} maxLength={40}/><button type="submit" disabled={busy || !teamName.trim()}>+ Add team</button></form>
+          <button type="button" className="cc-host-team-start-shortcut" onClick={() => goToLobbyStep(6)}>Start Game <ArrowRight size={15}/></button>
+        </>}
+      </div>}
+
+      {lobbyStep === 5 && <div className="cc-host-lobby-card cc-host-team-name-step">
+        <h2>Edit teams and players</h2><p>Set team names and add a picture. You can still move players between teams here.</p>
+        {!session.teams_enabled ? <p className="cc-host-lobby-note">This game is set up for individual players, so team setup is skipped.</p> : <>
+          {teams.map((team) => <article className="cc-host-team-edit-card" key={team.id}>
+            <div className="cc-host-team-edit-identity"><span className="cc-host-lobby-team-icon">{teamPhotoUrls[team.id] ? <img src={teamPhotoUrls[team.id]} alt=""/> : <Users size={21}/>}</span><input aria-label={`Name for ${team.name}`} value={teamNameEdits[team.id] ?? team.name} maxLength={40} onChange={(event) => setTeamNameEdits((values) => ({ ...values, [team.id]: event.target.value }))}/><button type="button" disabled={busy || !teamNameEdits[team.id]?.trim() || teamNameEdits[team.id] === team.name} onClick={() => void renameTeam(team)}>Save</button></div>
+            <label className="cc-host-team-photo-upload"><span>{teamPhotoUrls[team.id] ? <img src={teamPhotoUrls[team.id]} alt="Team photo"/> : <Plus size={20}/>}</span><strong>Upload team picture</strong><input type="file" accept="image/*" disabled={busy} onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadTeamPhoto(team, file); event.currentTarget.value = ""; }}/></label>
+            <div className="cc-host-team-edit-members">{players.filter((player) => player.team_id === team.id).map((player) => <label key={player.id}><span>{player.avatar_url ? <img src={player.avatar_url} alt=""/> : player.name.slice(0, 1).toUpperCase()}</span><strong>{player.name}</strong><select aria-label={`Team for ${player.name}`} value={player.team_id ?? ""} disabled={busy} onChange={(event) => void assignTeam(player, event.target.value)}><option value="">No team</option>{teams.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}</select></label>)}</div>
+          </article>)}
+          <form className="cc-host-add-team-form" onSubmit={(event) => void createTeam(event)}><input aria-label="New team name" value={teamName} onChange={(event) => setTeamName(event.target.value)} placeholder={`Team ${teams.length + 1}`} maxLength={40}/><button type="submit" disabled={busy || !teamName.trim()}>+ Add team</button></form>
+        </>}
+      </div>}
+
+      {lobbyStep === 6 && <div className="cc-host-lobby-card cc-host-waiting-step">
+        <div className="cc-host-waiting-art">{gamePhotoUrl ? <img src={gamePhotoUrl} alt=""/> : <span aria-hidden="true">🎉</span>}</div>
+        <span className="cc-host-waiting-kicker">READY WHEN YOU ARE</span><h2>{session.name}</h2>
+        <strong className="cc-host-waiting-count">{session.teams_enabled ? `${readyTeamsCount} of ${teams.length} teams ready` : `${players.length} players ready`}</strong>
+        <p>Everyone is together. This is a good time to explain the rules, answer questions and make sure each team knows how to play.</p>
+        <div className="cc-host-waiting-summary">{players.length} players · {session.teams_enabled ? `${teams.length} teams · ${session.team_size} players per team` : "Individual play"}</div>
+      </div>}
+
+      <footer className="cc-host-lobby-step-actions">
+        <button type="button" className="cc-host-lobby-back" disabled={lobbyStep === 1} onClick={() => goToLobbyStep((lobbyStep - 1) as 1 | 2 | 3 | 4 | 5 | 6)}><ArrowLeft size={16}/> Back</button>
+        {lobbyStep < 6 ? <button type="button" className="cc-host-lobby-next" onClick={() => goToLobbyStep((lobbyStep + 1) as 1 | 2 | 3 | 4 | 5 | 6)}>{lobbyStep === 5 ? "Next" : "Next"} <ArrowRight size={17}/></button>
+          : <button type="button" className="cc-host-lobby-next" disabled={busy} onClick={() => void startGame()}>{busy ? <LoaderCircle size={17} className="cc-spin"/> : <Play size={17}/>} Start Game</button>}
+      </footer>
+    </section>
+  );
+
   return (
-    <HostShell title={session.name} subtitle={`${session.venue_name || "Single venue"} · ${session.status === "lobby" ? "Waiting room" : session.status === "live" ? "Live game" : "Completed"}`} showCreate={false}>
+    <main className="host-portal cc-host-live-standalone">
       <div className="cc-session-page cc-host-game-redesign cc-host-live-integrated">
         <div className="cc-session-topbar" data-tour="host-overview">
           <Link to="/host" className="cc-session-back"><ArrowLeft size={17}/> Host Hub</Link>
           <div className="cc-host-topbar-right">
+            {headerPlayer && <span className="cc-host-topbar-score"><Trophy size={15}/>{headerPlayer.score} pts · #{headerRank}</span>}
             <span className="cc-host-controls-badge"><span className="cc-host-controls-dot"/> HOST CONTROLS</span>
             <span className={`cc-session-status cc-session-status--${session.status}`}>{session.status === "lobby" ? "LOBBY" : session.status === "live" ? "LIVE" : "COMPLETED"}</span>
           </div>
         </div>
 
-        <section className="cc-host-mobile-profile" aria-label="Host and game details">
-          <Link to="/host" className="cc-host-mobile-brand">Chaos</Link>
-          <div className="cc-host-mobile-player">
-            <span className="cc-host-mobile-avatar">{hostPlayer?.avatar_url ? <img src={hostPlayer.avatar_url} alt=""/> : (hostPlayer?.name || "H").slice(0, 1).toUpperCase()}</span>
-            <span className="cc-host-mobile-player-copy"><strong>{hostPlayer?.name || "Host"}</strong><b>HOST</b><small>{hostPlayer ? "Playing in this game" : session.name}</small></span>
-            <span className="cc-host-mobile-score">{hostPlayer ? <><strong>🏆 {hostPlayer.score}</strong><small>★ #{hostRank}</small></> : <><strong>{players.length} joined</strong><small>players</small></>}</span>
-          </div>
-          <div className="cc-host-mobile-code"><span><small>GAME CODE</small><strong>{session.join_code}</strong></span><button type="button" aria-label="Copy game code" onClick={() => void copyCode()}><Clipboard size={18}/></button></div>
-        </section>
+        <div className="cc-host-live-system-bar"><span>Chaos</span><span className="cc-host-live-system-status">{session.status === "live" ? "● LIVE" : session.status.toUpperCase()}</span><Link to="/host">Host Hub ↗</Link></div>
+        <SessionPlayerProfile viewerRole="host"
+          name={hostPlayer?.name ?? headerPlayer?.name ?? hostDisplayName}
+          subtitle={hostPlayer ? teamById.get(hostPlayer.team_id ?? "")?.name ?? "Playing in this game" : headerPlayer ? "Current leader" : "Game host"}
+          avatarUrl={hostPlayer?.avatar_url ?? headerPlayer?.avatar_url}
+          score={headerPlayer?.score ?? 0}
+          rank={headerRank}
+          badge={hostPlayer ? "HOST" : headerPlayer ? "LEADER" : "HOST"}
+        />
+        <SessionGameTitlebar name={session.name} code={session.join_code} photoUrl={gamePhotoUrl} onCopy={() => void copyCode()}/>
 
         <section className="cc-host-live-intro" aria-label="Live game overview">
           <div className="cc-host-live-intro-copy">
@@ -708,12 +1185,12 @@ export default function HostLiveSession() {
         {notice && <div className="host-alert host-alert--success" role="status">{notice}</div>}
 
         <div className="cc-host-tour-action"><button type="button" className="cc-tour-help-button cc-tour-help-button--host" onClick={() => setHostTourOpen(true)}>✦ Take the host tour</button></div>
+        {session.status === "lobby" ? lobbyFlow : <>
         <nav className="cc-host-game-tabs" data-tour="host-sections" aria-label="Game sections">
           <button type="button" className={activeTab === "game" ? "is-active" : ""} aria-current={activeTab === "game" ? "page" : undefined} onClick={() => setActiveTab("game")}><Gamepad2 size={18}/><span>Game</span></button>
-          <button type="button" className={activeTab === "leaderboard" ? "is-active" : ""} aria-current={activeTab === "leaderboard" ? "page" : undefined} onClick={() => setActiveTab("leaderboard")}><Medal size={18}/><span>Leaderboard</span></button>
-          <button type="button" className={activeTab === "side-challenges" ? "is-active" : ""} aria-current={activeTab === "side-challenges" ? "page" : undefined} onClick={() => setActiveTab("side-challenges")}><ClipboardList size={18}/><span>Side challenges</span>{submissions.filter((item) => item.status === "submitted" && challengeById.get(item.challenge_id)?.kind !== "main").length > 0 && <b className="cc-host-tab-badge">{submissions.filter((item) => item.status === "submitted" && challengeById.get(item.challenge_id)?.kind !== "main").length}</b>}</button>
-          <button type="button" className={activeTab === "reward-round" ? "is-active" : ""} aria-current={activeTab === "reward-round" ? "page" : undefined} onClick={() => setActiveTab("reward-round")}><Star size={18}/><span>Reward round</span></button>
-          <button type="button" data-tour="host-controls-tab" className={`cc-host-controls-tab${activeTab === "host-controls" ? " is-active" : ""}`} aria-current={activeTab === "host-controls" ? "page" : undefined} onClick={() => setActiveTab("host-controls")}><Shield size={18}/><span>Host controls</span></button>
+          <button type="button" className={activeTab === "side-challenges" ? "is-active" : ""} aria-current={activeTab === "side-challenges" ? "page" : undefined} onClick={() => setActiveTab("side-challenges")}><ClipboardList size={18}/><span>Challenges</span>{submissions.filter((item) => item.status === "submitted" && challengeById.get(item.challenge_id)?.kind !== "main").length > 0 && <b className="cc-host-tab-badge">{submissions.filter((item) => item.status === "submitted" && challengeById.get(item.challenge_id)?.kind !== "main").length}</b>}</button>
+          <button type="button" className={activeTab === "leaderboard" ? "is-active" : ""} aria-current={activeTab === "leaderboard" ? "page" : undefined} onClick={() => setActiveTab("leaderboard")}><Medal size={18}/><span>Scores</span></button>
+          <button type="button" data-tour="host-controls-tab" className={`cc-host-controls-tab${activeTab === "host-controls" || activeTab === "reward-round" ? " is-active" : ""}`} aria-current={activeTab === "host-controls" ? "page" : undefined} onClick={() => setActiveTab("host-controls")}><Shield size={18}/><span>Host</span></button>
         </nav>
 
 {activeTab === "game" && (
@@ -722,59 +1199,85 @@ export default function HostLiveSession() {
             <div><div className="cc-section-kicker">PLAYER EXPERIENCE</div><h2>Game</h2><p>You're in the same game space as players. Host-only actions live in their own tab.</p></div>
             <button type="button" className="host-button cc-host-control-shortcut" onClick={() => setActiveTab("host-controls")}><Shield size={15}/> Host controls</button>
           </div>
-          {session.host_participates && hostPlayerViewUrl ? (
-            <div className="cc-host-embedded-player-shell">
-              <div className="cc-host-embedded-player-bar"><span><i/> PLAYING AS HOST</span><button type="button" onClick={() => setActiveTab("host-controls")}>Open host controls <ArrowRight size={14}/></button></div>
-              <iframe key={hostPlayerViewUrl} className="cc-host-embedded-player-frame" title={`Player game experience for ${session.name}`} src={hostPlayerViewUrl} />
-            </div>
-          ) : (
-            <div className="cc-host-game-preview-layout">
+          <div className="cc-host-game-preview-layout">
               <section className="cc-host-game-preview-main">
-                {session.status === "lobby" ? (
-                  <div className="cc-host-preview-state"><span className="cc-host-preview-kicker">GAME LOBBY</span><h3>Get ready for the chaos</h3><p>Players see a waiting screen until you start the game.</p><div className="cc-host-preview-code">{session.join_code}</div><span>{players.length} / {session.player_limit} players joined</span></div>
-                ) : session.status === "completed" ? (
-                  <div className="cc-host-preview-state"><span className="cc-host-preview-kicker">GAME COMPLETE</span><h3>That's a wrap!</h3><p>Players can view their final scores and the completed challenge history.</p></div>
+                {session.status === "completed" ? (
+                  <section className="cc-player-state-card"><span className="cc-player-eyebrow">GAME COMPLETE</span><h2>That's a wrap!</h2><p>Players can view their final scores and completed challenge history.</p></section>
+                ) : hostBreakActive ? (
+                  <section className="cc-host-break-card" aria-live="polite">
+                    <div className="cc-host-break-header"><span className="cc-host-break-kicker">✦ BREAK · ROUND {nextBreakChallenge?.round_number ?? breakResumeRound ?? session.current_round_number + 1} UP NEXT</span><strong className="cc-host-break-countdown">{roundClockText}</strong></div>
+                    <div className="cc-host-break-preview">
+                      {nextBreakChallenge ? <>
+                        <div className="cc-host-break-challenge-title"><b aria-hidden="true">{challengeIcon(nextBreakChallenge.title, nextBreakChallenge.description)}</b><div><span>UP NEXT · ROUND {nextBreakChallenge.round_number}</span><h2>{nextBreakChallenge.title}</h2></div></div>
+                        <p className="cc-host-break-description">{nextBreakChallenge.description}</p>
+                        <div className="cc-host-break-facts"><span><b>Duration</b>{nextBreakChallenge.duration_minutes} min</span><span><b>Points</b>{nextBreakChallenge.points} pts</span><span><b>Starts</b>{nextRoundStartAt ? nextRoundStartAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "When break resumes"}</span><span><b>Ends</b>{nextRoundEndAt ? nextRoundEndAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "After timer"}</span></div>
+                        <div className="cc-host-break-equipment"><b>Equipment needed</b><p>{nextBreakTask?.equipment?.length ? nextBreakTask.equipment.join(" · ") : "No equipment listed for this challenge."}</p>{nextBreakTask?.setup && <small>{nextBreakTask.setup}</small>}</div>
+                        <button type="button" className="cc-host-break-edit" disabled={busy} onClick={() => openBreakChallengeEditor(nextBreakChallenge)}><Pencil size={15}/> Edit this challenge</button>
+                      </> : <><h2>Take a breather</h2><p>There is no upcoming challenge in this game plan.</p></>}
+                    </div>
+                    <p className="cc-host-break-timing">{roundClockRunning
+                      ? `Players see this break countdown. Round ${breakResumeRound ?? session.current_round_number + 1} will be ready when it ends; start the round timer when your announcement and setup are done.`
+                      : "The break timer is paused. Resume it when you want players to know when the next round begins."}</p>
+                  </section>
                 ) : (
-                  <article className="cc-host-preview-challenge">
-                    <div className="cc-host-preview-challenge-top"><span className="cc-host-preview-kicker">YOUR CHALLENGE</span><span className="cc-host-preview-points">{currentChallenge?.points ?? 0} POINTS ON APPROVAL</span></div>
-                    <div className="cc-host-preview-round-label"><span className="cc-player-live-dot"/> ROUND {session.current_round_number} OF {mainRounds.length}</div>
-                    <div className="cc-host-preview-challenge-heading"><h3>{currentChallenge?.title ?? "Challenge not found"}</h3><span className="cc-host-preview-challenge-art" aria-hidden="true">{challengeIcon(currentChallenge?.title ?? "Challenge", currentChallenge?.description ?? "")}</span></div>
-                    <p>{currentChallenge?.description ?? "Check that this session has a main challenge assigned to the current round."}</p>
-                    <div className="cc-host-preview-challenge-meta"><span>{currentChallenge?.duration_minutes ?? 0} min</span><span>{currentChallenge?.allow_photo_upload ? "Photo/video evidence required" : "Evidence optional"}</span></div>
-                    {currentChallenge?.allow_photo_upload && <div className="cc-host-preview-upload-note"><ClipboardList size={17}/><span>Players can upload photo or video evidence, then submit for host review.</span></div>}
-                  </article>
+                  <SessionMainChallengeCard viewerRole="host"
+                    title={currentChallenge?.title ?? "Challenge not found"}
+                    description={currentChallenge?.description ?? "Check that this session has a main challenge assigned to the current round."}
+                    points={currentChallenge?.points ?? 0}
+                    round={session.current_round_number}
+                    roundCount={mainRounds.length}
+                    durationMinutes={currentChallenge?.duration_minutes ?? 0}
+                    timerLabel={roundClockText}
+                    timerCaption={hostBreakActive ? "BREAK" : roundClockRunning ? "TIME LEFT" : "READY"}
+                    actionTourTarget="host-round-timer"
+                    action={<>
+                      <button type="button" className="cc-player-primary-button" onClick={runStartRoundControl} disabled={busy || session.status !== "live"}>
+                        {roundClockRunning ? <><Pause size={16}/> Pause Timer</> : <><Play size={16}/> Start Round Timer</>}
+                      </button>
+                      <p className="cc-host-shared-challenge-note">You and the players see the same challenge and countdown. Start the timer when your announcement and setup are done.</p>
+                    </>}
+                  />
                 )}
               </section>
-              {session.host_participates ? (
-                <aside className="cc-host-join-as-player-panel">
-                  <div className="cc-host-player-illustration"><UserRound size={25}/></div>
-                  <span className="cc-section-kicker">YOU CAN PLAY TOO</span><h3>Join the player roster</h3>
-                  <p>Your player game will open right here. You won't be sent to another tab, and your host tools stay available in the Host Controls section.</p>
-                  <label className="cc-host-player-name"><span>Your player name</span><input value={hostPlayerName} maxLength={40} onChange={(event) => setHostPlayerName(event.target.value)} placeholder="Enter your player name"/></label>
-                  <button type="button" className="host-button cc-player-mode-action" onClick={() => void openHostPlayerView()} disabled={busy || session.status === "completed"}><Gamepad2 size={17}/>{session.host_player_id ? "Play game as host" : "Join & play game"}</button>
-                </aside>
-              ) : (
-                <aside className="cc-host-join-as-player-panel cc-host-not-participating-panel">
-                  <div className="cc-host-player-illustration"><Gamepad2 size={25}/></div><span className="cc-section-kicker">HOST VIEW</span><h3>Same game, host-side view</h3>
-                  <p>This preview mirrors the challenge players see. Host participation wasn't enabled for this session, so challenge uploads remain on the player devices.</p>
-                  <button type="button" className="host-button cc-host-control-shortcut" onClick={() => setActiveTab("host-controls")}><Shield size={15}/> Manage the game</button>
-                </aside>
-              )}
+              <aside className="cc-host-join-as-player-panel cc-host-not-participating-panel">
+                <div className="cc-host-player-illustration"><Trophy size={25}/></div><span className="cc-section-kicker">LIVE PLAYER SCORES</span><h3>{headerPlayer ? `${headerPlayer.name} is in the lead` : "Waiting for players"}</h3>
+                <p>{headerPlayer ? `${headerPlayer.score} points · rank ${headerRank} of ${players.length}. Scores refresh from the live player roster.` : "Player scores and rankings will appear here as people join and earn points."}</p>
+                <button type="button" className="host-button cc-host-control-shortcut" onClick={() => setActiveTab("leaderboard")}><Medal size={15}/> View leaderboard</button>
+              </aside>
             </div>
-          )}
-          {session.status === "live" && mainRounds[session.current_round_number] && <article className="cc-host-next-challenge"><span>▶ NEXT CHALLENGE</span><div className="cc-host-next-challenge-heading"><b aria-hidden="true">{challengeIcon(mainRounds[session.current_round_number].title, mainRounds[session.current_round_number].description)}</b><strong>{mainRounds[session.current_round_number].title}</strong></div><small>{mainRounds[session.current_round_number].description}</small></article>}
         </section>
+        )}
+
+        {activeTab === "game" && (
+          <>
+            <section className="cc-host-live-controls-card" aria-label="Host controls">
+              <h2><span aria-hidden="true">✦</span> HOST CONTROLS</h2>
+              {session.status === "live" && <div className={`cc-host-round-clock${!roundClockRunning ? " is-paused" : ""}`}><span>{hostBreakActive ? "BREAK TIME" : roundClockRunning ? "TIME REMAINING" : "TIMER PAUSED"}</span><strong>{roundClockText}</strong></div>}
+              <div className="cc-host-live-control-grid">
+                <button type="button" onClick={runStartRoundControl} disabled={busy || session.status !== "live"}><>{roundClockRunning ? <Pause size={20}/> : <Play size={20}/>}</><span>{roundClockRunning ? "Pause Timer" : "Start Timer"}</span></button>
+                <button type="button" onClick={openPointReview}><Trophy size={20}/><span>Review Points</span></button>
+                <button type="button" onClick={() => hostBreakActive ? void moveToRound(breakResumeRound ?? session.current_round_number + 1) : requestMoveToRound(session.current_round_number + 1)} disabled={busy || session.status !== "live" || session.current_round_number >= mainRounds.length}><ArrowRight size={20}/><span>{hostBreakActive ? "Skip Break" : upcomingBreakMinutes > 0 ? "Next · Break" : "Next Round"}</span></button>
+                <button type="button" className={hostBreakActive ? "is-on-break" : ""} onClick={() => hostBreakActive ? void moveToRound(breakResumeRound ?? session.current_round_number + 1) : requestStartBreak()} disabled={busy || session.status !== "live" || session.current_round_number >= mainRounds.length}><span className="cc-host-pause-symbol">Ⅱ</span><span>{hostBreakActive ? "End Break" : "Start Break"}</span></button>
+              </div>
+              {hostBreakActive && <p className="cc-host-break-note">Break countdown is shared with players · next up: Round {breakResumeRound ?? session.current_round_number + 1}.</p>}
+              <button type="button" className="cc-host-reward-shortcut" onClick={() => { setShowRewardSetup(!activeRewardRound); setShowRewardOverlay(true); }}>Open reward points</button>
+            </section>
+            {session.status === "live" && mainRounds[session.current_round_number] && <article className={`cc-host-next-challenge${upcomingBreakMinutes > 0 || hostBreakActive ? " is-break" : ""}`}>
+              <span>{hostBreakActive ? "BREAK IN PROGRESS" : upcomingBreakMinutes > 0 ? `▶ NEXT UP · BREAK · ${upcomingBreakMinutes} MIN` : `▶ NEXT CHALLENGE · ROUND ${session.current_round_number + 1}`}</span>
+              <div className="cc-host-next-challenge-heading"><b aria-hidden="true">{upcomingBreakMinutes > 0 || hostBreakActive ? "☕" : challengeIcon(mainRounds[session.current_round_number].title, mainRounds[session.current_round_number].description)}</b><strong>{hostBreakActive ? `Round ${breakResumeRound ?? session.current_round_number + 1} follows the break` : upcomingBreakMinutes > 0 ? `Break · ${upcomingBreakMinutes} minutes` : mainRounds[session.current_round_number].title}</strong></div>
+              <small>{hostBreakActive ? "Players will be moved to the next challenge when the break ends." : upcomingBreakMinutes > 0 ? `After the break: ${mainRounds[session.current_round_number].title}` : mainRounds[session.current_round_number].description}</small>
+            </article>}
+          </>
         )}
 
 {activeTab === "host-controls" && (
         <div className="cc-session-grid">
           <section className="cc-session-card cc-invite-card">
-            <div className="cc-section-kicker">YOUR GAME CODE</div>
-            <div className="cc-join-code">{session.join_code}</div>
-            <p>Players can scan this QR code or enter the six-digit code at the join screen.</p>
+            <div className="cc-section-kicker">INVITE PLAYERS</div>
+            <p>Players can scan this QR code or enter the code shown in the game header.</p>
             <div className="cc-qr-wrap"><QRCodeSVG value={joinUrl} size={196} level="M" marginSize={4} /></div>
             <div className="cc-invite-actions">
-              <button type="button" className="host-button host-button--secondary" onClick={() => void copyCode()}><Clipboard size={16}/> Copy code</button>
+              <button type="button" className="host-button host-button--secondary" onClick={() => void copyCode()}><Clipboard size={16}/> Copy join code</button>
               <a className="host-button host-button--ghost" href={joinUrl} target="_blank" rel="noreferrer">Open join screen <ArrowRight size={16}/></a>
             </div>
             <div className="cc-player-count"><Users size={17}/> {players.length} / {session.player_limit} players joined</div>
@@ -783,22 +1286,7 @@ export default function HostLiveSession() {
 
           <section className="cc-session-card cc-live-controls" data-tour="host-start-controls">
             <div className="cc-section-kicker">GAME CONTROL</div>
-            {session.status === "lobby" ? (
-              <>
-                <h2>Ready when you are.</h2>
-                <p>Share the code, get everyone into the lobby, then start the game. Your first challenge stays hidden until you start.</p>
-                <button type="button" className="host-button host-button--lime cc-primary-wide" onClick={() => void startGame()} disabled={busy || players.length === 0 || (session.host_participates && !session.host_player_id) || (session.teams_enabled && players.some((player) => !player.team_id))}>
-                  {busy ? <LoaderCircle size={17} className="cc-spin"/> : <Play size={17}/>} Start game
-                </button>
-                {players.length === 0
-                  ? <p className="cc-helper-text">The start button becomes available when the first player joins.</p>
-                  : session.host_participates && !session.host_player_id
-                    ? <p className="cc-helper-text">Host play is enabled. Join as a player on this page first, then start when everyone's ready.</p>
-                    : session.teams_enabled && players.some((player) => !player.team_id)
-                    ? <p className="cc-helper-text">Wait until every player has a team. {session.host_chooses_teams ? "Assign teams below." : "Players can choose teams from their lobby screen."}</p>
-                    : null}
-              </>
-            ) : session.status === "completed" ? (
+            {session.status === "completed" ? (
               <>
                 <h2>Game complete!</h2>
                 <p>This session is saved separately from every other game. You can still review the rounds and scores below.</p>
@@ -810,8 +1298,8 @@ export default function HostLiveSession() {
                 <h2>{currentChallenge?.title ?? "Round not found"}</h2>
                 <p>{currentChallenge?.description ?? "Check that the saved plan contains a main challenge for this round."}</p>
                 <div className="cc-round-controls">
-                  <button type="button" className="host-button host-button--secondary" disabled={busy || session.current_round_number <= 1} onClick={() => void moveToRound(session.current_round_number - 1)}><RotateCcw size={16}/> Previous round</button>
-                  <button type="button" className="host-button host-button--primary" disabled={busy || session.current_round_number >= mainRounds.length} onClick={() => void moveToRound(session.current_round_number + 1)}>Next round <ArrowRight size={16}/></button>
+                  <button type="button" className="host-button host-button--secondary" disabled={busy || session.current_round_number <= 1} onClick={() => requestMoveToRound(session.current_round_number - 1)}><RotateCcw size={16}/> Previous round</button>
+                  <button type="button" className="host-button host-button--primary" disabled={busy || session.current_round_number >= mainRounds.length} onClick={() => requestMoveToRound(session.current_round_number + 1)}>Next round <ArrowRight size={16}/></button>
                 </div>
                 <div className="cc-round-list" aria-label="Jump to round">
                   {mainRounds.map((round) => <button
@@ -819,7 +1307,7 @@ export default function HostLiveSession() {
                     key={round.id}
                     className={`cc-round-chip${round.round_number === session.current_round_number ? " is-current" : ""}`}
                     disabled={busy || round.round_number === session.current_round_number}
-                    onClick={() => void moveToRound(Number(round.round_number))}
+                    onClick={() => requestMoveToRound(Number(round.round_number))}
                   >{round.round_number}. {round.title}</button>)}
                 </div>
                 <button type="button" className="host-button host-button--ghost cc-finish-game" disabled={busy} onClick={() => void finishGame()}><Flag size={16}/> Finish game</button>
@@ -829,16 +1317,9 @@ export default function HostLiveSession() {
         </div>
         )}
 
-{activeTab === "leaderboard" && renderHostPlayerTab("leaderboard")}
         {activeTab === "leaderboard" && (
         <section className="cc-session-card cc-session-section" data-tour="host-leaderboard">
           <div className="cc-session-section-heading"><div><div className="cc-section-kicker">{session.teams_enabled ? "TEAM SETUP" : "PLAYER LOBBY"}</div><h2>{session.teams_enabled ? "Players & teams" : "Players"}</h2><p>{session.teams_enabled ? (session.host_chooses_teams ? "Assign players to teams." : "See who has joined and which teams they picked.") + ` Team limit: ${session.team_size} players.` : "Everyone who joins this game appears here."}</p></div><span className="cc-count-pill">{players.length} players</span></div>
-          {session.teams_enabled && session.host_chooses_teams && session.status === "lobby" && (
-            <form className="cc-create-team-form" onSubmit={(event) => void createTeam(event)}>
-              <input aria-label="New team name" value={teamName} onChange={(event) => setTeamName(event.target.value)} placeholder="New team name" maxLength={40}/>
-              <button className="host-button host-button--secondary" type="submit" disabled={busy || !teamName.trim()}>Create team</button>
-            </form>
-          )}
           <div className="cc-leaderboard-switch" role="tablist" aria-label="Leaderboard type">
             <button type="button" role="tab" aria-selected={leaderboardScope === "players"} className={leaderboardScope === "players" ? "is-active" : ""} onClick={() => setLeaderboardScope("players")}>Players</button>
             {session.teams_enabled && <button type="button" role="tab" aria-selected={leaderboardScope === "teams"} className={leaderboardScope === "teams" ? "is-active" : ""} onClick={() => setLeaderboardScope("teams")}>Teams</button>}
@@ -867,11 +1348,12 @@ export default function HostLiveSession() {
         </section>
         )}
 
-{activeTab === "reward-round" && (
-        <section className="cc-session-card cc-session-section cc-reward-points-section" data-tour="host-reward">
+{(activeTab === "reward-round" || showRewardOverlay) && (
+        <section className={`cc-session-card cc-session-section cc-reward-points-section${showRewardOverlay ? " cc-reward-points-overlay" : ""}`} data-tour="host-reward" role={showRewardOverlay ? "dialog" : undefined} aria-modal={showRewardOverlay || undefined} aria-label={showRewardOverlay ? "Review points and voting" : undefined}>
           <div className="cc-session-section-heading">
-            <div><div className="cc-section-kicker">REWARD POINTS</div><h2>Reward points</h2><p>Choose how to decide the winner. Player voting awards points automatically; host awards and audience cheers are confirmed manually.</p></div>
+            <div><div className="cc-section-kicker">REWARD POINTS</div><h2>Review points</h2><p>Choose a challenge, then run the player vote or award flow without leaving the game screen.</p></div>
             <span className="cc-count-pill">{enabledRewardMethods.length} methods enabled</span>
+            {showRewardOverlay && <button type="button" className="cc-reward-overlay-close" onClick={() => setShowRewardOverlay(false)} aria-label="Return to game">×</button>}
           </div>
 
           {!activeRewardRound && session.status === "live" && !showRewardSetup && (
@@ -903,6 +1385,11 @@ export default function HostLiveSession() {
                 <>
                   <div className="cc-reward-instructions"><strong>Voting is live</strong><span>Players can choose or change one vote on their own device. The top-voted player/team wins automatically when you close voting.</span><b>{activeRewardVotes.length} vote{activeRewardVotes.length === 1 ? "" : "s"} cast</b></div>
                   <div className="cc-reward-candidate-list">{rewardTargetRows.map((candidate) => <div className="cc-reward-candidate-row" key={candidate.id}><span className="cc-reward-candidate-avatar">{candidate.name.slice(0, 1).toUpperCase()}</span><span className="cc-reward-candidate-copy"><strong>{candidate.name}</strong><small>{candidate.detail}</small></span><span className="cc-reward-vote-total">{rewardVoteCount(candidate.id)} vote{rewardVoteCount(candidate.id) === 1 ? "" : "s"}</span></div>)}</div>
+                  {session.host_player_id ? (() => {
+                    const ownVote = activeRewardVotes.find((vote) => vote.voter_player_id === session.host_player_id);
+                    const ownTargetId = activeRewardRound.target_kind === "player" ? ownVote?.target_player_id : ownVote?.target_team_id;
+                    return <div className="cc-reward-host-vote"><div><strong>Cast your host vote</strong><span>{ownTargetId ? `Your vote is saved for ${rewardTargetRows.find((candidate) => candidate.id === ownTargetId)?.name ?? "your selection"}.` : "Your vote counts with the players’ votes."}</span></div><div className="cc-reward-host-vote-options">{rewardTargetRows.map((candidate) => <button type="button" key={candidate.id} disabled={busy} className={ownTargetId === candidate.id ? "is-selected" : ""} onClick={() => void castHostRewardVote(candidate.id)}>{ownTargetId === candidate.id ? <Check size={14}/> : null}{candidate.name}</button>)}</div></div>;
+                  })() : <div className="cc-reward-host-vote cc-reward-host-vote--join"><div><strong>Want to vote too?</strong><span>Join the player list as Host to cast a vote that counts with everyone else’s.</span></div><button type="button" disabled={busy} onClick={() => void setHostParticipation(true)}>Join &amp; vote</button></div>}
                   <div className="cc-reward-actions"><button type="button" className="host-button host-button--ghost" disabled={busy} onClick={() => void cancelRewardRound()}>Cancel flow</button><button type="button" className="host-button host-button--lime" disabled={busy} onClick={() => void completeRewardRound()}><Check size={16}/> Close voting & award winner(s)</button></div>
                 </>
               )}
@@ -931,7 +1418,6 @@ export default function HostLiveSession() {
         </section>
         )}
 
-{activeTab === "side-challenges" && renderHostPlayerTab("side-challenges")}
         {activeTab === "side-challenges" && (
         <>
         <section className="cc-session-card cc-session-section cc-side-challenge-library">
@@ -1047,7 +1533,7 @@ export default function HostLiveSession() {
           <div className="cc-session-section-heading"><div><div className="cc-section-kicker">ROUND PLAN</div><h2>Your challenges</h2><p>Jump to a round at any time while the game is live, including previous rounds.</p></div><span className="cc-count-pill">{mainRounds.length} rounds</span></div>
           <div className="cc-challenge-list">
             {mainRounds.map((round) => (
-              <button type="button" key={round.id} className={`cc-challenge-row${session.status === "live" && round.round_number === session.current_round_number ? " is-current" : ""}`} onClick={() => session.status === "live" && void moveToRound(Number(round.round_number))} disabled={session.status !== "live" || round.round_number === session.current_round_number || busy}>
+              <button type="button" key={round.id} className={`cc-challenge-row${session.status === "live" && round.round_number === session.current_round_number ? " is-current" : ""}`} onClick={() => session.status === "live" && requestMoveToRound(Number(round.round_number))} disabled={session.status !== "live" || round.round_number === session.current_round_number || busy}>
                 <span className="cc-challenge-index">{round.round_number}</span>
                 <span className="cc-challenge-copy"><strong>{round.title}</strong><small>{round.description}</small></span>
                 <span className="cc-challenge-points">{round.points} pts</span>
@@ -1076,7 +1562,6 @@ export default function HostLiveSession() {
           </section>
         )}
 
-{activeTab === "reward-round" && renderHostPlayerTab("final")}
         {activeTab === "reward-round" && (
         <section className="cc-session-card cc-session-section cc-session-final-vote-card">
           <div className="cc-session-section-heading"><div><div className="cc-section-kicker">FINAL ROUND</div><h2>Player favourite vote</h2><p>Save media from approved side challenges or secret missions above. Only approved entries marked “Saved for final” appear for players.</p></div><span className="cc-count-pill">{evidence.filter((item) => item.saved_for_final).length} saved</span></div>
@@ -1122,8 +1607,36 @@ export default function HostLiveSession() {
             )}
           </section>
         )}
+        </>}
       </div>
+      {editingBreakChallenge && <div className="cc-host-override-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) setEditingBreakChallenge(null); }}>
+        <form className="cc-host-override-dialog cc-host-break-edit-dialog" role="dialog" aria-modal="true" aria-labelledby="cc-host-break-edit-title" onSubmit={(event) => void saveBreakChallengeEdit(event)}>
+          <span className="cc-host-override-kicker">EDIT ROUND {editingBreakChallenge.round_number}</span>
+          <h2 id="cc-host-break-edit-title">Update the upcoming challenge</h2>
+          <label>Challenge title<input required maxLength={100} value={editChallengeTitle} onChange={(event) => setEditChallengeTitle(event.target.value)}/></label>
+          <label>Instructions<textarea rows={4} value={editChallengeDescription} onChange={(event) => setEditChallengeDescription(event.target.value)}/></label>
+          <label>Equipment needed <small>Separate items with commas.</small><textarea rows={2} value={editChallengeEquipment} onChange={(event) => setEditChallengeEquipment(event.target.value)}/></label>
+          <div className="cc-host-break-edit-numbers"><label>Minutes<input type="number" min={1} max={240} value={editChallengeDuration} onChange={(event) => setEditChallengeDuration(Number(event.target.value))}/></label><label>Points<input type="number" min={0} max={1000} value={editChallengePoints} onChange={(event) => setEditChallengePoints(Number(event.target.value))}/></label></div>
+          <label className="cc-host-break-edit-check"><input type="checkbox" checked={editChallengeEvidence} onChange={(event) => setEditChallengeEvidence(event.target.checked)}/> Players must submit photo or video evidence</label>
+          <div className="cc-host-override-actions"><button type="button" disabled={busy} onClick={() => setEditingBreakChallenge(null)}>Cancel</button><button type="submit" disabled={busy || !editChallengeTitle.trim()}>{busy ? "Saving…" : "Save challenge"}</button></div>
+        </form>
+      </div>}
+      {overridePrompt && <div className="cc-host-override-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !busy) setOverridePrompt(null); }}>
+        <section className="cc-host-override-dialog" role="alertdialog" aria-modal="true" aria-labelledby="cc-host-override-title">
+          <span className="cc-host-override-kicker">HOST CONTROL</span>
+          <h2 id="cc-host-override-title">{overridePrompt.kind === "start" ? "Start before everything is ready?" : "Override autoplay?"}</h2>
+          <p>{overridePrompt.kind === "start"
+            ? "You can start the game now. The host timer will begin at Round 1, and the remaining schedule will be based on the actual start time."
+            : overridePrompt.forceBreak
+              ? `You are starting a break before Round ${overridePrompt.round}. The challenge timer will pause and players will see the planned resume time.`
+              : `You are moving directly to Round ${overridePrompt.round}. Its timer will reset and stay paused until you start it. Later timings will shift to follow your start time.`}</p>
+          {overridePrompt.kind === "start" && <ul>{startOverrideReasons().map((reason) => <li key={reason}>{reason}</li>)}</ul>}
+          {overridePrompt.kind === "start" && players.length > 0 && session.teams_enabled && unassignedPlayers.length > 0 && <p className="cc-host-override-blocked">Assign every player to a team before starting. This requirement cannot be overridden.</p>}
+          {autoplayEnabled && <p className="cc-host-override-note">Autoplay is enabled. Confirming gives you manual control for the rest of this game.</p>}
+          <div className="cc-host-override-actions"><button type="button" disabled={busy} onClick={() => setOverridePrompt(null)}>Go back</button><button type="button" disabled={busy || (overridePrompt.kind === "start" && (players.length === 0 || (session.teams_enabled && (teams.length === 0 || unassignedPlayers.length > 0))))} onClick={confirmHostOverride}>{busy ? "Working…" : overridePrompt.kind === "start" && players.length > 0 && session.teams_enabled && (teams.length === 0 || unassignedPlayers.length > 0) ? "Assign teams first" : overridePrompt.kind === "start" ? "Override & start game" : overridePrompt.forceBreak ? "Override & start break" : "Override & move round"}</button></div>
+        </section>
+      </div>}
       {hostTourOpen && <GuidedTour steps={hostTourSteps} onNavigate={navigateHostTour} onClose={() => setHostTourOpen(false)} label="HOST TOUR"/>}
-    </HostShell>
+    </main>
   );
 }

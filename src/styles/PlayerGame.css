@@ -12,7 +12,7 @@
   color: #060F13;
   background: #5C36FB;
   background-image: radial-gradient(circle at 15% 8%, rgba(255,255,255,.18), transparent 33%), radial-gradient(circle at 90% 80%, rgba(211,251,110,.11), transparent 30%);
-  font-family: "Maven Pro", system-ui, sans-serif;
+  font-family: "Quicksand", system-ui, sans-serif;
 }
 .cc-player-auth {
   display: flex;
@@ -83,7 +83,7 @@
 }
 .cc-player-auth-card h1 {
   margin: 7px 0 8px;
-  font-family: "Hard Beat", "Maven Pro", system-ui, sans-serif;
+  font-family: "Hard Beat", "Quicksand", system-ui, sans-serif;
   font-weight: 900;
   font-size: clamp(30px, 7vw, 42px);
   line-height: .98;
@@ -176,14 +176,14 @@
 .cc-player-avatar-large { display:grid; place-items:center; flex:0 0 50px; width:50px; height:50px; border:2px solid #fff; border-radius:50%; background:#D3FB6E; color:#23166E; font-size:22px; font-weight:1000; }
 .cc-player-profile-copy { flex:1; min-width:0; }
 .cc-player-profile-copy .cc-player-eyebrow { color:#D3FB6E; }
-.cc-player-profile-copy h1 { margin:2px 0; font-size:20px; line-height:1.1; font-weight:900; }
+.cc-player-profile-copy h1 { margin:2px 0; font-family:"quicksand"; font-size:20px; line-height:1.1; font-weight:900; }
 .cc-player-profile-copy p { margin:0; color:#E4DCFF; font-size:12px; }
 .cc-player-score { display:grid; text-align:center; padding:8px 12px; border-radius:14px; background:#23166E; color:#fff; }
 .cc-player-score strong { font-size:23px; line-height:1; }
 .cc-player-score span { font-size:9px; font-weight:900; letter-spacing:.1em; color:#D3FB6E; margin-top:4px; }
 .cc-player-state-card,.cc-player-team-card,.cc-player-challenge-card,.cc-player-side-section,.cc-player-team-roster { background:#fff; border:2px solid #060F13; border-radius:22px; padding:20px; box-shadow:4px 4px 0 #DED6FE; }
 .cc-player-state-icon { display:grid; place-items:center; width:48px; height:48px; border-radius:15px; background:#EDE9FF; color:#5C36FB; margin-bottom:12px; }
-.cc-player-state-card h2,.cc-player-team-card h2,.cc-player-challenge-card h2,.cc-player-side-section h2,.cc-player-team-roster h2 { margin:6px 0 8px; font-size:23px; font-weight:1000; line-height:1.05; color:#060F13; }
+.cc-player-state-card h2,.cc-player-team-card h2,.cc-player-challenge-card h2,.cc-player-side-section h2,.cc-player-team-roster h2 { margin:6px 0 8px; font-size:23px; font-weight:1000; line-height:1.05; color:#ffffff; }
 .cc-player-state-card p { color:#595568; line-height:1.45; margin:0; }
 .cc-player-lobby-count { margin-top:15px; padding-top:12px; border-top:1px solid #EAE7F3; color:#5C36FB; font-size:12px; font-weight:800; }
 .cc-player-live-label { display:flex; align-items:center; gap:9px; color:#23166E; font-size:12px; font-weight:1000; letter-spacing:.08em; }
@@ -267,6 +267,30 @@
 .cc-player-secret-status--approved { color:#183e0b; background:#d3fb6e; }
 .cc-player-secret-status--rejected { color:#8d1646; background:#fdd3e7; }
 .cc-player-secret-complete { width:100%; margin-top:11px; }
+
+/* Secret missions join the live game feed beneath the main challenge. */
+.cc-player-secret-section { padding:0; border:0; border-radius:0; background:transparent; color:inherit; box-shadow:none; }
+.cc-player-secret-list { gap:12px; }
+.cc-player-secret-card { position:relative; overflow:hidden; padding:13px 74px 13px 13px; border:2px solid #17102c; border-radius:17px; background:linear-gradient(135deg,#eaff00 0%,#dcff00 66%,#d5f600 100%); color:#17102c; box-shadow:0 4px 0 #17102c; }
+.cc-player-secret-card::after { position:absolute; inset:0; z-index:0; pointer-events:none; content:""; opacity:.18; background:repeating-linear-gradient(135deg,transparent 0 12px,#fff 12px 16px); }
+.cc-player-secret-card > * { position:relative; z-index:1; }
+.cc-player-secret-card-top { justify-content:flex-start; }
+.cc-player-secret-label { padding:0; color:#5c36fb; background:transparent; font-size:10px; font-weight:1000; letter-spacing:.04em; }
+.cc-player-secret-card .cc-player-points { margin-left:auto; color:#ff2673; }
+.cc-player-secret-card h3 { margin:7px 0 5px; font-family:"Hard Beat",Impact,sans-serif; font-size:19px; line-height:1.02; text-transform:uppercase; }
+.cc-player-secret-card > p { margin:0 0 9px; color:#17102c; font-size:11px; line-height:1.3; }
+.cc-player-secret-art { top:12px; right:11px; width:53px; height:53px; font-size:42px; }
+.cc-player-secret-status { padding:7px 9px; border:1px solid rgba(23,16,44,.18); border-radius:10px; background:rgba(255,255,255,.72); }
+.cc-player-secret-modal-backdrop { position:fixed; z-index:20; inset:0; display:grid; place-items:center; padding:22px; background:rgba(31,15,104,.76); backdrop-filter:blur(1px); }
+.cc-player-secret-modal { width:min(100%,360px); overflow:hidden; padding:16px; border:2px solid #17102c; border-radius:20px; background:#eaff00; color:#17102c; box-shadow:0 6px 0 #17102c; }
+.cc-player-secret-modal-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.cc-player-secret-modal-label { font-family:"Hard Beat",Impact,sans-serif; font-size:24px; font-weight:900; line-height:.9; text-shadow:1px 1px 0 #fff; }
+.cc-player-secret-modal-art { display:grid; width:55px; height:55px; place-items:center; border:2px solid #17102c; border-radius:50%; background:#fff; font-size:39px; }
+.cc-player-secret-modal h2 { margin:7px 0 8px; font-family:"Hard Beat",Impact,sans-serif; font-size:25px; font-weight:900; line-height:.98; text-transform:uppercase; }
+.cc-player-secret-modal > p { margin:0 0 10px; font-size:12px; line-height:1.35; white-space:pre-wrap; }
+.cc-player-secret-modal-points { margin-bottom:10px; color:#ff2673; font-size:12px; font-weight:1000; text-transform:uppercase; }
+.cc-player-secret-modal-play { display:flex; width:100%; min-height:42px; align-items:center; justify-content:center; gap:6px; border:2px solid #17102c; border-radius:12px; background:#5c36fb; color:#fff; box-shadow:0 3px 0 #17102c; font-family:"Hard Beat",Impact,sans-serif; font-size:15px; font-weight:900; cursor:pointer; }
+.cc-player-secret-modal-play:focus-visible { outline:3px solid #17102c; outline-offset:3px; }
 
 /* Persistent player navigation between the three V2 player pages. */
 .cc-player-page-nav {
@@ -397,7 +421,7 @@
 /* Full-screen interstitial used while a host-led reward round is active. */
 .cc-player-reward-screen { display:grid; gap:16px; width:min(100%,820px); margin:22px auto 0; padding:clamp(22px,5vw,42px); border:3px solid #060f13; border-radius:25px; background:#fff; box-shadow:9px 9px 0 #23166e; animation:cc-player-reward-arrive .4s ease-out both; }
 .cc-player-reward-kicker { display:inline-flex; align-items:center; gap:8px; justify-self:start; padding:8px 11px; border-radius:999px; color:#23166e; background:#d3fb6e; font-size:10px; font-weight:1000; letter-spacing:.09em; }
-.cc-player-reward-screen h2 { margin:0; color:#060f13; font-family:"Hard Beat","Maven Pro",system-ui,sans-serif; font-size:clamp(29px,6vw,46px); line-height:.98; }
+.cc-player-reward-screen h2 { margin:0; color:#060f13; font-family:"Hard Beat"," Quicksand",system-ui,sans-serif; font-size:clamp(29px,6vw,46px); line-height:.98; }
 .cc-player-reward-intro { margin:0; color:#5d596b; line-height:1.5; font-size:13px; }
 .cc-player-reward-vote-count { display:flex; align-items:baseline; gap:8px; padding:12px 14px; border:1px solid #e5e0f4; border-radius:13px; background:#f7f5ff; }
 .cc-player-reward-vote-count strong { color:#5c36fb; font-size:27px; font-weight:1000; font-variant-numeric:tabular-nums; }
@@ -489,7 +513,7 @@
   overflow: hidden;
   color: var(--chaos-white);
   background: radial-gradient(ellipse at 48% 48%, #806bff 0%, #6c4bff 38%, var(--chaos-purple) 76%);
-  font-family: "Maven Pro", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Quicksand", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 .join-flow::before {
@@ -662,7 +686,7 @@
   color: #fff;
   background-color: #6846ff;
   background-image: repeating-conic-gradient(from 2deg at 50% 48%, rgba(255,255,255,.1) 0deg 13deg, transparent 13deg 28deg), radial-gradient(ellipse at center, #836aff 0%, #6846ff 70%);
-  font-family: "Maven Pro", ui-sans-serif, system-ui, sans-serif;
+  font-family: "Quicksand", ui-sans-serif, system-ui, sans-serif;
 }
 .join-flow { min-height: 100svh; }
 .join-flow::before { background: radial-gradient(ellipse at center, transparent 5%, rgba(54,28,196,.18) 100%); mask-image: none; }
@@ -737,7 +761,7 @@
 .cc-player-challenge-top { align-items: flex-start; }
 .cc-player-challenge-top .cc-player-eyebrow { color: #eaff00; padding: 3px 7px; border-radius: 999px; background: #17102c; font-size: 9px; }
 .cc-player-points { color: #ff2673; }
-.cc-player-challenge-card h2 { margin: 3px 0 9px; color: #17102c; font-size: 22px; line-height: 1.05; text-transform: uppercase; }
+.cc-player-challenge-card h2 { margin: 3px 0 9px; color: #ffffff; font-size: 22px; line-height: 1.05; text-transform: uppercase; }
 .cc-player-challenge-card > p { color: #252333; font-size: 13px; }
 .cc-player-challenge-meta { color: #5c36fb; }
 .cc-player-primary-button { min-height: 42px; border: 0; border-radius: 999px; box-shadow: none; }
@@ -765,6 +789,8 @@
 .cc-player-avatar-large { overflow: hidden; }
 .cc-player-avatar-large img { display: block; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
 .cc-player-profile-copy h1 { color: #fff; }
+.cc-player-game-header .cc-player-profile-copy h1,
+.cc-player-embedded .cc-player-profile-copy h1 { font-family:"Quicksand",ui-sans-serif,system-ui,sans-serif; font-size:14px; color:#fff; text-shadow:none; transform:none; text-transform:none; }
 .cc-player-score { flex-direction: row; padding: 0; border-radius: 0; background: transparent; }
 .cc-player-score-points,.cc-player-score-rank { display: inline-flex; align-items: center; gap: 4px; color: #fff; font-size: 12px; font-weight: 900; }
 .cc-player-score-points svg { color: #eaff00; stroke: #17102c; stroke-width: 3px; }
@@ -772,27 +798,48 @@
 .cc-player-score-rank svg { color: #eaff00; stroke: #17102c; stroke-width: 3px; }
 .cc-player-game-titlebar { display: flex; align-items: center; gap: 9px; min-width: 0; padding: 3px 0 5px; }
 .cc-player-game-icon { display: grid; flex: 0 0 48px; width: 48px; height: 42px; place-items: center; border: 2px solid #17102c; border-radius: 15px; background: linear-gradient(135deg,#f5edff,#fff); box-shadow: 2px 2px 0 #eaff00; font-size: 27px; }
+.cc-player-game-icon img { display:block; width:100%; height:100%; border-radius:11px; object-fit:cover; }
 .cc-player-game-name { display: grid; min-width: 0; gap: 2px; }
-.cc-player-game-name strong { max-width: 190px; overflow: hidden; color: #fff; font-family: "Lost in South", "Hard Beat", Impact, sans-serif; font-size: 16px; text-overflow: ellipsis; text-shadow: 2px 2px 0 #17102c; text-transform: uppercase; white-space: nowrap; }
+.cc-player-game-name strong { max-width: 190px; overflow: hidden; color: #fff; font-family: "Hard Beat", Impact, sans-serif; font-size: 16px; text-overflow: ellipsis; text-shadow: 2px 2px 0 #17102c; text-transform: uppercase; white-space: nowrap; }
 .cc-player-game-name small,.cc-player-game-code small { color: rgba(255,255,255,.78); font-size: 8px; font-weight: 900; letter-spacing: .08em; }
 .cc-player-game-code { display: flex; align-items: center; gap: 6px; margin-left: auto; }
 .cc-player-game-code > span { display: grid; justify-items: end; gap: 1px; }
 .cc-player-game-code strong { color: #fff; font-size: 13px; font-weight: 1000; letter-spacing: .08em; }
 .cc-player-game-code button { display: grid; width: 32px; height: 34px; place-items: center; border: 0; border-radius: 9px; background: transparent; color: #fff; cursor: pointer; }
 .cc-player-challenge-card { padding: 14px; border-radius: 21px; }
-.cc-player-challenge-top { min-height: 23px; }
-.cc-player-challenge-kind { display: inline-flex; align-items: center; min-height: 21px; padding: 2px 8px; border-radius: 999px; background: #eaff00; color: #17102c; font-size: 10px; font-style: italic; font-weight: 1000; }
-.cc-player-round-chip { display: inline-flex; padding: 5px 10px; border-radius: 999px; background: #5c36fb; color: #fff; font-size: 9px; font-weight: 900; }
-.cc-player-challenge-heading { display: flex; align-items: center; justify-content: space-between; gap: 7px; }
+.cc-player-challenge-top-right { display:flex; flex-direction: column; align-self:stretch; align-items: flex-end; gap: 4px; }
+.cc-player-challenge-kind { display:flex; transform:rotate(-3deg); align-items: center; padding: 4px 6px; justify-content: center; border-radius: 999px; background: #eaff00; font-family:"Hardbeat"; color: #17102c; font-size: 14px; font-style: italic; font-weight: 1000; }
+.cc-player-round-chip { display: inline-flex; padding: 2px 10px; border-radius: 999px; background: #5c36fb; color: #fff; font-size: 11px; font-weight: 900; }
+.cc-player-challenge-heading-row { display: flex; align-items: center; gap: 8px; }
+.cc-player-challenge-heading-row, .cc-player-challenge-heading, .cc-player-challenge-top { display: flex; align-items: center; gap: 8px; }
+.cc-player-challenge-heading { display: flex; flex-direction: column; align-items: flex-start; align-self:stretch; gap: 0px; flex: 1 0 0; }
 .cc-player-challenge-heading > div { min-width: 0; }
-.cc-player-challenge-heading h2 { margin: 2px 0 1px; font-family: "Lost in South", "Hard Beat", Impact, sans-serif; font-size: clamp(20px, 6vw, 26px); line-height: .98; text-transform: uppercase; -webkit-text-stroke: .5px #17102c; text-shadow: 2px 2px 0 #17102c; }
+.cc-player-challenge-heading-kindtitle, .cc-player-challenge-heading h2, .cc-player-challenge-kind {display:flex; justify-content:flex; align-items:start; flex-direction: column; padding-top:3px;}
+.cc-player-challenge-heading h2 { margin: -14px 0 12px; padding-left:3px; font-family: "Hardbeat", Impact, sans-serif; font-weight:900; font-size: 22px; line-height: 100%; transform: rotate(-3deg); text-transform: uppercase; background:black; background-clip:text; -webkit-text-stroke: 3px transparent; -webkit-background-clip:text; text-shadow: 3px 3px 0 #17102c; }
 .cc-player-challenge-award { display: block; color: #ff2673; font-size: 12px; font-style: italic; font-weight: 1000; text-align: right; }
 .cc-player-challenge-art { display: grid; flex: 0 0 75px; width: 75px; height: 75px; place-items: center; border: 0; background: radial-gradient(circle,#eaff00 0 34%,transparent 35%), radial-gradient(circle at 20% 25%,#ffcf54 0 10%,transparent 11%); filter: drop-shadow(2px 3px 0 #17102c); font-size: 54px; line-height: 1; transform: rotate(-7deg); }
 .cc-player-challenge-card > p { margin: 8px 0 12px; color: #17102c; font-size: 13px; font-weight: 650; line-height: 1.25; }
+.cc-player-challenge-bottom {display:flex; flex-direction:row; align-items:center; justify-content:space-between; gap: 8px; align-self:stretch;}
+.cc-player-challenge-actions { display:grid; flex:1; min-width:0; gap:7px; }
+.cc-player-challenge-actions .cc-player-evidence-block { width:100%; min-width:0; margin:0; }
+.cc-player-challenge-actions .cc-player-evidence-tools { flex-wrap:nowrap; }
+.cc-player-challenge-actions .cc-player-upload-button,.cc-player-challenge-actions .cc-player-primary-button { width:100%; min-width:0; min-height:40px; padding:8px; font-size:11px; }
+.cc-player-challenge-actions .cc-player-evidence-count { flex:none; }
+.cc-player-challenge-actions .cc-player-submission-state { width:100%; justify-content:center; padding:9px 7px; font-size:10px; }
+.cc-player-challenge-actions .cc-player-evidence-required { font-size:9px; }
+.cc-player-challenge-actions .cc-player-evidence-grid { grid-template-columns:repeat(auto-fill,minmax(56px,1fr)); }
+.cc-player-challenge-actions .cc-player-evidence-item { max-width:70px; }
+.cc-player-challenge-actions .cc-player-hint { margin:0; font-size:10px; }
 .cc-player-challenge-meta { align-items: center; margin: 0; }
 .cc-player-time-chip { display: grid !important; min-width: 84px; gap: 0 !important; justify-items: center; padding: 5px 10px; border: 1.5px solid #17102c; border-radius: 999px; background: #fff; color: #17102c; box-shadow: 1px 2px 0 #17102c; }
 .cc-player-time-chip > span { color: #5c36fb; font-size: 8px; line-height: 1; }
 .cc-player-time-chip strong { display: inline-flex; align-items: center; gap: 3px; font-size: 16px; font-weight: 1000; line-height: 1.15; }
+.cc-player-break-card { display:grid; min-height:230px; align-content:center; justify-items:center; gap:10px; border-color:#17102c; color:#17102c; background:#eaff00; box-shadow:4px 4px 0 #17102c; text-align:center; }
+.cc-player-break-card .cc-player-eyebrow { color:#fff; padding:6px 10px; border-radius:999px; background:#fb377a; text-shadow:none; }
+.cc-player-break-card h2 { margin:0; color:#17102c !important; font-family:"Hard Beat",Impact,sans-serif; font-size:clamp(27px,7vw,36px) !important; text-shadow:none !important; text-transform:uppercase; }
+.cc-player-break-card p { margin:0; color:#34245f !important; font-size:13px; font-weight:800; line-height:1.4; }
+.cc-player-break-countdown { color:#5c36fb; font-family:"Hard Beat",Impact,sans-serif; font-size:42px; font-variant-numeric:tabular-nums; }
+.cc-player-break-next { padding:7px 11px; border-radius:999px; color:#fff; background:#23166e; font-size:10px; font-weight:1000; }
 .cc-player-evidence-tag { color: #5c36fb; font-size: 10px; font-weight: 900; }
 .cc-player-side-card-top { display: flex; align-items: flex-start; gap: 7px; }
 .cc-player-side-card-art { display: grid; flex: 0 0 40px; width: 40px; height: 40px; place-items: center; border-radius: 13px; background: radial-gradient(circle at 65% 35%,#eaff00 0 30%,transparent 31%),#f1eaff; filter: drop-shadow(1px 2px 0 #17102c); font-size: 29px; }
@@ -801,6 +848,7 @@
 .cc-player-secret-art { position: absolute; top: 42px; right: 9px; display: grid; width: 62px; height: 62px; place-items: center; background: radial-gradient(circle,#eaff00 0 37%,transparent 38%); filter: drop-shadow(2px 2px 0 #17102c); font-size: 44px; }
 .cc-player-secret-heading .cc-player-secret-icon { font-size: 29px; }
 .cc-player-page-nav { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); }
+.cc-challenge-description {font-size:14px; font-weight:600; line-height:1.3; color:#17102c; letter-spacing:.02em}
 .cc-player-page-tab:nth-child(1) { order: 1; }
 .cc-player-page-tab:nth-child(2) { order: 3; }
 .cc-player-page-tab:nth-child(3) { order: 2; }
@@ -814,3 +862,29 @@
   .cc-player-game-name strong { max-width: 145px; font-size: 14px; }
   .cc-player-challenge-art { flex-basis: 66px; width: 66px; height: 66px; font-size: 48px; }
 }
+
+/* Match the secret mission reveal and inline card to the player mockup. */
+.cc-player-secret-modal-backdrop { background:rgba(29,12,104,.78); backdrop-filter:blur(1.5px); }
+.cc-player-secret-modal { width:min(100%,330px); padding:13px; border:2px solid #17102c; border-radius:18px; background:#eaff00; box-shadow:0 5px 0 #17102c; }
+.cc-player-secret-modal-top { align-items:center; margin-bottom:3px; }
+.cc-player-secret-modal-label { color:#fff; font-family:"Hardbeat",Impact,sans-serif; font-size:25px; font-style:italic; line-height:.86; letter-spacing:-.04em; -webkit-text-stroke:1.4px #17102c; paint-order:stroke fill; text-shadow:2px 2px 0 #17102c; }
+.cc-player-secret-modal-art { width:50px; height:50px; border:2px solid #17102c; background:#fff; box-shadow:1px 2px 0 #17102c; font-size:36px; }
+.cc-player-secret-modal h2 { margin:3px 0 7px; color:#fff; font-family:"Hardbeat",Impact,sans-serif; font-size:24px; font-style:italic; line-height:.9; letter-spacing:-.035em; -webkit-text-stroke:1.4px #17102c; paint-order:stroke fill; text-shadow:2px 2px 0 #17102c; }
+.cc-player-secret-modal > p { margin:0 0 9px; color:#17102c; font-family:"Quicksand",ui-sans-serif,sans-serif; font-size:11px; font-weight:700; line-height:1.28; }
+.cc-player-secret-modal-points { margin-bottom:8px; color:#ff2673; font-family:"Hardbeat",Impact,sans-serif; font-size:12px; font-style:italic; }
+.cc-player-secret-modal-play { min-height:35px; border:0; border-radius:10px; background:#6945ff; color:#fff; box-shadow:0 3px 0 #17102c; font-family:"Hardbeat",Impact,sans-serif; font-size:13px; font-style:italic; }
+.cc-player-secret-section { margin-top:-2px; }
+.cc-player-secret-card { padding:9px 61px 10px 10px; border-width:1.5px; border-radius:15px; background:linear-gradient(135deg,#dbff00 0%,#ecff19 55%,#cbf100 100%); box-shadow:0 3px 0 #17102c; }
+.cc-player-secret-card::after { opacity:.23; background:repeating-linear-gradient(135deg,transparent 0 10px,rgba(255,255,255,.72) 10px 13px); }
+.cc-player-secret-card-top { align-items:flex-start; gap:5px; }
+.cc-player-secret-label { color:#17102c; font-family:"Hardbeat",Impact,sans-serif; font-size:11px; font-style:italic; letter-spacing:-.02em; }
+.cc-player-secret-card .cc-player-points { color:#ff2673; font-family:"Hardbeat",Impact,sans-serif; font-size:10px; font-style:italic; }
+.cc-player-secret-card h3 { margin:3px 0 4px; color:#fff; font-family:"Hardbeat",Impact,sans-serif; font-size:17px; font-style:italic; line-height:.94; letter-spacing:-.025em; text-transform:uppercase; -webkit-text-stroke:1px #17102c; paint-order:stroke fill; text-shadow:1.5px 1.5px 0 #17102c; }
+.cc-player-secret-card > p { margin:0 0 6px; color:#17102c; font-family:"Quicksand",ui-sans-serif,sans-serif; font-size:10px; font-weight:700; line-height:1.22; }
+.cc-player-secret-art { top:28px; right:6px; width:48px; height:48px; font-size:35px; filter:drop-shadow(1px 2px 0 #17102c); }
+.cc-player-secret-card .cc-player-evidence-tools { margin:7px 0; }
+.cc-player-secret-card .cc-player-upload-button { min-height:32px; padding:6px 9px; border:0; border-radius:9px; background:#6945ff; color:#fff; box-shadow:0 2px 0 #17102c; font-family:"Hardbeat",Impact,sans-serif; font-size:10px; font-style:italic; }
+.cc-player-secret-card .cc-player-evidence-count { color:#17102c; font-size:9px; }
+.cc-player-secret-card .cc-player-evidence-required { margin:3px 0 7px; color:#17102c; font-size:9px; }
+.cc-player-secret-status { padding:6px 8px; border:1px solid rgba(23,16,44,.22); border-radius:8px; font-size:9px; }
+.cc-player-secret-complete { min-height:32px; margin-top:7px; border:0; border-radius:9px; background:#6945ff; color:#fff; box-shadow:0 2px 0 #17102c; font-family:"Hardbeat",Impact,sans-serif; font-size:10px; font-style:italic; }
