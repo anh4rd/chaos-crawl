@@ -1,1 +1,0 @@
-import{t as e}from"./index-Zmynq5mi.js";var t=e();function n({children:e,className:n}){return(0,t.jsx)(`div`,{className:`rounded-2xl bg-white p-6 backdrop-blur-md shadow-[0_0_1px_#000000] ${n??``}`.trim(),children:e})}export{n as t};
