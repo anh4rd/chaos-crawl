@@ -835,3 +835,11 @@
 }
 
 /* ===== END HostLiveGameRedesign.css ===== */
+.cc-host-preview-challenge-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.cc-host-preview-challenge-heading h3 { flex:1; min-width:0; }
+.cc-host-preview-challenge-art { display:grid; flex:0 0 72px; width:72px; height:72px; place-items:center; background:radial-gradient(circle,#eaff00 0 35%,transparent 36%); filter:drop-shadow(2px 3px 0 #17102e); font-size:51px; }
+.cc-host-next-challenge-heading { display:flex; align-items:center; gap:9px; }
+.cc-host-next-challenge-heading b { display:grid; flex:0 0 42px; width:42px; height:42px; place-items:center; border:2px solid #10072e; border-radius:13px; background:radial-gradient(circle at 68% 30%,#eaff00 0 28%,transparent 29%),#f2edff; box-shadow:2px 2px 0 #23166e; font-size:29px; }
+.cc-host-next-challenge-heading strong { font-family:"Hard Beat","Maven Pro",system-ui,sans-serif; font-size:17px; }
+.cc-host-side-challenge-emoji { color:inherit; background:radial-gradient(circle at 68% 30%,#eaff00 0 28%,transparent 29%),#f2edff; font-size:25px; }
+.cc-secret-assignment-icon { font-size:27px; }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowRight, CalendarDays, Check, Clock3, Edit3, LoaderCircle, MapPin, Play, Plus, Sparkles, Users } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { challengeIcon } from "../lib/challengeVisuals";
 import HostShell from "../components/host/HostShell";
 import { createOrGetHostGameSession } from "../lib/gameSessions";
 import "../styles/HostPortal.css";
@@ -32,7 +33,7 @@ interface HostGame {
   player_count: number;
   venue_name: string | null;
   status: "draft" | "planned" | "live" | "completed";
-  plan_data?: { gamePhotoUrl?: string | null } | null;
+  plan_data?: { gamePhotoUrl?: string | null; selectedTasks?: Array<{ id?: string; title: string; description?: string; kind?: string }> } | null;
 }
 
 const HOST_GAME_SUMMARY_FIELDS = "id,name,event_date,start_time,end_time,player_count,venue_name,status,plan_data";
@@ -68,6 +69,7 @@ function GameCard({
 }) {
   const completed = game.status === "completed" || (game.event_date ? new Date(`${game.event_date}T23:59:59`).getTime() < Date.now() : false);
   const canPlay = game.status === "planned" || game.status === "live";
+  const challengeTasks = (game.plan_data?.selectedTasks ?? []).filter((task) => !task.kind || task.kind === "main");
 
   return (
     <article className="host-game-card">
@@ -82,6 +84,7 @@ function GameCard({
           <span className="host-muted host-small">{completed ? "Past game" : readOnly ? "Host game" : "Your game"}</span>
         </div>
         <h3>{game.name}</h3>
+        {challengeTasks.length > 0 && <div className="host-game-challenge-icons" aria-label="Challenges in this game">{challengeTasks.slice(0, 4).map((task, index) => <span key={task.id ?? `${task.title}-${index}`} title={task.title}>{challengeIcon(task.title, task.description)}</span>)}</div>}
         <div className="host-game-meta"><span><CalendarDays size={15} />{dateLabel(game.event_date)}</span><span><Clock3 size={15} />{timeLabel(game.start_time)}{game.end_time ? `–${timeLabel(game.end_time)}` : ""}</span></div>
         <div className="host-game-meta"><span><MapPin size={15} />{game.venue_name || "Venue not set"}</span><span><Users size={15} />About {game.player_count} players</span></div>
         <div className="host-game-actions">

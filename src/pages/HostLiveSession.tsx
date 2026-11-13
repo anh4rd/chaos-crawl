@@ -7,6 +7,7 @@ import {
   Gamepad2, Medal, ClipboardList, Star, UserRound,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { challengeIcon } from "../lib/challengeVisuals";
 import HostShell from "../components/host/HostShell";
 import "../styles/HostPortal.css";
 import "../styles/HostLiveGame.css";
@@ -737,7 +738,7 @@ export default function HostLiveSession() {
                   <article className="cc-host-preview-challenge">
                     <div className="cc-host-preview-challenge-top"><span className="cc-host-preview-kicker">YOUR CHALLENGE</span><span className="cc-host-preview-points">{currentChallenge?.points ?? 0} POINTS ON APPROVAL</span></div>
                     <div className="cc-host-preview-round-label"><span className="cc-player-live-dot"/> ROUND {session.current_round_number} OF {mainRounds.length}</div>
-                    <h3>{currentChallenge?.title ?? "Challenge not found"}</h3>
+                    <div className="cc-host-preview-challenge-heading"><h3>{currentChallenge?.title ?? "Challenge not found"}</h3><span className="cc-host-preview-challenge-art" aria-hidden="true">{challengeIcon(currentChallenge?.title ?? "Challenge", currentChallenge?.description ?? "")}</span></div>
                     <p>{currentChallenge?.description ?? "Check that this session has a main challenge assigned to the current round."}</p>
                     <div className="cc-host-preview-challenge-meta"><span>{currentChallenge?.duration_minutes ?? 0} min</span><span>{currentChallenge?.allow_photo_upload ? "Photo/video evidence required" : "Evidence optional"}</span></div>
                     {currentChallenge?.allow_photo_upload && <div className="cc-host-preview-upload-note"><ClipboardList size={17}/><span>Players can upload photo or video evidence, then submit for host review.</span></div>}
@@ -761,7 +762,7 @@ export default function HostLiveSession() {
               )}
             </div>
           )}
-          {session.status === "live" && mainRounds[session.current_round_number] && <article className="cc-host-next-challenge"><span>▶ NEXT CHALLENGE</span><strong>{mainRounds[session.current_round_number].title}</strong><small>{mainRounds[session.current_round_number].description}</small></article>}
+          {session.status === "live" && mainRounds[session.current_round_number] && <article className="cc-host-next-challenge"><span>▶ NEXT CHALLENGE</span><div className="cc-host-next-challenge-heading"><b aria-hidden="true">{challengeIcon(mainRounds[session.current_round_number].title, mainRounds[session.current_round_number].description)}</b><strong>{mainRounds[session.current_round_number].title}</strong></div><small>{mainRounds[session.current_round_number].description}</small></article>}
         </section>
         )}
 
@@ -937,7 +938,7 @@ export default function HostLiveSession() {
           <div className="cc-session-section-heading"><div><div className="cc-section-kicker">OPTIONAL MISSIONS</div><h2>Side challenges</h2><p>Extra tasks players can complete between rounds.</p></div><span className="cc-count-pill">{sideChallenges.length} available</span></div>
           {sideChallenges.length === 0 ? <p className="cc-helper-text">No side challenges were added to this game plan.</p> : (
             <div className="cc-host-side-challenge-grid">{sideChallenges.map((challenge) => <article className="cc-host-side-challenge-card" key={challenge.id}>
-              <div className="cc-host-side-card-top"><span className="cc-host-side-icon"><Sparkles size={17}/></span><span className="cc-host-points-pill">{challenge.points} pts</span></div>
+              <div className="cc-host-side-card-top"><span className="cc-host-side-icon cc-host-side-challenge-emoji" aria-hidden="true">{challengeIcon(challenge.title, challenge.description)}</span><span className="cc-host-points-pill">{challenge.points} pts</span></div>
               <h3>{challenge.title}</h3><p>{challenge.description}</p><small>{challenge.allow_photo_upload ? "Photo/video evidence required" : "Evidence optional"}</small>
             </article>)}</div>
           )}
@@ -1005,7 +1006,7 @@ export default function HostLiveSession() {
                   : assignment.status === "rejected" ? "Rejected · can retry" : "Cancelled";
                 return (
                   <article className="cc-secret-assignment-row" key={assignment.id}>
-                    <div className="cc-secret-assignment-icon"><Shield size={18}/></div>
+                    <div className="cc-secret-assignment-icon" aria-hidden="true">{challengeIcon(challenge?.title ?? "Secret mission", challenge?.description ?? "")}</div>
                     <div className="cc-secret-assignment-copy">
                       <strong>{challenge?.title ?? "Secret mission"}</strong>
                       <span>For {player?.name ?? "player"}</span>

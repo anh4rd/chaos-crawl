@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { CheckCircle2, Circle, Clock3, Gamepad2, LoaderCircle, RotateCcw, Trophy, ClipboardList, Users, Crown, Upload, Heart, Film, Flag } from "lucide-react";
+import { CheckCircle2, Circle, Clock3, Gamepad2, LoaderCircle, RotateCcw, Trophy, ClipboardList, Users, Crown, Upload, Heart, Film, Flag, Copy, Check, Star } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { challengeIcon } from "../lib/challengeVisuals";
 import "../styles/PlayerGame.css";
 import GuidedTour, { type GuidedTourStep } from "../components/tour/GuidedTour";
 
@@ -146,6 +147,8 @@ export default function SessionPlayerGame() {
   const [view, setView] = useState<SessionView | null>(null);
   const [secretMissions, setSecretMissions] = useState<SecretMission[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [playerRank, setPlayerRank] = useState<number | null>(null);
+  const [copiedCode, setCopiedCode] = useState(false);
   const [evidence, setEvidence] = useState<SessionEvidence[]>([]);
   const [finalGallery, setFinalGalleryView] = useState<FinalGalleryView | null>(null);
   const [rewardRound, setRewardRound] = useState<PlayerRewardRound | null>(null);
@@ -245,6 +248,24 @@ export default function SessionPlayerGame() {
     const id = window.setInterval(() => { if (mounted) void loadView(); }, 3000);
     return () => { mounted = false; window.clearInterval(id); };
   }, [loadView]);
+
+  useEffect(() => {
+    if (!code || !token || !view?.player.id) return;
+    let live = true;
+    const refreshRank = async () => {
+      const { data, error: rankError } = await supabase.rpc("cc_get_player_session_leaderboard", {
+        p_join_code: code,
+        p_player_token: token,
+      });
+      if (rankError || !live) return;
+      const entries = (data ?? []) as LeaderboardEntry[];
+      const index = entries.findIndex((entry) => entry.player_id === view.player.id);
+      setPlayerRank(index >= 0 ? index + 1 : null);
+    };
+    void refreshRank();
+    const interval = window.setInterval(() => void refreshRank(), 15000);
+    return () => { live = false; window.clearInterval(interval); };
+  }, [code, token, view?.player.id]);
 
   async function voteInRewardRound(candidateId: string) {
     if (!rewardRound || !token || !code || busyKey !== null || rewardRound.status !== "open") return;
@@ -471,6 +492,16 @@ export default function SessionPlayerGame() {
     await loadView();
   }
 
+  async function copyGameCode() {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(true);
+      window.setTimeout(() => setCopiedCode(false), 1800);
+    } catch {
+      setError("Copy isn't available in this browser. Game code: " + code);
+    }
+  }
+
   if (!token) {
     return <main className="cc-player-auth"><section className="cc-player-auth-card">
       <h1>Rejoin the chaos</h1><p>Enter the game code and the mobile number you used to join.</p>
@@ -511,16 +542,17 @@ export default function SessionPlayerGame() {
   return (
     <main className={`cc-session-player-app${embeddedHostMode ? " cc-player-embedded" : ""}`}>
       {!embeddedHostMode && <header className="cc-player-game-header">
-        <Link to="/join" className="cc-player-brand"><span className="cc-player-brand-icon"><Gamepad2 size={21}/></span><span>CHAOS<span>CRAWL</span></span></Link>
-        <div className="cc-player-code-pill">GAME {session.join_code}</div>
+        <div className="cc-player-system-bar"><span>Chaos</span><span aria-hidden="true">▮▮▮ ◉ ▰</span></div>
+        <section className="cc-player-profile" data-tour="player-profile">
+          <div className="cc-player-avatar-large">{player.avatar_url ? <img src={player.avatar_url} alt=""/> : player.name.slice(0, 1).toUpperCase()}</div>
+          <div className="cc-player-profile-copy"><h1>{player.name}</h1><p>{player.team_name || (session.teams_enabled ? "Choose your team" : "Solo player")}</p></div>
+          <div className="cc-player-score"><span className="cc-player-score-points"><Star size={18} fill="currentColor"/><strong>{player.score}</strong></span><span className="cc-player-score-rank"><Trophy size={17} fill="currentColor"/> #{playerRank ?? "—"}</span></div>
+        </section>
       </header>}
 
       <div className="cc-player-game-content">
-        <section className="cc-player-profile" data-tour="player-profile">
-          <div className="cc-player-avatar-large">{player.name.slice(0, 1).toUpperCase()}</div>
-          <div className="cc-player-profile-copy"><span className="cc-player-eyebrow">PLAYER</span><h1>{player.name}</h1><p>{player.team_name || (session.teams_enabled ? "Choose your team" : "Solo player")}</p></div>
-          <div className="cc-player-score"><strong>{player.score}</strong><span>POINTS</span></div>
-        </section>
+        {embeddedHostMode && <section className="cc-player-profile" data-tour="player-profile"><div className="cc-player-avatar-large">{player.avatar_url ? <img src={player.avatar_url} alt=""/> : player.name.slice(0, 1).toUpperCase()}</div><div className="cc-player-profile-copy"><h1>{player.name}</h1><p>{player.team_name || (session.teams_enabled ? "Choose your team" : "Solo player")}</p></div><div className="cc-player-score"><span className="cc-player-score-points"><Star size={18} fill="currentColor"/><strong>{player.score}</strong></span><span className="cc-player-score-rank"><Trophy size={17} fill="currentColor"/> #{playerRank ?? "—"}</span></div></section>}
+        <section className="cc-player-game-titlebar"><div className="cc-player-game-icon" aria-hidden="true">🎉</div><div className="cc-player-game-name"><strong>{session.name}</strong><small>GAME</small></div><div className="cc-player-game-code"><span><small>GAME CODE</small><strong>{session.join_code}</strong></span><button type="button" onClick={() => void copyGameCode()} aria-label="Copy game code" title="Copy game code">{copiedCode ? <Check size={19}/> : <Copy size={19}/>}</button></div></section>
         {!embeddedHostMode && <div className="cc-player-tour-row"><button type="button" className="cc-tour-help-button" onClick={() => setTourOpen(true)}>✦ How to play / Take a tour</button></div>}
 
         {!embeddedHostMode && <nav className="cc-player-page-nav" data-tour="player-navigation" aria-label="Game pages">
@@ -528,14 +560,11 @@ export default function SessionPlayerGame() {
             <Gamepad2 size={17}/><span>Game</span>
           </Link>
           <Link to={`/play/${code}/leaderboard`} className={`cc-player-page-tab${activePage === "leaderboard" ? " is-active" : ""}`} aria-current={activePage === "leaderboard" ? "page" : undefined}>
-            <Trophy size={17}/><span>Leaderboard</span>
+            <Trophy size={17}/><span>Scores</span>
           </Link>
           <Link to={`/play/${code}/side-challenges`} className={`cc-player-page-tab${activePage === "side-challenges" ? " is-active" : ""}`} aria-current={activePage === "side-challenges" ? "page" : undefined}>
-            <ClipboardList size={17}/><span>Side challenges</span>{sideChallenges.length > 0 && <span className="cc-player-nav-count">{sideChallenges.length}</span>}
+            <ClipboardList size={17}/><span>Challenges</span>{sideChallenges.length > 0 && <span className="cc-player-nav-count">{sideChallenges.length}</span>}
           </Link>
-          {session.final_gallery_open && <Link to={`/play/${code}/final`} className={`cc-player-page-tab${activePage === "final" ? " is-active" : ""}`} aria-current={activePage === "final" ? "page" : undefined}>
-            <Heart size={17}/><span>Final vote</span>
-          </Link>}
         </nav>}
 
         {error && <div className="cc-player-error" role="alert">{error}</div>}
@@ -583,7 +612,7 @@ export default function SessionPlayerGame() {
         {!rewardRound && activePage === "game" && (
           <>
             {session.status === "lobby" && (
-              <section className="cc-player-state-card">
+              <section className="cc-player-state-card cc-player-state-card--lobby">
                 <div className="cc-player-state-icon"><Users size={25}/></div>
                 <span className="cc-player-eyebrow">YOU'RE IN</span>
                 <h2>Waiting for the host…</h2>
@@ -632,15 +661,16 @@ export default function SessionPlayerGame() {
 
             {session.status === "live" && (
               <>
-                <section className="cc-player-live-label"><span className="cc-player-live-dot"/> GAME LIVE <span>ROUND {session.current_round_number} OF {session.round_count}</span></section>
+                <section className="cc-player-live-label"><span className="cc-player-live-dot"/> ROUND {session.current_round_number} <span>OF {session.round_count}</span></section>
                 {secretMissions.length > 0 && (
                   <section className="cc-player-secret-section" aria-label="Your private secret missions">
-                    <div className="cc-player-secret-heading"><span className="cc-player-secret-icon">✦</span><div><span className="cc-player-eyebrow">JUST FOR YOU</span><h2>Your secret mission{secretMissions.length === 1 ? "" : "s"}</h2></div><span className="cc-player-secret-badge">PRIVATE</span></div>
+                    <div className="cc-player-secret-heading"><span className="cc-player-secret-icon" aria-hidden="true">{challengeIcon(secretMissions[0]?.title ?? "Secret mission", secretMissions[0]?.description ?? "")}</span><div><span className="cc-player-eyebrow">JUST FOR YOU</span><h2>Your secret mission{secretMissions.length === 1 ? "" : "s"}</h2></div><span className="cc-player-secret-badge">PRIVATE</span></div>
                     <p className="cc-player-secret-intro">These missions were sent to you by the host. Keep them under wraps.</p>
                     <div className="cc-player-secret-list">
                       {secretMissions.map((mission) => (
                         <article className="cc-player-secret-card" key={mission.assignment_id}>
                           <div className="cc-player-secret-card-top"><span className="cc-player-secret-label">SECRET TASK</span><span className="cc-player-points">+{mission.points} pts</span></div>
+                          <span className="cc-player-secret-art" aria-hidden="true">{challengeIcon(mission.title, mission.description)}</span>
                           <h3>{mission.title}</h3>
                           <p>{mission.description}</p>
                           <div className="cc-player-evidence-tools">
@@ -674,15 +704,15 @@ export default function SessionPlayerGame() {
                 )}
                 {challenge ? (
                   <section className="cc-player-challenge-card" data-tour="player-challenge">
-                    <div className="cc-player-challenge-top"><span className="cc-player-eyebrow">YOUR CHALLENGE</span><span className="cc-player-points">+{challenge.points} POINTS ON APPROVAL</span></div>
-                    <h2>{challenge.title}</h2>
+                    <div className="cc-player-challenge-top"><span className="cc-player-challenge-kind">MAIN CHALLENGE</span><span className="cc-player-round-chip">ROUND {session.current_round_number} / {session.round_count}</span></div>
+                    <div className="cc-player-challenge-heading"><div><h2>{challenge.title}</h2><span className="cc-player-challenge-award">+{challenge.points} POINTS</span></div><span className="cc-player-challenge-art" aria-hidden="true">{challengeIcon(challenge.title, challenge.description)}</span></div>
                     <p>{challenge.description}</p>
-                    <div className="cc-player-challenge-meta"><span><Clock3 size={16}/> {challenge.duration_minutes} min</span>{challenge.allow_photo_upload && <span>Evidence required</span>}</div>
+                    <div className="cc-player-challenge-meta"><span className="cc-player-time-chip"><span>TIME</span><strong><Clock3 size={15}/>{challenge.duration_minutes}:00</strong></span>{challenge.allow_photo_upload && <span className="cc-player-evidence-tag">Evidence required</span>}</div>
                     {challenge.allow_photo_upload && (
                       <div className="cc-player-evidence-block" data-tour="player-upload">
                         <div className="cc-player-evidence-tools">
                           <label className="cc-player-upload-button">
-                            <Upload size={16}/>{busyKey === `upload:${challenge.id}` ? "Uploading…" : "Upload photo / video evidence"}
+                            <Upload size={16}/>{busyKey === `upload:${challenge.id}` ? "Uploading…" : "Upload Evidence"}
                             <input type="file" accept="image/*,video/*" disabled={busyKey !== null || currentSubmission?.status === "approved" || evidenceForChallenge(challenge.id).length >= 6} onChange={(event) => void uploadEvidence(event, { type: "challenge", challenge })}/>
                           </label>
                           <span className="cc-player-evidence-count">{evidenceForChallenge(challenge.id).length}/6 files</span>
@@ -746,6 +776,7 @@ export default function SessionPlayerGame() {
         {!rewardRound && activePage === "side-challenges" && (
           <section className="cc-player-side-page" data-tour="player-side-challenges">
             <div className="cc-player-page-heading"><div><span className="cc-player-eyebrow">EXTRA CHAOS</span><h2>Side challenges</h2><p>Complete these alongside the main round for extra points.</p></div><span className="cc-player-count-chip">{sideChallenges.length}</span></div>
+            {session.final_gallery_open && <Link to={`/play/${code}/final`} className="cc-player-vote-entry-link"><Heart size={16}/> Open the final vote</Link>}
             {session.status === "lobby" && <div className="cc-player-page-notice">Side challenges become active when the host starts the game.</div>}
             {session.status === "completed" && <div className="cc-player-page-notice">The game has ended. Here's how your side challenges finished.</div>}
             {sideChallenges.length === 0 ? <div className="cc-player-state-card"><h2>No side challenges added</h2><p>Ask the host if side challenges are part of this game.</p></div> : (
@@ -753,7 +784,7 @@ export default function SessionPlayerGame() {
                 {sideChallenges.map((item) => {
                   const submitted = view.my_submissions.find((sub) => sub.challenge_id === item.id);
                   return <article className="cc-player-side-card" key={item.id}>
-                    <div className="cc-player-side-card-copy"><div className="cc-player-side-card-top"><h3>{item.title}</h3><span className="cc-player-points">Winner: +{item.points} pts</span></div><p>{item.description}</p></div>
+                    <div className="cc-player-side-card-copy"><div className="cc-player-side-card-top"><span className="cc-player-side-card-art" aria-hidden="true">{challengeIcon(item.title, item.description)}</span><div><h3>{item.title}</h3><span className="cc-player-points">Winner: +{item.points} pts</span></div></div><p>{item.description}</p></div>
                     {item.allow_photo_upload && <div className="cc-player-side-evidence">
                       <label className="cc-player-upload-button">
                         <Upload size={15}/>{busyKey === `upload:${item.id}` ? "Uploading…" : "Upload evidence"}

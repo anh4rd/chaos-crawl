@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowRight, CheckCircle2, Gamepad2, LoaderCircle, RotateCcw, Users } from "lucide-react";
+import { CheckCircle2, LoaderCircle, Users } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import ChaosMonster from "../../public/chaos-logo.png";
 import "../styles/PlayerGame.css";
@@ -28,6 +28,7 @@ export default function Join() {
   const [code, setCode] = useState(codeFromUrl);
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
+  const [joinStep, setJoinStep] = useState<1 | 2>(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -47,6 +48,10 @@ export default function Join() {
     event.preventDefault();
     setError("");
     setNotice("");
+    if (joinStep === 1) {
+      if (code.replace(/\D/g, "").length === 6) setJoinStep(2);
+      return;
+    }
     if (!canSubmit) return;
     setBusy(true);
     try {
@@ -72,85 +77,37 @@ export default function Join() {
   }
 
   return (
-    <main className="cc-player-auth">
-      <div className="cc-player-auth-glow" aria-hidden="true" />
-      <header className="cc-player-brand">
-        <span className="cc-player-brand-icon"><Gamepad2 size={22}/></span>
-        <span>CHAOS<span>CRAWL</span></span>
-      </header>
-      <div className="self-stretch px-4 marginy:-100px inline-flex flex-col justify-center items-center overflow-hidden">
-    <img className="w-56 h-fit origin-top-left rotate-[-7deg]" src={ChaosMonster} />
-    <div className="w-56 inline-flex justify-start items-center">
-        <div className="w-72 pt-4 inline-flex flex-col justify-center items-start">
-            <div className="origin-top-left rotate-[-4deg] text-center justify-start"><span className="text-colour-text-fill-white text-7xl font-normal font-['Hard_Beat'] uppercase leading-[70px] [text-shadow:_4px_4px_0px_rgb(6_15_19_/_1.00)]">join</span><span className="text-colour-text-fill-white text-6xl font-normal font-['Hard_Beat'] uppercase leading-[64px] [text-shadow:_4px_4px_0px_rgb(6_15_19_/_1.00)]"> <br/></span><span className="text-colour-text-fill-white text-4xl font-normal font-['Hard_Beat'] uppercase leading-10 [text-shadow:_4px_4px_0px_rgb(6_15_19_/_1.00)]">the chaos</span></div>
-        </div>
-    </div>
-</div>
-
-      <section className="cc-player-auth-card">
-        <div className="cc-player-mascot" aria-hidden="true">✦</div>
-        <span className="cc-player-eyebrow">YOUR NEXT QUESTIONABLE DECISION</span>
-        <h1>{mode === "join" ? "Join the chaos." : "Back for more?"}</h1>
-        <p className="cc-player-intro">
-          {mode === "join"
-            ? "Enter the game code from your host, pick your name and get ready."
+    <main className="join-flow">
+      <header className="join-topbar"><span className="join-brand">Chaos</span><span className="join-topbar__hint">{mode === "join" ? "JOIN GAME" : "REJOIN GAME"}</span></header>
+      <div className={`join-flow__content ${joinStep === 1 ? "join-flow__content--code" : "join-flow__content--details"}`}>
+        {joinStep === 2 && <button type="button" className="join-back" onClick={() => setJoinStep(1)}>← Back</button>}
+        {joinStep === 1 && <img className="join-monster-art" src={ChaosMonster} alt="Chaos mascot" />}
+        <h1 className="join-display-title">{joinStep === 1 ? (mode === "join" ? <>Join<br/><span>the chaos</span></> : <>Back for<br/><span>more chaos</span></>) : <>Enter your<br/><span>details</span></>}</h1>
+        <p className="join-intro">
+          {joinStep === 2 ? "Choose how you want to show up in the game." : mode === "join"
+            ? "Join a game with the code from your host."
             : "Enter the code and the same mobile number you used when you joined."}
         </p>
 
-        <div className="cc-join-mode-switch" role="tablist" aria-label="Join or rejoin">
-          <button type="button" role="tab" aria-selected={mode === "join"} className={mode === "join" ? "is-active" : ""} onClick={() => { setMode("join"); setError(""); }}>
-            <Users size={16}/> Join game
-          </button>
-          <button type="button" role="tab" aria-selected={mode === "rejoin"} className={mode === "rejoin" ? "is-active" : ""} onClick={() => { setMode("rejoin"); setError(""); }}>
-            <RotateCcw size={16}/> Rejoin
-          </button>
-        </div>
+        {notice && <div className="join-message join-message--notice"><CheckCircle2 size={17}/><span>{notice}</span></div>}
+        {error && <div className="join-message join-message--error" role="alert"><span>{error}</span></div>}
 
-        {notice && <div className="cc-player-notice"><CheckCircle2 size={17}/>{notice}</div>}
-        {error && <div className="cc-player-error" role="alert">{error}</div>}
-
-        <form onSubmit={(event) => void submit(event)} className="cc-player-form">
-          <label className="cc-player-form-join-code-boxes" htmlFor=".cc-player-form-join-code">
-            <span>Six-digit game code</span>
-            <div className="cc-player-form-join-code-boxes">
-                {Array.from({ length: 6 }, (_, index) => <span className={`cc-player-form-join-code-box ${code[index] ? "cc-player-form-join-code-box--filled" : ""}`} key={index}>{code[index] ?? ""}</span>)}
-                <input
-                  id="join-code"
-                  className="cc-player-form-join-code-input-overlay"
-                  value={code}
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={6}
-                  aria-label="Enter six digit game code"
-                  onChange={(event) => { setCode(event.target.value.replace(/\D/g, "").slice(0, 6)); }}
-                />
-              </div>
-          </label>
-          {mode === "join" && (
-            <label>
-              <span>Your name</span>
-              <input autoComplete="given-name" placeholder="What should we call you?" maxLength={60} value={name} onChange={(event) => setName(event.target.value)} required />
-            </label>
-          )}
-          <label>
-            <span>Mobile number</span>
-            <input
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="07xxx xxxxxx"
-              value={mobile}
-              onChange={(event) => setMobile(event.target.value)}
-              required
-            />
-            <small>Used only to reconnect you to this game if you lose access to your browser. No SMS is sent.</small>
-          </label>
-          <button type="submit" className="cc-player-primary-button" disabled={!canSubmit}>
-            {busy ? <><LoaderCircle className="cc-spin" size={19}/> {mode === "join" ? "Joining…" : "Rejoining…"}</> : <>{mode === "join" ? "Join game" : "Get me back in"} <ArrowRight size={19}/></>}
-          </button>
+        <form onSubmit={(event) => void submit(event)} className="join-form">
+          {joinStep === 1 ? <>
+            <label className="join-code-label" htmlFor="join-code">Six-digit game code</label>
+            <div className="join-code-boxes" aria-label="Six digit game code">
+              {Array.from({ length: 6 }, (_, index) => <span className={`join-code-box${code[index] ? " join-code-box--filled" : ""}`} key={index}>{code[index] ?? "1"}</span>)}
+              <input id="join-code" className="join-code-input-overlay" value={code} inputMode="numeric" autoComplete="one-time-code" maxLength={6} aria-label="Enter six digit game code" onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}/>
+            </div>
+          </> : <>
+            <div className="join-current-code">GAME CODE <strong>{code}</strong></div>
+            {mode === "join" && <div className="join-form-card"><label htmlFor="join-name">Your name?</label><div className="join-input-wrap"><Users size={17}/><input id="join-name" autoComplete="given-name" placeholder="Enter your name" maxLength={60} value={name} onChange={(event) => setName(event.target.value)} required/></div></div>}
+            <div className="join-form-card"><label htmlFor="join-mobile">Your phone number?</label><p className="join-field-help">Used only to reconnect you to this game. No SMS is sent.</p><div className="join-input-wrap"><Users size={17}/><input id="join-mobile" type="tel" inputMode="tel" autoComplete="tel" placeholder="Enter your number" value={mobile} onChange={(event) => setMobile(event.target.value)} required/></div></div>
+          </>}
+          <button type="submit" className="join-primary-button" disabled={joinStep === 1 ? code.replace(/\D/g, "").length !== 6 : !canSubmit}>{busy ? <><LoaderCircle className="cc-spin" size={19}/> Joining…</> : <>{joinStep === 1 ? "Next" : mode === "join" ? "Join game" : "Rejoin game"} <CheckCircle2 size={18}/></>}</button>
         </form>
-      </section>
-      <p className="cc-player-auth-footer">One venue. A questionable number of challenges.</p>
+        {joinStep === 1 && <button type="button" className="join-text-button" onClick={() => { setMode(mode === "join" ? "rejoin" : "join"); setError(""); }}>{mode === "join" ? "Already joined? Rejoin" : "New player? Join game"}</button>}
+      </div>
     </main>
   );
 }

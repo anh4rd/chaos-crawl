@@ -1,6 +1,8 @@
 .host-hub-dashboard { min-width: 0; }
 .host-hub-dashboard .host-game-card-art { position: relative; overflow: hidden; }
 .host-hub-dashboard .host-game-card-art img { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
+.host-game-challenge-icons { display:flex; gap:6px; margin:-2px 0 8px; }
+.host-game-challenge-icons span { display:grid; width:33px; height:33px; place-items:center; border:1.5px solid #080817; border-radius:11px; background:radial-gradient(circle at 68% 30%,#eaff00 0 28%,transparent 29%),#f2edff; box-shadow:1px 2px 0 #23166e; font-size:22px; }
 .host-portal.host-app:has(.host-hub-dashboard) {
   background-color: #4822d4;
   background-image:
