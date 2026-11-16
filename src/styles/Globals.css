@@ -27,7 +27,7 @@ body {
   color: white;
 
   background-image:
-    linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.35)),
+    linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35)),
     url("/leopard.jpg");
 
   background-size: cover;
@@ -41,13 +41,12 @@ body {
 
 @font-face {
   font-family: "Lost in South";
-  src:url("/fonts/Lost in South.woff2") format("woff2");
+  src: url("/fonts/Lost in South.woff2") format("woff2");
   font-display: swap;
   font-weight: 400;
 }
 
 h1 {
-
   font-family: "Permanent Marker", cursive;
 
   color: var(--pink);
@@ -57,20 +56,17 @@ h1 {
   text-shadow:
     3px 3px black,
     0 0 15px hotpink;
-
 }
 
 h2,
 h3 {
-
   font-family: "Permanent Marker", cursive;
   color: var(--white);
   letter-spacing: 3px;
   line-height: 1;
   font-size: 2rem;
-
 }
 
-a{
-  color:white;
+a {
+  color: white;
 }
