@@ -1,1 +1,0 @@
-import{t as e}from"./index-CPl80eKa.js";var t=e();function n({fullWidth:e=!0,className:n=``,...r}){return(0,t.jsx)(`button`,{...r,className:`w-full rounded-full bg-lime-300 px-6 py-4 font-black uppercase text-black shadow-[0_0_2px_#000000] transition hover:scale-105 hover:bg-black hover:text-white hover:shadow-[0_0_15px_#BDEE41] ${n}`.trim(),children:r.children})}export{n as t};
