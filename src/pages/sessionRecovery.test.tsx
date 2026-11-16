@@ -33,10 +33,10 @@ vi.mock("../game/hooks/useChallenges", () => ({
   useChallenges: () => query([]),
 }));
 vi.mock("../game/hooks/useSideChallenges", () => ({
-  default: () => query([]),
+  useSideChallenges: () => query([]),
 }));
 vi.mock("../game/hooks/useChallengeCompletions", () => ({
-  default: () => query([]),
+  useChallengeCompletions: () => query([]),
 }));
 vi.mock("../game/hooks/useScoreEvents", () => ({
   useScoreEvents: () => query([]),

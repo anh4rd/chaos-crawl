@@ -12,6 +12,6 @@ const load = (signal: AbortSignal) =>
     .order("id", { ascending: true })
     .abortSignal(signal);
 
-export default function useSideChallenges() {
+export function useSideChallenges() {
   return useRealtimeQuery("side_challenges", load, initialData);
 }

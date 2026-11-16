@@ -2,8 +2,8 @@ import QueryPanel from "../QueryPanel";
 import Card from "../../../components/ui/Card";
 import { usePlayers } from "../../../game/hooks/usePlayers";
 import { useChallenges } from "../../../game/hooks/useChallenges";
-import useSideChallenges from "../../../game/hooks/useSideChallenges";
-import useChallengeCompletions from "../../../game/hooks/useChallengeCompletions";
+import { useSideChallenges } from "../../../game/hooks/useSideChallenges";
+import { useChallengeCompletions } from "../../../game/hooks/useChallengeCompletions";
 export default function CompletionReviewTab() {
   const playersQuery = usePlayers();
   const { data: players } = playersQuery;

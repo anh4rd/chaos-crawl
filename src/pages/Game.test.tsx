@@ -57,10 +57,10 @@ vi.mock("../game/hooks/useChallenges", () => ({
   useChallenges: () => mocks.challenges,
 }));
 vi.mock("../game/hooks/useSideChallenges", () => ({
-  default: () => mocks.side,
+  useSideChallenges: () => mocks.side,
 }));
 vi.mock("../game/hooks/useChallengeCompletions", () => ({
-  default: () => mocks.completions,
+  useChallengeCompletions: () => mocks.completions,
 }));
 vi.mock("../game/hooks/useScoreEvents", () => ({
   useScoreEvents: () => mocks.scores,

@@ -1,38 +1,34 @@
 import Card from "../../../components/ui/Card";
 import Button from "../../../components/ui/Button";
-import type { GameControls } from "./gameControlTypes";
+import type { Challenge, GameState, Pub } from "../../../types/database";
+
+export interface LiveGameSelectionProps {
+  game: GameState;
+  selectedPub: string;
+  setSelectedPub: (value: string) => void;
+  pubs: Pub[];
+  challenges: Challenge[];
+  setSelectedChallenge: (value: string) => void;
+  sortedPubs: Pub[];
+  selectedChallenge: string;
+  availableChallenges: Challenge[];
+  goLive: () => Promise<void>;
+  navigate: (path: string) => void;
+}
 
 export default function LiveGameSelection({
-  controls,
-}: {
-  controls: Pick<
-    GameControls,
-    | "game"
-    | "selectedPub"
-    | "setSelectedPub"
-    | "pubs"
-    | "challenges"
-    | "setSelectedChallenge"
-    | "sortedPubs"
-    | "selectedChallenge"
-    | "availableChallenges"
-    | "goLive"
-    | "navigate"
-  >;
-}) {
-  const {
-    game,
-    selectedPub,
-    setSelectedPub,
-    pubs,
-    challenges,
-    setSelectedChallenge,
-    sortedPubs,
-    selectedChallenge,
-    availableChallenges,
-    goLive,
-    navigate,
-  } = controls;
+  game,
+  selectedPub,
+  setSelectedPub,
+  pubs,
+  challenges,
+  setSelectedChallenge,
+  sortedPubs,
+  selectedChallenge,
+  availableChallenges,
+  goLive,
+  navigate,
+}: LiveGameSelectionProps) {
   const activeChallenge =
     challenges.find(
       (challenge) => String(challenge.id) === String(game.current_challenge_id),

@@ -6,6 +6,6 @@ export type { ChallengeCompletion } from "../../types/database";
 const initialData: ChallengeCompletion[] = [];
 const load = (signal: AbortSignal) => getChallengeCompletions(signal);
 
-export default function useChallengeCompletions() {
+export function useChallengeCompletions() {
   return useRealtimeQuery("challenge_completions", load, initialData);
 }

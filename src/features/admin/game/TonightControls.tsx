@@ -1,29 +1,40 @@
 import Card from "../../../components/ui/Card";
 import Button from "../../../components/ui/Button";
-import type { GameControls } from "./gameControlTypes";
+import type { Challenge, GameState, Pub } from "../../../types/database";
 import Input from "../../../components/ui/Input";
 import { openVoting, closeVoting } from "../voting/votingControls";
 
+export interface TonightControlsProps {
+  game: GameState;
+  nextRoundChallenge: Challenge | undefined;
+  revealRoundChallenge: (challenge: Challenge) => Promise<void>;
+  nextPub: Pub | undefined;
+  moveToNextPub: () => Promise<void>;
+  returnEveryoneToGame: () => Promise<void>;
+  scheduleMinutes: string;
+  setScheduleMinutes: (value: string) => void;
+  cancelScheduledReveal: () => Promise<void>;
+  currentRoundChallenges: Challenge[];
+  scheduleChallenge: (challenge: Challenge) => Promise<void>;
+  startSlideshow: () => Promise<void>;
+  stopSlideshow: () => Promise<void>;
+}
+
 export default function TonightControls({
-  controls,
-}: {
-  controls: GameControls;
-}) {
-  const {
-    game,
-    nextRoundChallenge,
-    revealRoundChallenge,
-    nextPub,
-    moveToNextPub,
-    returnEveryoneToGame,
-    scheduleMinutes,
-    setScheduleMinutes,
-    cancelScheduledReveal,
-    currentRoundChallenges,
-    scheduleChallenge,
-    startSlideshow,
-    stopSlideshow,
-  } = controls;
+  game,
+  nextRoundChallenge,
+  revealRoundChallenge,
+  nextPub,
+  moveToNextPub,
+  returnEveryoneToGame,
+  scheduleMinutes,
+  setScheduleMinutes,
+  cancelScheduledReveal,
+  currentRoundChallenges,
+  scheduleChallenge,
+  startSlideshow,
+  stopSlideshow,
+}: TonightControlsProps) {
   return (
     <>
       <Card>

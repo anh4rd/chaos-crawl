@@ -8,9 +8,9 @@ import Button from "../components/ui/Button";
 
 import { useGameState } from "../game/hooks/useGameState";
 
-import useSideChallenges from "../game/hooks/useSideChallenges";
+import { useSideChallenges } from "../game/hooks/useSideChallenges";
 
-import useChallengeCompletions from "../game/hooks/useChallengeCompletions";
+import { useChallengeCompletions } from "../game/hooks/useChallengeCompletions";
 
 import { usePlayers } from "../game/hooks/usePlayers";
 

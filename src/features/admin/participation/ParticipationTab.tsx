@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { usePlayers } from "../../../game/hooks/usePlayers";
 import { useGameState } from "../../../game/hooks/useGameState";
-import useSideChallenges from "../../../game/hooks/useSideChallenges";
-import useChallengeCompletions from "../../../game/hooks/useChallengeCompletions";
+import { useSideChallenges } from "../../../game/hooks/useSideChallenges";
+import { useChallengeCompletions } from "../../../game/hooks/useChallengeCompletions";
 import { useChallengeParticipation } from "../../../game/hooks/useChallengeParticipation";
 import Card from "../../../components/ui/Card";
 import QueryPanel from "../QueryPanel";

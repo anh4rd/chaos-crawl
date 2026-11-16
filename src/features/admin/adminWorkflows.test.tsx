@@ -120,10 +120,10 @@ vi.mock("../../game/hooks/useTeams", () => ({
 }));
 
 vi.mock("../../game/hooks/useSideChallenges", () => ({
-  default: () => ({ data: [], ...mocks.status.side }),
+  useSideChallenges: () => ({ data: [], ...mocks.status.side }),
 }));
 vi.mock("../../game/hooks/useChallengeCompletions", () => ({
-  default: () => ({ data: [], ...mocks.status.completions }),
+  useChallengeCompletions: () => ({ data: [], ...mocks.status.completions }),
 }));
 
 import PlayersTab from "./players/PlayersTab";

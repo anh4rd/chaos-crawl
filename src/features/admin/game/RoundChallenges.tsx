@@ -1,26 +1,22 @@
 import Card from "../../../components/ui/Card";
 import Button from "../../../components/ui/Button";
-import type { GameControls } from "./gameControlTypes";
+import type { Challenge, GameState } from "../../../types/database";
+
+export interface RoundChallengesProps {
+  game: GameState;
+  currentRoundChallenges: Challenge[];
+  currentChallengeIndex: number;
+  nextRoundChallenge: Challenge | undefined;
+  revealRoundChallenge: (challenge: Challenge) => Promise<void>;
+}
 
 export default function RoundChallenges({
-  controls,
-}: {
-  controls: Pick<
-    GameControls,
-    | "game"
-    | "currentRoundChallenges"
-    | "currentChallengeIndex"
-    | "nextRoundChallenge"
-    | "revealRoundChallenge"
-  >;
-}) {
-  const {
-    game,
-    currentRoundChallenges,
-    currentChallengeIndex,
-    nextRoundChallenge,
-    revealRoundChallenge,
-  } = controls;
+  game,
+  currentRoundChallenges,
+  currentChallengeIndex,
+  nextRoundChallenge,
+  revealRoundChallenge,
+}: RoundChallengesProps) {
   return (
     <Card>
       <h2 className="text-2xl font-bold">Round Challenges</h2>

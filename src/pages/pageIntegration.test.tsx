@@ -96,12 +96,12 @@ vi.mock("../game/hooks/useChallenges", () => ({
     ]),
 }));
 vi.mock("../game/hooks/useSideChallenges", () => ({
-  default: function useSideChallenges() {
+  useSideChallenges: function useSideChallenges() {
     return useDataBoundary("side", []);
   },
 }));
 vi.mock("../game/hooks/useChallengeCompletions", () => ({
-  default: function useChallengeCompletions() {
+  useChallengeCompletions: function useChallengeCompletions() {
     return useDataBoundary("completions", []);
   },
 }));

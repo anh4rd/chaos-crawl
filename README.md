@@ -93,6 +93,11 @@ client recognizes matching duplicate completions but cannot guarantee uniqueness
 on its own. No database policies or migrations are applied by this repository's
 local test suite.
 
+Completion, award, leaderboard and vote behavior is covered by mocked regression
+tests. Real database round trips for those core event workflows remain unverified
+until a schema-compatible disposable backend is available. The explicit live
+suite currently covers joining, session persistence, navigation and player visibility.
+
 ## Code health
 
 Desloppify is installed in the ignored local `.venv` (Python 3.11+). Its working

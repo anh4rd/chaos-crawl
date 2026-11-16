@@ -37,7 +37,7 @@ vi.mock("../../../game/hooks/useGameState", () => ({
   }),
 }));
 vi.mock("../../../game/hooks/useSideChallenges", () => ({
-  default: () => ({
+  useSideChallenges: () => ({
     data: [
       {
         id: 2,
@@ -53,7 +53,7 @@ vi.mock("../../../game/hooks/useSideChallenges", () => ({
   }),
 }));
 vi.mock("../../../game/hooks/useChallengeCompletions", () => ({
-  default: () => ({
+  useChallengeCompletions: () => ({
     data: mocks.completions,
     loading: false,
     error: null,

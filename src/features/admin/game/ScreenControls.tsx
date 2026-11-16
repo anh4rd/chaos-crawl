@@ -1,16 +1,20 @@
 import Card from "../../../components/ui/Card";
 import Button from "../../../components/ui/Button";
-import type { GameControls } from "./gameControlTypes";
+import type { GameState } from "../../../types/database";
+
+export interface ScreenControlsProps {
+  game: GameState;
+  navigate: (path: string) => void;
+  startSlideshow: () => Promise<void>;
+  stopSlideshow: () => Promise<void>;
+}
 
 export default function ScreenControls({
-  controls,
-}: {
-  controls: Pick<
-    GameControls,
-    "game" | "navigate" | "startSlideshow" | "stopSlideshow"
-  >;
-}) {
-  const { game, navigate, startSlideshow, stopSlideshow } = controls;
+  game,
+  navigate,
+  startSlideshow,
+  stopSlideshow,
+}: ScreenControlsProps) {
   return (
     <>
       <Card>
