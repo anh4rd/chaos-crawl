@@ -6,10 +6,7 @@ import { fileURLToPath, URL } from "node:url";
 export default defineConfig({
   base: "/chaos-crawl/",
 
-  plugins: [
-    react(),
-    tailwindcss(),
-  ],
+  plugins: [react(), tailwindcss()],
 
   resolve: {
     alias: {
