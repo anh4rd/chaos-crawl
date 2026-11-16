@@ -929,3 +929,46 @@
 .cc-player-secret-complete { min-height:32px; margin-top:7px; border:0; border-radius:9px; background:#6945ff; color:#fff; box-shadow:0 2px 0 #17102c; font-family:"Hardbeat",Impact,sans-serif; font-size:10px; font-style:italic; }
 .cc-session-player-app.cc-player-final-takeover:not(.cc-player-embedded) { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
 .cc-player-final-takeover:not(.cc-player-embedded) .cc-player-game-content { width: min(100%, 1120px); max-width: 1120px; min-height: 100svh; align-content: start; padding: clamp(24px, 5vh, 60px) clamp(16px, 4vw, 48px); }
+.cc-player-secret-review-backdrop { position:fixed; z-index:80; inset:0; display:grid; place-items:center; overflow:auto; padding:clamp(12px,3vw,30px); background:radial-gradient(circle at 15% 8%,rgba(255,255,255,.16),transparent 33%),#5c36fb; }
+.cc-player-secret-review { display:grid; gap:12px; width:min(100%,760px); max-height:calc(100svh - 24px); overflow:auto; padding:clamp(16px,3vw,28px); border:3px solid #17102c; border-radius:24px; background:#fff; color:#17102c; box-shadow:7px 7px 0 #23166e; }
+.cc-player-secret-review-kicker { color:#5c36fb; font-family:"Hardbeat",Impact,sans-serif; font-size:12px; font-style:italic; font-weight:900; letter-spacing:.08em; }
+.cc-player-secret-review-owner { display:flex; align-items:center; gap:9px; color:#51466e; font-size:12px; font-weight:900; }
+.cc-player-secret-review-owner img,.cc-player-secret-review-owner > span { display:grid; width:34px; height:34px; place-items:center; border-radius:50%; background:#eaff00; object-fit:cover; color:#17102c; }
+.cc-player-secret-review h1 { margin:0; color:#17102c; font-family:"Hardbeat",Impact,sans-serif; font-size:clamp(26px,5vw,42px); font-style:italic; line-height:.95; text-transform:uppercase; }
+.cc-player-secret-review-description { margin:0; color:#51466e; font-size:13px; font-weight:700; line-height:1.45; white-space:pre-wrap; }
+.cc-player-secret-review-media { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:9px; }
+.cc-player-secret-review-media img,.cc-player-secret-review-media video { display:block; width:100%; max-height:38vh; aspect-ratio:4/3; border:2px solid #17102c; border-radius:13px; background:#17102c; object-fit:contain; }
+.cc-player-secret-review-text-slide { display:grid; min-height:100px; place-items:center; padding:16px; border:2px dashed #b6a8ee; border-radius:14px; color:#655d78; text-align:center; font-size:12px; font-weight:800; }
+.cc-player-secret-review-votes,.cc-player-secret-review-voted { margin:0; color:#655d78; text-align:center; font-size:11px; font-weight:800; }
+.cc-player-secret-review-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.cc-player-secret-review-actions button { min-height:50px; border:2px solid #17102c; border-radius:13px; background:#eaff00; color:#17102c; box-shadow:0 3px 0 #17102c; font-family:"Hardbeat",Impact,sans-serif; font-size:18px; font-style:italic; font-weight:900; cursor:pointer; }
+.cc-player-secret-review-actions button.is-fail { background:#ff8eb6; }
+.cc-player-secret-review-actions button.is-selected { outline:3px solid #5c36fb; outline-offset:2px; }
+.cc-player-secret-review-actions button:disabled { opacity:.65; cursor:wait; }
+.cc-player-secret-review-results { display:grid; gap:9px; }
+.cc-player-secret-review-results > strong { color:#5c36fb; font-family:"Hardbeat",Impact,sans-serif; font-size:28px; font-style:italic; }
+.cc-player-secret-review-results > strong.is-fail { color:#e92166; }
+.cc-player-secret-review-results > p { margin:0; font-size:13px; font-weight:900; }
+.cc-player-secret-review-tally { display:flex; flex-wrap:wrap; gap:7px; }
+.cc-player-secret-review-tally span { padding:7px 10px; border-radius:999px; background:#eee9ff; color:#39268d; font-size:10px; font-weight:900; }
+.cc-player-secret-review-results h2 { margin:6px 0 0; font-size:14px; }
+.cc-player-secret-review-voters { display:flex; flex-wrap:wrap; gap:7px; }
+.cc-player-secret-review-voters > span { display:flex; align-items:center; gap:6px; padding:5px 8px; border-radius:999px; background:#f3efff; font-size:10px; }
+.cc-player-secret-review-voters img,.cc-player-secret-review-voters i { display:grid; width:22px; height:22px; place-items:center; border-radius:50%; background:#d3fb6e; object-fit:cover; font-style:normal; }
+.cc-player-secret-review-voters small { color:#5c36fb; font-weight:900; text-transform:uppercase; }
+.cc-player-secret-review-leaderboard { display:grid; gap:5px; }
+.cc-player-secret-review-leaderboard > div { display:grid; grid-template-columns:24px minmax(0,1fr) auto auto; align-items:center; gap:7px; padding:7px 9px; border-radius:9px; background:#f7f4ff; font-size:10px; }
+.cc-player-secret-review-leaderboard > div.is-you { background:#eaff00; }
+.cc-player-secret-review-leaderboard > div > span { color:#5c36fb; font-weight:1000; }
+.cc-player-secret-review-leaderboard > div > b { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cc-player-secret-review-leaderboard small { color:#655d78; }
+.cc-player-secret-review-leaderboard strong { white-space:nowrap; }
+.cc-player-secret-dismiss { display:inline-flex; min-height:30px; align-items:center; justify-content:center; margin-top:7px; padding:6px 10px; border:1px solid rgba(23,16,44,.35); border-radius:9px; background:rgba(255,255,255,.82); color:#39268d; font-family:"Quicksand",ui-sans-serif,sans-serif; font-size:10px; font-weight:900; cursor:pointer; }
+.cc-player-secret-dismiss:hover { background:#fff; }
+.cc-player-secret-dismiss:focus-visible { outline:3px solid #5c36fb; outline-offset:2px; }
+@media (max-width:560px) {
+  .cc-player-secret-review { gap:9px; padding:13px; border-radius:17px; }
+  .cc-player-secret-review-media img,.cc-player-secret-review-media video { max-height:30vh; }
+  .cc-player-secret-review-leaderboard > div { grid-template-columns:20px minmax(0,1fr) auto; }
+  .cc-player-secret-review-leaderboard small { display:none; }
+}

@@ -95,7 +95,34 @@ interface SecretMissionAssignment {
   submitted_at: string | null;
   reviewed_at: string | null;
   awarded_points: number;
+  final_review_outcome: "success" | "fail" | null;
   created_at: string;
+}
+interface SecretReviewState {
+  session_id: string;
+  is_open: boolean;
+  voting_open: boolean;
+  current_assignment_id: string | null;
+  current_evidence_id: string | null;
+}
+interface SecretReviewAssignment {
+  session_id: string;
+  assignment_id: string;
+  status: "pending" | "voting" | "results";
+  success_votes: number;
+  fail_votes: number;
+  votes_cast: number;
+  outcome: "success" | "fail" | null;
+  points_awarded: number;
+  opened_at: string | null;
+  closed_at: string | null;
+}
+interface SecretReviewVote {
+  session_id: string;
+  assignment_id: string;
+  player_id: string;
+  vote: "success" | "fail";
+  voted_at: string;
 }
 interface SessionEvidence {
   id: string;
@@ -154,6 +181,9 @@ export default function HostLiveSession() {
   const [teams, setTeams] = useState<SessionTeam[]>([]);
   const [submissions, setSubmissions] = useState<SessionSubmission[]>([]);
   const [secretAssignments, setSecretAssignments] = useState<SecretMissionAssignment[]>([]);
+  const [secretReviewState, setSecretReviewState] = useState<SecretReviewState | null>(null);
+  const [secretReviewAssignments, setSecretReviewAssignments] = useState<SecretReviewAssignment[]>([]);
+  const [secretReviewVotes, setSecretReviewVotes] = useState<SecretReviewVote[]>([]);
   const [evidence, setEvidence] = useState<SessionEvidence[]>([]);
   const [finalVotes, setFinalVotes] = useState<SessionFinalVote[]>([]);
   const [finalRoundState, setFinalRoundState] = useState<SessionFinalRoundState | null>(null);
@@ -220,6 +250,8 @@ export default function HostLiveSession() {
   const breakAdvanceRequested = useRef(false);
   const finalSlideshowConnection = useRef<PresentationConnectionLike | null>(null);
   const [isFinalSlideshowConnected, setIsFinalSlideshowConnected] = useState(false);
+  const secretSlideshowConnection = useRef<PresentationConnectionLike | null>(null);
+  const [isSecretSlideshowConnected, setIsSecretSlideshowConnected] = useState(false);
   const roundClockSecondsRef = useRef(roundClockSeconds);
   roundClockSecondsRef.current = roundClockSeconds;
   const sharedTimerWriteQueue = useRef<Promise<void>>(Promise.resolve());
@@ -227,6 +259,8 @@ export default function HostLiveSession() {
   useEffect(() => () => {
     finalSlideshowConnection.current?.close();
     finalSlideshowConnection.current = null;
+    secretSlideshowConnection.current?.close();
+    secretSlideshowConnection.current = null;
   }, []);
 
   const hostTourSteps: GuidedTourStep[] = [
@@ -249,13 +283,16 @@ export default function HostLiveSession() {
     const { error: dispatchError } = await supabase.rpc("cc_host_dispatch_due_secret_missions", { p_session_id: sessionId });
     if (dispatchError) console.warn("SECRET MISSION DISPATCH:", dispatchError.message);
 
-    const [sessionResult, challengeResult, playerResult, teamResult, submissionResult, secretAssignmentResult, evidenceResult, voteResult, finalRoundStateResult, finalRoundChallengesResult, rewardRoundResult, rewardVoteResult, rewardAwardResult] = await Promise.all([
+    const [sessionResult, challengeResult, playerResult, teamResult, submissionResult, secretAssignmentResult, secretReviewStateResult, secretReviewAssignmentResult, secretReviewVoteResult, evidenceResult, voteResult, finalRoundStateResult, finalRoundChallengesResult, rewardRoundResult, rewardVoteResult, rewardAwardResult] = await Promise.all([
       supabase.from("cc_game_sessions").select("*").eq("id", sessionId).single(),
       supabase.from("cc_game_session_challenges").select("*").eq("session_id", sessionId).order("sort_order", { ascending: true }),
       supabase.from("cc_game_session_players").select("id,name,avatar_url,team_id,score,joined_at,last_seen_at").eq("session_id", sessionId).order("joined_at", { ascending: true }),
       supabase.from("cc_game_session_teams").select("id,name,created_at").eq("session_id", sessionId).order("created_at", { ascending: true }),
       supabase.from("cc_game_session_submissions").select("id,player_id,challenge_id,status,awarded_points,submitted_at").eq("session_id", sessionId).order("submitted_at", { ascending: false }),
-      supabase.from("cc_game_session_secret_assignments").select("id,session_id,player_id,challenge_id,status,scheduled_at,sent_at,submitted_at,reviewed_at,awarded_points,created_at").eq("session_id", sessionId).order("created_at", { ascending: false }),
+      supabase.from("cc_game_session_secret_assignments").select("id,session_id,player_id,challenge_id,status,scheduled_at,sent_at,submitted_at,reviewed_at,awarded_points,final_review_outcome,created_at").eq("session_id", sessionId).order("created_at", { ascending: false }),
+      supabase.from("cc_game_session_secret_review_state").select("session_id,is_open,voting_open,current_assignment_id,current_evidence_id").eq("session_id", sessionId).maybeSingle(),
+      supabase.from("cc_game_session_secret_review_assignments").select("session_id,assignment_id,status,success_votes,fail_votes,votes_cast,outcome,points_awarded,opened_at,closed_at").eq("session_id", sessionId),
+      supabase.from("cc_game_session_secret_review_votes").select("session_id,assignment_id,player_id,vote,voted_at").eq("session_id", sessionId),
       supabase.from("cc_game_session_evidence").select("id,session_id,player_id,challenge_id,secret_assignment_id,storage_path,media_type,saved_for_final,created_at").eq("session_id", sessionId).order("created_at", { ascending: false }),
       supabase.from("cc_game_session_final_round_votes").select("session_id,challenge_id,player_id,evidence_id,voted_at").eq("session_id", sessionId),
       supabase.from("cc_game_session_final_round_state").select("session_id,is_open,voting_open,slideshow_challenge_id,slideshow_evidence_id").eq("session_id", sessionId).maybeSingle(),
@@ -280,6 +317,9 @@ export default function HostLiveSession() {
     setTeams((teamResult.data ?? []) as SessionTeam[]);
     setSubmissions((submissionResult.data ?? []) as SessionSubmission[]);
     setSecretAssignments((secretAssignmentResult.data ?? []) as SecretMissionAssignment[]);
+    setSecretReviewState((secretReviewStateResult.data as SecretReviewState | null) ?? null);
+    setSecretReviewAssignments((secretReviewAssignmentResult.data ?? []) as SecretReviewAssignment[]);
+    setSecretReviewVotes((secretReviewVoteResult.data ?? []) as SecretReviewVote[]);
     setEvidence((evidenceResult.data ?? []) as SessionEvidence[]);
     setFinalVotes((voteResult.data ?? []) as SessionFinalVote[]);
     setFinalRoundState((finalRoundStateResult.data as SessionFinalRoundState | null) ?? null);
@@ -287,7 +327,7 @@ export default function HostLiveSession() {
     setRewardRounds((rewardRoundResult.data ?? []) as SessionRewardRound[]);
     setRewardVotes((rewardVoteResult.data ?? []) as SessionRewardVote[]);
     setRewardAwards((rewardAwardResult.data ?? []) as SessionRewardAward[]);
-    const loadError = challengeResult.error || playerResult.error || teamResult.error || submissionResult.error || secretAssignmentResult.error || evidenceResult.error || voteResult.error || finalRoundStateResult.error || finalRoundChallengesResult.error || rewardRoundResult.error || rewardVoteResult.error || rewardAwardResult.error;
+    const loadError = challengeResult.error || playerResult.error || teamResult.error || submissionResult.error || secretAssignmentResult.error || secretReviewStateResult.error || secretReviewAssignmentResult.error || secretReviewVoteResult.error || evidenceResult.error || voteResult.error || finalRoundStateResult.error || finalRoundChallengesResult.error || rewardRoundResult.error || rewardVoteResult.error || rewardAwardResult.error;
     if (loadError) setError(`Some game details could not load: ${loadError.message}`);
     else setError("");
     setLoading(false);
@@ -454,6 +494,31 @@ export default function HostLiveSession() {
   const joinUrl = session
     ? `${window.location.origin}${window.location.pathname}#/join?code=${session.join_code}`
     : "";
+  const secretReviewOptions = secretAssignments.filter((assignment) =>
+    assignment.status === "submitted" ||
+    secretReviewAssignments.some((review) => review.assignment_id === assignment.id && review.status === "results"),
+  );
+  const hasPendingSecretReviews = secretReviewOptions.some((assignment) =>
+    !secretReviewAssignments.some((review) => review.assignment_id === assignment.id && review.status === "results"),
+  );
+  const selectedSecretReviewAssignmentId = secretReviewState?.current_assignment_id
+    ?? secretReviewOptions.find((assignment) => !secretReviewAssignments.some((review) => review.assignment_id === assignment.id && review.status === "results"))?.id
+    ?? secretReviewOptions[0]?.id
+    ?? "";
+  const selectedSecretReviewAssignment = secretAssignments.find((assignment) => assignment.id === selectedSecretReviewAssignmentId);
+  const selectedSecretReview = secretReviewAssignments.find((review) => review.assignment_id === selectedSecretReviewAssignmentId);
+  const selectedSecretReviewChallenge = selectedSecretReviewAssignment
+    ? challenges.find((challenge) => challenge.id === selectedSecretReviewAssignment.challenge_id)
+    : undefined;
+  const selectedSecretReviewEvidence = evidence.filter((item) => item.secret_assignment_id === selectedSecretReviewAssignmentId);
+  const currentSecretReviewEvidenceId = secretReviewState?.current_evidence_id;
+  const currentSecretReviewEvidenceIndex = selectedSecretReviewEvidence.findIndex((item) => item.id === currentSecretReviewEvidenceId);
+  const currentSecretReviewVoteCount = selectedSecretReviewAssignmentId
+    ? secretReviewVotes.filter((vote) => vote.assignment_id === selectedSecretReviewAssignmentId).length
+    : 0;
+  const hostSecretReviewVote = session?.host_player_id
+    ? secretReviewVotes.find((vote) => vote.assignment_id === selectedSecretReviewAssignmentId && vote.player_id === session.host_player_id)
+    : undefined;
 
   function goToLobbyStep(step: 1 | 2 | 3 | 4 | 5 | 6) {
     setLobbyStep(step);
@@ -1267,23 +1332,145 @@ export default function HostLiveSession() {
     await load();
   }
 
-  async function reviewSecretMission(assignment: SecretMissionAssignment, approve: boolean) {
-    const challenge = challenges.find((item) => item.id === assignment.challenge_id);
-    const suggested = Number(challenge?.points ?? 0);
-    const points = approve
-      ? Number(window.prompt(`Points to award for this secret mission (suggested: ${suggested})`, String(suggested)) ?? "-1")
-      : 0;
-    if (approve && (!Number.isFinite(points) || points < 0)) return;
+  async function selectSecretReviewAssignment(assignmentId: string) {
+    if (!session || busy) return;
+    const firstEvidence = evidence.find((item) => item.secret_assignment_id === assignmentId);
     setBusy(true); setError(""); setNotice("");
-    const { error: reviewError } = await supabase.rpc("cc_host_review_secret_mission", {
-      p_assignment_id: assignment.id,
-      p_approve: approve,
-      p_points: points,
+    const { error: selectError } = await supabase.rpc("cc_host_select_secret_review_assignment", {
+      p_session_id: session.id,
+      p_assignment_id: assignmentId,
+      p_evidence_id: firstEvidence?.id ?? null,
     });
     setBusy(false);
-    if (reviewError) { setError(reviewError.message); return; }
-    setNotice(approve ? `Secret mission approved for ${points} points.` : "Secret mission rejected. The player can try again.");
+    if (selectError) { setError(selectError.message); return; }
     await load();
+  }
+
+  async function openSecretReviewVote(assignmentId: string) {
+    if (!session || busy) return;
+    setBusy(true); setError(""); setNotice("");
+    const { error: openError } = await supabase.rpc("cc_host_open_secret_review", {
+      p_session_id: session.id,
+      p_assignment_id: assignmentId,
+    });
+    setBusy(false);
+    if (openError) { setError(openError.message); return; }
+    setNotice("Secret mission voting is open.");
+    await load();
+  }
+
+  async function reopenSecretReviewVote(assignmentId: string) {
+    if (!session || busy) return;
+    const assignment = secretAssignments.find((item) => item.id === assignmentId);
+    const challenge = assignment && challenges.find((item) => item.id === assignment.challenge_id);
+    if (!window.confirm(`Reopen "${challenge?.title ?? "this secret mission"}"? This clears its votes and reverses its awarded points.`)) return;
+    setBusy(true); setError(""); setNotice("");
+    const { error: reopenError } = await supabase.rpc("cc_host_reopen_secret_review", {
+      p_session_id: session.id,
+      p_assignment_id: assignmentId,
+    });
+    setBusy(false);
+    if (reopenError) { setError(reopenError.message); return; }
+    setNotice("Secret mission voting reopened with its previous votes cleared.");
+    await load();
+  }
+
+  async function closeSecretReviewVote() {
+    if (!session || busy) return;
+    setBusy(true); setError(""); setNotice("");
+    const { data, error: closeError } = await supabase.rpc("cc_host_close_secret_review_vote", {
+      p_session_id: session.id,
+    });
+    setBusy(false);
+    if (closeError) { setError(closeError.message); return; }
+    const result = data as { outcome?: "success" | "fail"; points_awarded?: number } | null;
+    setNotice(result?.outcome === "success"
+      ? `Mission success confirmed · ${result.points_awarded ?? 0} points awarded.`
+      : "Mission failed · no points awarded.");
+    await load();
+  }
+
+  async function advanceSecretReview() {
+    if (!session || busy) return;
+    setBusy(true); setError(""); setNotice("");
+    const { data, error: advanceError } = await supabase.rpc("cc_host_advance_secret_review", {
+      p_session_id: session.id,
+    });
+    setBusy(false);
+    if (advanceError) { setError(advanceError.message); return; }
+    const result = data as { completed?: boolean } | null;
+    setNotice(result?.completed
+      ? "All submitted secret missions have been reviewed."
+      : "The next secret mission is open for voting, and the TV slideshow has switched to its evidence.");
+    await load();
+  }
+
+  async function castHostSecretReviewVote(vote: "success" | "fail") {
+    if (!session || !secretReviewState?.current_assignment_id || !secretReviewState.voting_open || busy) return;
+    let playerToken = localStorage.getItem(hostPlayerStorageKey(session.id));
+    if (!session.host_participates || !session.host_player_id || !playerToken) {
+      const joined = await setHostParticipation(true);
+      if (!joined) return;
+      setActiveTab("side-challenges");
+      playerToken = localStorage.getItem(hostPlayerStorageKey(session.id));
+    }
+    if (!playerToken) {
+      setError("Host participation was enabled, but the host player token is missing. Please rejoin as Host and try again.");
+      return;
+    }
+    setBusy(true); setError(""); setNotice("");
+    const { error: voteError } = await supabase.rpc("cc_player_cast_secret_review_vote", {
+      p_join_code: session.join_code,
+      p_player_token: playerToken,
+      p_assignment_id: secretReviewState.current_assignment_id,
+      p_vote: vote,
+    });
+    setBusy(false);
+    if (voteError) { setError(voteError.message); return; }
+    setNotice(`Your host vote for ${vote} has been counted.`);
+    await load();
+  }
+
+  async function setSecretReviewEvidence(evidenceId: string | null) {
+    if (!session || busy) return;
+    setBusy(true); setError(""); setNotice("");
+    const { error: slideshowError } = await supabase.rpc("cc_host_set_secret_review_evidence", {
+      p_session_id: session.id,
+      p_evidence_id: evidenceId,
+    });
+    setBusy(false);
+    if (slideshowError) { setError(slideshowError.message); return; }
+    await load();
+  }
+
+  async function castSecretReviewSlideshow() {
+    if (!session || secretSlideshowConnection.current) return;
+    const requestConstructor = (window as Window & { PresentationRequest?: PresentationRequestConstructor }).PresentationRequest;
+    if (!requestConstructor) {
+      setError("This browser can't open a TV device picker. Use Chrome's Cast tab option or AirPlay screen mirroring instead.");
+      return;
+    }
+    const url = `${window.location.origin}${window.location.pathname}#/secret-slideshow/${session.id}`;
+    setError(""); setNotice("");
+    try {
+      const connection = await new requestConstructor([url]).start();
+      secretSlideshowConnection.current = connection;
+      setIsSecretSlideshowConnected(connection.state === "connected");
+      connection.addEventListener("statechange", () => {
+        const connected = connection.state === "connected";
+        setIsSecretSlideshowConnected(connected);
+        if (!connected && secretSlideshowConnection.current === connection) secretSlideshowConnection.current = null;
+      });
+    } catch (castError) {
+      if (castError instanceof DOMException && castError.name === "AbortError") return;
+      setError(castError instanceof Error ? `Couldn't cast the secret mission slideshow: ${castError.message}` : "Couldn't cast the secret mission slideshow.");
+    }
+  }
+
+  function disconnectSecretReviewSlideshow() {
+    secretSlideshowConnection.current?.close();
+    secretSlideshowConnection.current = null;
+    setIsSecretSlideshowConnected(false);
   }
 
   const playerById = new Map(players.map((player) => [player.id, player]));
@@ -1334,14 +1521,13 @@ export default function HostLiveSession() {
     .sort((a, b) => a.sort_order - b.sort_order || a.id.localeCompare(b.id));
   const nextReviewedFinalChallenge = reviewedFinalChallengesInOrder.find((challenge) => challenge.sort_order > currentFinalSortOrder)
     ?? reviewedFinalChallengesInOrder[0];
-  const nextFinalChallenge = nextPendingFinalChallenge ?? nextReviewedFinalChallenge;
 
   if (loading) {
     return <main className="host-portal cc-host-live-standalone"><div className="cc-host-standalone-loading"><LoaderCircle className="cc-spin" size={24}/> Loading your game session…</div></main>;
   }
   if (!session) {
     return <main className="host-portal cc-host-live-standalone"><section className="cc-host-standalone-error">
-      {error && <div className="host-alert host-alert--error">{error}</div>}
+      {error && <div className="host-alert host-alert--error" role="alert"><span>{error}</span><button type="button" className="cc-host-alert-dismiss" aria-label="Dismiss error" onClick={() => setError("")}><X size={16}/></button></div>}
       <Link className="host-button host-button--primary" to="/host">Back to Host Hub</Link>
     </section></main>;
   }
@@ -1472,8 +1658,8 @@ export default function HostLiveSession() {
           </div>
         </section>
 
-        {error && <div className="host-alert host-alert--error" role="alert">{error}</div>}
-        {notice && <div className="host-alert host-alert--success" role="status">{notice}</div>}
+        {error && <div className="host-alert host-alert--error" role="alert"><span>{error}</span><button type="button" className="cc-host-alert-dismiss" aria-label="Dismiss error" onClick={() => setError("")}><X size={16}/></button></div>}
+        {notice && <div className="host-alert host-alert--success" role="status"><span>{notice}</span><button type="button" className="cc-host-alert-dismiss" aria-label="Dismiss notice" onClick={() => setNotice("")}><X size={16}/></button></div>}
 
         <div className="cc-host-tour-action"><button type="button" className="cc-tour-help-button cc-tour-help-button--host" onClick={() => setHostTourOpen(true)}>✦ Take the host tour</button></div>
         {session.status === "lobby" ? lobbyFlow : <>
@@ -1899,8 +2085,10 @@ export default function HostLiveSession() {
                   ? `Scheduled · ${new Date(assignment.scheduled_at).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" })}`
                   : assignment.status === "sent" ? "Sent to player"
                   : assignment.status === "submitted" ? "Needs review"
+                  : assignment.final_review_outcome === "success" ? `Success · +${assignment.awarded_points} pts`
+                  : assignment.final_review_outcome === "fail" ? "Fail · final · no points"
                   : assignment.status === "approved" ? `Approved · +${assignment.awarded_points} pts`
-                  : assignment.status === "rejected" ? "Rejected · can retry" : "Cancelled";
+                  : assignment.status === "rejected" ? "Rejected" : "Cancelled";
                 return (
                   <article className="cc-secret-assignment-row" key={assignment.id}>
                     <div className="cc-secret-assignment-icon" aria-hidden="true">{challengeIcon(challenge?.title ?? "Secret mission", challenge?.description ?? "")}</div>
@@ -1917,12 +2105,6 @@ export default function HostLiveSession() {
                         </div>
                       ))}</div>
                     </div>}
-                    {assignment.status === "submitted" && (
-                      <div className="cc-submission-actions">
-                        <button type="button" className="host-button host-button--lime" disabled={busy} onClick={() => void reviewSecretMission(assignment, true)}><Check size={15}/> Approve</button>
-                        <button type="button" className="host-button host-button--ghost" disabled={busy} onClick={() => void reviewSecretMission(assignment, false)}><X size={15}/> Retry</button>
-                      </div>
-                    )}
                   </article>
                 );
               })}
@@ -1934,6 +2116,82 @@ export default function HostLiveSession() {
                 ? "No secret missions assigned yet. Pick one player and a mission above."
                 : "There are no secret missions in this plan yet. Add one here, or select secret missions in Explore before creating a new game."}</p>
             </div>
+          )}
+        </section>
+        <section className="cc-session-card cc-session-section cc-host-secret-review-card">
+          <div className="cc-session-section-heading">
+            <div><div className="cc-section-kicker">SECRET MISSION VOTE</div><h2>Review one mission at a time</h2><p>A strict majority of Success awards the mission points. Fail or a tie is final and awards zero.</p></div>
+            <span className="cc-count-pill">{secretReviewOptions.length} to review</span>
+          </div>
+          {secretReviewOptions.length === 0 ? (
+            <p className="cc-helper-text">Submitted secret missions will appear here when players mark them complete.</p>
+          ) : (
+            <>
+              <div className="cc-host-final-controls">
+                <span className="cc-host-final-controls-title">{secretReviewState?.voting_open ? "VOTING IS OPEN" : selectedSecretReview?.status === "results" ? "RESULTS SHARED" : "READY FOR REVIEW"}</span>
+                <label className="cc-host-final-challenge-picker">
+                  Choose a secret mission
+                  <select
+                    value={selectedSecretReviewAssignmentId}
+                    disabled={busy || Boolean(secretReviewState?.voting_open)}
+                    onChange={(event) => void selectSecretReviewAssignment(event.target.value)}
+                  >
+                    {secretReviewOptions.map((assignment) => {
+                      const mission = challenges.find((item) => item.id === assignment.challenge_id);
+                      const review = secretReviewAssignments.find((item) => item.assignment_id === assignment.id);
+                      const owner = players.find((item) => item.id === assignment.player_id);
+                      return <option key={assignment.id} value={assignment.id}>{mission?.title ?? "Secret mission"} · {owner?.name ?? "Player"}{review?.status === "results" ? " · reviewed" : ""}</option>;
+                    })}
+                  </select>
+                </label>
+                {selectedSecretReviewChallenge && selectedSecretReviewAssignment && (
+                  <div className="cc-secret-review-summary">
+                    <strong>{selectedSecretReviewChallenge.title}</strong>
+                    <span>For {players.find((player) => player.id === selectedSecretReviewAssignment.player_id)?.name ?? "player"} · {selectedSecretReviewChallenge.points} points at stake</span>
+                    <p>{selectedSecretReviewChallenge.description}</p>
+                  </div>
+                )}
+                {selectedSecretReview?.status === "results" ? (
+                  <div className="cc-secret-review-result">
+                    <strong>{selectedSecretReview.outcome === "success" ? "SUCCESS" : "FAIL"}</strong>
+                    <span>{selectedSecretReview.success_votes} Success · {selectedSecretReview.fail_votes} Fail · {selectedSecretReview.votes_cast} votes</span>
+                    <b>{selectedSecretReview.outcome === "success" ? `+${selectedSecretReview.points_awarded} points awarded` : "No points awarded · final result"}</b>
+                    <div className="cc-secret-review-voters">
+                      {secretReviewVotes.filter((vote) => vote.assignment_id === selectedSecretReviewAssignmentId).map((vote) => {
+                        const voter = players.find((player) => player.id === vote.player_id);
+                        return <span key={vote.player_id}>{voter?.name ?? "Player"} · {vote.vote}</span>;
+                      })}
+                    </div>
+                    <strong>Leaderboard changes</strong>
+                    <div className="cc-secret-review-leaderboard">
+                      {[...players].sort((a, b) => b.score - a.score || a.name.localeCompare(b.name)).slice(0, 8).map((player, index) => (
+                        <span key={player.id}><b>{index + 1}. {player.name}</b><small>{player.score} pts</small></span>
+                      ))}
+                    </div>
+                    <div className="cc-host-final-control-grid">
+                      <button type="button" className="cc-host-final-control-button" disabled={busy} onClick={() => void reopenSecretReviewVote(selectedSecretReviewAssignmentId)}>Reopen voting</button>
+                      <button type="button" className="cc-host-final-control-button is-wide is-primary" disabled={busy} onClick={() => void advanceSecretReview()}>
+                        {hasPendingSecretReviews ? "Next challenge" : "Return all players to the game"}
+                      </button>
+                    </div>
+                  </div>
+                ) : secretReviewState?.voting_open && secretReviewState.current_assignment_id === selectedSecretReviewAssignmentId ? (
+                  <>
+                    <div className="cc-host-final-player-count"><span>Votes cast</span><strong>{currentSecretReviewVoteCount} / {players.length}</strong></div>
+                    <div className="cc-host-final-control-grid">
+                      <button type="button" className={`cc-host-final-control-button${hostSecretReviewVote?.vote === "success" ? " is-primary" : ""}`} disabled={busy || !session?.host_participates} onClick={() => void castHostSecretReviewVote("success")}>Vote Success</button>
+                      <button type="button" className={`cc-host-final-control-button${hostSecretReviewVote?.vote === "fail" ? " is-primary" : ""}`} disabled={busy || !session?.host_participates} onClick={() => void castHostSecretReviewVote("fail")}>Vote Fail</button>
+                      <button type="button" className="cc-host-final-control-button is-wide is-primary" disabled={busy} onClick={() => void closeSecretReviewVote()}>Close voting and show results</button>
+                    </div>
+                    {!session?.host_participates && <small className="cc-helper-text">To vote as host, enable host participation in Host Controls.</small>}
+                  </>
+                ) : (
+                  <div className="cc-host-final-control-grid">
+                    <button type="button" className="cc-host-final-control-button is-primary is-wide" disabled={busy || !selectedSecretReviewAssignmentId} onClick={() => void openSecretReviewVote(selectedSecretReviewAssignmentId)}>Open voting for this mission</button>
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </section>
         </>
@@ -1952,6 +2210,16 @@ export default function HostLiveSession() {
             ))}
           </div>
         </section>
+        )}
+
+        {activeTab === "host-controls" && secretReviewState?.is_open && secretReviewState.current_assignment_id === selectedSecretReviewAssignmentId && (
+          <section className="cc-session-card cc-host-secret-tv-controls" aria-label="Secret mission TV slideshow controls">
+            {isSecretSlideshowConnected && <>
+              <button type="button" className="cc-host-final-control-button" disabled={busy || currentSecretReviewEvidenceIndex <= 0} onClick={() => void setSecretReviewEvidence(selectedSecretReviewEvidence[currentSecretReviewEvidenceIndex - 1]?.id ?? null)}>Previous</button>
+              <button type="button" className="cc-host-final-control-button" disabled={busy || currentSecretReviewEvidenceIndex < 0 || currentSecretReviewEvidenceIndex >= selectedSecretReviewEvidence.length - 1} onClick={() => void setSecretReviewEvidence(selectedSecretReviewEvidence[currentSecretReviewEvidenceIndex + 1]?.id ?? null)}>Next</button>
+            </>}
+            <button type="button" className={`cc-host-final-control-button${isSecretSlideshowConnected ? " is-primary" : ""}`} onClick={() => isSecretSlideshowConnected ? disconnectSecretReviewSlideshow() : void castSecretReviewSlideshow()}>{isSecretSlideshowConnected ? "Disconnect" : "Cast"}</button>
+          </section>
         )}
 
         {activeTab === "host-controls" && (
@@ -2005,15 +2273,17 @@ export default function HostLiveSession() {
                 <>
                   <div className="cc-host-final-player-count"><span>Results shared</span><strong>{selectedFinalChallengeState?.votes_cast ?? 0} votes</strong></div>
                   <button type="button" className="host-button cc-host-final-control-button" disabled={busy} onClick={() => void reopenFinalChallengeVoting()}><Heart size={15}/> Reopen Voting</button>
-                  {nextFinalChallenge
-                    ? <button type="button" className="host-button cc-host-final-control-button is-primary is-wide" disabled={busy} onClick={() => void advanceFinalChallenge()}><ArrowRight size={15}/> Next challenge · {nextFinalChallenge.title}</button>
-                    : <button type="button" className="host-button cc-host-final-control-button is-primary is-wide" disabled={busy} onClick={() => void setFinalGallery(false, false)}>Return players to the game</button>}
+                  {nextPendingFinalChallenge
+                    ? <button type="button" className="host-button cc-host-final-control-button is-primary is-wide" disabled={busy} onClick={() => void advanceFinalChallenge()}><ArrowRight size={15}/> Next challenge · {nextPendingFinalChallenge.title}</button>
+                    : <button type="button" className="host-button cc-host-final-control-button is-primary is-wide" disabled={busy} onClick={() => void setFinalGallery(false, false)}>Return all players to game</button>}
                 </>
               ) : (
                 <>
                   <button type="button" className="host-button cc-host-final-control-button" disabled={busy} onClick={() => void setFinalGallery(true, false)}><Heart size={15}/> Show Results</button>
                   <button type="button" className="host-button cc-host-final-control-button" disabled={busy} onClick={() => void reopenFinalChallengeVoting()}><Heart size={15}/> Reopen Voting</button>
-                  {nextFinalChallenge && <button type="button" className="host-button cc-host-final-control-button is-primary is-wide" disabled={busy || !session.final_gallery_open} title="Share the results before moving to the next challenge." onClick={() => void advanceFinalChallenge()}><ArrowRight size={15}/> Next challenge · {nextFinalChallenge.title}</button>}
+                  {nextPendingFinalChallenge
+                    ? <button type="button" className="host-button cc-host-final-control-button is-primary is-wide" disabled={busy || !session.final_gallery_open} title="Share the results before moving to the next challenge." onClick={() => void advanceFinalChallenge()}><ArrowRight size={15}/> Next challenge · {nextPendingFinalChallenge.title}</button>
+                    : <button type="button" className="host-button cc-host-final-control-button is-primary is-wide" disabled={busy} onClick={() => void setFinalGallery(false, false)}>Return all players to game</button>}
                 </>
               )}
             </>}
@@ -2168,7 +2438,7 @@ export default function HostLiveSession() {
           <h2 id="cc-host-break-timer-title">Edit the time until the next round</h2>
           <p>Round {breakResumeRound ?? session.current_round_number + 1} will start when the break timer ends.</p>
           <label>Break minutes<input type="number" min={1} max={240} required value={editBreakMinutes} disabled={busy} onChange={(event) => setEditBreakMinutes(Number(event.target.value))}/></label>
-          {error && <p className="cc-host-override-blocked" role="alert">{error}</p>}
+          {error && <div className="cc-host-override-blocked" role="alert"><span>{error}</span><button type="button" className="cc-host-alert-dismiss" aria-label="Dismiss error" onClick={() => setError("")}><X size={16}/></button></div>}
           <div className="cc-host-override-actions"><button type="button" disabled={busy} onClick={() => setEditingBreakTimer(false)}>Cancel</button><button type="submit" disabled={busy || editBreakMinutes < 1}>{busy ? "Saving…" : "Save timer"}</button></div>
         </form>
       </div>}

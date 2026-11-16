@@ -8,6 +8,7 @@ const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Vote = lazy(() => import("./pages/Vote"));
 const Slideshow = lazy(() => import("./pages/Slideshow"));
 const SessionFinalSlideshow = lazy(() => import("./pages/SessionFinalSlideshow"));
+const SessionSecretSlideshow = lazy(() => import("./pages/SessionSecretSlideshow"));
 const VoteResults = lazy(() => import("./pages/VoteResults"));
 const SessionPlayerGame = lazy(() => import("./pages/SessionPlayerGame"));
 const HostLiveSession = lazy(() => import("./pages/HostLiveSession"));
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="/vote" element={<Vote />} />
         <Route path="/slideshow" element={<Slideshow />} />
         <Route path="/final-slideshow/:sessionId" element={<SessionFinalSlideshow />} />
+        <Route path="/secret-slideshow/:sessionId" element={<SessionSecretSlideshow />} />
         <Route path="/vote-results" element={<VoteResults />} />
 
         {/* Host authentication is separate from the player join flow. */}

@@ -76,6 +76,50 @@ interface SecretMission {
   awarded_points: number;
   allow_photo_upload: boolean;
 }
+interface SecretReviewMedia {
+  id: string;
+  media_type: "image" | "video";
+  storage_path: string;
+}
+interface SecretReviewVoter {
+  id: string;
+  name: string;
+  avatar_url: string | null;
+  vote: "success" | "fail";
+}
+interface SecretReviewLeaderboardEntry {
+  player_id: string;
+  name: string;
+  avatar_url: string | null;
+  team_id: string | null;
+  team_name: string | null;
+  score: number;
+}
+interface SecretReviewView {
+  open: boolean;
+  voting_open: boolean;
+  assignment_id: string | null;
+  current_evidence_id: string | null;
+  mission: {
+    assignment_id: string;
+    player_id: string;
+    player_name: string;
+    player_avatar_url: string | null;
+    title: string;
+    description: string;
+    points: number;
+    status: "pending" | "voting" | "results";
+  } | null;
+  media: SecretReviewMedia[];
+  votes_cast: number;
+  success_votes: number | null;
+  fail_votes: number | null;
+  my_vote: "success" | "fail" | null;
+  outcome: "success" | "fail" | null;
+  voters: SecretReviewVoter[];
+  leaderboard: SecretReviewLeaderboardEntry[];
+  my_final_reviews: Array<{ assignment_id: string; outcome: "success" | "fail"; points_awarded: number }>;
+}
 interface SessionEvidence {
   id: string;
   session_id: string;
@@ -155,8 +199,10 @@ export default function SessionPlayerGame() {
   const [token, setToken] = useState(() => localStorage.getItem(playerStorageKey(code)));
   const [view, setView] = useState<SessionView | null>(null);
   const [secretMissions, setSecretMissions] = useState<SecretMission[]>([]);
+  const [secretReview, setSecretReview] = useState<SecretReviewView | null>(null);
   const [activeSecretMissionId, setActiveSecretMissionId] = useState<string | null>(null);
   const [dismissedSecretMissionKeys, setDismissedSecretMissionKeys] = useState<string[]>([]);
+  const [dismissedSecretMissionCardIds, setDismissedSecretMissionCardIds] = useState<string[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [playerRank, setPlayerRank] = useState<number | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -179,6 +225,18 @@ export default function SessionPlayerGame() {
   useEffect(() => {
     setToken(localStorage.getItem(playerStorageKey(code)));
   }, [code]);
+
+  useEffect(() => {
+    const playerId = view?.player.id;
+    if (!playerId) return;
+    const storageKey = `chaos-crawl-dismissed-secret-missions:${code}:${playerId}`;
+    try {
+      const parsed = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
+      setDismissedSecretMissionCardIds(Array.isArray(parsed) ? parsed.map(String) : []);
+    } catch {
+      setDismissedSecretMissionCardIds([]);
+    }
+  }, [code, view?.player.id]);
 
   useEffect(() => {
     if (!code) return;
@@ -231,6 +289,16 @@ export default function SessionPlayerGame() {
       nextError = `Your game loaded, but secret missions couldn't refresh: ${missionError.message}`;
     } else {
       setSecretMissions((missionData ?? []) as SecretMission[]);
+    }
+
+    const { data: secretReviewData, error: secretReviewError } = await supabase.rpc("cc_player_get_session_secret_review", {
+      p_join_code: code,
+      p_player_token: token,
+    });
+    if (secretReviewError) {
+      nextError = nextError || `Secret mission review couldn't refresh: ${secretReviewError.message}`;
+    } else {
+      setSecretReview(secretReviewData as SecretReviewView);
     }
 
     const { data: evidenceData, error: evidenceError } = await supabase.rpc("cc_get_player_session_evidence", {
@@ -466,9 +534,12 @@ export default function SessionPlayerGame() {
       setError("This challenge has already been approved, so no more evidence can be added.");
       return;
     }
-    if (parent.type === "secret" && parent.mission.status === "approved") {
-      setError("This mission has already been approved, so no more evidence can be added.");
-      return;
+    if (parent.type === "secret") {
+      const finalReview = secretReview?.my_final_reviews.find((item) => item.assignment_id === parent.mission.assignment_id);
+      if (parent.mission.status === "approved" || finalReview) {
+        setError("This secret mission has a final result, so no more evidence can be added.");
+        return;
+      }
     }
 
     const allowedExtensions = new Set(["jpg", "jpeg", "png", "gif", "webp", "avif", "heic", "heif", "bmp", "tif", "tiff", "mp4", "mov", "qt", "webm", "ogg", "ogv", "3gp", "3g2", "m4v", "mpeg", "mpg", "mp2", "avi", "mkv", "wmv", "flv", "ts", "mts", "m2ts", "asf"]);
@@ -602,6 +673,10 @@ export default function SessionPlayerGame() {
 
   async function submitSecretMission(mission: SecretMission) {
     if (!token || !code) return;
+    if (secretReview?.my_final_reviews.some((item) => item.assignment_id === mission.assignment_id)) {
+      setError("This secret mission has already received a final review result.");
+      return;
+    }
     if (mission.allow_photo_upload && evidenceForSecret(mission.assignment_id).length === 0) {
       setError("Upload at least one photo or video before submitting this secret mission.");
       return;
@@ -618,6 +693,24 @@ export default function SessionPlayerGame() {
     await loadView();
   }
 
+  async function voteOnSecretReview(vote: "success" | "fail") {
+    if (!token || !code || !secretReview?.assignment_id || !secretReview.voting_open) return;
+    setBusyKey("secret-review-vote");
+    setError("");
+    const { error: voteError } = await supabase.rpc("cc_player_cast_secret_review_vote", {
+      p_join_code: code,
+      p_player_token: token,
+      p_assignment_id: secretReview.assignment_id,
+      p_vote: vote,
+    });
+    setBusyKey(null);
+    if (voteError) {
+      setError(voteError.message);
+      return;
+    }
+    await loadView();
+  }
+
   function playSecretMission(mission: SecretMission) {
     const playerId = view?.player.id;
     if (!playerId) return;
@@ -630,6 +723,20 @@ export default function SessionPlayerGame() {
       localStorage.setItem(storageKey, JSON.stringify([...new Set([...seenIds, mission.assignment_id])]));
     } catch { /* The mission remains dismissed for this visit. */ }
     setActiveSecretMissionId(null);
+  }
+
+  function dismissCompletedSecretMission(mission: SecretMission) {
+    const playerId = view?.player.id;
+    if (!playerId) return;
+    const storageKey = `chaos-crawl-dismissed-secret-missions:${code}:${playerId}`;
+    const nextIds = [...new Set([...dismissedSecretMissionCardIds, mission.assignment_id])];
+    setDismissedSecretMissionCardIds(nextIds);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(nextIds));
+    } catch {
+      setError("The mission was dismissed for this visit, but the dismissal couldn't be saved on this device.");
+    }
+    playSecretMission(mission);
   }
 
   async function copyGameCode() {
@@ -663,6 +770,7 @@ export default function SessionPlayerGame() {
 
   const { session, player, teams, challenge, side_challenges: sideChallenges } = view;
   const finalRoundTakeover = activePage === "final" && session.final_gallery_open;
+  const secretReviewTakeover = Boolean(secretReview?.open && secretReview.mission);
   const playerTourSteps: GuidedTourStep[] = [
     { target: '[data-tour="player-profile"]', title: "Your player card", body: "Your avatar, team and points live here. Your score updates as approved challenges and reward rounds are completed.", page: "game" },
     { target: '[data-tour="player-navigation"]', title: "Move around the game", body: "Use these tabs to switch between your current challenge, the leaderboard, side challenges and the final vote when it opens.", page: "game" },
@@ -680,21 +788,83 @@ export default function SessionPlayerGame() {
     }))
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
   const activeSecretMission = secretMissions.find((mission) => mission.assignment_id === activeSecretMissionId) ?? null;
+  const visibleSecretMissions = secretMissions.filter((mission) => !dismissedSecretMissionCardIds.includes(mission.assignment_id));
   const sharedTimerSeconds = sharedTimer && (sharedTimer.is_on_break || sharedTimer.round_number === session.current_round_number)
     ? Math.max(0, sharedTimer.remaining_seconds - (sharedTimer.is_running && timerReceivedAt !== null ? Math.floor((timerNow - timerReceivedAt) / 1000) : 0))
     : Math.max(0, Number(challenge?.duration_minutes ?? 0) * 60);
   const sharedTimerLabel = `${Math.floor(sharedTimerSeconds / 60).toString().padStart(2, "0")}:${(sharedTimerSeconds % 60).toString().padStart(2, "0")}`;
 
   return (
-    <main className={`cc-session-player-app${embeddedHostMode ? " cc-player-embedded" : ""}${finalRoundTakeover ? " cc-player-final-takeover" : ""}`}>
-      {!embeddedHostMode && <SessionPlayerProfile viewerRole="player" name={player.name} subtitle={player.team_name || (session.teams_enabled ? "Choose your team" : "Solo player")} avatarUrl={player.avatar_url} score={player.score} rank={playerRank ?? null}/>}
+    <main className={`cc-session-player-app${embeddedHostMode ? " cc-player-embedded" : ""}${finalRoundTakeover ? " cc-player-final-takeover" : ""}${secretReviewTakeover ? " cc-player-secret-review-active" : ""}`}>
+      {secretReviewTakeover && secretReview?.mission && (
+        <section className="cc-player-secret-review-backdrop" role="dialog" aria-modal="true" aria-labelledby="cc-secret-review-title">
+          <div className="cc-player-secret-review">
+            <span className="cc-player-secret-review-kicker">SECRET MISSION REVIEW</span>
+            <div className="cc-player-secret-review-owner">
+              {secretReview.mission.player_avatar_url
+                ? <img src={secretReview.mission.player_avatar_url} alt=""/>
+                : <span>{secretReview.mission.player_name.slice(0, 1).toUpperCase()}</span>}
+              <strong>{secretReview.mission.player_name}'s mission</strong>
+            </div>
+            <h1 id="cc-secret-review-title">{secretReview.mission.title}</h1>
+            <p className="cc-player-secret-review-description">{secretReview.mission.description}</p>
+            {secretReview.media.length > 0 ? (
+              <div className="cc-player-secret-review-media">
+                {secretReview.media.map((item) => item.media_type === "video"
+                  ? <video key={item.id} src={mediaUrl(item.storage_path)} controls playsInline preload="metadata"/>
+                  : <img key={item.id} src={mediaUrl(item.storage_path)} alt={`Evidence for ${secretReview.mission?.title ?? "secret mission"}`}/>)}
+              </div>
+            ) : <div className="cc-player-secret-review-text-slide">No photo or video submitted for this mission.</div>}
+            {secretReview.voting_open ? (
+              <>
+                <p className="cc-player-secret-review-votes" aria-live="polite">{secretReview.votes_cast} vote{secretReview.votes_cast === 1 ? "" : "s"} cast · results appear when the host closes voting</p>
+                <div className="cc-player-secret-review-actions">
+                  <button type="button" className={secretReview.my_vote === "success" ? "is-selected" : ""} disabled={busyKey !== null} onClick={() => void voteOnSecretReview("success")}>
+                    {busyKey === "secret-review-vote" ? <LoaderCircle size={18} className="cc-spin"/> : "SUCCESS"}
+                  </button>
+                  <button type="button" className={secretReview.my_vote === "fail" ? "is-selected is-fail" : "is-fail"} disabled={busyKey !== null} onClick={() => void voteOnSecretReview("fail")}>
+                    {busyKey === "secret-review-vote" ? <LoaderCircle size={18} className="cc-spin"/> : "FAIL"}
+                  </button>
+                </div>
+                {secretReview.my_vote && <p className="cc-player-secret-review-voted">Your vote is saved. You can change it until voting closes.</p>}
+              </>
+            ) : secretReview.outcome ? (
+              <div className="cc-player-secret-review-results">
+                <strong className={secretReview.outcome === "success" ? "is-success" : "is-fail"}>
+                  {secretReview.outcome === "success" ? "SUCCESS" : "FAIL"}
+                </strong>
+                <p>{secretReview.outcome === "success" ? `+${secretReview.mission.points} points awarded` : "No points awarded · final result"}</p>
+                <div className="cc-player-secret-review-tally">
+                  <span>{secretReview.success_votes ?? 0} Success</span>
+                  <span>{secretReview.fail_votes ?? 0} Fail</span>
+                  <span>{secretReview.votes_cast} votes</span>
+                </div>
+                <h2>Who voted</h2>
+                <div className="cc-player-secret-review-voters">
+                  {secretReview.voters.map((voter) => <span key={voter.id}>
+                    {voter.avatar_url ? <img src={voter.avatar_url} alt=""/> : <i>{voter.name.slice(0, 1).toUpperCase()}</i>}
+                    <b>{voter.name}</b><small>{voter.vote}</small>
+                  </span>)}
+                </div>
+                <h2>Leaderboard changes</h2>
+                <div className="cc-player-secret-review-leaderboard">
+                  {secretReview.leaderboard.slice(0, 8).map((entry, index) => <div key={entry.player_id} className={entry.player_id === player.id ? "is-you" : ""}>
+                    <span>{index + 1}</span><b>{entry.name}{entry.player_id === player.id ? " · YOU" : ""}</b><small>{entry.team_name ?? "Solo"}</small><strong>{entry.score} pts</strong>
+                  </div>)}
+                </div>
+              </div>
+            ) : <p className="cc-player-secret-review-votes">Waiting for the host to open voting…</p>}
+          </div>
+        </section>
+      )}
+      {!embeddedHostMode && !secretReviewTakeover && <SessionPlayerProfile viewerRole="player" name={player.name} subtitle={player.team_name || (session.teams_enabled ? "Choose your team" : "Solo player")} avatarUrl={player.avatar_url} score={player.score} rank={playerRank ?? null}/>}
 
       <div className="cc-player-game-content">
-        {embeddedHostMode && <SessionPlayerProfile viewerRole="player" name={player.name} subtitle={player.team_name || (session.teams_enabled ? "Choose your team" : "Solo player")} avatarUrl={player.avatar_url} score={player.score} rank={playerRank ?? null}/>}
-        {!finalRoundTakeover && <SessionGameTitlebar name={session.name} code={session.join_code} photoUrl={gamePhotoUrl} copied={copiedCode} onCopy={() => void copyGameCode()}/>}
-        {!embeddedHostMode && !finalRoundTakeover && <div className="cc-player-tour-row"><button type="button" className="cc-tour-help-button" onClick={() => setTourOpen(true)}>✦ How to play / Take a tour</button></div>}
+        {embeddedHostMode && !secretReviewTakeover && <SessionPlayerProfile viewerRole="player" name={player.name} subtitle={player.team_name || (session.teams_enabled ? "Choose your team" : "Solo player")} avatarUrl={player.avatar_url} score={player.score} rank={playerRank ?? null}/>}
+        {!finalRoundTakeover && !secretReviewTakeover && <SessionGameTitlebar name={session.name} code={session.join_code} photoUrl={gamePhotoUrl} copied={copiedCode} onCopy={() => void copyGameCode()}/>}
+        {!embeddedHostMode && !finalRoundTakeover && !secretReviewTakeover && <div className="cc-player-tour-row"><button type="button" className="cc-tour-help-button" onClick={() => setTourOpen(true)}>✦ How to play / Take a tour</button></div>}
 
-        {!embeddedHostMode && !finalRoundTakeover && <nav className="cc-player-page-nav" data-tour="player-navigation" aria-label="Game pages">
+        {!embeddedHostMode && !finalRoundTakeover && !secretReviewTakeover && <nav className="cc-player-page-nav" data-tour="player-navigation" aria-label="Game pages">
           <Link to={`/play/${code}/game`} className={`cc-player-page-tab${activePage === "game" ? " is-active" : ""}`} aria-current={activePage === "game" ? "page" : undefined}>
             <Gamepad2 size={17}/><span>Game</span>
           </Link>
@@ -848,10 +1018,10 @@ export default function SessionPlayerGame() {
                         {session.teams_enabled && !player.team_id && <p className="cc-player-hint">Wait for the host to assign your team before submitting.</p>}
                   </SessionMainChallengeCard>
                 ) : <section className="cc-player-state-card"><h2>Challenge not ready yet</h2><p>Ask the host to select a round.</p></section>}
-                {secretMissions.length > 0 && (
+                {visibleSecretMissions.length > 0 && (
                   <section className="cc-player-secret-section" aria-label="Your private secret missions">
                     <div className="cc-player-secret-list">
-                      {secretMissions.map((mission) => (
+                      {visibleSecretMissions.map((mission) => (
                         <article className="cc-player-secret-card" key={mission.assignment_id}>
                           <div className="cc-player-secret-card-top"><span className="cc-player-secret-label">SECRET MISSION</span><span className="cc-player-points">+{mission.points} pts</span></div>
                           <span className="cc-player-secret-art" aria-hidden="true">{challengeIcon(mission.title, mission.description)}</span>
@@ -860,7 +1030,7 @@ export default function SessionPlayerGame() {
                           <div className="cc-player-evidence-tools">
                             <label className="cc-player-upload-button">
                               <Upload size={16}/>{busyKey === `upload:${mission.assignment_id}` ? "Uploading…" : "Add photo / video evidence"}
-                              <input type="file" accept="image/*,video/*" disabled={busyKey !== null || mission.status === "approved" || evidenceForSecret(mission.assignment_id).length >= 6} onChange={(event) => void uploadEvidence(event, { type: "secret", mission })}/>
+                              <input type="file" accept="image/*,video/*" disabled={busyKey !== null || mission.status === "approved" || secretReview?.my_final_reviews.some((item) => item.assignment_id === mission.assignment_id) || evidenceForSecret(mission.assignment_id).length >= 6} onChange={(event) => void uploadEvidence(event, { type: "secret", mission })}/>
                             </label>
                             <span className="cc-player-evidence-count">{evidenceForSecret(mission.assignment_id).length}/6 files</span>
                           </div>
@@ -872,13 +1042,19 @@ export default function SessionPlayerGame() {
                           {mission.allow_photo_upload && <p className="cc-player-evidence-required">Photo or video evidence is required before you can submit this mission.</p>}
                           <div className={`cc-player-secret-status cc-player-secret-status--${mission.status}`}>
                             {mission.status === "sent" ? "Mission received — go do your thing"
-                              : mission.status === "submitted" ? "Marked complete · waiting for host review"
+                              : mission.status === "submitted" ? "Marked complete · waiting for the group review"
                               : mission.status === "approved" ? `Mission approved · +${mission.awarded_points} points`
+                              : secretReview?.my_final_reviews.some((item) => item.assignment_id === mission.assignment_id && item.outcome === "fail") ? "Mission failed · final result · no points"
                               : "The host asked you to try again"}
                           </div>
-                          {(mission.status === "sent" || mission.status === "rejected") && (
+                          {(mission.status === "sent" || mission.status === "rejected") && !secretReview?.my_final_reviews.some((item) => item.assignment_id === mission.assignment_id) && (
                             <button type="button" className="cc-player-primary-button cc-player-secret-complete" disabled={busyKey !== null} onClick={() => void submitSecretMission(mission)}>
                               {busyKey === mission.assignment_id ? <LoaderCircle className="cc-spin" size={18}/> : <CheckCircle2 size={18}/>} {mission.status === "rejected" ? "Try again — I've done it" : "I've completed my mission"}
+                            </button>
+                          )}
+                          {(mission.status === "submitted" || mission.status === "approved" || secretReview?.my_final_reviews.some((item) => item.assignment_id === mission.assignment_id)) && (
+                            <button type="button" className="cc-player-secret-dismiss" onClick={() => dismissCompletedSecretMission(mission)}>
+                              Dismiss completed mission
                             </button>
                           )}
                         </article>
@@ -1043,7 +1219,7 @@ export default function SessionPlayerGame() {
         {!embeddedHostMode && !finalRoundTakeover && <div className="cc-player-sync-note"><span className="cc-player-live-dot"/> Live updates enabled {lastUpdated && <span>· synced {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>}</div>}
         {!embeddedHostMode && !finalRoundTakeover && <button type="button" className="cc-player-text-button" onClick={() => navigate(`/join?code=${code}&returning=1`)}><RotateCcw size={15}/> Need to rejoin on this device?</button>}
       </div>
-      {activeSecretMission && activePage === "game" && session.status === "live" && !rewardRound && (
+      {activeSecretMission && activePage === "game" && session.status === "live" && !rewardRound && !secretReviewTakeover && (
         <div className="cc-player-secret-modal-backdrop">
           <section className="cc-player-secret-modal" role="dialog" aria-modal="true" aria-labelledby="cc-player-secret-modal-title" aria-describedby="cc-player-secret-modal-description">
             <div className="cc-player-secret-modal-top">
