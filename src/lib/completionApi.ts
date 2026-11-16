@@ -1,11 +1,7 @@
-import {
-  supabase,
-} from "./supabase";
-
-export type ChallengeType =
-  | "main"
-  | "side"
-  | "bonus";
+import { supabase } from "./supabase";
+import { invalidResult, runApi, type ApiResult } from "./apiResult";
+import type { ChallengeType, ChallengeCompletion } from "../types/database";
+export type { ChallengeType, ChallengeCompletion } from "../types/database";
 
 export interface CompleteChallengeArgs {
   playerId: string;
@@ -15,15 +11,10 @@ export interface CompleteChallengeArgs {
   photoId?: string | number | null;
 }
 
-export interface ChallengeCompletion {
-  id: string | number;
-  player_id: string;
-  challenge_type: ChallengeType;
-  challenge_id: string;
-  points: number;
-  photo_id: string | number | null;
-  completed_at?: string | null;
-}
+const alreadyCompleted = {
+  code: "ALREADY_COMPLETED",
+  message: "You already completed this challenge.",
+};
 
 export async function completeChallenge({
   playerId,
@@ -31,164 +22,102 @@ export async function completeChallenge({
   challengeId,
   points,
   photoId = null,
-}: CompleteChallengeArgs) {
-  const {
-    data: existing,
-    error: checkError,
-  } = await supabase
-    .from("challenge_completions")
-    .select("*")
-    .eq(
-      "player_id",
-      playerId
-    )
-    .eq(
-      "challenge_type",
-      challengeType
-    )
-    .eq(
-      "challenge_id",
-      String(challengeId)
-    )
-    .maybeSingle();
-
-  if (checkError) {
-    console.error(
-      "CHECK COMPLETION ERROR:",
-      checkError
+}: CompleteChallengeArgs): Promise<ApiResult<ChallengeCompletion>> {
+  if (
+    !playerId.trim() ||
+    !String(challengeId).trim() ||
+    !Number.isFinite(points) ||
+    !["main", "side", "bonus"].includes(challengeType)
+  ) {
+    return invalidResult(
+      "A player, valid challenge and finite points are required.",
     );
-
-    return {
-      data: null,
-      error: checkError,
-    };
   }
+  const existing = await runApi<ChallengeCompletion>(() =>
+    supabase
+      .from("challenge_completions")
+      .select("*")
+      .eq("player_id", playerId)
+      .eq("challenge_type", challengeType)
+      .eq("challenge_id", String(challengeId))
+      .maybeSingle(),
+  );
+  if (existing.error) return existing;
+  if (existing.data) return { data: existing.data, error: alreadyCompleted };
 
-  if (existing) {
-    return {
-      data:
-        existing as ChallengeCompletion,
-
-      error: {
-        code: "ALREADY_COMPLETED",
-        message:
-          "You already completed this challenge.",
-      },
-    };
-  }
-
-  const {
-    data,
-    error,
-  } = await supabase
-    .from("challenge_completions")
-    .insert({
-      player_id:
-        playerId,
-
-      challenge_type:
-        challengeType,
-
-      challenge_id:
-        String(challengeId),
-
-      points,
-
-      photo_id:
-        photoId ?? null,
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error(
-      "CREATE COMPLETION ERROR:",
-      error
+  const result = await runApi<ChallengeCompletion>(() =>
+    supabase
+      .from("challenge_completions")
+      .insert({
+        player_id: playerId,
+        challenge_type: challengeType,
+        challenge_id: String(challengeId),
+        points,
+        photo_id: photoId,
+      })
+      .select()
+      .single(),
+  );
+  // A uniqueness constraint, if installed, closes the check/insert race. Do not
+  // label unrelated unique violations (for example photo_id) as a completion.
+  if (result.error?.code === "23505") {
+    const duplicate = await runApi<ChallengeCompletion>(() =>
+      supabase
+        .from("challenge_completions")
+        .select("*")
+        .eq("player_id", playerId)
+        .eq("challenge_type", challengeType)
+        .eq("challenge_id", String(challengeId))
+        .maybeSingle(),
     );
-
-    return {
-      data: null,
-      error,
-    };
+    if (duplicate.data)
+      return { data: duplicate.data, error: alreadyCompleted };
   }
-
-  return {
-    data:
-      data as ChallengeCompletion,
-
-    error: null,
-  };
+  return result;
 }
 
-export async function removeChallengeCompletion(
+export function removeChallengeCompletion(
   playerId: string,
   challengeType: ChallengeType,
-  challengeId: string | number
-) {
-  return supabase
-    .from("challenge_completions")
-    .delete()
-    .eq(
-      "player_id",
-      playerId
-    )
-    .eq(
-      "challenge_type",
-      challengeType
-    )
-    .eq(
-      "challenge_id",
-      String(challengeId)
-    );
+  challengeId: string | number,
+): Promise<ApiResult<null>> {
+  return runApi<null>(() =>
+    supabase
+      .from("challenge_completions")
+      .delete()
+      .eq("player_id", playerId)
+      .eq("challenge_type", challengeType)
+      .eq("challenge_id", String(challengeId)),
+  );
 }
 
-export async function getChallengeCompletions() {
-  const {
-    data,
-    error,
-  } = await supabase
-    .from("challenge_completions")
-    .select("*")
-    .order(
-      "completed_at",
-      {
-        ascending: false,
-      }
-    );
-
-  if (error) {
-    console.error(
-      "LOAD COMPLETIONS ERROR:",
-      error
-    );
-
-    return {
-      data: [],
-      error,
-    };
-  }
-
-  return {
-    data:
-      (data ?? []) as ChallengeCompletion[],
-
-    error: null,
-  };
+export function getChallengeCompletions(
+  signal?: AbortSignal,
+): Promise<ApiResult<ChallengeCompletion[]>> {
+  return runApi<ChallengeCompletion[]>(() => {
+    const query = supabase
+      .from("challenge_completions")
+      .select("*")
+      .order("completed_at", { ascending: false });
+    return signal ? query.abortSignal(signal) : query;
+  });
 }
 
-export async function updateCompletionPoints(
+export function updateCompletionPoints(
   completionId: string | number,
-  points: number
-) {
-  return supabase
-    .from("challenge_completions")
-    .update({
-      points,
-    })
-    .eq(
-      "id",
-      completionId
-    )
-    .select()
-    .single();
+  points: number,
+): Promise<ApiResult<ChallengeCompletion>> {
+  if (!Number.isFinite(points) || !String(completionId).trim()) {
+    return Promise.resolve(
+      invalidResult("A completion and finite points are required."),
+    );
+  }
+  return runApi<ChallengeCompletion>(() =>
+    supabase
+      .from("challenge_completions")
+      .update({ points })
+      .eq("id", completionId)
+      .select()
+      .single(),
+  );
 }

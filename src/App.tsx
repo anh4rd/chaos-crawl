@@ -1,40 +1,21 @@
-import {
-  lazy,
-  Suspense,
-} from "react";
+import { lazy, Suspense } from "react";
 
-import {
-  Routes,
-  Route,
-} from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 
-const Join = lazy(
-  () => import("./pages/Join")
-);
+const Join = lazy(() => import("./pages/Join"));
 
-const Game = lazy(
-  () => import("./pages/Game")
-);
+const Game = lazy(() => import("./pages/Game"));
 
-const Admin = lazy(
-  () => import("./pages/Admin")
-);
+const Admin = lazy(() => import("./pages/Admin"));
 
-const Leaderboard = lazy(
-  () => import("./pages/Leaderboard")
-);
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 
-const Vote = lazy(
-  () => import("./pages/Vote")
-);
+const Vote = lazy(() => import("./pages/Vote"));
 
-const Slideshow = lazy(
-  () => import("./pages/Slideshow")
-);
+const Slideshow = lazy(() => import("./pages/Slideshow"));
 
-const VoteResults = lazy(
-  () => import("./pages/VoteResults")
-);
+const VoteResults = lazy(() => import("./pages/VoteResults"));
+const ChallengeReview = lazy(() => import("./pages/ChallengeReview"));
 
 export default function App() {
   return (
@@ -46,45 +27,22 @@ export default function App() {
       }
     >
       <Routes>
-        <Route
-          path="/"
-          element={<Join />}
-        />
-        <Route
-  path="/join"
-  element={<Join />}
-/>
+        <Route path="/" element={<Join />} />
+        <Route path="/join" element={<Join />} />
 
-        <Route
-          path="/game"
-          element={<Game />}
-        />
+        <Route path="/game" element={<Game />} />
 
-        <Route
-          path="/admin"
-          element={<Admin />}
-        />
+        <Route path="/admin" element={<Admin />} />
 
-        <Route
-          path="/leaderboard"
-          element={<Leaderboard />}
-        />
+        <Route path="/leaderboard" element={<Leaderboard />} />
 
-        <Route
-          path="/vote"
-          element={<Vote />}
-        />
+        <Route path="/vote" element={<Vote />} />
 
-        <Route
-          path="/slideshow"
-          element={<Slideshow />}
-        />
-        <Route
-        path="/vote-results"
-        element={<VoteResults />}
-        />
+        <Route path="/slideshow" element={<Slideshow />} />
+        <Route path="/vote-results" element={<VoteResults />} />
+        <Route path="/challenge-review" element={<ChallengeReview />} />
+        <Route path="*" element={<Join />} />
       </Routes>
-    
     </Suspense>
   );
 }

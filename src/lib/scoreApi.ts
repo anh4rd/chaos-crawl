@@ -1,41 +1,19 @@
 import { supabase } from "./supabase";
+import { invalidResult, runApi, type ApiResult } from "./apiResult";
+import type { ScoreChallengeType, ScoreEvent } from "../types/database";
+export type { ScoreChallengeType, ScoreEvent } from "../types/database";
 
-export type ScoreChallengeType =
-  | "main"
-  | "side"
-  | "bonus"
-  | "vote"
-  | "manual";
-
-export interface ScoreEvent {
-  id: string;
-
-  player_id: string | null;
-  team_name: string | null;
-
-  challenge_type: ScoreChallengeType;
-  challenge_id: string;
-  challenge_title: string;
-
-  points: number;
-  reason: string | null;
-
-  awarded_at: string;
-}
-
-interface AwardScoreArgs {
+export interface AwardScoreArgs {
   playerId?: string | null;
   teamName?: string | null;
-
   challengeType: ScoreChallengeType;
   challengeId: string | number;
   challengeTitle: string;
-
   points: number;
   reason?: string | null;
 }
 
-export async function awardScore({
+export function awardScore({
   playerId = null,
   teamName = null,
   challengeType,
@@ -43,73 +21,71 @@ export async function awardScore({
   challengeTitle,
   points,
   reason = null,
-}: AwardScoreArgs) {
-  if (!playerId && !teamName) {
-    return {
-      data: null,
-      error: new Error(
-        "A player or team is required."
-      ),
-    };
+}: AwardScoreArgs): Promise<ApiResult<ScoreEvent>> {
+  if (Boolean(playerId?.trim()) === Boolean(teamName?.trim())) {
+    return Promise.resolve(
+      invalidResult("Exactly one player or team is required."),
+    );
   }
-
-  return supabase
-    .from("score_events")
-    .insert({
-      player_id: playerId,
-      team_name: teamName,
-
-      challenge_type:
-        challengeType,
-
-      challenge_id:
-        String(challengeId),
-
-      challenge_title:
-        challengeTitle,
-
-      points,
-
-      reason,
-    })
-    .select()
-    .single();
+  if (
+    !Number.isFinite(points) ||
+    points === 0 ||
+    !String(challengeId).trim() ||
+    !challengeTitle.trim() ||
+    !["main", "side", "bonus", "vote", "manual"].includes(challengeType)
+  ) {
+    return Promise.resolve(
+      invalidResult(
+        "A valid challenge and finite, nonzero points are required.",
+      ),
+    );
+  }
+  return runApi<ScoreEvent>(() =>
+    supabase
+      .from("score_events")
+      .insert({
+        player_id: playerId,
+        team_name: teamName,
+        challenge_type: challengeType,
+        challenge_id: String(challengeId),
+        challenge_title: challengeTitle,
+        points,
+        reason,
+      })
+      .select()
+      .single(),
+  );
 }
 
-export async function getScoreEvents() {
-  return supabase
-    .from("score_events")
-    .select("*")
-    .order("awarded_at", {
-      ascending: false,
-    });
+export function getScoreEvents(): Promise<ApiResult<ScoreEvent[]>> {
+  return runApi<ScoreEvent[]>(() =>
+    supabase
+      .from("score_events")
+      .select("*")
+      .order("awarded_at", { ascending: false }),
+  );
 }
 
-export async function getScoreEventsForChallenge(
+export function getScoreEventsForChallenge(
   challengeType: ScoreChallengeType,
-  challengeId: string | number
-) {
-  return supabase
-    .from("score_events")
-    .select("*")
-    .eq(
-      "challenge_type",
-      challengeType
-    )
-    .eq(
-      "challenge_id",
-      String(challengeId)
-    )
-    .order("awarded_at", {
-      ascending: false,
-    });
+  challengeId: string | number,
+): Promise<ApiResult<ScoreEvent[]>> {
+  return runApi<ScoreEvent[]>(() =>
+    supabase
+      .from("score_events")
+      .select("*")
+      .eq("challenge_type", challengeType)
+      .eq("challenge_id", String(challengeId))
+      .order("awarded_at", { ascending: false }),
+  );
 }
 
-export async function removeScoreEvent(
-  scoreEventId: string
-) {
-  return supabase
-    .from("score_events")
-    .delete()
-    .eq("id", scoreEventId);
+export function removeScoreEvent(
+  scoreEventId: string,
+): Promise<ApiResult<null>> {
+  if (!scoreEventId.trim())
+    return Promise.resolve(invalidResult("A score event is required."));
+  return runApi<null>(() =>
+    supabase.from("score_events").delete().eq("id", scoreEventId),
+  );
 }

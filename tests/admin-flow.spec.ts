@@ -1,379 +1,199 @@
-import {
-  test,
-  expect,
-  type Page,
-} from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
-async function openAdmin(
-  page: Page
-) {
-  await page.goto("/#/admin");
+import { openAdmin } from "./support/liveNavigation";
 
-  await expect(
-    page.getByText(
-      "Host Control"
-    )
-  ).toBeVisible();
+test.describe("admin journey", () => {
+  test("admin loads without runtime or network errors", async ({ page }) => {
+    const pageErrors: string[] = [];
 
-  await expect(
-    page.getByRole(
-      "button",
-      {
-        name: /live/i,
+    const failedResponses: string[] = [];
+
+    page.on("pageerror", (error) => {
+      pageErrors.push(error.message);
+    });
+
+    page.on("response", (response) => {
+      if (response.status() >= 400) {
+        failedResponses.push(`${response.status()} ${response.url()}`);
       }
-    ).first()
-  ).toBeVisible();
-}
+    });
 
-test.describe(
-  "admin journey",
-  () => {
-    test(
-      "admin loads without runtime or network errors",
-      async ({ page }) => {
-        const pageErrors: string[] =
-          [];
+    await openAdmin(page);
 
-        const failedResponses: string[] =
-          [];
+    await page.waitForTimeout(1000);
 
-        page.on(
-          "pageerror",
-          (error) => {
-            pageErrors.push(
-              error.message
-            );
-          }
-        );
+    expect(pageErrors, `Runtime errors:\n${pageErrors.join("\n")}`).toEqual([]);
 
-        page.on(
-          "response",
-          (response) => {
-            if (
-              response.status() >= 400
-            ) {
-              failedResponses.push(
-                `${response.status()} ${response.url()}`
-              );
-            }
-          }
-        );
+    expect(
+      failedResponses,
+      `Failed responses:\n${failedResponses.join("\n")}`,
+    ).toEqual([]);
+  });
 
-        await openAdmin(page);
+  test("all admin tabs open", async ({ page }) => {
+    await openAdmin(page);
 
-        await page.waitForTimeout(
-          1000
-        );
+    const tabs = [
+      /🔴 Live/i,
+      /🎯 Challenges/i,
+      /✅ Review/i,
+      /📺 Screens/i,
+      /🗳️ Voting/i,
+      /👥 Players/i,
+      /🏁 Teams/i,
+    ];
 
-        expect(
-          pageErrors,
-          `Runtime errors:\n${pageErrors.join(
-            "\n"
-          )}`
-        ).toEqual([]);
+    for (const tabName of tabs) {
+      const tab = page.getByRole("button", {
+        name: tabName,
+      });
 
-        expect(
-          failedResponses,
-          `Failed responses:\n${failedResponses.join(
-            "\n"
-          )}`
-        ).toEqual([]);
-      }
-    );
+      await expect(tab).toBeVisible();
 
-    test(
-      "all admin tabs open",
-      async ({ page }) => {
-        await openAdmin(page);
+      await tab.click();
 
-        const tabs = [
-          /🔴 Live/i,
-          /🎯 Challenges/i,
-          /✅ Review/i,
-          /📺 Screens/i,
-          /🗳️ Voting/i,
-          /👥 Players/i,
-          /🏁 Teams/i,
-        ];
+      await expect(tab).toBeVisible();
+    }
+  });
 
-        for (
-          const tabName of tabs
-        ) {
-          const tab =
-            page.getByRole(
-              "button",
-              {
-                name: tabName,
-              }
-            );
+  test("live tab shows round controls", async ({ page }) => {
+    await openAdmin(page);
 
-          await expect(
-            tab
-          ).toBeVisible();
+    await page
+      .getByRole("button", {
+        name: /🔴 Live/i,
+      })
+      .click();
 
-          await tab.click();
+    await expect(page.getByText("Round Challenges")).toBeVisible();
 
-          await expect(
-            tab
-          ).toBeVisible();
-        }
-      }
-    );
+    await expect(
+      page.getByRole("button", {
+        name: /move to next pub/i,
+      }),
+    ).toBeVisible();
 
-    test(
-      "live tab shows round controls",
-      async ({ page }) => {
-        await openAdmin(page);
+    await expect(
+      page.getByRole("button", {
+        name: /go live/i,
+      }),
+    ).toBeVisible();
+  });
 
-        await page
-          .getByRole(
-            "button",
-            {
-              name: /🔴 Live/i,
-            }
-          )
-          .click();
+  test("challenges tab opens", async ({ page }) => {
+    await openAdmin(page);
 
-        await expect(
-          page.getByText(
-            "Round Challenges"
-          )
-        ).toBeVisible();
+    await page
+      .getByRole("button", {
+        name: /🎯 Challenges/i,
+      })
+      .click();
 
-        await expect(
-          page.getByRole(
-            "button",
-            {
-              name:
-                /move to next pub/i,
-            }
-          )
-        ).toBeVisible();
+    await expect(page.locator("body")).not.toContainText("Loading chaos...");
 
-        await expect(
-          page.getByRole(
-            "button",
-            {
-              name: /go live/i,
-            }
-          )
-        ).toBeVisible();
-      }
-    );
+    await expect(page.locator("body")).toContainText(/challenge/i);
+  });
 
-    test(
-      "challenges tab opens",
-      async ({ page }) => {
-        await openAdmin(page);
+  test("review tab opens", async ({ page }) => {
+    await openAdmin(page);
 
-        await page
-          .getByRole(
-            "button",
-            {
-              name:
-                /🎯 Challenges/i,
-            }
-          )
-          .click();
+    await page
+      .getByRole("button", {
+        name: /✅ Review/i,
+      })
+      .click();
 
-        await expect(
-          page.locator("body")
-        ).not.toContainText(
-          "Loading chaos..."
-        );
+    await expect(page.locator("body")).not.toContainText("Loading chaos...");
+  });
 
-        await expect(
-          page.locator("body")
-        ).toContainText(
-          /challenge/i
-        );
-      }
-    );
+  test("screens tab exposes host screen controls", async ({ page }) => {
+    await openAdmin(page);
 
-    test(
-      "review tab opens",
-      async ({ page }) => {
-        await openAdmin(page);
+    await page
+      .getByRole("button", {
+        name: /📺 Screens/i,
+      })
+      .click();
 
-        await page
-          .getByRole(
-            "button",
-            {
-              name: /✅ Review/i,
-            }
-          )
-          .click();
+    await expect(page.locator("body")).not.toContainText("Loading chaos...");
 
-        await expect(
-          page.locator("body")
-        ).not.toContainText(
-          "Loading chaos..."
-        );
-      }
-    );
+    const bodyText = await page.locator("body").innerText();
 
-    test(
-      "screens tab exposes host screen controls",
-      async ({ page }) => {
-        await openAdmin(page);
+    expect(bodyText).toMatch(/slideshow|screen|leaderboard/i);
+  });
 
-        await page
-          .getByRole(
-            "button",
-            {
-              name: /📺 Screens/i,
-            }
-          )
-          .click();
+  test("voting tab opens", async ({ page }) => {
+    await openAdmin(page);
 
-        await expect(
-          page.locator("body")
-        ).not.toContainText(
-          "Loading chaos..."
-        );
+    await page
+      .getByRole("button", {
+        name: /🗳️ Voting/i,
+      })
+      .click();
 
-        const bodyText =
-          await page
-            .locator("body")
-            .innerText();
+    await expect(page.locator("body")).not.toContainText("Loading chaos...");
 
-        expect(
-          bodyText
-        ).toMatch(
-          /slideshow|screen|leaderboard/i
-        );
-      }
-    );
+    await expect(page.locator("body")).toContainText(/vot/i);
+  });
 
-    test(
-      "voting tab opens",
-      async ({ page }) => {
-        await openAdmin(page);
+  test("players tab opens", async ({ page }) => {
+    await openAdmin(page);
 
-        await page
-          .getByRole(
-            "button",
-            {
-              name: /🗳️ Voting/i,
-            }
-          )
-          .click();
+    await page
+      .getByRole("button", {
+        name: /👥 Players/i,
+      })
+      .click();
 
-        await expect(
-          page.locator("body")
-        ).not.toContainText(
-          "Loading chaos..."
-        );
+    await expect(page.locator("body")).not.toContainText("Loading chaos...");
+  });
 
-        await expect(
-          page.locator("body")
-        ).toContainText(
-          /vot/i
-        );
-      }
-    );
+  test("teams tab opens", async ({ page }) => {
+    await openAdmin(page);
 
-    test(
-      "players tab opens",
-      async ({ page }) => {
-        await openAdmin(page);
+    await page
+      .getByRole("button", {
+        name: /🏁 Teams/i,
+      })
+      .click();
 
-        await page
-          .getByRole(
-            "button",
-            {
-              name: /👥 Players/i,
-            }
-          )
-          .click();
+    await expect(page.locator("body")).not.toContainText("Loading chaos...");
 
-        await expect(
-          page.locator("body")
-        ).not.toContainText(
-          "Loading chaos..."
-        );
-      }
-    );
+    await expect(page.locator("body")).toContainText(/team/i);
+  });
 
-    test(
-      "teams tab opens",
-      async ({ page }) => {
-        await openAdmin(page);
+  test("switching every admin tab causes no React crash", async ({ page }) => {
+    const errors: string[] = [];
 
-        await page
-          .getByRole(
-            "button",
-            {
-              name: /🏁 Teams/i,
-            }
-          )
-          .click();
+    page.on("pageerror", (error) => {
+      errors.push(error.message);
+    });
 
-        await expect(
-          page.locator("body")
-        ).not.toContainText(
-          "Loading chaos..."
-        );
+    await openAdmin(page);
 
-        await expect(
-          page.locator("body")
-        ).toContainText(
-          /team/i
-        );
-      }
-    );
+    const tabs = [
+      /🔴 Live/i,
+      /🎯 Challenges/i,
+      /✅ Review/i,
+      /📺 Screens/i,
+      /🗳️ Voting/i,
+      /👥 Players/i,
+      /🏁 Teams/i,
+    ];
 
-    test(
-      "switching every admin tab causes no React crash",
-      async ({ page }) => {
-        const errors: string[] =
-          [];
+    for (const tabName of tabs) {
+      await page
+        .getByRole("button", {
+          name: tabName,
+        })
+        .click();
 
-        page.on(
-          "pageerror",
-          (error) => {
-            errors.push(
-              error.message
-            );
-          }
-        );
+      await page.waitForTimeout(200);
+    }
 
-        await openAdmin(page);
-
-        const tabs = [
-          /🔴 Live/i,
-          /🎯 Challenges/i,
-          /✅ Review/i,
-          /📺 Screens/i,
-          /🗳️ Voting/i,
-          /👥 Players/i,
-          /🏁 Teams/i,
-        ];
-
-        for (
-          const tabName of tabs
-        ) {
-          await page
-            .getByRole(
-              "button",
-              {
-                name: tabName,
-              }
-            )
-            .click();
-
-          await page.waitForTimeout(
-            200
-          );
-        }
-
-        expect(
-          errors,
-          `React errors while switching tabs:\n${errors.join(
-            "\n"
-          )}`
-        ).toEqual([]);
-      }
-    );
-  }
-);
+    expect(
+      errors,
+      `React errors while switching tabs:\n${errors.join("\n")}`,
+    ).toEqual([]);
+  });
+});
