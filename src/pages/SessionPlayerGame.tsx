@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { CheckCircle2, Circle, Gamepad2, LoaderCircle, RotateCcw, Trophy, ClipboardList, Users, Crown, Upload, Heart, Film, Flag, Check } from "lucide-react";
+import { CheckCircle2, Gamepad2, LoaderCircle, RotateCcw, Trophy, ClipboardList, Users, Crown, Upload, Heart, Film, Flag, Check } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { challengeIcon } from "../lib/challengeVisuals";
 import SessionMainChallengeCard from "../components/session/SessionMainChallengeCard";
@@ -144,6 +144,7 @@ export default function SessionPlayerGame() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const embeddedHostMode = searchParams.get("hostEmbed") === "1";
+  const focusChallengeId = searchParams.get("challengeId");
   const activePage: PlayerPage = pageParam === "leaderboard" || pageParam === "side-challenges" || pageParam === "final" ? pageParam : "game";
   const code = joinCode.replace(/\D/g, "").slice(0, 6);
   const [token, setToken] = useState(() => localStorage.getItem(playerStorageKey(code)));
@@ -166,7 +167,9 @@ export default function SessionPlayerGame() {
   const [tourOpen, setTourOpen] = useState(false);
   const [sharedTimer, setSharedTimer] = useState<SharedGameTimer | null>(null);
   const [sharedTimerError, setSharedTimerError] = useState("");
-  const [timerNow, setTimerNow] = useState(Date.now());
+  const [timerReceivedAt, setTimerReceivedAt] = useState<number | null>(null);
+  const [timerNow, setTimerNow] = useState(() => performance.now());
+  const sharedTimerSnapshotKey = useRef<string | null>(null);
 
   useEffect(() => {
     setToken(localStorage.getItem(playerStorageKey(code)));
@@ -247,7 +250,7 @@ export default function SessionPlayerGame() {
     }
 
     if (activePage === "final") {
-      const { data: galleryData, error: galleryError } = await supabase.rpc("cc_get_player_session_final_gallery", {
+      const { data: galleryData, error: galleryError } = await supabase.rpc("cc_player_get_session_final_round_gallery", {
         p_join_code: code,
         p_player_token: token,
       });
@@ -275,26 +278,56 @@ export default function SessionPlayerGame() {
     if (!sessionId || view?.session.status !== "live" || activePage !== "game") {
       setSharedTimer(null);
       setSharedTimerError("");
+      setTimerReceivedAt(null);
+      sharedTimerSnapshotKey.current = null;
       return;
     }
     let mounted = true;
+    let requestId = 0;
+    let latestAppliedRequestId = 0;
     const refreshTimer = async () => {
+      const currentRequestId = ++requestId;
       const { data, error: timerError } = await supabase.from("cc_game_session_timers")
         .select("session_id,round_number,remaining_seconds,is_running,is_on_break,resume_round_number,break_ends_at,updated_at")
         .eq("session_id", sessionId).maybeSingle();
-      if (mounted) {
-        setSharedTimer((data as SharedGameTimer | null) ?? null);
-        setSharedTimerError(timerError ? "The shared timer is unavailable. Please ask the host to check the live timer connection." : "");
+      if (!mounted || currentRequestId < latestAppliedRequestId) return;
+      latestAppliedRequestId = currentRequestId;
+      if (timerError) {
+        setSharedTimerError("The shared timer is unavailable. Please ask the host to check the live timer connection.");
+        return;
       }
+      setSharedTimerError("");
+      const nextTimer = (data as SharedGameTimer | null) ?? null;
+      const nextSnapshotKey = nextTimer
+        ? [sessionId, nextTimer.updated_at, nextTimer.round_number, nextTimer.remaining_seconds, nextTimer.is_running, nextTimer.is_on_break, nextTimer.resume_round_number, nextTimer.break_ends_at].join(":")
+        : null;
+      if (nextSnapshotKey === sharedTimerSnapshotKey.current) return;
+      sharedTimerSnapshotKey.current = nextSnapshotKey;
+      const receivedAt = performance.now();
+      setSharedTimer(nextTimer);
+      setTimerReceivedAt(nextTimer ? receivedAt : null);
+      setTimerNow(receivedAt);
     };
     void refreshTimer();
     const interval = window.setInterval(() => void refreshTimer(), 2000);
-    return () => { mounted = false; window.clearInterval(interval); };
+    const timerChannel = supabase.channel(`game-session-timer-${sessionId}`)
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "cc_game_session_timers",
+        filter: `session_id=eq.${sessionId}`,
+      }, () => void refreshTimer())
+      .subscribe();
+    return () => {
+      mounted = false;
+      window.clearInterval(interval);
+      void supabase.removeChannel(timerChannel);
+    };
   }, [activePage, view?.session.id, view?.session.status]);
 
   useEffect(() => {
     if (!sharedTimer?.is_running) return;
-    const interval = window.setInterval(() => setTimerNow(Date.now()), 1000);
+    const interval = window.setInterval(() => setTimerNow(performance.now()), 1000);
     return () => window.clearInterval(interval);
   }, [sharedTimer?.is_running]);
 
@@ -331,6 +364,14 @@ export default function SessionPlayerGame() {
     const interval = window.setInterval(() => void refreshRank(), 15000);
     return () => { live = false; window.clearInterval(interval); };
   }, [code, token, view?.player.id]);
+
+  useEffect(() => {
+    if (activePage !== "side-challenges" || !focusChallengeId) return;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(`cc-side-challenge-${focusChallengeId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activePage, focusChallengeId, view?.side_challenges.length]);
 
   async function voteInRewardRound(candidateId: string) {
     if (!rewardRound || !token || !code || busyKey !== null || rewardRound.status !== "open") return;
@@ -481,7 +522,7 @@ export default function SessionPlayerGame() {
     if (!token || !code) return;
     setBusyKey(`vote:${item.id}`);
     setError("");
-    const { error: voteError } = await supabase.rpc("cc_player_vote_session_final_media", {
+    const { error: voteError } = await supabase.rpc("cc_player_cast_session_final_round_vote", {
       p_join_code: code,
       p_player_token: token,
       p_evidence_id: item.id,
@@ -523,7 +564,7 @@ export default function SessionPlayerGame() {
 
   async function submitChallenge(challenge: ChallengeInfo) {
     if (!token || !code) return;
-    if (challenge.allow_photo_upload && evidenceForChallenge(challenge.id).length === 0) {
+    if ((challenge.kind === "side" || challenge.allow_photo_upload) && evidenceForChallenge(challenge.id).length === 0) {
       setError("Upload at least one photo or video before marking this challenge complete.");
       return;
     }
@@ -608,7 +649,7 @@ export default function SessionPlayerGame() {
     { target: '[data-tour="player-upload"]', title: "Upload and submit", body: "Tap the upload control to add a photo or video. Once you've completed the task, mark it complete; your host reviews it before any main-challenge points are awarded.", page: "game" },
     { target: '[data-tour="player-leaderboard"]', title: "Track the leaderboard", body: "See how you rank against other players and how your team is doing. Scores refresh as the host approves work and awards points.", page: "leaderboard" },
     { target: '[data-tour="player-side-challenges"]', title: "Find extra challenges", body: "Side challenges are optional tasks you can complete alongside the main round. Open one, add evidence if requested, then submit it for review. Their reward points are settled after the final vote.", page: "side-challenges" },
-    ...(session.final_gallery_open ? [{ target: '[data-tour="player-final"]', title: "Vote in the final gallery", body: "When the host opens the gallery, browse the approved photos and videos and vote for your favourite. The winning entry receives its configured points when voting closes.", page: "final" }] : []),
+    ...(session.final_gallery_open ? [{ target: '[data-tour="player-final"]', title: "Vote in the final gallery", body: "When the host opens the final round, browse submitted side-challenge photos and videos and vote for your favourite. The winning entry receives its configured points when voting closes.", page: "final" }] : []),
   ];
   const teamSelectionAllowed = session.teams_enabled && !session.host_chooses_teams && (session.status === "lobby" || (session.status === "live" && !player.team_id));
   const teamLeaderboard = teams
@@ -619,7 +660,7 @@ export default function SessionPlayerGame() {
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
   const activeSecretMission = secretMissions.find((mission) => mission.assignment_id === activeSecretMissionId) ?? null;
   const sharedTimerSeconds = sharedTimer && (sharedTimer.is_on_break || sharedTimer.round_number === session.current_round_number)
-    ? Math.max(0, sharedTimer.remaining_seconds - (sharedTimer.is_running ? Math.floor((timerNow - new Date(sharedTimer.updated_at).getTime()) / 1000) : 0))
+    ? Math.max(0, sharedTimer.remaining_seconds - (sharedTimer.is_running && timerReceivedAt !== null ? Math.floor((timerNow - timerReceivedAt) / 1000) : 0))
     : Math.max(0, Number(challenge?.duration_minutes ?? 0) * 60);
   const sharedTimerLabel = `${Math.floor(sharedTimerSeconds / 60).toString().padStart(2, "0")}:${(sharedTimerSeconds % 60).toString().padStart(2, "0")}`;
 
@@ -632,7 +673,7 @@ export default function SessionPlayerGame() {
         <SessionGameTitlebar name={session.name} code={session.join_code} photoUrl={gamePhotoUrl} copied={copiedCode} onCopy={() => void copyGameCode()}/>
         {!embeddedHostMode && <div className="cc-player-tour-row"><button type="button" className="cc-tour-help-button" onClick={() => setTourOpen(true)}>✦ How to play / Take a tour</button></div>}
 
-        {!embeddedHostMode && <nav className="cc-player-page-nav" data-tour="player-navigation" aria-label="Game pages">
+        {!embeddedHostMode && <nav className={`cc-player-page-nav${session.final_gallery_open ? " has-final-vote" : ""}`} data-tour="player-navigation" aria-label="Game pages">
           <Link to={`/play/${code}/game`} className={`cc-player-page-tab${activePage === "game" ? " is-active" : ""}`} aria-current={activePage === "game" ? "page" : undefined}>
             <Gamepad2 size={17}/><span>Game</span>
           </Link>
@@ -642,6 +683,9 @@ export default function SessionPlayerGame() {
           <Link to={`/play/${code}/side-challenges`} className={`cc-player-page-tab${activePage === "side-challenges" ? " is-active" : ""}`} aria-current={activePage === "side-challenges" ? "page" : undefined}>
             <ClipboardList size={17}/><span>Challenges</span>{sideChallenges.length > 0 && <span className="cc-player-nav-count">{sideChallenges.length}</span>}
           </Link>
+          {session.final_gallery_open && <Link to={`/play/${code}/final`} className={`cc-player-page-tab${activePage === "final" ? " is-active" : ""}`} aria-current={activePage === "final" ? "page" : undefined}>
+            <Heart size={17}/><span>Final vote</span>
+          </Link>}
         </nav>}
 
         {(error || sharedTimerError) && <div className="cc-player-error" role="alert">{error || sharedTimerError}</div>}
@@ -740,12 +784,19 @@ export default function SessionPlayerGame() {
               <>
                 {sharedTimer?.is_on_break ? (
                   <section className="cc-player-state-card cc-player-break-card" aria-live="polite">
-                    <span className="cc-player-eyebrow">☕ BREAK TIME</span>
+                    <span className="cc-player-eyebrow">☕ BREAK IN PROGRESS</span>
                     <h2>Take a breather</h2>
-                    <strong className="cc-player-break-countdown">{sharedTimerLabel}</strong>
-                    {sharedTimer.is_running && sharedTimer.break_ends_at
-                      ? <p>Playing is scheduled to resume at <strong>{new Date(sharedTimer.break_ends_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</strong>.</p>
-                      : <p>The break timer is paused. The host will let you know when the game is ready to continue.</p>}
+                    {sharedTimer.is_running ? (
+                      <>
+                        <p>The game will resume in</p>
+                        <strong className="cc-player-break-countdown" aria-label={`Game resumes in ${sharedTimerLabel}`}>{sharedTimerLabel}</strong>
+                      </>
+                    ) : (
+                      <>
+                        <p>The break timer is paused. The game will resume when the host restarts the countdown.</p>
+                        <strong className="cc-player-break-countdown">PAUSED</strong>
+                      </>
+                    )}
                     {sharedTimer.resume_round_number && <div className="cc-player-break-next">Up next · Round {sharedTimer.resume_round_number}</div>}
                   </section>
                 ) : challenge ? (
@@ -863,22 +914,35 @@ export default function SessionPlayerGame() {
               <div className="cc-player-side-list">
                 {sideChallenges.map((item) => {
                   const submitted = view.my_submissions.find((sub) => sub.challenge_id === item.id);
-                  return <article className="cc-player-side-card" key={item.id}>
+                  const evidenceCount = evidenceForChallenge(item.id).length;
+                  const submissionComplete = submitted?.status === "submitted" || submitted?.status === "approved";
+                  return <article className="cc-player-side-card" id={`cc-side-challenge-${item.id}`} key={item.id}>
                     <div className="cc-player-side-card-copy"><div className="cc-player-side-card-top"><span className="cc-player-side-card-art" aria-hidden="true">{challengeIcon(item.title, item.description)}</span><div><h3>{item.title}</h3><span className="cc-player-points">Winner: +{item.points} pts</span></div></div><p>{item.description}</p></div>
-                    {item.allow_photo_upload && <div className="cc-player-side-evidence">
-                      <label className="cc-player-upload-button">
-                        <Upload size={15}/>{busyKey === `upload:${item.id}` ? "Uploading…" : "Upload evidence"}
-                        <input type="file" accept="image/*,video/*" disabled={busyKey !== null || submitted?.status === "approved" || session.status !== "live" || evidenceForChallenge(item.id).length >= 6} onChange={(event) => void uploadEvidence(event, { type: "challenge", challenge: item })}/>
-                      </label>
-                      <span className="cc-player-evidence-count">{evidenceForChallenge(item.id).length}/6</span>
+                    <div className="cc-player-side-evidence">
+                      <div className="cc-player-side-evidence-actions">
+                        {evidenceCount === 0 && !submissionComplete ? (
+                          <label className="cc-player-upload-button">
+                            <Upload size={15}/>{busyKey === `upload:${item.id}` ? "Uploading…" : "Upload evidence"}
+                            <input type="file" accept="image/*,video/*" disabled={busyKey !== null || session.status !== "live"} onChange={(event) => void uploadEvidence(event, { type: "challenge", challenge: item })}/>
+                          </label>
+                        ) : (
+                          <button type="button" className="cc-player-upload-button" disabled={busyKey !== null || submissionComplete || session.status !== "live" || (!player.team_id && session.teams_enabled)} onClick={() => void submitChallenge(item)}>
+                            {busyKey === item.id ? <LoaderCircle size={15} className="cc-spin"/> : <CheckCircle2 size={15}/>}Done
+                          </button>
+                        )}
+                        {evidenceCount > 0 && !submissionComplete && <label className="cc-player-side-add-evidence">
+                          <Upload size={13}/>Add more
+                          <input type="file" accept="image/*,video/*" disabled={busyKey !== null || session.status !== "live" || evidenceCount >= 6} onChange={(event) => void uploadEvidence(event, { type: "challenge", challenge: item })}/>
+                        </label>}
+                      </div>
+                      <span className="cc-player-evidence-count">{evidenceCount}/6</span>
                       {evidenceForChallenge(item.id).length > 0 && <div className="cc-player-evidence-grid">{evidenceForChallenge(item.id).map((media) => <div className="cc-player-evidence-item" key={media.id}>{media.media_type === "video" ? <video src={mediaUrl(media.storage_path)} controls playsInline preload="metadata" /> : <img src={mediaUrl(media.storage_path)} alt="Your side challenge evidence" loading="lazy" />}</div>)}</div>}
-                      {evidenceForChallenge(item.id).length === 0 && <p className="cc-player-evidence-required">Evidence required to complete this challenge.</p>}
-                    </div>}
+                    </div>
                     {submitted?.status === "approved" ? <span className="cc-player-submission-state is-approved"><CheckCircle2 size={16}/>{submitted.awarded_points > 0
                       ? `Final vote winner · +${submitted.awarded_points} pts`
                       : view.session.final_vote_completed_at ? "Approved · no vote points" : "Approved · awaiting final vote"}</span>
                       : submitted?.status === "submitted" ? <span className="cc-player-small-status">Submitted · awaiting review</span>
-                      : session.status === "live" ? <button type="button" className="cc-player-small-button" disabled={busyKey !== null || (!player.team_id && session.teams_enabled)} onClick={() => void submitChallenge(item)}>{busyKey === item.id ? <LoaderCircle size={16} className="cc-spin"/> : <Circle size={16}/>} {submitted?.status === "rejected" ? "Try again" : "Done"}</button>
+                      : submitted?.status === "rejected" ? <span className="cc-player-small-status">Rejected · add evidence and submit again</span>
                       : <span className="cc-player-small-status">Not completed</span>}
                   </article>;
                 })}
@@ -890,13 +954,13 @@ export default function SessionPlayerGame() {
         {!rewardRound && activePage === "final" && (
           <section className="cc-player-final-page" data-tour="player-final">
             <div className="cc-player-page-heading">
-              <div><span className="cc-player-eyebrow">THE FINAL ROUND</span><h2>Fan favourite</h2><p>Browse the entries saved by the host and vote for your favourite photo or video.</p></div>
+              <div><span className="cc-player-eyebrow">THE FINAL ROUND</span><h2>Fan favourite</h2><p>Browse every submitted side-challenge photo and video, then vote for your favourite. Submissions waiting for host review are included too.</p></div>
               <span className="cc-player-count-chip">{finalGallery?.items.length ?? 0} entries</span>
             </div>
             {!finalGallery?.gallery_open ? (
-              <div className="cc-player-state-card"><Heart size={24}/><h2>The final vote isn't open yet</h2><p>The host will open the gallery after reviewing the best secret missions and side challenges.</p></div>
+              <div className="cc-player-state-card"><Heart size={24}/><h2>The final vote isn't open yet</h2><p>The host will open the final round when it is time to celebrate the side-challenge submissions.</p></div>
             ) : finalGallery.items.length === 0 ? (
-              <div className="cc-player-state-card"><Film size={24}/><h2>No final entries yet</h2><p>The host hasn't saved any approved photo or video entries for the final round.</p></div>
+              <div className="cc-player-state-card"><Film size={24}/><h2>No final entries yet</h2><p>No side-challenge photos or videos have been submitted for the final round yet.</p></div>
             ) : (
               <>
                 <div className="cc-player-final-vote-status">{finalGallery.voting_open ? "Voting is open — choose one favourite. You can change your vote until voting closes." : "Voting is closed. Here are the final entries."}</div>
