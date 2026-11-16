@@ -648,7 +648,7 @@ export default function SessionPlayerGame() {
     { target: '[data-tour="player-challenge"]', title: "Your main challenge", body: "Read the task, instructions and time allowance. The evidence label tells you whether a photo or video is required before you can submit.", page: "game" },
     { target: '[data-tour="player-upload"]', title: "Upload and submit", body: "Tap the upload control to add a photo or video. Once you've completed the task, mark it complete; your host reviews it before any main-challenge points are awarded.", page: "game" },
     { target: '[data-tour="player-leaderboard"]', title: "Track the leaderboard", body: "See how you rank against other players and how your team is doing. Scores refresh as the host approves work and awards points.", page: "leaderboard" },
-    { target: '[data-tour="player-side-challenges"]', title: "Find extra challenges", body: "Side challenges are optional tasks you can complete alongside the main round. Open one, add evidence if requested, then submit it for review. Their reward points are settled after the final vote.", page: "side-challenges" },
+    { target: '[data-tour="player-side-challenges"]', title: "Find extra challenges", body: "Complete a side challenge and upload evidence to receive 5 points automatically. The final-vote winner earns the extra challenge bonus.", page: "side-challenges" },
     ...(session.final_gallery_open ? [{ target: '[data-tour="player-final"]', title: "Vote in the final gallery", body: "When the host opens the final round, browse submitted side-challenge photos and videos and vote for your favourite. The winning entry receives its configured points when voting closes.", page: "final" }] : []),
   ];
   const teamSelectionAllowed = session.teams_enabled && !session.host_chooses_teams && (session.status === "lobby" || (session.status === "live" && !player.team_id));
@@ -906,7 +906,7 @@ export default function SessionPlayerGame() {
 
         {!rewardRound && activePage === "side-challenges" && (
           <section className="cc-player-side-page" data-tour="player-side-challenges">
-            <div className="cc-player-page-heading"><div><span className="cc-player-eyebrow">EXTRA CHAOS</span><h2>Side challenges</h2><p>Complete these alongside the main round for extra points.</p></div><span className="cc-player-count-chip">{sideChallenges.length}</span></div>
+            <div className="cc-player-page-heading"><div><span className="cc-player-eyebrow">EXTRA CHAOS</span><h2>Side challenges</h2><p>Each submission earns 5 points. The final-vote winner also earns the challenge bonus.</p></div><span className="cc-player-count-chip">{sideChallenges.length}</span></div>
             {session.final_gallery_open && <Link to={`/play/${code}/final`} className="cc-player-vote-entry-link"><Heart size={16}/> Open the final vote</Link>}
             {session.status === "lobby" && <div className="cc-player-page-notice">Side challenges become active when the host starts the game.</div>}
             {session.status === "completed" && <div className="cc-player-page-notice">The game has ended. Here's how your side challenges finished.</div>}
@@ -914,10 +914,12 @@ export default function SessionPlayerGame() {
               <div className="cc-player-side-list">
                 {sideChallenges.map((item) => {
                   const submitted = view.my_submissions.find((sub) => sub.challenge_id === item.id);
-                  const evidenceCount = evidenceForChallenge(item.id).length;
+                  const sideEvidence = evidenceForChallenge(item.id);
+                  const evidenceCount = sideEvidence.length;
                   const submissionComplete = submitted?.status === "submitted" || submitted?.status === "approved";
+                  const isFinalVoteWinner = sideEvidence.some((media) => media.id === view.session.final_vote_winner_evidence_id);
                   return <article className="cc-player-side-card" id={`cc-side-challenge-${item.id}`} key={item.id}>
-                    <div className="cc-player-side-card-copy"><div className="cc-player-side-card-top"><span className="cc-player-side-card-art" aria-hidden="true">{challengeIcon(item.title, item.description)}</span><div><h3>{item.title}</h3><span className="cc-player-points">Winner: +{item.points} pts</span></div></div><p>{item.description}</p></div>
+                    <div className="cc-player-side-card-copy"><div className="cc-player-side-card-top"><span className="cc-player-side-card-art" aria-hidden="true">{challengeIcon(item.title, item.description)}</span><div><h3>{item.title}</h3><span className="cc-player-points">Final vote bonus: +{item.points} pts</span></div></div><p>{item.description}</p></div>
                     <div className="cc-player-side-evidence">
                       <div className="cc-player-side-evidence-actions">
                         {evidenceCount === 0 && !submissionComplete ? (
@@ -936,12 +938,12 @@ export default function SessionPlayerGame() {
                         </label>}
                       </div>
                       <span className="cc-player-evidence-count">{evidenceCount}/6</span>
-                      {evidenceForChallenge(item.id).length > 0 && <div className="cc-player-evidence-grid">{evidenceForChallenge(item.id).map((media) => <div className="cc-player-evidence-item" key={media.id}>{media.media_type === "video" ? <video src={mediaUrl(media.storage_path)} controls playsInline preload="metadata" /> : <img src={mediaUrl(media.storage_path)} alt="Your side challenge evidence" loading="lazy" />}</div>)}</div>}
+                      {sideEvidence.length > 0 && <div className="cc-player-evidence-grid">{sideEvidence.map((media) => <div className="cc-player-evidence-item" key={media.id}>{media.media_type === "video" ? <video src={mediaUrl(media.storage_path)} controls playsInline preload="metadata" /> : <img src={mediaUrl(media.storage_path)} alt="Your side challenge evidence" loading="lazy" />}</div>)}</div>}
                     </div>
-                    {submitted?.status === "approved" ? <span className="cc-player-submission-state is-approved"><CheckCircle2 size={16}/>{submitted.awarded_points > 0
-                      ? `Final vote winner · +${submitted.awarded_points} pts`
-                      : view.session.final_vote_completed_at ? "Approved · no vote points" : "Approved · awaiting final vote"}</span>
-                      : submitted?.status === "submitted" ? <span className="cc-player-small-status">Submitted · awaiting review</span>
+                    {submitted?.status === "approved" ? <span className="cc-player-submission-state is-approved"><CheckCircle2 size={16}/>{isFinalVoteWinner
+                      ? `Final vote winner · +${submitted.awarded_points} base +${view.session.final_vote_winner_points} bonus`
+                      : `Completed · +${submitted.awarded_points} pts`}</span>
+                      : submitted?.status === "submitted" ? <span className="cc-player-small-status">Submitted · +{submitted.awarded_points} pts</span>
                       : submitted?.status === "rejected" ? <span className="cc-player-small-status">Rejected · add evidence and submit again</span>
                       : <span className="cc-player-small-status">Not completed</span>}
                   </article>;
@@ -954,7 +956,7 @@ export default function SessionPlayerGame() {
         {!rewardRound && activePage === "final" && (
           <section className="cc-player-final-page" data-tour="player-final">
             <div className="cc-player-page-heading">
-              <div><span className="cc-player-eyebrow">THE FINAL ROUND</span><h2>Fan favourite</h2><p>Browse every submitted side-challenge photo and video, then vote for your favourite. Submissions waiting for host review are included too.</p></div>
+              <div><span className="cc-player-eyebrow">THE FINAL ROUND</span><h2>Fan favourite</h2><p>Browse submitted side-challenge photos and videos, then vote for your favourite. Every submission already earns 5 points; the winner earns the extra challenge bonus.</p></div>
               <span className="cc-player-count-chip">{finalGallery?.items.length ?? 0} entries</span>
             </div>
             {!finalGallery?.gallery_open ? (

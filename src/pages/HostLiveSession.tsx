@@ -116,6 +116,7 @@ interface SessionFinalRoundState {
   slideshow_challenge_id: string | null;
   slideshow_evidence_id: string | null;
 }
+type PresentationRequestConstructor = new (urls: string[]) => { start: () => Promise<unknown> };
 interface SessionRewardRound {
   id: string; session_id: string; challenge_id: string; reward_method: RewardMethod;
   target_kind: RewardTargetKind; points: number; status: "open" | "completed" | "cancelled";
@@ -212,7 +213,7 @@ export default function HostLiveSession() {
     { target: '[data-tour="host-sections"]', title: "The same game sections", body: "These tabs mirror the player experience: Game, Leaderboard, Side Challenges and Reward Round. The Host Controls tab contains the tools players cannot access.", page: "game" },
     { target: '[data-tour="host-player-game"]', title: "The player experience", body: "This is the same game screen players use. If host participation is enabled, join the roster here and complete challenges, upload evidence and follow the game like everyone else.", page: "game" },
     { target: '[data-tour="host-leaderboard"]', title: "Leaderboard", body: "Switch between player and team rankings, check scores and assign teams while the game is in the lobby.", page: "leaderboard" },
-    { target: '[data-tour="host-side-review"]', title: "Side challenges", body: "Review side-challenge submissions. Every submitted photo and video is included in the final-round vote, and the winning entry receives its challenge points.", page: "side-challenges" },
+    { target: '[data-tour="host-side-review"]', title: "Side challenges", body: "Side-challenge submissions are automatically approved for 5 points. Every submitted photo and video is included in the final-round vote, and the winning entry receives its challenge bonus.", page: "side-challenges" },
     { target: '[data-tour="host-controls-tab"]', title: "Host-only controls", body: "This tab contains tools players cannot access: start or finish the game, navigate rounds, manage teams, review submissions and schedule secret missions.", page: "host-controls" },
     { target: '[data-tour="host-start-controls"]', title: "Start and manage the game", body: "Share the join code and QR, check who has joined, assign teams and start the game when everyone is ready. During play, use the round controls to move the game along.", page: "host-controls" },
     { target: '[data-tour="host-review"]', title: "Review main challenges", body: "Open submitted photos or videos, approve or reject the work and assign main-challenge points here. Side-challenge points are handled separately after voting.", page: "host-controls" },
@@ -926,14 +927,15 @@ export default function HostLiveSession() {
 
   async function reviewSubmission(submission: SessionSubmission, approve: boolean) {
     const challenge = challenges.find((item) => item.id === submission.challenge_id);
-    const isSideChallenge = challenge?.kind === "side";
+    if (challenge?.kind === "side") {
+      setError("Side-challenge submissions are approved automatically.");
+      return;
+    }
     const suggested = Number(challenge?.points ?? 0);
-    // Main-challenge points are assigned only after host review. Side-challenge
-    // uploads are approved for gallery eligibility but stay unscored until voting closes.
-    const points = approve && !isSideChallenge
+    const points = approve
       ? Number(window.prompt(`Points to award (suggested: ${suggested})`, String(suggested)) ?? "-1")
       : 0;
-    if (approve && !isSideChallenge && (!Number.isFinite(points) || points < 0)) return;
+    if (approve && (!Number.isFinite(points) || points < 0)) return;
     setBusy(true); setError(""); setNotice("");
     const { error: reviewError } = await supabase.rpc("cc_host_review_session_submission", {
       p_submission_id: submission.id,
@@ -942,11 +944,7 @@ export default function HostLiveSession() {
     });
     setBusy(false);
     if (reviewError) { setError(reviewError.message); return; }
-    setNotice(!approve
-      ? "Submission rejected."
-      : isSideChallenge
-        ? "Side challenge approved. Its submitted photos and videos remain in the final-round vote."
-        : `Approved submission for ${points} points.`);
+    setNotice(!approve ? "Submission rejected." : `Approved submission for ${points} points.`);
     await load();
   }
 
@@ -1029,6 +1027,26 @@ export default function HostLiveSession() {
     } catch (shareError) {
       if (shareError instanceof DOMException && shareError.name === "AbortError") return;
       setError(shareError instanceof Error ? `Couldn't share the slideshow link: ${shareError.message}` : "Couldn't share the slideshow link.");
+    }
+  }
+
+  async function castFinalSlideshow() {
+    if (!session || !selectedFinalEvidence) return;
+    const requestConstructor = (window as Window & { PresentationRequest?: PresentationRequestConstructor }).PresentationRequest;
+    if (!requestConstructor) {
+      setError("This browser can't open a TV device picker. Use Chrome's Cast tab option, or mirror this screen with AirPlay.");
+      return;
+    }
+
+    const url = `${window.location.origin}${window.location.pathname}#/final-slideshow/${session.id}`;
+    setError("");
+    setNotice("");
+    try {
+      await new requestConstructor([url]).start();
+      setNotice("The selected slideshow is now open on the TV. Use the host controls to change the challenge or slide.");
+    } catch (castError) {
+      if (castError instanceof DOMException && castError.name === "AbortError") return;
+      setError(castError instanceof Error ? `Couldn't cast the slideshow: ${castError.message}` : "Couldn't cast the slideshow.");
     }
   }
 
@@ -1233,6 +1251,7 @@ export default function HostLiveSession() {
   const headerPlayer = hostPlayer ?? rankedPlayers[0];
   const headerRank = headerPlayer ? rankedPlayers.findIndex((player) => player.id === headerPlayer.id) + 1 : null;
   const challengeById = new Map(challenges.map((challenge) => [challenge.id, challenge]));
+  const sideSubmissions = submissions.filter((item) => challengeById.get(item.challenge_id)?.kind === "side");
   const teamById = new Map(teams.map((team) => [team.id, team]));
   const finalSideEvidence = evidence.filter((item) => {
     if (item.secret_assignment_id || challengeById.get(item.challenge_id)?.kind !== "side") return false;
@@ -1758,10 +1777,10 @@ export default function HostLiveSession() {
         {activeTab === "side-challenges" && (
         <>
         <section className="cc-session-card cc-session-section cc-side-challenge-library">
-          <div className="cc-session-section-heading"><div><div className="cc-section-kicker">OPTIONAL MISSIONS</div><h2>Side challenges</h2><p>Extra tasks players can complete between rounds.</p></div><span className="cc-count-pill">{sideChallenges.length} available</span></div>
+          <div className="cc-session-section-heading"><div><div className="cc-section-kicker">OPTIONAL MISSIONS</div><h2>Side challenges</h2><p>Each submission automatically earns 5 points; the final-vote winner earns the challenge bonus.</p></div><span className="cc-count-pill">{sideChallenges.length} available</span></div>
           {sideChallenges.length === 0 ? <p className="cc-helper-text">No side challenges were added to this game plan.</p> : (
             <div className="cc-host-side-challenge-grid">{sideChallenges.map((challenge) => <article className="cc-host-side-challenge-card" key={challenge.id}>
-              <div className="cc-host-side-card-top"><span className="cc-host-side-icon cc-host-side-challenge-emoji" aria-hidden="true">{challengeIcon(challenge.title, challenge.description)}</span><span className="cc-host-points-pill">{challenge.points} pts</span></div>
+              <div className="cc-host-side-card-top"><span className="cc-host-side-icon cc-host-side-challenge-emoji" aria-hidden="true">{challengeIcon(challenge.title, challenge.description)}</span><span className="cc-host-points-pill">Final bonus: {challenge.points} pts</span></div>
               <h3>{challenge.title}</h3><p>{challenge.description}</p><small>Photo/video evidence required</small>
               <button type="button" className="host-button host-button--secondary" disabled={busy || session.status !== "live"} onClick={() => void openHostSideChallengeUpload(challenge)}><Upload size={15}/>{session.host_participates && hostPlayer ? "Upload evidence" : "Join & upload evidence"}</button>
             </article>)}</div>
@@ -1902,7 +1921,7 @@ export default function HostLiveSession() {
 
         {activeTab === "final-round" && (
         <section className="cc-session-card cc-session-section cc-session-final-vote-card" data-tour="host-final-round">
-          <div className="cc-session-section-heading"><div><div className="cc-section-kicker">FINAL ROUND</div><h2>Side challenge fan vote</h2><p>Every submitted side-challenge photo and video appears automatically, including submissions awaiting review. Approved secret-mission entries saved for the final remain eligible too.</p></div><span className="cc-count-pill">{finalSideEvidence.length + finalSecretEvidence.length} entries</span></div>
+          <div className="cc-session-section-heading"><div><div className="cc-section-kicker">FINAL ROUND</div><h2>Side challenge fan vote</h2><p>Every submitted side-challenge photo and video appears automatically. Approved secret-mission entries saved for the final remain eligible too.</p></div><span className="cc-count-pill">{finalSideEvidence.length + finalSecretEvidence.length} entries</span></div>
           <div className="cc-session-final-vote-summary">
             <div><strong>{session.final_gallery_open ? "Open" : "Hidden"}</strong><span>Gallery visibility</span></div>
             <div><strong>{session.final_vote_completed_at ? "Voting complete" : session.final_voting_open ? "Voting open" : "Voting closed"}</strong><span>Player voting status</span></div>
@@ -1970,6 +1989,12 @@ export default function HostLiveSession() {
                     disabled={!selectedFinalEvidence || busy}
                     onClick={() => window.open(`${window.location.origin}${window.location.pathname}#/final-slideshow/${session.id}`, "_blank", "noopener,noreferrer")}
                   ><Cast size={15}/> Open TV screen</button>
+                  <button
+                    type="button"
+                    className="host-button host-button--lime"
+                    disabled={!selectedFinalEvidence || busy}
+                    onClick={() => void castFinalSlideshow()}
+                  ><Cast size={15}/> Cast / AirPlay</button>
                   <button type="button" className="host-button host-button--secondary" onClick={() => void shareFinalSlideshow()}>Share TV link</button>
                 </div>
               </div>
@@ -1981,7 +2006,7 @@ export default function HostLiveSession() {
               </div>}
               <div className="cc-host-final-tv-link">
                 <QRCodeSVG value={`${window.location.origin}${window.location.pathname}#/final-slideshow/${session.id}`} size={104} level="M" includeMargin/>
-                <p>Scan on the TV or its connected browser to open the full-screen slideshow. Use the controls here to switch side challenges and move through submissions. On desktop, you can also cast the browser tab using your device’s built-in casting controls.</p>
+                <p>Cast / AirPlay opens your browser’s TV picker when supported. Otherwise, open the TV screen and use Chrome’s Cast tab option or your device’s AirPlay screen mirroring. The TV must be able to reach this site; localhost links only work on the computer running the app.</p>
               </div>
             </div>
           )}
@@ -1990,18 +2015,18 @@ export default function HostLiveSession() {
 
         {activeTab === "side-challenges" && (
           <section className="cc-session-card cc-session-section cc-host-side-review-card" data-tour="host-side-review">
-            <div className="cc-session-section-heading"><div><div className="cc-section-kicker">SUBMISSION REVIEW</div><h2>Review side challenges</h2><p>Approve evidence for side challenges here. Side-challenge points are awarded only when final voting closes.</p></div><span className="cc-count-pill">{submissions.filter((item) => item.status === "submitted" && challengeById.get(item.challenge_id)?.kind === "side").length} pending</span></div>
-            {submissions.filter((item) => challengeById.get(item.challenge_id)?.kind === "side").length === 0 ? <p className="cc-helper-text">Side-challenge submissions will appear here when players send them.</p> : (
+            <div className="cc-session-section-heading"><div><div className="cc-section-kicker">SIDE CHALLENGE SUBMISSIONS</div><h2>Player submissions</h2><p>Every submission is automatically approved for 5 points. The final-vote winner also earns the challenge bonus.</p></div><span className="cc-count-pill">{sideSubmissions.length} submissions</span></div>
+            {sideSubmissions.length === 0 ? <p className="cc-helper-text">Side-challenge submissions will appear here automatically after players submit evidence.</p> : (
               <div className="cc-submission-list">
-                {submissions.filter((submission) => challengeById.get(submission.challenge_id)?.kind === "side").map((submission) => {
+                {sideSubmissions.map((submission) => {
                   const player = playerById.get(submission.player_id);
                   const challenge = challengeById.get(submission.challenge_id);
                   const submissionMedia = evidenceForChallenge(submission.player_id, submission.challenge_id);
+                  const isFinalVoteWinner = submissionMedia.some((media) => media.id === session.final_vote_winner_evidence_id);
                   return <article className="cc-submission-row" key={submission.id}>
                     <div className="cc-submission-info"><strong>{player?.name ?? "Player"}</strong><span>{challenge?.title ?? "Side challenge"}</span><small>{new Date(submission.submitted_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small></div>
-                    <span className={`cc-submission-status cc-submission-status--${submission.status}`}>{submission.status === "submitted" ? "Needs review" : submission.status === "approved" ? submission.awarded_points > 0 ? `Final vote winner · +${submission.awarded_points} pts` : session.final_vote_completed_at ? "Approved · no vote points" : "Approved · awaiting vote" : "Rejected"}</span>
+                    <span className={`cc-submission-status cc-submission-status--${submission.status}`}>{isFinalVoteWinner ? `Final vote winner · +${submission.awarded_points} base +${session.final_vote_winner_points} bonus` : submission.status === "approved" ? `Auto-approved · +${submission.awarded_points} pts` : submission.status === "submitted" ? "Awaiting automatic approval" : "Rejected"}</span>
                     {submissionMedia.length > 0 && <div className="cc-session-evidence-gallery"><strong>{submissionMedia.length} evidence file{submissionMedia.length === 1 ? "" : "s"}</strong><div className="cc-session-evidence-grid">{submissionMedia.map((media) => <div className="cc-session-evidence-item" key={media.id}>{media.media_type === "video" ? <video src={evidenceUrl(media.storage_path)} controls playsInline preload="metadata"/> : <img src={evidenceUrl(media.storage_path)} alt={`Evidence for ${challenge?.title ?? "side challenge"}`} loading="lazy"/>}<div className="cc-session-evidence-meta"><small>{media.media_type === "video" ? "Video evidence · included in final vote" : "Photo evidence · included in final vote"}</small></div></div>)}</div></div>}
-                    {submission.status === "submitted" && <div className="cc-submission-actions"><button type="button" className="host-button host-button--lime" disabled={busy} onClick={() => void reviewSubmission(submission, true)}><Check size={15}/> Approve for final</button><button type="button" className="host-button host-button--ghost" disabled={busy} onClick={() => void reviewSubmission(submission, false)}><X size={15}/> Reject</button></div>}
                   </article>;
                 })}
               </div>
