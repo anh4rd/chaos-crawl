@@ -38,7 +38,7 @@ interface SessionPlayerInfo {
   team_name: string | null;
 }
 interface TeamInfo { id: string; name: string; member_count: number; }
-interface LeaderboardEntry { player_id: string; name: string; score: number; team_id: string | null; team_name: string | null; }
+interface LeaderboardEntry { player_id: string; name: string; score: number; team_id: string | null; team_name: string | null; avatar_url?: string | null; }
 type PlayerPage = "game" | "leaderboard" | "side-challenges" | "final";
 interface ChallengeInfo {
   id: string;
@@ -89,13 +89,17 @@ interface SessionEvidence {
 }
 interface FinalGalleryItem {
   id: string;
+  player_id: string;
   player_name: string;
+  player_avatar_url: string | null;
   challenge_title: string;
-  challenge_kind: "main" | "side" | "secret";
+  challenge_kind: "side";
   media_type: "image" | "video";
   storage_path: string;
   vote_count: number | null;
   is_my_vote: boolean;
+  is_winner: boolean;
+  voters: Array<{ id: string; name: string; avatar_url: string | null }>;
 }
 interface PlayerRewardCandidate {
   id: string;
@@ -125,15 +129,16 @@ interface FinalGalleryView {
   gallery_open: boolean;
   voting_open: boolean;
   voting_completed: boolean;
-  completed_at: string | null;
-  winner_player_id: string | null;
-  winner_player_name: string | null;
-  winner_evidence_id: string | null;
-  winner_challenge_title: string | null;
-  winner_points: number;
-  winner_vote_count: number;
+  sequence_completed: boolean;
+  challenge_id: string | null;
+  challenge_title: string | null;
+  challenge_description: string | null;
+  challenge_points: number;
+  challenge_status: "pending" | "voting" | "results" | null;
+  votes_cast: number;
   my_vote_id: string | null;
   items: FinalGalleryItem[];
+  leaderboard: LeaderboardEntry[];
 }
 function playerStorageKey(code: string) {
   return `chaos-crawl-session-player:${code.replace(/\D/g, "")}`;
@@ -202,8 +207,9 @@ export default function SessionPlayerGame() {
       setLoading(false);
       return;
     }
-    if (data) {
-      setView(data as SessionView);
+    const currentView = data as SessionView | null;
+    if (currentView) {
+      setView(currentView);
       setLastUpdated(new Date());
     }
 
@@ -249,7 +255,7 @@ export default function SessionPlayerGame() {
       }
     }
 
-    if (activePage === "final") {
+    if (activePage === "final" || currentView?.session.final_gallery_open) {
       const { data: galleryData, error: galleryError } = await supabase.rpc("cc_player_get_session_final_round_gallery", {
         p_join_code: code,
         p_player_token: token,
@@ -257,13 +263,27 @@ export default function SessionPlayerGame() {
       if (galleryError) {
         nextError = nextError || `The final gallery couldn't refresh: ${galleryError.message}`;
       } else {
-        setFinalGalleryView(galleryData as FinalGalleryView);
+        const finalRoundData = galleryData as FinalGalleryView;
+        setFinalGalleryView(finalRoundData);
+        if (finalRoundData.voting_completed) setLeaderboard(finalRoundData.leaderboard);
       }
+    } else {
+      setFinalGalleryView(null);
     }
 
     setError(nextError);
     setLoading(false);
   }, [activePage, code, token]);
+
+  useEffect(() => {
+    if (!view) return;
+    const embeddedQuery = embeddedHostMode ? "?hostEmbed=1" : "";
+    if (view.session.final_gallery_open && activePage !== "final") {
+      navigate(`/play/${code}/final${embeddedQuery}`, { replace: true });
+    } else if (!view.session.final_gallery_open && activePage === "final") {
+      navigate(`/play/${code}/game${embeddedQuery}`, { replace: true });
+    }
+  }, [activePage, code, embeddedHostMode, navigate, view?.session.final_gallery_open]);
 
   useEffect(() => {
     let mounted = true;
@@ -642,14 +662,15 @@ export default function SessionPlayerGame() {
   }
 
   const { session, player, teams, challenge, side_challenges: sideChallenges } = view;
+  const finalRoundTakeover = activePage === "final" && session.final_gallery_open;
   const playerTourSteps: GuidedTourStep[] = [
     { target: '[data-tour="player-profile"]', title: "Your player card", body: "Your avatar, team and points live here. Your score updates as approved challenges and reward rounds are completed.", page: "game" },
     { target: '[data-tour="player-navigation"]', title: "Move around the game", body: "Use these tabs to switch between your current challenge, the leaderboard, side challenges and the final vote when it opens.", page: "game" },
     { target: '[data-tour="player-challenge"]', title: "Your main challenge", body: "Read the task, instructions and time allowance. The evidence label tells you whether a photo or video is required before you can submit.", page: "game" },
     { target: '[data-tour="player-upload"]', title: "Upload and submit", body: "Tap the upload control to add a photo or video. Once you've completed the task, mark it complete; your host reviews it before any main-challenge points are awarded.", page: "game" },
     { target: '[data-tour="player-leaderboard"]', title: "Track the leaderboard", body: "See how you rank against other players and how your team is doing. Scores refresh as the host approves work and awards points.", page: "leaderboard" },
-    { target: '[data-tour="player-side-challenges"]', title: "Find extra challenges", body: "Complete a side challenge and upload evidence to receive 5 points automatically. The final-vote winner earns the extra challenge bonus.", page: "side-challenges" },
-    ...(session.final_gallery_open ? [{ target: '[data-tour="player-final"]', title: "Vote in the final gallery", body: "When the host opens the final round, browse submitted side-challenge photos and videos and vote for your favourite. The winning entry receives its configured points when voting closes.", page: "final" }] : []),
+    { target: '[data-tour="player-side-challenges"]', title: "Find extra challenges", body: "Complete a side challenge and upload evidence to receive 5 points automatically. Tied top submissions also receive the challenge bonus.", page: "side-challenges" },
+    ...(session.final_gallery_open ? [{ target: '[data-tour="player-final"]', title: "Vote in the final gallery", body: "The host opens one side challenge at a time. Vote for a favourite, then review the vote counts, voter identities and updated leaderboard after the host closes voting.", page: "final" }] : []),
   ];
   const teamSelectionAllowed = session.teams_enabled && !session.host_chooses_teams && (session.status === "lobby" || (session.status === "live" && !player.team_id));
   const teamLeaderboard = teams
@@ -665,15 +686,15 @@ export default function SessionPlayerGame() {
   const sharedTimerLabel = `${Math.floor(sharedTimerSeconds / 60).toString().padStart(2, "0")}:${(sharedTimerSeconds % 60).toString().padStart(2, "0")}`;
 
   return (
-    <main className={`cc-session-player-app${embeddedHostMode ? " cc-player-embedded" : ""}`}>
+    <main className={`cc-session-player-app${embeddedHostMode ? " cc-player-embedded" : ""}${finalRoundTakeover ? " cc-player-final-takeover" : ""}`}>
       {!embeddedHostMode && <SessionPlayerProfile viewerRole="player" name={player.name} subtitle={player.team_name || (session.teams_enabled ? "Choose your team" : "Solo player")} avatarUrl={player.avatar_url} score={player.score} rank={playerRank ?? null}/>}
 
       <div className="cc-player-game-content">
         {embeddedHostMode && <SessionPlayerProfile viewerRole="player" name={player.name} subtitle={player.team_name || (session.teams_enabled ? "Choose your team" : "Solo player")} avatarUrl={player.avatar_url} score={player.score} rank={playerRank ?? null}/>}
-        <SessionGameTitlebar name={session.name} code={session.join_code} photoUrl={gamePhotoUrl} copied={copiedCode} onCopy={() => void copyGameCode()}/>
-        {!embeddedHostMode && <div className="cc-player-tour-row"><button type="button" className="cc-tour-help-button" onClick={() => setTourOpen(true)}>✦ How to play / Take a tour</button></div>}
+        {!finalRoundTakeover && <SessionGameTitlebar name={session.name} code={session.join_code} photoUrl={gamePhotoUrl} copied={copiedCode} onCopy={() => void copyGameCode()}/>}
+        {!embeddedHostMode && !finalRoundTakeover && <div className="cc-player-tour-row"><button type="button" className="cc-tour-help-button" onClick={() => setTourOpen(true)}>✦ How to play / Take a tour</button></div>}
 
-        {!embeddedHostMode && <nav className={`cc-player-page-nav${session.final_gallery_open ? " has-final-vote" : ""}`} data-tour="player-navigation" aria-label="Game pages">
+        {!embeddedHostMode && !finalRoundTakeover && <nav className="cc-player-page-nav" data-tour="player-navigation" aria-label="Game pages">
           <Link to={`/play/${code}/game`} className={`cc-player-page-tab${activePage === "game" ? " is-active" : ""}`} aria-current={activePage === "game" ? "page" : undefined}>
             <Gamepad2 size={17}/><span>Game</span>
           </Link>
@@ -683,9 +704,6 @@ export default function SessionPlayerGame() {
           <Link to={`/play/${code}/side-challenges`} className={`cc-player-page-tab${activePage === "side-challenges" ? " is-active" : ""}`} aria-current={activePage === "side-challenges" ? "page" : undefined}>
             <ClipboardList size={17}/><span>Challenges</span>{sideChallenges.length > 0 && <span className="cc-player-nav-count">{sideChallenges.length}</span>}
           </Link>
-          {session.final_gallery_open && <Link to={`/play/${code}/final`} className={`cc-player-page-tab${activePage === "final" ? " is-active" : ""}`} aria-current={activePage === "final" ? "page" : undefined}>
-            <Heart size={17}/><span>Final vote</span>
-          </Link>}
         </nav>}
 
         {(error || sharedTimerError) && <div className="cc-player-error" role="alert">{error || sharedTimerError}</div>}
@@ -906,8 +924,7 @@ export default function SessionPlayerGame() {
 
         {!rewardRound && activePage === "side-challenges" && (
           <section className="cc-player-side-page" data-tour="player-side-challenges">
-            <div className="cc-player-page-heading"><div><span className="cc-player-eyebrow">EXTRA CHAOS</span><h2>Side challenges</h2><p>Each submission earns 5 points. The final-vote winner also earns the challenge bonus.</p></div><span className="cc-player-count-chip">{sideChallenges.length}</span></div>
-            {session.final_gallery_open && <Link to={`/play/${code}/final`} className="cc-player-vote-entry-link"><Heart size={16}/> Open the final vote</Link>}
+            <div className="cc-player-page-heading"><div><span className="cc-player-eyebrow">EXTRA CHAOS</span><h2>Side challenges</h2><p>Each submission earns 5 points. Tied top submissions also receive the challenge bonus in the final vote.</p></div><span className="cc-player-count-chip">{sideChallenges.length}</span></div>
             {session.status === "lobby" && <div className="cc-player-page-notice">Side challenges become active when the host starts the game.</div>}
             {session.status === "completed" && <div className="cc-player-page-notice">The game has ended. Here's how your side challenges finished.</div>}
             {sideChallenges.length === 0 ? <div className="cc-player-state-card"><h2>No side challenges added</h2><p>Ask the host if side challenges are part of this game.</p></div> : (
@@ -917,7 +934,6 @@ export default function SessionPlayerGame() {
                   const sideEvidence = evidenceForChallenge(item.id);
                   const evidenceCount = sideEvidence.length;
                   const submissionComplete = submitted?.status === "submitted" || submitted?.status === "approved";
-                  const isFinalVoteWinner = sideEvidence.some((media) => media.id === view.session.final_vote_winner_evidence_id);
                   return <article className="cc-player-side-card" id={`cc-side-challenge-${item.id}`} key={item.id}>
                     <div className="cc-player-side-card-copy"><div className="cc-player-side-card-top"><span className="cc-player-side-card-art" aria-hidden="true">{challengeIcon(item.title, item.description)}</span><div><h3>{item.title}</h3><span className="cc-player-points">Final vote bonus: +{item.points} pts</span></div></div><p>{item.description}</p></div>
                     <div className="cc-player-side-evidence">
@@ -940,9 +956,7 @@ export default function SessionPlayerGame() {
                       <span className="cc-player-evidence-count">{evidenceCount}/6</span>
                       {sideEvidence.length > 0 && <div className="cc-player-evidence-grid">{sideEvidence.map((media) => <div className="cc-player-evidence-item" key={media.id}>{media.media_type === "video" ? <video src={mediaUrl(media.storage_path)} controls playsInline preload="metadata" /> : <img src={mediaUrl(media.storage_path)} alt="Your side challenge evidence" loading="lazy" />}</div>)}</div>}
                     </div>
-                    {submitted?.status === "approved" ? <span className="cc-player-submission-state is-approved"><CheckCircle2 size={16}/>{isFinalVoteWinner
-                      ? `Final vote winner · +${submitted.awarded_points} base +${view.session.final_vote_winner_points} bonus`
-                      : `Completed · +${submitted.awarded_points} pts`}</span>
+                    {submitted?.status === "approved" ? <span className="cc-player-submission-state is-approved"><CheckCircle2 size={16}/>Completed · +{submitted.awarded_points} base points</span>
                       : submitted?.status === "submitted" ? <span className="cc-player-small-status">Submitted · +{submitted.awarded_points} pts</span>
                       : submitted?.status === "rejected" ? <span className="cc-player-small-status">Rejected · add evidence and submit again</span>
                       : <span className="cc-player-small-status">Not completed</span>}
@@ -956,47 +970,78 @@ export default function SessionPlayerGame() {
         {!rewardRound && activePage === "final" && (
           <section className="cc-player-final-page" data-tour="player-final">
             <div className="cc-player-page-heading">
-              <div><span className="cc-player-eyebrow">THE FINAL ROUND</span><h2>Fan favourite</h2><p>Browse submitted side-challenge photos and videos, then vote for your favourite. Every submission already earns 5 points; the winner earns the extra challenge bonus.</p></div>
+              <div><span className="cc-player-eyebrow">THE FINAL ROUND</span><h2>Side challenge voting</h2><p>Browse submitted side-challenge photos and videos, then vote for your favourite. Your vote is for the challenge currently selected by the host.</p></div>
               <span className="cc-player-count-chip">{finalGallery?.items.length ?? 0} entries</span>
             </div>
             {!finalGallery?.gallery_open ? (
               <div className="cc-player-state-card"><Heart size={24}/><h2>The final vote isn't open yet</h2><p>The host will open the final round when it is time to celebrate the side-challenge submissions.</p></div>
-            ) : finalGallery.items.length === 0 ? (
-              <div className="cc-player-state-card"><Film size={24}/><h2>No final entries yet</h2><p>No side-challenge photos or videos have been submitted for the final round yet.</p></div>
             ) : (
               <>
-                <div className="cc-player-final-vote-status">{finalGallery.voting_open ? "Voting is open — choose one favourite. You can change your vote until voting closes." : "Voting is closed. Here are the final entries."}</div>
-                {finalGallery.voting_completed && <div className="cc-player-final-vote-status">
-                  {finalGallery.winner_player_name
-                    ? <><strong>{finalGallery.winner_player_name} won the final vote!</strong> {finalGallery.winner_challenge_title ? `${finalGallery.winner_challenge_title} · ` : ""}+{finalGallery.winner_points} points awarded automatically from {finalGallery.winner_vote_count} vote{finalGallery.winner_vote_count === 1 ? "" : "s"}.</>
-                    : "Final voting is complete. No eligible votes were cast, so no vote points were awarded."}
-                </div>}
-                <div className="cc-player-final-grid">
-                  {finalGallery.items.map((item) => (
-                    <article className={`cc-player-final-card${item.is_my_vote ? " is-voted" : ""}`} key={item.id}>
-                      <div className="cc-player-final-media">
-                        {item.media_type === "video" ? <video src={mediaUrl(item.storage_path)} controls playsInline preload="metadata" /> : <img src={mediaUrl(item.storage_path)} alt={`${item.player_name}'s entry for ${item.challenge_title}`} loading="lazy" />}
-                      </div>
-                      <div className="cc-player-final-copy">
-                        <span className="cc-player-final-category">{item.challenge_kind === "secret" ? "SECRET MISSION" : item.challenge_kind === "side" ? "SIDE CHALLENGE" : "MAIN CHALLENGE"}</span>
-                        <h3>{item.challenge_title}</h3>
-                        <p>Submitted by <strong>{item.player_name}</strong></p>
-                        <div className="cc-player-final-vote-row">
-                          {finalGallery.voting_open ? <button type="button" className={`cc-player-vote-button${item.is_my_vote ? " is-selected" : ""}`} disabled={busyKey !== null} onClick={() => void voteForFinalMedia(item)}>{busyKey === `vote:${item.id}` ? <LoaderCircle size={16} className="cc-spin"/> : <Heart size={16} fill={item.is_my_vote ? "currentColor" : "none"}/>} {item.is_my_vote ? "Your vote" : "Vote for this"}</button>
-                            : <span className={`cc-player-small-status${item.is_my_vote ? " is-selected" : ""}`}>{item.is_my_vote ? "Your vote" : "Voting closed"}</span>}
-                          {!finalGallery.voting_open && item.vote_count !== null && <strong className="cc-player-final-vote-count">{item.vote_count} vote{item.vote_count === 1 ? "" : "s"}</strong>}
-                        </div>
-                      </div>
-                    </article>
-                  ))}
+                <article className="cc-player-final-challenge-card">
+                  <div className="cc-player-final-challenge-label"><span>SIDE CHALLENGE</span><strong>+{finalGallery.challenge_points} BONUS POINTS</strong></div>
+                  <h3>{finalGallery.challenge_title}</h3>
+                  {finalGallery.challenge_description && <p>{finalGallery.challenge_description}</p>}
+                </article>
+                <div className="cc-player-final-vote-status">
+                  {finalGallery.voting_open
+                    ? `${finalGallery.challenge_title}: voting is open. ${finalGallery.votes_cast} vote${finalGallery.votes_cast === 1 ? "" : "s"} cast so far; you can change your vote until the host closes it.`
+                    : finalGallery.voting_completed
+                      ? `${finalGallery.challenge_title}: voting is closed. ${finalGallery.votes_cast} vote${finalGallery.votes_cast === 1 ? "" : "s"} cast. ${finalGallery.votes_cast > 0 ? `Tied top submissions each earn +${finalGallery.challenge_points} points.` : "No bonus points were awarded."} ${finalGallery.sequence_completed ? "The final round is complete." : "The host will open the next challenge after reviewing these results."}`
+                      : `${finalGallery.challenge_title ?? "The selected challenge"} is waiting for voting to start.`}
                 </div>
+                {finalGallery.items.length === 0
+                  ? <div className="cc-player-state-card"><Film size={24}/><h2>No entries for this challenge</h2><p>There are no submitted side-challenge photos or videos for the challenge currently selected by the host.</p></div>
+                  : <div className="cc-player-final-grid">
+                    {finalGallery.items.map((item) => (
+                      <article className={`cc-player-final-card${item.is_my_vote ? " is-voted" : ""}${item.is_winner ? " is-winner" : ""}`} key={item.id}>
+                        <div className="cc-player-final-media">
+                          {item.media_type === "video" ? <video src={mediaUrl(item.storage_path)} controls playsInline preload="metadata" /> : <img src={mediaUrl(item.storage_path)} alt={`${item.player_name}'s entry for ${item.challenge_title}`} loading="lazy" />}
+                        </div>
+                        <div className="cc-player-final-copy">
+                          <div className="cc-player-final-submitter">
+                            <span className="cc-player-final-submitter-avatar">{item.player_avatar_url ? <img src={item.player_avatar_url} alt=""/> : item.player_name.slice(0, 1).toUpperCase()}</span>
+                            <span className="cc-player-final-submitter-copy"><strong>{item.player_name}</strong><small>{item.challenge_title}</small></span>
+                            <CheckCircle2 size={22} aria-label="Submission received"/>
+                          </div>
+                          <div className="cc-player-final-vote-row">
+                            {finalGallery.voting_open ? <button type="button" className={`cc-player-vote-button${item.is_my_vote ? " is-selected" : ""}`} disabled={busyKey !== null} onClick={() => void voteForFinalMedia(item)}>{busyKey === `vote:${item.id}` ? <LoaderCircle size={16} className="cc-spin"/> : <Heart size={16} fill={item.is_my_vote ? "currentColor" : "none"}/>} {item.is_my_vote ? "Your vote" : "Vote for this"}</button>
+                              : <span className={`cc-player-small-status${item.is_my_vote ? " is-selected" : ""}`}>{item.is_my_vote ? "Your vote" : "Voting closed"}</span>}
+                            {!finalGallery.voting_open && item.vote_count !== null && <strong className="cc-player-final-vote-count">{item.vote_count} vote{item.vote_count === 1 ? "" : "s"}</strong>}
+                            {item.is_winner && <span className="cc-player-final-winner-badge">Top submission</span>}
+                          </div>
+                          {finalGallery.voting_completed && <div className="cc-player-final-voters" aria-label={`Voters for ${item.player_name}'s submission`}>
+                            {item.voters.length === 0 ? <span className="cc-player-final-no-voters">No voters</span> : item.voters.map((voter) => <span className="cc-player-final-voter" key={voter.id} title={voter.name}>
+                              <span className="cc-player-final-voter-avatar">{voter.avatar_url ? <img src={voter.avatar_url} alt=""/> : voter.name.slice(0, 1).toUpperCase()}</span><span>{voter.name}</span>
+                            </span>)}
+                          </div>}
+                        </div>
+                      </article>
+                    ))}
+                  </div>}
+                {finalGallery.voting_completed && <section className="cc-player-final-leaderboard">
+                  <div className="cc-player-section-heading"><div><span className="cc-player-eyebrow">RESULTS</span><h2>Updated leaderboard</h2></div><span className="cc-player-count-chip">{leaderboard.length} players</span></div>
+                  {leaderboard.length === 0 ? <p className="cc-player-empty-copy">Leaderboard scores are still refreshing.</p> : <div className="cc-player-leaderboard-list">
+                    {leaderboard.map((entry, index) => <article key={entry.player_id} className={`cc-player-rank-row${entry.player_id === player.id ? " is-you" : ""}`}>
+                      <div className={`cc-player-rank-number${index < 3 ? ` is-top rank-${index + 1}` : ""}`}>{index === 0 ? <Crown size={17}/> : index + 1}</div>
+                      <div className="cc-player-rank-avatar">{entry.avatar_url ? <img src={entry.avatar_url} alt=""/> : entry.name.slice(0, 1).toUpperCase()}</div>
+                      <div className="cc-player-rank-copy"><strong>{entry.name}{entry.player_id === player.id && <span className="cc-player-you-chip">YOU</span>}</strong><span>{entry.team_name || "Solo player"}</span></div>
+                      <div className="cc-player-rank-score"><strong>{entry.score}</strong><span>PTS</span></div>
+                    </article>)}
+                  </div>}
+                  {session.teams_enabled && <div className="cc-player-team-leaderboard">
+                    <div className="cc-player-section-heading"><div><span className="cc-player-eyebrow">SQUAD SCORES</span><h2>Team leaderboard</h2></div><span className="cc-player-count-chip">{teamLeaderboard.length} teams</span></div>
+                    {teamLeaderboard.map((team, index) => <article className={`cc-player-team-rank-row${player.team_id === team.id ? " is-you" : ""}`} key={team.id}>
+                      <span className="cc-player-team-rank-number">{index + 1}</span><span className="cc-player-team-dot">{team.name.slice(0, 1).toUpperCase()}</span><strong>{team.name}{player.team_id === team.id && <small>YOUR TEAM</small>}</strong><span className="cc-player-team-rank-score">{team.score} pts</span>
+                    </article>)}
+                  </div>}
+                </section>}
               </>
             )}
           </section>
         )}
 
-        {!embeddedHostMode && <div className="cc-player-sync-note"><span className="cc-player-live-dot"/> Live updates enabled {lastUpdated && <span>· synced {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>}</div>}
-        {!embeddedHostMode && <button type="button" className="cc-player-text-button" onClick={() => navigate(`/join?code=${code}&returning=1`)}><RotateCcw size={15}/> Need to rejoin on this device?</button>}
+        {!embeddedHostMode && !finalRoundTakeover && <div className="cc-player-sync-note"><span className="cc-player-live-dot"/> Live updates enabled {lastUpdated && <span>· synced {lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>}</div>}
+        {!embeddedHostMode && !finalRoundTakeover && <button type="button" className="cc-player-text-button" onClick={() => navigate(`/join?code=${code}&returning=1`)}><RotateCcw size={15}/> Need to rejoin on this device?</button>}
       </div>
       {activeSecretMission && activePage === "game" && session.status === "live" && !rewardRound && (
         <div className="cc-player-secret-modal-backdrop">

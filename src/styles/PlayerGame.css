@@ -303,7 +303,6 @@
   background: #fff;
   box-shadow: 3px 3px 0 #DED6FE;
 }
-.cc-player-page-nav.has-final-vote { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .cc-player-page-tab {
   display: flex;
   position: relative;
@@ -342,7 +341,8 @@
 .cc-player-rank-number.rank-1 { background: #D3FB6E; color: #23166E; }
 .cc-player-rank-number.rank-2 { background: #DED6FE; color: #23166E; }
 .cc-player-rank-number.rank-3 { background: #FFE0EC; color: #8D1646; }
-.cc-player-rank-avatar { display: grid; place-items: center; flex: 0 0 38px; width: 38px; height: 38px; border: 1.5px solid #060F13; border-radius: 50%; background: #D3FB6E; color: #23166E; font-size: 15px; font-weight: 1000; }
+.cc-player-rank-avatar { display: grid; place-items: center; flex: 0 0 38px; width: 38px; height: 38px; overflow:hidden; border: 1.5px solid #060F13; border-radius: 50%; background: #D3FB6E; color: #23166E; font-size: 15px; font-weight: 1000; }
+.cc-player-rank-avatar img { width:100%; height:100%; object-fit:cover; }
 .cc-player-rank-copy { display: grid; flex: 1; min-width: 0; gap: 4px; }
 .cc-player-rank-copy > strong { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; color: #060F13; font-size: 13px; font-weight: 1000; overflow-wrap: anywhere; }
 .cc-player-rank-copy > span { color: #77718B; font-size: 11px; }
@@ -403,14 +403,28 @@
 .cc-player-side-card { flex-wrap:wrap; }
 .cc-player-side-card .cc-player-side-evidence { order:3; }
 .cc-player-final-page { display:grid; gap:14px; }
+.cc-player-final-leaderboard { display:grid; gap:12px; padding:14px; border:1px solid #E8E2F4; border-radius:16px; background:#FAF8FF; }
+.cc-player-final-challenge-card { display:grid; gap:8px; padding:14px; border:2px solid #060F13; border-radius:18px; background:#fff; color:#17102c; box-shadow:3px 3px 0 #DCD5F1; }
+.cc-player-final-challenge-label { display:flex; align-items:center; justify-content:space-between; gap:8px; color:#5C36FB; font-size:9px; font-weight:1000; letter-spacing:.06em; }
+.cc-player-final-challenge-label strong { color:#fb377a; white-space:nowrap; }
+.cc-player-final-challenge-card h3 { margin:0; color:#060F13; font-family:"Hard Beat",Impact,sans-serif; font-size:20px; font-weight:1000; line-height:1.05; text-transform:uppercase; }
+.cc-player-final-challenge-card p { margin:0; color:#3F3A4B; font-size:12px; line-height:1.4; }
 .cc-player-final-vote-status { padding:12px 14px; border:1px solid #D9D0FF; border-radius:14px; background:#F3EFFF; color:#3A247D; font-size:12px; line-height:1.4; font-weight:800; }
 .cc-player-final-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr)); gap:14px; }
 .cc-player-final-card { overflow:hidden; border:2px solid #060F13; border-radius:19px; background:#fff; box-shadow:3px 3px 0 #DCD5F1; }
 .cc-player-final-card.is-voted { border-color:#5C36FB; box-shadow:4px 4px 0 #D3FB6E; }
+.cc-player-final-card.is-winner { border-color:#88B927; box-shadow:4px 4px 0 #D3FB6E; }
 .cc-player-final-media { display:grid; place-items:center; width:100%; aspect-ratio:4/3; background:#161124; }
 .cc-player-final-media img,
 .cc-player-final-media video { display:block; width:100%; height:100%; object-fit:contain; }
 .cc-player-final-copy { display:grid; gap:7px; padding:13px; }
+.cc-player-final-submitter { display:flex; align-items:center; gap:8px; min-width:0; }
+.cc-player-final-submitter-avatar { display:grid; place-items:center; flex:0 0 34px; width:34px; height:34px; overflow:hidden; border:1px solid #DCD5F1; border-radius:50%; background:#EDE9FF; color:#3A247D; font-size:12px; font-weight:1000; }
+.cc-player-final-submitter-avatar img { width:100%; height:100%; object-fit:cover; }
+.cc-player-final-submitter-copy { display:grid; min-width:0; gap:2px; }
+.cc-player-final-submitter-copy strong { color:#060F13; font-size:12px; font-weight:1000; }
+.cc-player-final-submitter-copy small { overflow:hidden; color:#5E5B6B; font-size:9px; text-overflow:ellipsis; white-space:nowrap; }
+.cc-player-final-submitter > svg { flex:none; margin-left:auto; color:#88B927; }
 .cc-player-final-category { color:#7554FC; font-size:9px; font-weight:1000; letter-spacing:.1em; }
 .cc-player-final-copy h3 { margin:0; color:#060F13; font-size:16px; line-height:1.15; font-weight:1000; overflow-wrap:anywhere; }
 .cc-player-final-copy p { margin:0; color:#5E5B6B; font-size:11px; }
@@ -419,6 +433,12 @@
 .cc-player-vote-button.is-selected { background:#23166E; color:#D3FB6E; }
 .cc-player-vote-button:disabled { opacity:.6; cursor:wait; }
 .cc-player-final-vote-count { color:#5C36FB; font-size:11px; }
+.cc-player-final-winner-badge { padding:4px 8px; border-radius:999px; background:#D3FB6E; color:#183E0B; font-size:9px; font-weight:1000; text-transform:uppercase; }
+.cc-player-final-voters { display:flex; flex-wrap:wrap; gap:7px; }
+.cc-player-final-voter { display:inline-flex; align-items:center; gap:5px; max-width:100%; padding:4px 7px 4px 4px; border:1px solid #E5E0F1; border-radius:999px; color:#3F3A4B; font-size:10px; font-weight:800; }
+.cc-player-final-voter-avatar { display:grid; place-items:center; width:22px; height:22px; flex:none; overflow:hidden; border-radius:50%; background:#EDE9FF; color:#3A247D; font-size:9px; font-weight:1000; }
+.cc-player-final-voter-avatar img { width:100%; height:100%; object-fit:cover; }
+.cc-player-final-no-voters { color:#817B92; font-size:10px; }
 .cc-player-small-status.is-selected { background:#D3FB6E; color:#183E0B; }
 .cc-final-tv { position:relative; display:grid; place-items:center; width:100%; min-height:100vh; overflow:hidden; background:#08060F; color:#fff; }
 .cc-final-tv-media { display:block; width:100%; height:100vh; object-fit:contain; background:#08060F; }
@@ -868,7 +888,6 @@
 .cc-player-secret-art { position: absolute; top: 42px; right: 9px; display: grid; width: 62px; height: 62px; place-items: center; background: radial-gradient(circle,#eaff00 0 37%,transparent 38%); filter: drop-shadow(2px 2px 0 #17102c); font-size: 44px; }
 .cc-player-secret-heading .cc-player-secret-icon { font-size: 29px; }
 .cc-player-page-nav { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); }
-.cc-player-page-nav.has-final-vote { grid-template-columns: repeat(4,minmax(0,1fr)); }
 .cc-challenge-description {font-size:14px; font-weight:600; line-height:1.3; color:#17102c; letter-spacing:.02em}
 .cc-player-page-tab:nth-child(1) { order: 1; }
 .cc-player-page-tab:nth-child(2) { order: 3; }
@@ -908,3 +927,5 @@
 .cc-player-secret-card .cc-player-evidence-required { margin:3px 0 7px; color:#17102c; font-size:9px; }
 .cc-player-secret-status { padding:6px 8px; border:1px solid rgba(23,16,44,.22); border-radius:8px; font-size:9px; }
 .cc-player-secret-complete { min-height:32px; margin-top:7px; border:0; border-radius:9px; background:#6945ff; color:#fff; box-shadow:0 2px 0 #17102c; font-family:"Hardbeat",Impact,sans-serif; font-size:10px; font-style:italic; }
+.cc-session-player-app.cc-player-final-takeover:not(.cc-player-embedded) { padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+.cc-player-final-takeover:not(.cc-player-embedded) .cc-player-game-content { width: min(100%, 1120px); max-width: 1120px; min-height: 100svh; align-content: start; padding: clamp(24px, 5vh, 60px) clamp(16px, 4vw, 48px); }

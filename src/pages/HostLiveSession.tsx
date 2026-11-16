@@ -108,7 +108,7 @@ interface SessionEvidence {
   saved_for_final: boolean;
   created_at: string;
 }
-interface SessionFinalVote { session_id: string; player_id: string; evidence_id: string; voted_at: string; }
+interface SessionFinalVote { session_id: string; challenge_id: string; player_id: string; evidence_id: string; voted_at: string; }
 interface SessionFinalRoundState {
   session_id: string;
   is_open: boolean;
@@ -116,7 +116,20 @@ interface SessionFinalRoundState {
   slideshow_challenge_id: string | null;
   slideshow_evidence_id: string | null;
 }
-type PresentationRequestConstructor = new (urls: string[]) => { start: () => Promise<unknown> };
+interface SessionFinalRoundChallenge {
+  session_id: string;
+  challenge_id: string;
+  status: "pending" | "voting" | "results";
+  votes_cast: number;
+  opened_at: string | null;
+  closed_at: string | null;
+}
+interface PresentationConnectionLike {
+  state: string;
+  close: () => void;
+  addEventListener: (type: "statechange", listener: () => void) => void;
+}
+type PresentationRequestConstructor = new (urls: string[]) => { start: () => Promise<PresentationConnectionLike> };
 interface SessionRewardRound {
   id: string; session_id: string; challenge_id: string; reward_method: RewardMethod;
   target_kind: RewardTargetKind; points: number; status: "open" | "completed" | "cancelled";
@@ -144,6 +157,7 @@ export default function HostLiveSession() {
   const [evidence, setEvidence] = useState<SessionEvidence[]>([]);
   const [finalVotes, setFinalVotes] = useState<SessionFinalVote[]>([]);
   const [finalRoundState, setFinalRoundState] = useState<SessionFinalRoundState | null>(null);
+  const [finalRoundChallenges, setFinalRoundChallenges] = useState<SessionFinalRoundChallenge[]>([]);
   const [rewardRounds, setRewardRounds] = useState<SessionRewardRound[]>([]);
   const [rewardVotes, setRewardVotes] = useState<SessionRewardVote[]>([]);
   const [rewardAwards, setRewardAwards] = useState<SessionRewardAward[]>([]);
@@ -204,21 +218,28 @@ export default function HostLiveSession() {
   const [defaultBreakMinutes, setDefaultBreakMinutes] = useState(0);
   const [breakResumeRound, setBreakResumeRound] = useState<number | null>(null);
   const breakAdvanceRequested = useRef(false);
+  const finalSlideshowConnection = useRef<PresentationConnectionLike | null>(null);
+  const [isFinalSlideshowConnected, setIsFinalSlideshowConnected] = useState(false);
   const roundClockSecondsRef = useRef(roundClockSeconds);
   roundClockSecondsRef.current = roundClockSeconds;
   const sharedTimerWriteQueue = useRef<Promise<void>>(Promise.resolve());
+
+  useEffect(() => () => {
+    finalSlideshowConnection.current?.close();
+    finalSlideshowConnection.current = null;
+  }, []);
 
   const hostTourSteps: GuidedTourStep[] = [
     { target: '[data-tour="host-overview"]', title: "Your live game overview", body: "The game code, live status and player count help you keep track of the session. Share the code or QR from Host Controls when people are joining.", page: "game" },
     { target: '[data-tour="host-sections"]', title: "The same game sections", body: "These tabs mirror the player experience: Game, Leaderboard, Side Challenges and Reward Round. The Host Controls tab contains the tools players cannot access.", page: "game" },
     { target: '[data-tour="host-player-game"]', title: "The player experience", body: "This is the same game screen players use. If host participation is enabled, join the roster here and complete challenges, upload evidence and follow the game like everyone else.", page: "game" },
     { target: '[data-tour="host-leaderboard"]', title: "Leaderboard", body: "Switch between player and team rankings, check scores and assign teams while the game is in the lobby.", page: "leaderboard" },
-    { target: '[data-tour="host-side-review"]', title: "Side challenges", body: "Side-challenge submissions are automatically approved for 5 points. Every submitted photo and video is included in the final-round vote, and the winning entry receives its challenge bonus.", page: "side-challenges" },
+    { target: '[data-tour="host-side-review"]', title: "Side challenges", body: "Side-challenge submissions are automatically approved for 5 points. Every submitted photo and video is included in its challenge vote; tied top submissions receive the configured bonus.", page: "side-challenges" },
     { target: '[data-tour="host-controls-tab"]', title: "Host-only controls", body: "This tab contains tools players cannot access: start or finish the game, navigate rounds, manage teams, review submissions and schedule secret missions.", page: "host-controls" },
     { target: '[data-tour="host-start-controls"]', title: "Start and manage the game", body: "Share the join code and QR, check who has joined, assign teams and start the game when everyone is ready. During play, use the round controls to move the game along.", page: "host-controls" },
     { target: '[data-tour="host-review"]', title: "Review main challenges", body: "Open submitted photos or videos, approve or reject the work and assign main-challenge points here. Side-challenge points are handled separately after voting.", page: "host-controls" },
     { target: '[data-tour="host-reward"]', title: "Run a reward round", body: "Choose an enabled method, set the points, run voting or select winners, then show the results and return everyone to the game.", page: "reward-round" },
-    { target: '[data-tour="host-final-round"]', title: "Run the final round", body: "Open side-challenge voting, share the TV slideshow and vote alongside the players.", page: "final-round" },
+    { target: '[data-tour="host-final-round"]', title: "Run the final round", body: "Open side-challenge voting, cast the slideshow to a TV and vote alongside players from the submission list.", page: "final-round" },
   ];
   const navigateHostTour = useCallback((page: string) => { setActiveTab(page as HostTab); }, []);
 
@@ -228,7 +249,7 @@ export default function HostLiveSession() {
     const { error: dispatchError } = await supabase.rpc("cc_host_dispatch_due_secret_missions", { p_session_id: sessionId });
     if (dispatchError) console.warn("SECRET MISSION DISPATCH:", dispatchError.message);
 
-    const [sessionResult, challengeResult, playerResult, teamResult, submissionResult, secretAssignmentResult, evidenceResult, voteResult, finalRoundStateResult, rewardRoundResult, rewardVoteResult, rewardAwardResult] = await Promise.all([
+    const [sessionResult, challengeResult, playerResult, teamResult, submissionResult, secretAssignmentResult, evidenceResult, voteResult, finalRoundStateResult, finalRoundChallengesResult, rewardRoundResult, rewardVoteResult, rewardAwardResult] = await Promise.all([
       supabase.from("cc_game_sessions").select("*").eq("id", sessionId).single(),
       supabase.from("cc_game_session_challenges").select("*").eq("session_id", sessionId).order("sort_order", { ascending: true }),
       supabase.from("cc_game_session_players").select("id,name,avatar_url,team_id,score,joined_at,last_seen_at").eq("session_id", sessionId).order("joined_at", { ascending: true }),
@@ -236,8 +257,9 @@ export default function HostLiveSession() {
       supabase.from("cc_game_session_submissions").select("id,player_id,challenge_id,status,awarded_points,submitted_at").eq("session_id", sessionId).order("submitted_at", { ascending: false }),
       supabase.from("cc_game_session_secret_assignments").select("id,session_id,player_id,challenge_id,status,scheduled_at,sent_at,submitted_at,reviewed_at,awarded_points,created_at").eq("session_id", sessionId).order("created_at", { ascending: false }),
       supabase.from("cc_game_session_evidence").select("id,session_id,player_id,challenge_id,secret_assignment_id,storage_path,media_type,saved_for_final,created_at").eq("session_id", sessionId).order("created_at", { ascending: false }),
-      supabase.from("cc_game_session_final_round_votes").select("session_id,player_id,evidence_id,voted_at").eq("session_id", sessionId),
+      supabase.from("cc_game_session_final_round_votes").select("session_id,challenge_id,player_id,evidence_id,voted_at").eq("session_id", sessionId),
       supabase.from("cc_game_session_final_round_state").select("session_id,is_open,voting_open,slideshow_challenge_id,slideshow_evidence_id").eq("session_id", sessionId).maybeSingle(),
+      supabase.from("cc_game_session_final_round_challenges").select("session_id,challenge_id,status,votes_cast,opened_at,closed_at").eq("session_id", sessionId),
       supabase.from("cc_game_session_reward_rounds").select("*").eq("session_id", sessionId).order("created_at", { ascending: false }),
       supabase.from("cc_game_session_reward_votes").select("id,session_id,reward_round_id,voter_player_id,target_player_id,target_team_id,voted_at").eq("session_id", sessionId),
       supabase.from("cc_game_session_reward_awards").select("id,session_id,reward_round_id,winner_player_id,winner_team_id,points_awarded,votes_received").eq("session_id", sessionId),
@@ -261,10 +283,11 @@ export default function HostLiveSession() {
     setEvidence((evidenceResult.data ?? []) as SessionEvidence[]);
     setFinalVotes((voteResult.data ?? []) as SessionFinalVote[]);
     setFinalRoundState((finalRoundStateResult.data as SessionFinalRoundState | null) ?? null);
+    setFinalRoundChallenges((finalRoundChallengesResult.data ?? []) as SessionFinalRoundChallenge[]);
     setRewardRounds((rewardRoundResult.data ?? []) as SessionRewardRound[]);
     setRewardVotes((rewardVoteResult.data ?? []) as SessionRewardVote[]);
     setRewardAwards((rewardAwardResult.data ?? []) as SessionRewardAward[]);
-    const loadError = challengeResult.error || playerResult.error || teamResult.error || submissionResult.error || secretAssignmentResult.error || evidenceResult.error || voteResult.error || finalRoundStateResult.error || rewardRoundResult.error || rewardVoteResult.error || rewardAwardResult.error;
+    const loadError = challengeResult.error || playerResult.error || teamResult.error || submissionResult.error || secretAssignmentResult.error || evidenceResult.error || voteResult.error || finalRoundStateResult.error || finalRoundChallengesResult.error || rewardRoundResult.error || rewardVoteResult.error || rewardAwardResult.error;
     if (loadError) setError(`Some game details could not load: ${loadError.message}`);
     else setError("");
     setLoading(false);
@@ -960,18 +983,6 @@ export default function HostLiveSession() {
     return evidence.filter((item) => item.secret_assignment_id === assignmentId);
   }
 
-  async function toggleEvidenceFinal(item: SessionEvidence) {
-    if (!session) return;
-    setBusy(true); setError(""); setNotice("");
-    const { error: updateError } = await supabase.from("cc_game_session_evidence")
-      .update({ saved_for_final: !item.saved_for_final })
-      .eq("id", item.id).eq("session_id", session.id);
-    setBusy(false);
-    if (updateError) { setError(updateError.message); return; }
-    setNotice(!item.saved_for_final ? "Saved for the final vote gallery." : "Removed from the final vote gallery.");
-    await load();
-  }
-
   async function setFinalGallery(galleryOpen: boolean, votingOpen: boolean) {
     if (!session) return;
     const closingVote = session.final_voting_open && !votingOpen;
@@ -984,21 +995,60 @@ export default function HostLiveSession() {
     setBusy(false);
     if (galleryError) { setError(galleryError.message); return; }
     if (closingVote) {
-      const winnerId = (galleryResult as { final_vote_winner_player_id?: string | null } | null)?.final_vote_winner_player_id;
-      const winnerPoints = Number((galleryResult as { final_vote_winner_points?: number } | null)?.final_vote_winner_points ?? 0);
-      const winnerName = winnerId ? players.find((player) => player.id === winnerId)?.name : null;
-      setNotice(winnerId
-        ? `Voting closed. ${winnerName ?? "The winning player"} automatically received ${winnerPoints} vote points.`
-        : "Voting closed. No eligible votes were cast, so no vote points were awarded.");
+      const votesCast = Number((galleryResult as { votes_cast?: number } | null)?.votes_cast ?? 0);
+      setNotice(`Voting closed with ${votesCast} vote${votesCast === 1 ? "" : "s"}. Results and the updated leaderboard are now visible.`);
     } else {
-      setNotice(galleryOpen ? (votingOpen ? "Final gallery and voting are open for players." : "Final results are visible; voting is closed.") : "Final gallery hidden from players.");
+      setNotice(galleryOpen ? (votingOpen ? "Voting is open for the selected side challenge." : "The current challenge results are visible.") : "Final gallery hidden from players.");
     }
     await load();
-    if (galleryOpen && sideChallenges.length > 0) {
-      const challengeId = finalRoundState?.slideshow_challenge_id ?? sideChallenges[0].id;
-      const firstItem = finalSideEvidence.find((item) => item.challenge_id === challengeId);
-      await setFinalSlideshow(challengeId, firstItem?.id ?? null);
+  }
+
+  async function advanceFinalChallenge() {
+    if (!session) return;
+    if (nextReviewedFinalChallenge && !nextPendingFinalChallenge) {
+      await reopenFinalChallengeVoting(nextReviewedFinalChallenge.id);
+      return;
     }
+    setBusy(true); setError(""); setNotice("");
+    const { error: advanceError } = await supabase.rpc("cc_host_advance_session_final_round_challenge", {
+      p_session_id: session.id,
+    });
+    setBusy(false);
+    if (advanceError) { setError(advanceError.message); return; }
+    setNotice("The next challenge is open for voting, and the TV slideshow has switched to its submissions.");
+    await load();
+  }
+
+  async function reopenFinalChallengeVoting(challengeId = selectedFinalChallenge?.id) {
+    const challenge = challenges.find((item) => item.id === challengeId);
+    if (!session || !challenge || busy) return;
+    const confirmed = window.confirm(
+      `Reopen voting for "${challenge.title}"? This clears its votes and reverses the bonus points awarded for this challenge.`,
+    );
+    if (!confirmed) return;
+    setBusy(true); setError(""); setNotice("");
+    const { error: reopenError } = await supabase.rpc("cc_host_reopen_session_final_round_challenge", {
+      p_session_id: session.id,
+      p_challenge_id: challenge.id,
+    });
+    setBusy(false);
+    if (reopenError) { setError(reopenError.message); return; }
+    setNotice("Voting reopened with previous votes cleared.");
+    await load();
+  }
+
+  async function selectFinalChallenge(challengeId: string) {
+    if (!session || busy) return;
+    const firstItem = finalSideEvidence.find((item) => item.challenge_id === challengeId);
+    setBusy(true); setError(""); setNotice("");
+    const { error: selectError } = await supabase.rpc("cc_host_select_session_final_round_challenge", {
+      p_session_id: session.id,
+      p_challenge_id: challengeId,
+      p_evidence_id: firstItem?.id ?? null,
+    });
+    setBusy(false);
+    if (selectError) { setError(selectError.message); return; }
+    await load();
   }
 
   async function setFinalSlideshow(challengeId: string, evidenceId: string | null) {
@@ -1014,27 +1064,11 @@ export default function HostLiveSession() {
     await load();
   }
 
-  async function shareFinalSlideshow() {
-    if (!session) return;
-    const url = `${window.location.origin}${window.location.pathname}#/final-slideshow/${session.id}`;
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: `${session.name} · Final slideshow`, url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      setNotice("TV slideshow link copied.");
-    } catch (shareError) {
-      if (shareError instanceof DOMException && shareError.name === "AbortError") return;
-      setError(shareError instanceof Error ? `Couldn't share the slideshow link: ${shareError.message}` : "Couldn't share the slideshow link.");
-    }
-  }
-
   async function castFinalSlideshow() {
-    if (!session || !selectedFinalEvidence) return;
+    if (!session || !selectedFinalEvidence || finalSlideshowConnection.current) return;
     const requestConstructor = (window as Window & { PresentationRequest?: PresentationRequestConstructor }).PresentationRequest;
     if (!requestConstructor) {
-      setError("This browser can't open a TV device picker. Use Chrome's Cast tab option, or mirror this screen with AirPlay.");
+      setError("This browser can't open a TV device picker. Use Chrome's Cast tab option or AirPlay screen mirroring instead.");
       return;
     }
 
@@ -1042,33 +1076,51 @@ export default function HostLiveSession() {
     setError("");
     setNotice("");
     try {
-      await new requestConstructor([url]).start();
-      setNotice("The selected slideshow is now open on the TV. Use the host controls to change the challenge or slide.");
+      const connection = await new requestConstructor([url]).start();
+      finalSlideshowConnection.current = connection;
+      setIsFinalSlideshowConnected(connection.state === "connected");
+      connection.addEventListener("statechange", () => {
+        const connected = connection.state === "connected";
+        setIsFinalSlideshowConnected(connected);
+        if (!connected && finalSlideshowConnection.current === connection) {
+          finalSlideshowConnection.current = null;
+        }
+      });
     } catch (castError) {
       if (castError instanceof DOMException && castError.name === "AbortError") return;
       setError(castError instanceof Error ? `Couldn't cast the slideshow: ${castError.message}` : "Couldn't cast the slideshow.");
     }
   }
 
-  async function openHostFinalVote() {
-    if (!session) return;
-    const url = `${window.location.origin}${window.location.pathname}#/play/${session.join_code}/final?hostEmbed=1`;
-    if (!session.host_participates || !localStorage.getItem(hostPlayerStorageKey(session.id))) {
-      const voteWindow = window.open("about:blank", "_blank");
-      if (!voteWindow) {
-        setError("Allow pop-ups to open the host voting screen.");
-        return;
-      }
-      voteWindow.opener = null;
+  function disconnectFinalSlideshow() {
+    finalSlideshowConnection.current?.close();
+    finalSlideshowConnection.current = null;
+    setIsFinalSlideshowConnected(false);
+  }
+
+  async function castHostFinalVote(evidenceId: string) {
+    if (!session || selectedFinalChallengeStatus !== "voting" || busy) return;
+    let playerToken = localStorage.getItem(hostPlayerStorageKey(session.id));
+    if (!session.host_participates || !session.host_player_id || !playerToken) {
       const joined = await setHostParticipation(true);
-      if (!joined || !localStorage.getItem(hostPlayerStorageKey(session.id))) {
-        voteWindow.close();
-        return;
-      }
-      voteWindow.location.href = url;
+      if (!joined) return;
+      setActiveTab("final-round");
+      playerToken = localStorage.getItem(hostPlayerStorageKey(session.id));
+    }
+    if (!playerToken) {
+      setError("Host participation was enabled, but the host player token is missing. Please rejoin as Host and try again.");
       return;
     }
-    window.open(url, "_blank", "noopener,noreferrer");
+    setBusy(true); setError(""); setNotice("");
+    const { error: voteError } = await supabase.rpc("cc_player_cast_session_final_round_vote", {
+      p_join_code: session.join_code,
+      p_player_token: playerToken,
+      p_evidence_id: evidenceId,
+    });
+    setBusy(false);
+    if (voteError) { setError(voteError.message); return; }
+    setNotice("Your vote has been counted.");
+    await load();
   }
 
   async function openHostSideChallengeUpload(challenge: SessionChallenge) {
@@ -1096,17 +1148,6 @@ export default function HostLiveSession() {
       return;
     }
     uploadWindow.location.href = url;
-  }
-
-  async function copyFinalVoteLink() {
-    if (!session) return;
-    const url = `${window.location.origin}${window.location.pathname}#/play/${session.join_code}/final`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setNotice("Player final-vote link copied.");
-    } catch {
-      setNotice(`Copy this player link: ${url}`);
-    }
   }
 
   function openBreakChallengeEditor(challenge: SessionChallenge) {
@@ -1261,26 +1302,39 @@ export default function HostLiveSession() {
       && (submission.status === "submitted" || submission.status === "approved"),
     );
   }).sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id));
-  const finalSecretEvidence = evidence.filter((item) =>
-    item.saved_for_final
-    && item.secret_assignment_id !== null
-    && secretAssignments.some((assignment) => assignment.id === item.secret_assignment_id && assignment.status === "approved"),
-  );
   const selectedFinalChallengeId = finalRoundState?.slideshow_challenge_id
     ?? sideChallenges[0]?.id
     ?? "";
+  const selectedFinalChallengeState = finalRoundChallenges.find((item) => item.challenge_id === selectedFinalChallengeId);
+  const selectedFinalChallengeStatus = selectedFinalChallengeState?.status ?? "pending";
+  const selectedFinalChallenge = challengeById.get(selectedFinalChallengeId);
   const selectedFinalChallengeEvidence = finalSideEvidence.filter((item) => item.challenge_id === selectedFinalChallengeId);
   const selectedFinalEvidenceIndex = Math.max(0, selectedFinalChallengeEvidence.findIndex((item) => item.id === finalRoundState?.slideshow_evidence_id));
   const selectedFinalEvidence = selectedFinalChallengeEvidence[selectedFinalEvidenceIndex] ?? selectedFinalChallengeEvidence[0] ?? null;
-  const finalVoteWinner = session?.final_vote_winner_player_id
-    ? playerById.get(session.final_vote_winner_player_id)
-    : undefined;
-  const finalVoteWinnerEvidence = session?.final_vote_winner_evidence_id
-    ? evidence.find((item) => item.id === session.final_vote_winner_evidence_id)
-    : undefined;
-  const finalVoteWinnerChallenge = finalVoteWinnerEvidence
-    ? challengeById.get(finalVoteWinnerEvidence.challenge_id)
-    : undefined;
+  const selectedFinalChallengeVotes = finalVotes.filter((item) => item.challenge_id === selectedFinalChallengeId);
+  const finalVoteCountByEvidence = new Map<string, number>();
+  for (const vote of selectedFinalChallengeVotes) {
+    finalVoteCountByEvidence.set(vote.evidence_id, (finalVoteCountByEvidence.get(vote.evidence_id) ?? 0) + 1);
+  }
+  const finalTopVoteCount = Math.max(0, ...finalVoteCountByEvidence.values());
+  const finalWinningEvidenceIds = new Set(
+    [...finalVoteCountByEvidence.entries()]
+      .filter(([, voteCount]) => finalTopVoteCount > 0 && voteCount === finalTopVoteCount)
+      .map(([evidenceId]) => evidenceId),
+  );
+  const currentFinalSortOrder = selectedFinalChallenge?.sort_order ?? Number.NEGATIVE_INFINITY;
+  const pendingFinalChallengesInOrder = sideChallenges
+    .filter((challenge) => finalRoundChallenges.some((state) => state.challenge_id === challenge.id && state.status === "pending"))
+    .sort((a, b) => a.sort_order - b.sort_order || a.id.localeCompare(b.id));
+  const nextPendingFinalChallenge = pendingFinalChallengesInOrder.find((challenge) => challenge.id !== selectedFinalChallengeId && challenge.sort_order > currentFinalSortOrder)
+    ?? pendingFinalChallengesInOrder.find((challenge) => challenge.id !== selectedFinalChallengeId);
+  const reviewedFinalChallengesInOrder = sideChallenges
+    .filter((challenge) => challenge.id !== selectedFinalChallengeId
+      && finalRoundChallenges.some((state) => state.challenge_id === challenge.id && state.status === "results"))
+    .sort((a, b) => a.sort_order - b.sort_order || a.id.localeCompare(b.id));
+  const nextReviewedFinalChallenge = reviewedFinalChallengesInOrder.find((challenge) => challenge.sort_order > currentFinalSortOrder)
+    ?? reviewedFinalChallengesInOrder[0];
+  const nextFinalChallenge = nextPendingFinalChallenge ?? nextReviewedFinalChallenge;
 
   if (loading) {
     return <main className="host-portal cc-host-live-standalone"><div className="cc-host-standalone-loading"><LoaderCircle className="cc-spin" size={24}/> Loading your game session…</div></main>;
@@ -1395,7 +1449,7 @@ export default function HostLiveSession() {
           </div>
         </div>
 
-        <div className="cc-host-live-system-bar"><span>Chaos</span><span className="cc-host-live-system-status">{session.status === "live" ? "● LIVE" : session.status.toUpperCase()}</span><Link to="/host">Host Hub ↗</Link></div>
+        
         <SessionPlayerProfile viewerRole="host"
           name={hostPlayer?.name ?? headerPlayer?.name ?? hostDisplayName}
           subtitle={hostPlayer ? teamById.get(hostPlayer.team_id ?? "")?.name ?? "Playing in this game" : headerPlayer ? "Current leader" : "Game host"}
@@ -1777,7 +1831,7 @@ export default function HostLiveSession() {
         {activeTab === "side-challenges" && (
         <>
         <section className="cc-session-card cc-session-section cc-side-challenge-library">
-          <div className="cc-session-section-heading"><div><div className="cc-section-kicker">OPTIONAL MISSIONS</div><h2>Side challenges</h2><p>Each submission automatically earns 5 points; the final-vote winner earns the challenge bonus.</p></div><span className="cc-count-pill">{sideChallenges.length} available</span></div>
+          <div className="cc-session-section-heading"><div><div className="cc-section-kicker">OPTIONAL MISSIONS</div><h2>Side challenges</h2><p>Each submission automatically earns 5 points; tied top submissions receive the challenge bonus.</p></div><span className="cc-count-pill">{sideChallenges.length} available</span></div>
           {sideChallenges.length === 0 ? <p className="cc-helper-text">No side challenges were added to this game plan.</p> : (
             <div className="cc-host-side-challenge-grid">{sideChallenges.map((challenge) => <article className="cc-host-side-challenge-card" key={challenge.id}>
               <div className="cc-host-side-card-top"><span className="cc-host-side-icon cc-host-side-challenge-emoji" aria-hidden="true">{challengeIcon(challenge.title, challenge.description)}</span><span className="cc-host-points-pill">Final bonus: {challenge.points} pts</span></div>
@@ -1859,7 +1913,7 @@ export default function HostLiveSession() {
                       <div className="cc-session-evidence-grid">{evidenceForAssignment(assignment.id).map((media) => (
                         <div className="cc-session-evidence-item" key={media.id}>
                           {media.media_type === "video" ? <video src={evidenceUrl(media.storage_path)} controls playsInline preload="metadata" /> : <img src={evidenceUrl(media.storage_path)} alt={`Evidence for ${challenge?.title ?? "secret mission"}`} loading="lazy" />}
-                          <div className="cc-session-evidence-meta"><small>{media.media_type === "video" ? "Video evidence" : "Photo evidence"}</small><button type="button" className={media.saved_for_final ? "is-saved" : ""} disabled={busy || Boolean(session.final_vote_completed_at)} onClick={() => void toggleEvidenceFinal(media)}><Heart size={13}/> {media.saved_for_final ? "Saved for final" : "Save for final"}</button></div>
+                          <div className="cc-session-evidence-meta"><small>{media.media_type === "video" ? "Video evidence" : "Photo evidence"}</small></div>
                         </div>
                       ))}</div>
                     </div>}
@@ -1921,92 +1975,154 @@ export default function HostLiveSession() {
 
         {activeTab === "final-round" && (
         <section className="cc-session-card cc-session-section cc-session-final-vote-card" data-tour="host-final-round">
-          <div className="cc-session-section-heading"><div><div className="cc-section-kicker">FINAL ROUND</div><h2>Side challenge fan vote</h2><p>Every submitted side-challenge photo and video appears automatically. Approved secret-mission entries saved for the final remain eligible too.</p></div><span className="cc-count-pill">{finalSideEvidence.length + finalSecretEvidence.length} entries</span></div>
-          <div className="cc-session-final-vote-summary">
-            <div><strong>{session.final_gallery_open ? "Open" : "Hidden"}</strong><span>Gallery visibility</span></div>
-            <div><strong>{session.final_vote_completed_at ? "Voting complete" : session.final_voting_open ? "Voting open" : "Voting closed"}</strong><span>Player voting status</span></div>
-            <div><strong>{finalVotes.length}</strong><span>Votes cast</span></div>
+          <div className="cc-session-section-heading"><div><div className="cc-section-kicker">FINAL ROUND</div><h2>Side challenge voting</h2><p>Review one side challenge at a time. Share the results before moving on to the next challenge.</p></div><span className="cc-count-pill">{selectedFinalChallengeEvidence.length} entries</span></div>
+          <div className="cc-host-final-controls">
+            <strong className="cc-host-final-controls-title">HOST CONTROLS</strong>
+            <div className="cc-host-final-control-grid">
+            {sideChallenges.length > 0 && (
+              <label className="cc-host-final-challenge-picker">Choose side challenge
+                <select
+                  value={selectedFinalChallengeId}
+                  disabled={busy || selectedFinalChallengeStatus === "voting"}
+                  title={selectedFinalChallengeStatus === "voting" ? "Close the current vote before changing challenges." : undefined}
+                  onChange={(event) => void selectFinalChallenge(event.target.value)}
+                >
+                  {sideChallenges.map((challenge) => <option value={challenge.id} key={challenge.id}>{challenge.title}</option>)}
+                </select>
+              </label>
+            )}
+            {selectedFinalChallengeStatus === "pending" && sideChallenges.length > 0 && (
+              <>
+                <button type="button" className="host-button cc-host-final-control-button is-primary" disabled={busy} onClick={() => void setFinalGallery(true, true)}><Heart size={15}/> Open Voting</button>
+              </>
+            )}
+            {selectedFinalChallengeStatus === "voting" && <>
+              <div className="cc-host-final-player-count"><span>Players voted</span><strong>{selectedFinalChallengeVotes.length}/{players.length}</strong></div>
+              <button type="button" className="host-button cc-host-final-control-button is-primary" disabled={busy} onClick={() => void setFinalGallery(true, false)}><Flag size={15}/> Show Results</button>
+            </>}
+            {selectedFinalChallengeStatus === "results" && <>
+              {session.final_gallery_open ? (
+                <>
+                  <div className="cc-host-final-player-count"><span>Results shared</span><strong>{selectedFinalChallengeState?.votes_cast ?? 0} votes</strong></div>
+                  <button type="button" className="host-button cc-host-final-control-button" disabled={busy} onClick={() => void reopenFinalChallengeVoting()}><Heart size={15}/> Reopen Voting</button>
+                  {nextFinalChallenge
+                    ? <button type="button" className="host-button cc-host-final-control-button is-primary is-wide" disabled={busy} onClick={() => void advanceFinalChallenge()}><ArrowRight size={15}/> Next challenge · {nextFinalChallenge.title}</button>
+                    : <button type="button" className="host-button cc-host-final-control-button is-primary is-wide" disabled={busy} onClick={() => void setFinalGallery(false, false)}>Return players to the game</button>}
+                </>
+              ) : (
+                <>
+                  <button type="button" className="host-button cc-host-final-control-button" disabled={busy} onClick={() => void setFinalGallery(true, false)}><Heart size={15}/> Show Results</button>
+                  <button type="button" className="host-button cc-host-final-control-button" disabled={busy} onClick={() => void reopenFinalChallengeVoting()}><Heart size={15}/> Reopen Voting</button>
+                  {nextFinalChallenge && <button type="button" className="host-button cc-host-final-control-button is-primary is-wide" disabled={busy || !session.final_gallery_open} title="Share the results before moving to the next challenge." onClick={() => void advanceFinalChallenge()}><ArrowRight size={15}/> Next challenge · {nextFinalChallenge.title}</button>}
+                </>
+              )}
+            </>}
+            {(selectedFinalChallengeStatus === "voting" || selectedFinalChallengeStatus === "results") && <>
+              {isFinalSlideshowConnected && <>
+                <button
+                  type="button"
+                  className="host-button cc-host-final-control-button"
+                  disabled={busy || selectedFinalChallengeEvidence.length < 2}
+                  onClick={() => {
+                    const index = (selectedFinalEvidenceIndex - 1 + selectedFinalChallengeEvidence.length) % selectedFinalChallengeEvidence.length;
+                    const item = selectedFinalChallengeEvidence[index];
+                    if (item) void setFinalSlideshow(selectedFinalChallengeId, item.id);
+                  }}
+                ><ArrowLeft size={15}/> Previous</button>
+                <button
+                  type="button"
+                  className="host-button cc-host-final-control-button"
+                  disabled={busy || selectedFinalChallengeEvidence.length < 2}
+                  onClick={() => {
+                    const index = (selectedFinalEvidenceIndex + 1) % selectedFinalChallengeEvidence.length;
+                    const item = selectedFinalChallengeEvidence[index];
+                    if (item) void setFinalSlideshow(selectedFinalChallengeId, item.id);
+                  }}
+                >Next <ArrowRight size={15}/></button>
+              </>}
+              <button
+                type="button"
+                className={`host-button cc-host-final-control-button${isFinalSlideshowConnected ? " is-primary" : ""}`}
+                disabled={!isFinalSlideshowConnected && (!selectedFinalEvidence || busy)}
+                onClick={() => isFinalSlideshowConnected ? disconnectFinalSlideshow() : void castFinalSlideshow()}
+              ><Cast size={15}/>{isFinalSlideshowConnected ? "Disconnect" : "Cast"}</button>
+            </>}
+            </div>
           </div>
-          <div className="cc-session-final-vote-actions">
-            {session.final_vote_completed_at
-              ? (!session.final_gallery_open && <button type="button" className="host-button host-button--lime" disabled={busy} onClick={() => void setFinalGallery(true, false)}><Heart size={15}/> Show final results</button>)
-              : (!session.final_gallery_open || !session.final_voting_open
-                ? <button type="button" className="host-button host-button--lime" disabled={busy} onClick={() => void setFinalGallery(true, true)}><Heart size={15}/> Open final gallery & voting</button>
-                : <button type="button" className="host-button host-button--secondary" disabled={busy} onClick={() => void setFinalGallery(true, false)}><Flag size={15}/> Close voting & award winner</button>)}
-            {session.final_gallery_open && <button type="button" className="host-button host-button--ghost" disabled={busy || session.final_voting_open} onClick={() => void setFinalGallery(false, false)}>Hide gallery</button>}
-            <button type="button" className="host-button host-button--secondary" onClick={() => void copyFinalVoteLink()}>Copy player vote link</button>
-            <button type="button" className="host-button host-button--secondary" onClick={openHostFinalVote}><Heart size={15}/> Vote on this phone</button>
-          </div>
-          <p className="cc-helper-text">Players open Final vote from their game page and can change one favourite until voting closes. Closing the vote automatically awards the winning entry the points configured for its challenge. A tie is resolved by the earliest uploaded winning entry. To vote as host, join the game as a player from Host Controls first.</p>
-          {session.final_vote_completed_at && <div className="cc-session-final-vote-result">
-            <strong>{finalVoteWinner ? `${finalVoteWinner.name} won the final vote` : "Final voting completed — no eligible votes"}</strong>
-            {finalVoteWinner && <span>{finalVoteWinnerChallenge?.title ?? "Winning entry"} · {session.final_vote_winner_vote_count} vote{session.final_vote_winner_vote_count === 1 ? "" : "s"} · +{session.final_vote_winner_points} points awarded automatically</span>}
-          </div>}
-          {session.final_gallery_open && sideChallenges.length > 0 && (
-            <div className="cc-host-final-slideshow">
-              <div className="cc-host-final-slideshow-controls">
-                <label>
-                  TV slideshow side challenge
-                  <select
-                    value={selectedFinalChallengeId}
-                    disabled={busy}
-                    onChange={(event) => {
-                      const challengeId = event.target.value;
-                      const firstItem = finalSideEvidence.find((item) => item.challenge_id === challengeId);
-                      void setFinalSlideshow(challengeId, firstItem?.id ?? null);
-                    }}
-                  >
-                    {sideChallenges.map((challenge) => <option value={challenge.id} key={challenge.id}>{challenge.title}</option>)}
-                  </select>
-                </label>
-                <div className="cc-host-final-slide-navigation">
-                  <span>{selectedFinalChallengeEvidence.length ? `${selectedFinalEvidenceIndex + 1} / ${selectedFinalChallengeEvidence.length}` : "No submissions yet"}</span>
-                  <button
-                    type="button"
-                    className="host-button host-button--ghost"
-                    disabled={busy || selectedFinalChallengeEvidence.length < 2}
-                    aria-label="Previous slideshow entry"
-                    onClick={() => {
-                      const index = (selectedFinalEvidenceIndex - 1 + selectedFinalChallengeEvidence.length) % selectedFinalChallengeEvidence.length;
-                      const item = selectedFinalChallengeEvidence[index];
-                      if (item) void setFinalSlideshow(selectedFinalChallengeId, item.id);
-                    }}
-                  ><ArrowLeft size={15}/> Previous</button>
-                  <button
-                    type="button"
-                    className="host-button host-button--ghost"
-                    disabled={busy || selectedFinalChallengeEvidence.length < 2}
-                    aria-label="Next slideshow entry"
-                    onClick={() => {
-                      const index = (selectedFinalEvidenceIndex + 1) % selectedFinalChallengeEvidence.length;
-                      const item = selectedFinalChallengeEvidence[index];
-                      if (item) void setFinalSlideshow(selectedFinalChallengeId, item.id);
-                    }}
-                  >Next <ArrowRight size={15}/></button>
-                  <button
-                    type="button"
-                    className="host-button host-button--lime"
-                    disabled={!selectedFinalEvidence || busy}
-                    onClick={() => window.open(`${window.location.origin}${window.location.pathname}#/final-slideshow/${session.id}`, "_blank", "noopener,noreferrer")}
-                  ><Cast size={15}/> Open TV screen</button>
-                  <button
-                    type="button"
-                    className="host-button host-button--lime"
-                    disabled={!selectedFinalEvidence || busy}
-                    onClick={() => void castFinalSlideshow()}
-                  ><Cast size={15}/> Cast / AirPlay</button>
-                  <button type="button" className="host-button host-button--secondary" onClick={() => void shareFinalSlideshow()}>Share TV link</button>
-                </div>
+          {selectedFinalChallenge && <article className="cc-player-final-challenge-card">
+            <div className="cc-player-final-challenge-label"><span>SIDE CHALLENGE</span><strong>+{selectedFinalChallenge.points} BONUS POINTS</strong></div>
+            <h3>{selectedFinalChallenge.title}</h3>
+            <p>{selectedFinalChallenge.description}</p>
+          </article>}
+          {selectedFinalChallengeStatus === "voting" && selectedFinalChallengeEvidence.length > 0 && (
+            <div className="cc-player-final-grid">
+              {selectedFinalChallengeEvidence.map((item) => {
+                const submitter = playerById.get(item.player_id);
+                const hostVote = selectedFinalChallengeVotes.find((vote) => vote.player_id === session.host_player_id);
+                const hostVotedForItem = hostVote?.evidence_id === item.id;
+                return <article className="cc-player-final-card" key={item.id}>
+                  <div className="cc-player-final-media">{item.media_type === "video"
+                    ? <video src={evidenceUrl(item.storage_path)} controls playsInline preload="metadata"/>
+                    : <img src={evidenceUrl(item.storage_path)} alt={`${submitter?.name ?? "Player"}'s side challenge submission`} loading="lazy"/>}</div>
+                  <div className="cc-player-final-copy">
+                    <div className="cc-player-final-submitter">
+                      <span className="cc-player-final-submitter-avatar">{submitter?.avatar_url ? <img src={submitter.avatar_url} alt=""/> : submitter?.name.slice(0, 1).toUpperCase()}</span>
+                      <span className="cc-player-final-submitter-copy"><strong>{submitter?.name ?? "Player"}</strong><small>{selectedFinalChallenge?.title ?? "Side challenge"}</small></span>
+                      <Check size={22} aria-label="Submission received"/>
+                    </div>
+                    <div className="cc-player-final-vote-row">
+                      <button
+                        type="button"
+                        className={`cc-player-vote-button${hostVotedForItem ? " is-selected" : ""}`}
+                        disabled={busy}
+                        onClick={() => void castHostFinalVote(item.id)}
+                      ><Heart size={16} fill={hostVotedForItem ? "currentColor" : "none"}/>{hostVotedForItem ? "Your vote" : "Vote for this"}</button>
+                    </div>
+                  </div>
+                </article>;
+              })}
+            </div>
+          )}
+          {selectedFinalChallengeStatus === "results" && (
+            <div className="cc-host-final-results">
+              <div className="cc-session-final-vote-result">
+                <strong>{selectedFinalChallenge?.title}: results</strong>
+                <span>{selectedFinalChallengeState?.votes_cast ?? 0} vote{selectedFinalChallengeState?.votes_cast === 1 ? "" : "s"} cast · {finalTopVoteCount > 0 ? `Tied top submissions each earn +${selectedFinalChallenge?.points ?? 0} points.` : "No votes were cast; no bonus points were awarded."}</span>
               </div>
-              {selectedFinalEvidence && <div className="cc-host-final-slide-preview">
-                {selectedFinalEvidence.media_type === "video"
-                  ? <video src={evidenceUrl(selectedFinalEvidence.storage_path)} controls playsInline preload="metadata"/>
-                  : <img src={evidenceUrl(selectedFinalEvidence.storage_path)} alt="Selected final-round slideshow entry"/>}
-                <span>{playerById.get(selectedFinalEvidence.player_id)?.name ?? "Player"} · {challengeById.get(selectedFinalEvidence.challenge_id)?.title}</span>
-              </div>}
-              <div className="cc-host-final-tv-link">
-                <QRCodeSVG value={`${window.location.origin}${window.location.pathname}#/final-slideshow/${session.id}`} size={104} level="M" includeMargin/>
-                <p>Cast / AirPlay opens your browser’s TV picker when supported. Otherwise, open the TV screen and use Chrome’s Cast tab option or your device’s AirPlay screen mirroring. The TV must be able to reach this site; localhost links only work on the computer running the app.</p>
+              {selectedFinalChallengeEvidence.length === 0 ? <p className="cc-helper-text">There were no submitted entries for this challenge.</p> : (
+                <div className="cc-player-final-grid">
+                  {selectedFinalChallengeEvidence.map((item) => {
+                    const itemVotes = selectedFinalChallengeVotes.filter((vote) => vote.evidence_id === item.id);
+                    const isWinner = finalWinningEvidenceIds.has(item.id);
+                    return <article className={`cc-player-final-card${isWinner ? " is-winner" : ""}`} key={item.id}>
+                      <div className="cc-player-final-media">{item.media_type === "video"
+                        ? <video src={evidenceUrl(item.storage_path)} controls playsInline preload="metadata"/>
+                        : <img src={evidenceUrl(item.storage_path)} alt={`${playerById.get(item.player_id)?.name ?? "Player"}'s final-round entry`} loading="lazy"/>}</div>
+                      <div className="cc-player-final-copy">
+                        <div className="cc-player-final-submitter">
+                          <span className="cc-player-final-submitter-avatar">{playerById.get(item.player_id)?.avatar_url ? <img src={playerById.get(item.player_id)?.avatar_url ?? ""} alt=""/> : playerById.get(item.player_id)?.name.slice(0, 1).toUpperCase()}</span>
+                          <span className="cc-player-final-submitter-copy"><strong>{playerById.get(item.player_id)?.name ?? "Player"}</strong><small>{selectedFinalChallenge?.title}</small></span>
+                          <Check size={22} aria-label="Submission received"/>
+                        </div>
+                        <div className="cc-player-final-vote-row"><strong className="cc-player-final-vote-count">{itemVotes.length} vote{itemVotes.length === 1 ? "" : "s"}</strong>{isWinner && <span className="cc-player-final-winner-badge">Top submission</span>}</div>
+                        <div className="cc-player-final-voters" aria-label={`Voters for ${playerById.get(item.player_id)?.name ?? "player"}'s submission`}>
+                          {itemVotes.length === 0 ? <span className="cc-player-final-no-voters">No voters</span> : itemVotes.map((vote) => {
+                            const voter = playerById.get(vote.player_id);
+                            if (!voter) return null;
+                            return <span className="cc-player-final-voter" key={vote.player_id} title={voter.name}>
+                              <span className="cc-player-final-voter-avatar">{voter.avatar_url ? <img src={voter.avatar_url} alt=""/> : voter.name.slice(0, 1).toUpperCase()}</span>
+                              <span>{voter.name}</span>
+                            </span>;
+                          })}
+                        </div>
+                      </div>
+                    </article>;
+                  })}
+                </div>
+              )}
+              <div className="cc-session-final-vote-result">
+                <strong>Updated player leaderboard</strong>
+                <div className="cc-host-final-leaderboard">{rankedPlayers.map((player, index) => <div key={player.id}><span>{index + 1}</span><strong>{player.name}</strong><span>{player.score} pts</span></div>)}</div>
               </div>
             </div>
           )}
@@ -2015,17 +2131,16 @@ export default function HostLiveSession() {
 
         {activeTab === "side-challenges" && (
           <section className="cc-session-card cc-session-section cc-host-side-review-card" data-tour="host-side-review">
-            <div className="cc-session-section-heading"><div><div className="cc-section-kicker">SIDE CHALLENGE SUBMISSIONS</div><h2>Player submissions</h2><p>Every submission is automatically approved for 5 points. The final-vote winner also earns the challenge bonus.</p></div><span className="cc-count-pill">{sideSubmissions.length} submissions</span></div>
+            <div className="cc-session-section-heading"><div><div className="cc-section-kicker">SIDE CHALLENGE SUBMISSIONS</div><h2>Player submissions</h2><p>Every submission is automatically approved for 5 points. Tied top submissions also receive the challenge bonus.</p></div><span className="cc-count-pill">{sideSubmissions.length} submissions</span></div>
             {sideSubmissions.length === 0 ? <p className="cc-helper-text">Side-challenge submissions will appear here automatically after players submit evidence.</p> : (
               <div className="cc-submission-list">
                 {sideSubmissions.map((submission) => {
                   const player = playerById.get(submission.player_id);
                   const challenge = challengeById.get(submission.challenge_id);
                   const submissionMedia = evidenceForChallenge(submission.player_id, submission.challenge_id);
-                  const isFinalVoteWinner = submissionMedia.some((media) => media.id === session.final_vote_winner_evidence_id);
                   return <article className="cc-submission-row" key={submission.id}>
                     <div className="cc-submission-info"><strong>{player?.name ?? "Player"}</strong><span>{challenge?.title ?? "Side challenge"}</span><small>{new Date(submission.submitted_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</small></div>
-                    <span className={`cc-submission-status cc-submission-status--${submission.status}`}>{isFinalVoteWinner ? `Final vote winner · +${submission.awarded_points} base +${session.final_vote_winner_points} bonus` : submission.status === "approved" ? `Auto-approved · +${submission.awarded_points} pts` : submission.status === "submitted" ? "Awaiting automatic approval" : "Rejected"}</span>
+                    <span className={`cc-submission-status cc-submission-status--${submission.status}`}>{submission.status === "approved" ? `Auto-approved · +${submission.awarded_points} pts` : submission.status === "submitted" ? "Awaiting automatic approval" : "Rejected"}</span>
                     {submissionMedia.length > 0 && <div className="cc-session-evidence-gallery"><strong>{submissionMedia.length} evidence file{submissionMedia.length === 1 ? "" : "s"}</strong><div className="cc-session-evidence-grid">{submissionMedia.map((media) => <div className="cc-session-evidence-item" key={media.id}>{media.media_type === "video" ? <video src={evidenceUrl(media.storage_path)} controls playsInline preload="metadata"/> : <img src={evidenceUrl(media.storage_path)} alt={`Evidence for ${challenge?.title ?? "side challenge"}`} loading="lazy"/>}<div className="cc-session-evidence-meta"><small>{media.media_type === "video" ? "Video evidence · included in final vote" : "Photo evidence · included in final vote"}</small></div></div>)}</div></div>}
                   </article>;
                 })}
