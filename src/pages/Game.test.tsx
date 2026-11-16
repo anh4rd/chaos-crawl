@@ -31,13 +31,22 @@ const mocks = vi.hoisted(() => {
     completions: query<ChallengeCompletion[]>([]),
     scores: query<ScoreEvent[]>([]),
     playerId: "p1" as string | null,
+    sessionError: null as Error | null,
     navigate: vi.fn(),
     complete: vi.fn(),
     upload: vi.fn(),
   };
 });
 vi.mock("react-router-dom", () => ({ useNavigate: () => mocks.navigate }));
-vi.mock("../lib/playerSession", () => ({ getPlayerId: () => mocks.playerId }));
+vi.mock("../lib/playerSession", () => ({
+  PLAYER_SESSION_CHANGED_EVENT: "chaos-crawl-player-session-changed",
+  readPlayerSession: () =>
+    mocks.sessionError
+      ? { status: "unavailable", playerId: null, error: mocks.sessionError }
+      : mocks.playerId
+        ? { status: "ready", playerId: mocks.playerId }
+        : { status: "missing", playerId: null },
+}));
 vi.mock("../game/hooks/useGameState", () => ({
   useGameState: () => mocks.game,
 }));
@@ -124,6 +133,7 @@ beforeEach(() => {
     },
   ];
   mocks.playerId = "p1";
+  mocks.sessionError = null;
   mocks.complete.mockResolvedValue({ data: { id: "completion" }, error: null });
   mocks.upload.mockResolvedValue({ data: { id: "media" }, error: null });
 });
@@ -289,4 +299,18 @@ describe("player game page", () => {
       replace: true,
     });
   });
+});
+
+it("offers a storage retry without pretending the player is missing", async () => {
+  mocks.sessionError = new Error(
+    "Browser storage is blocked. Allow site storage, then try again.",
+  );
+  render(<Game />);
+  expect(screen.getByRole("alert").textContent).toContain("storage is blocked");
+  expect(screen.queryByText("Join the game to take part")).toBeNull();
+  expect(mocks.navigate).not.toHaveBeenCalled();
+  mocks.sessionError = null;
+  fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+  await screen.findByText("Become Nan");
+  expect(screen.queryByRole("alert")).toBeNull();
 });

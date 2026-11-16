@@ -1,6 +1,6 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/liveFixture";
 
-import { openAdmin } from "./support/liveNavigation";
+import { openAdmin } from "../support/liveNavigation";
 
 test.describe("admin journey", () => {
   test("admin loads without runtime or network errors", async ({ page }) => {

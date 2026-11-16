@@ -23,6 +23,7 @@ const mock = vi.hoisted(() => ({
   votes: [] as Vote[],
   scores: [] as ScoreEvent[],
   playerId: "p1" as string | null,
+  sessionError: null as Error | null,
   active: new Map<string, number>(),
   status: Object.fromEntries(
     [
@@ -105,7 +106,13 @@ vi.mock("../game/hooks/useChallengeCompletions", () => ({
   },
 }));
 vi.mock("../lib/playerSession", () => ({
-  getPlayerId: () => mock.playerId,
+  PLAYER_SESSION_CHANGED_EVENT: "chaos-crawl-player-session-changed",
+  readPlayerSession: () =>
+    mock.sessionError
+      ? { status: "unavailable", playerId: null, error: mock.sessionError }
+      : mock.playerId
+        ? { status: "ready", playerId: mock.playerId }
+        : { status: "missing", playerId: null },
   clearPlayerId: vi.fn(),
   setPlayerId: vi.fn(),
 }));
@@ -185,6 +192,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mock.active.clear();
   mock.playerId = "p1";
+  mock.sessionError = null;
   mock.game = {
     id: 1,
     current_pub: "First Pub",
@@ -292,6 +300,7 @@ describe("Vote route", () => {
     const view = render(pageTree(<VotePage />));
     await screen.findByRole("heading", { name: "Vote Cast!" });
     mock.playerId = "p2";
+    fireEvent(window, new Event("storage"));
     view.rerender(pageTree(<VotePage />));
     await screen.findByRole("button", { name: "Cast Vote" });
     expect(mock.getMyVote).toHaveBeenLastCalledWith("p2", "First challenge");
@@ -498,4 +507,18 @@ describe("App route registration", () => {
     expect(screen.getByRole("button", { name: "Join Game" })).toBeTruthy();
     expect(mock.from).not.toHaveBeenCalled();
   });
+});
+
+it("recovers the Vote route from blocked session storage through an explicit retry", async () => {
+  mock.sessionError = new Error(
+    "Browser storage is blocked. Allow site storage, then try again.",
+  );
+  render(pageTree(<VotePage />));
+  expect(screen.getByRole("alert").textContent).toContain("storage is blocked");
+  expect(mock.getMyVote).not.toHaveBeenCalled();
+  expect(screen.queryByText("Player session not found")).toBeNull();
+  mock.sessionError = null;
+  fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+  await screen.findByRole("button", { name: "Cast Vote" });
+  expect(mock.getMyVote).toHaveBeenCalledWith("p1", "First challenge");
 });

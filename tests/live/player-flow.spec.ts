@@ -1,8 +1,9 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "../support/liveFixture";
+import { uniqueName } from "../support/livePlayers";
 
 test.describe("player journey", () => {
   test("player can join and reach the game", async ({ page }) => {
-    const playerName = `PW-${Date.now()}`;
+    const playerName = uniqueName("Player");
 
     await page.goto("./");
 
@@ -24,7 +25,7 @@ test.describe("player journey", () => {
   });
 
   test("joined player survives refresh", async ({ page }) => {
-    const playerName = `PW-Refresh-${Date.now()}`;
+    const playerName = uniqueName("Refresh");
 
     await page.goto("./");
 
@@ -46,7 +47,7 @@ test.describe("player journey", () => {
   });
 
   test("leaderboard button opens leaderboard", async ({ page }) => {
-    const playerName = `PW-Leaderboard-${Date.now()}`;
+    const playerName = uniqueName("Leaderboard");
 
     await page.goto("./");
 
@@ -78,7 +79,7 @@ test.describe("player journey", () => {
       errors.push(error.message);
     });
 
-    const playerName = `PW-Errors-${Date.now()}`;
+    const playerName = uniqueName("Errors");
 
     await page.goto("./");
 

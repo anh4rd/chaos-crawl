@@ -1,18 +1,19 @@
-import { expect, test, type BrowserContext } from "@playwright/test";
+import type { BrowserContext } from "@playwright/test";
+import { test, expect } from "../support/liveFixture";
 import {
   uniqueName,
   safeCloseContext,
   joinPlayer,
   type TestPlayer,
-} from "./support/livePlayers";
+} from "../support/livePlayers";
 import {
   openAdmin,
   openPlayersTab,
   expectPlayerVisible,
   verifyPlayerWithFreshAdmin,
   clickLeaderboard,
-} from "./support/liveNavigation";
-import { attachErrorTracker } from "./support/runtimeErrors";
+} from "../support/liveNavigation";
+import { attachErrorTracker } from "../support/runtimeErrors";
 
 test.describe("multi-player event flow", () => {
   test.setTimeout(90_000);

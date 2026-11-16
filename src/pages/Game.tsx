@@ -16,7 +16,7 @@ import { usePlayers } from "../game/hooks/usePlayers";
 
 import { useChallenges } from "../game/hooks/useChallenges";
 
-import { getPlayerId } from "../lib/playerSession";
+import { usePlayerSession } from "../game/hooks/usePlayerSession";
 
 import { useChallengeParticipation } from "../game/hooks/useChallengeParticipation";
 import ScheduledCountdown from "../features/ScheduledCountdown";
@@ -45,7 +45,8 @@ export default function Game() {
   const scoresQuery = useScoreEvents();
   const navigate = useNavigate();
 
-  const playerId = getPlayerId();
+  const session = usePlayerSession();
+  const playerId = session.playerId;
   const currentPlayer = players.find((player) => player.id === playerId);
   const participation = useChallengeParticipation(
     currentPlayer,
@@ -61,8 +62,11 @@ export default function Game() {
         ? "/slideshow"
         : null;
   useEffect(() => {
-    if (screenRoute) navigate(screenRoute, { replace: true });
-  }, [screenRoute, navigate]);
+    if (screenRoute && !session.error) navigate(screenRoute, { replace: true });
+  }, [screenRoute, navigate, session.error]);
+
+  if (session.error)
+    return <DataError error={session.error} retry={session.reload} />;
 
   const queries = [
     gameQuery,

@@ -5,7 +5,10 @@ import type { GameControls } from "./gameControlTypes";
 export default function ScreenControls({
   controls,
 }: {
-  controls: GameControls;
+  controls: Pick<
+    GameControls,
+    "game" | "navigate" | "startSlideshow" | "stopSlideshow"
+  >;
 }) {
   const { game, navigate, startSlideshow, stopSlideshow } = controls;
   return (

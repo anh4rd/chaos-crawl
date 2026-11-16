@@ -29,27 +29,39 @@ Supabase Realtime.
 
 ## Commands
 
-| Command                                   | Purpose                                                       |
-| ----------------------------------------- | ------------------------------------------------------------- |
-| `npm run dev`                             | Start the local development server                            |
-| `npm run build`                           | Check strict TypeScript contracts and build production assets |
-| `npm run preview`                         | Serve the production build locally                            |
-| `npm run lint`                            | Check application and unit-test code with Oxlint              |
-| `npm test`                                | Run deterministic unit and component regression tests         |
-| `npm run test:watch`                      | Run unit tests in watch mode                                  |
-| `npm run format`                          | Format source, tests, configuration, and this document        |
-| `npm run format:check`                    | Check formatting                                              |
-| `npm run test:e2e -- tests/smoke.spec.ts` | Test actual hash routes with a mocked backend                 |
-| `npm run test:e2e`                        | Run all browser tests, including live database flows          |
-| `npm run test:e2e:ui`                     | Open Playwright's interactive test runner                     |
-| `npm run test:e2e:headed`                 | Run browser tests in visible browsers                         |
-| `npm run test:e2e:report`                 | Open the last browser test report                             |
-| `npm run deploy`                          | Build and publish `dist` to GitHub Pages                      |
+| Command                                   | Purpose                                                              |
+| ----------------------------------------- | -------------------------------------------------------------------- |
+| `npm run dev`                             | Start the local development server                                   |
+| `npm run build`                           | Check strict TypeScript contracts and build production assets        |
+| `npm run preview`                         | Serve the production build locally                                   |
+| `npm run lint`                            | Check application and unit-test code with Oxlint                     |
+| `npm test`                                | Run deterministic unit and component regression tests                |
+| `npm run test:watch`                      | Run unit tests in watch mode                                         |
+| `npm run format`                          | Format source, tests, configuration, and this document               |
+| `npm run format:check`                    | Check formatting                                                     |
+| `npm run test:e2e -- tests/smoke.spec.ts` | Test actual hash routes with a mocked backend                        |
+| `npm run test:e2e`                        | Run deterministic desktop/mobile browser tests with a mocked backend |
+| `npm run test:e2e:live`                   | Explicitly run live journeys against a disposable test backend       |
+| `npm run test:e2e:ui`                     | Open Playwright's interactive test runner                            |
+| `npm run test:e2e:headed`                 | Run browser tests in visible browsers                                |
+| `npm run test:e2e:report`                 | Open the last browser test report                                    |
+| `npm run deploy`                          | Build and publish `dist` to GitHub Pages                             |
 
 Playwright starts Vite automatically. Install its browser once with
-`npx playwright install chromium`. The smoke suite mocks database reads and
-Realtime connections and does not write live data. The other browser suites
-create players in the configured database; use a dedicated test project for them.
+`npx playwright install chromium`. The default suite mocks database reads and
+Realtime connections and never writes live data. `PLAYWRIGHT_PORT` can select
+an unused local server port.
+
+Live journeys are isolated under `tests/live` and require explicit
+`SUPABASE_TEST_URL` and `SUPABASE_TEST_ANON_KEY` environment values for a
+disposable backend, followed by `npm run test:e2e:live`. They start their own Vite
+server using those values, rather than reusing a developer server. The backend
+must contain the application's tables and `game_state` row with ID1. A per-test
+fixture snapshots and seeds the shared screen flags, restores them after each
+journey, and deletes only players named with that invocation's random UUID
+prefix. Setup and cleanup failures fail the test. No live journeys are run by
+`npm run test:e2e`, and no live backend is needed for local unit or default browser
+regressions.
 
 ## Application boundaries
 

@@ -15,7 +15,7 @@ export default function TeamsTab() {
     newTeamName,
     setNewTeamName,
     creatingTeam,
-    assigningPlayerId,
+    assigningPlayerIds,
     createTeam,
     assignTeam,
   } = useTeamManagement({ reloadTeams: loadTeams, reloadPlayers });
@@ -67,7 +67,8 @@ export default function TeamsTab() {
 
                 <select
                   value={player.team ?? ""}
-                  disabled={assigningPlayerId === player.id}
+                  aria-label={`Team for ${player.name}`}
+                  disabled={assigningPlayerIds.has(player.id)}
                   onChange={(event) => {
                     void assignTeam(player.id, event.target.value);
                   }}

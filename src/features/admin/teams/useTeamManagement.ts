@@ -11,9 +11,10 @@ export function useTeamManagement({
 }) {
   const [newTeamName, setNewTeamName] = useState("");
   const [creatingTeam, setCreatingTeam] = useState(false);
-  const [assigningPlayerId, setAssigningPlayerId] = useState<string | null>(
-    null,
+  const [assigningPlayerIds, setAssigningPlayerIds] = useState<Set<string>>(
+    () => new Set(),
   );
+  const pendingAssignments = useRef(new Set<string>());
   const creating = useRef(false);
   async function createTeam() {
     const name = newTeamName.trim();
@@ -38,7 +39,9 @@ export function useTeamManagement({
     }
   }
   async function assignTeam(playerId: string, teamName: string) {
-    setAssigningPlayerId(playerId);
+    if (pendingAssignments.current.has(playerId)) return;
+    pendingAssignments.current.add(playerId);
+    setAssigningPlayerIds(new Set(pendingAssignments.current));
     try {
       const { error } = await changeTeam(playerId, teamName);
       if (error) {
@@ -51,14 +54,15 @@ export function useTeamManagement({
         `Could not assign team: ${cause instanceof Error ? cause.message : "Unexpected error"}`,
       );
     } finally {
-      setAssigningPlayerId(null);
+      pendingAssignments.current.delete(playerId);
+      setAssigningPlayerIds(new Set(pendingAssignments.current));
     }
   }
   return {
     newTeamName,
     setNewTeamName,
     creatingTeam,
-    assigningPlayerId,
+    assigningPlayerIds,
     createTeam,
     assignTeam,
   };
