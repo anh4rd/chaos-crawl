@@ -1,1 +1,0 @@
-import{t as e}from"./supabase-Co7fYmdc.js";import{t}from"./useRealtimeQuery-DeIwKqi9.js";var n=[],r=t=>e.from(`pubs`).select(`*`).order(`sort_order`,{ascending:!0}).abortSignal(t);function i(){return t(`pubs`,r,n)}export{i as t};

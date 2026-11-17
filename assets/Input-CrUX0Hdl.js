@@ -1,1 +1,0 @@
-import{t as e}from"./index-Djq2SFQA.js";var t=e();function n({className:e=``,...n}){return(0,t.jsx)(`input`,{...n,className:`w-full rounded-2xl border-4 border-pink-500 bg-white p-4 text-black ${e}`.trim()})}export{n as t};
