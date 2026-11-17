@@ -1,0 +1,2876 @@
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+} from "react";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
+import {
+  CheckCircle2,
+  Gamepad2,
+  LoaderCircle,
+  RotateCcw,
+  Trophy,
+  ClipboardList,
+  Users,
+  Crown,
+  Upload,
+  Heart,
+  Film,
+  Flag,
+  Check,
+} from "lucide-react";
+import { supabase } from "../lib/sessionSupabase";
+import { challengeIcon } from "../lib/challengeVisuals";
+import SessionMainChallengeCard from "../components/session/SessionMainChallengeCard";
+import {
+  SessionGameTitlebar,
+  SessionPlayerProfile,
+} from "../components/session/SessionGameChrome";
+import "../styles/PlayerGame.css";
+import GuidedTour, { type GuidedTourStep } from "../components/tour/GuidedTour";
+
+type SessionStatus = "lobby" | "live" | "completed";
+interface SessionInfo {
+  id: string;
+  name: string;
+  venue_name: string | null;
+  join_code: string;
+  status: SessionStatus;
+  current_round_number: number;
+  round_count: number;
+  teams_enabled: boolean;
+  host_chooses_teams: boolean;
+  team_size: number;
+  player_limit: number;
+  final_gallery_open: boolean;
+  final_voting_open: boolean;
+  final_vote_completed_at: string | null;
+  final_vote_winner_player_id: string | null;
+  final_vote_winner_evidence_id: string | null;
+  final_vote_winner_points: number;
+  final_vote_winner_vote_count: number;
+}
+interface SessionPlayerInfo {
+  id: string;
+  name: string;
+  avatar_url: string | null;
+  score: number;
+  team_id: string | null;
+  team_name: string | null;
+}
+interface TeamInfo {
+  id: string;
+  name: string;
+  member_count: number;
+}
+interface LeaderboardEntry {
+  player_id: string;
+  name: string;
+  score: number;
+  team_id: string | null;
+  team_name: string | null;
+  avatar_url?: string | null;
+}
+type PlayerPage = "game" | "leaderboard" | "side-challenges" | "final";
+interface ChallengeInfo {
+  id: string;
+  kind: "main" | "side";
+  round_number?: number | null;
+  title: string;
+  description: string;
+  points: number;
+  duration_minutes: number;
+  allow_photo_upload: boolean;
+  submission_status: "submitted" | "approved" | "rejected" | null;
+  awarded_points: number;
+}
+interface SessionView {
+  session: SessionInfo;
+  player: SessionPlayerInfo;
+  teams: TeamInfo[];
+  challenge: ChallengeInfo | null;
+  side_challenges: ChallengeInfo[];
+  my_submissions: Array<{
+    challenge_id: string;
+    status: "submitted" | "approved" | "rejected";
+    awarded_points: number;
+  }>;
+}
+interface SharedGameTimer {
+  session_id: string;
+  round_number: number;
+  remaining_seconds: number;
+  is_running: boolean;
+  is_on_break: boolean;
+  resume_round_number: number | null;
+  break_ends_at: string | null;
+  updated_at: string;
+}
+interface SecretMission {
+  assignment_id: string;
+  challenge_id: string;
+  title: string;
+  description: string;
+  points: number;
+  duration_minutes: number;
+  status: "sent" | "submitted" | "approved" | "rejected";
+  scheduled_at: string;
+  sent_at: string | null;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  awarded_points: number;
+  allow_photo_upload: boolean;
+}
+interface SecretReviewMedia {
+  id: string;
+  media_type: "image" | "video";
+  storage_path: string;
+}
+interface SecretReviewVoter {
+  id: string;
+  name: string;
+  avatar_url: string | null;
+  vote: "success" | "fail";
+}
+interface SecretReviewLeaderboardEntry {
+  player_id: string;
+  name: string;
+  avatar_url: string | null;
+  team_id: string | null;
+  team_name: string | null;
+  score: number;
+}
+interface SecretReviewView {
+  open: boolean;
+  voting_open: boolean;
+  assignment_id: string | null;
+  current_evidence_id: string | null;
+  mission: {
+    assignment_id: string;
+    player_id: string;
+    player_name: string;
+    player_avatar_url: string | null;
+    title: string;
+    description: string;
+    points: number;
+    status: "pending" | "voting" | "results";
+  } | null;
+  media: SecretReviewMedia[];
+  votes_cast: number;
+  success_votes: number | null;
+  fail_votes: number | null;
+  my_vote: "success" | "fail" | null;
+  outcome: "success" | "fail" | null;
+  voters: SecretReviewVoter[];
+  leaderboard: SecretReviewLeaderboardEntry[];
+  my_final_reviews: Array<{
+    assignment_id: string;
+    outcome: "success" | "fail";
+    points_awarded: number;
+  }>;
+}
+interface SessionEvidence {
+  id: string;
+  session_id: string;
+  player_id: string;
+  challenge_id: string;
+  secret_assignment_id: string | null;
+  storage_path: string;
+  media_type: "image" | "video";
+  saved_for_final: boolean;
+  created_at: string;
+}
+interface FinalGalleryItem {
+  id: string;
+  player_id: string;
+  player_name: string;
+  player_avatar_url: string | null;
+  challenge_title: string;
+  challenge_kind: "side";
+  media_type: "image" | "video";
+  storage_path: string;
+  vote_count: number | null;
+  is_my_vote: boolean;
+  is_winner: boolean;
+  voters: Array<{ id: string; name: string; avatar_url: string | null }>;
+}
+interface PlayerRewardCandidate {
+  id: string;
+  name: string;
+  team_name: string | null;
+  score: number;
+  member_count: number | null;
+}
+interface PlayerRewardWinner {
+  id: string;
+  kind: "player" | "team";
+  name: string;
+  points: number;
+  votes: number;
+}
+interface PlayerRewardLeaderboardEntry {
+  id: string;
+  name: string;
+  score: number;
+  team_name: string | null;
+}
+interface PlayerRewardRound {
+  id: string;
+  challenge_id: string;
+  challenge_title: string;
+  method: "voting" | "host_awards" | "audience_cheers";
+  target_kind: "player" | "team";
+  points: number;
+  status: "open" | "completed";
+  votes_cast: number;
+  my_vote_player_id: string | null;
+  my_vote_team_id: string | null;
+  candidates: PlayerRewardCandidate[];
+  winners: PlayerRewardWinner[];
+  leaderboard: PlayerRewardLeaderboardEntry[];
+}
+interface FinalGalleryView {
+  gallery_open: boolean;
+  voting_open: boolean;
+  voting_completed: boolean;
+  sequence_completed: boolean;
+  challenge_id: string | null;
+  challenge_title: string | null;
+  challenge_description: string | null;
+  challenge_points: number;
+  challenge_status: "pending" | "voting" | "results" | null;
+  votes_cast: number;
+  my_vote_id: string | null;
+  items: FinalGalleryItem[];
+  leaderboard: LeaderboardEntry[];
+}
+function playerStorageKey(code: string) {
+  return `chaos-crawl-session-player:${code.replace(/\D/g, "")}`;
+}
+
+export default function SessionPlayerGame() {
+  const { joinCode = "", page: pageParam } = useParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const embeddedHostMode = searchParams.get("hostEmbed") === "1";
+  const focusChallengeId = searchParams.get("challengeId");
+  const activePage: PlayerPage =
+    pageParam === "leaderboard" ||
+    pageParam === "side-challenges" ||
+    pageParam === "final"
+      ? pageParam
+      : "game";
+  const code = joinCode.replace(/\D/g, "").slice(0, 6);
+  const [token, setToken] = useState(() =>
+    localStorage.getItem(playerStorageKey(code)),
+  );
+  const [view, setView] = useState<SessionView | null>(null);
+  const [secretMissions, setSecretMissions] = useState<SecretMission[]>([]);
+  const [secretReview, setSecretReview] = useState<SecretReviewView | null>(
+    null,
+  );
+  const [activeSecretMissionId, setActiveSecretMissionId] = useState<
+    string | null
+  >(null);
+  const [dismissedSecretMissionKeys, setDismissedSecretMissionKeys] = useState<
+    string[]
+  >([]);
+  const [dismissedSecretMissionCardIds, setDismissedSecretMissionCardIds] =
+    useState<string[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [playerRank, setPlayerRank] = useState<number | null>(null);
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [evidence, setEvidence] = useState<SessionEvidence[]>([]);
+  const [finalGallery, setFinalGalleryView] = useState<FinalGalleryView | null>(
+    null,
+  );
+  const [rewardRound, setRewardRound] = useState<PlayerRewardRound | null>(
+    null,
+  );
+  const [loading, setLoading] = useState(true);
+  const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [error, setError] = useState("");
+  const [teamName, setTeamName] = useState("");
+  const [gamePhotoUrl, setGamePhotoUrl] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [tourOpen, setTourOpen] = useState(false);
+  const [sharedTimer, setSharedTimer] = useState<SharedGameTimer | null>(null);
+  const [sharedTimerError, setSharedTimerError] = useState("");
+  const [timerReceivedAt, setTimerReceivedAt] = useState<number | null>(null);
+  const [timerNow, setTimerNow] = useState(() => performance.now());
+  const sharedTimerSnapshotKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    setToken(localStorage.getItem(playerStorageKey(code)));
+  }, [code]);
+
+  useEffect(() => {
+    const playerId = view?.player.id;
+    if (!playerId) return;
+    const storageKey = `chaos-crawl-dismissed-secret-missions:${code}:${playerId}`;
+    try {
+      const parsed = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
+      setDismissedSecretMissionCardIds(
+        Array.isArray(parsed) ? parsed.map(String) : [],
+      );
+    } catch {
+      setDismissedSecretMissionCardIds([]);
+    }
+  }, [code, view?.player.id]);
+
+  useEffect(() => {
+    if (!code) return;
+    let active = true;
+    setGamePhotoUrl(null);
+    void supabase
+      .rpc("cc_get_public_game_invite", { p_join_code: code })
+      .then(({ data, error: photoError }) => {
+        if (!active || photoError || !data) return;
+        const invite = data as { game_photo_url?: string | null };
+        setGamePhotoUrl(invite.game_photo_url ?? null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [code]);
+
+  const loadView = useCallback(async () => {
+    if (!code || !token) {
+      setLoading(false);
+      return;
+    }
+    let nextError = "";
+    const { data, error: viewError } = await supabase.rpc(
+      "cc_get_game_session_view",
+      {
+        p_join_code: code,
+        p_player_token: token,
+      },
+    );
+    if (viewError) {
+      setError(viewError.message);
+      setLoading(false);
+      return;
+    }
+    const currentView = data as SessionView | null;
+    if (currentView) {
+      setView(currentView);
+      setLastUpdated(new Date());
+    }
+
+    const { data: rewardData, error: rewardError } = await supabase.rpc(
+      "cc_player_get_session_reward_round",
+      {
+        p_join_code: code,
+        p_player_token: token,
+      },
+    );
+    if (rewardError) {
+      nextError = `Your game loaded, but reward points couldn't refresh: ${rewardError.message}`;
+    } else {
+      setRewardRound((rewardData ?? null) as PlayerRewardRound | null);
+    }
+
+    const { data: missionData, error: missionError } = await supabase.rpc(
+      "cc_get_player_secret_missions",
+      {
+        p_join_code: code,
+        p_player_token: token,
+      },
+    );
+    if (missionError) {
+      nextError = `Your game loaded, but secret missions couldn't refresh: ${missionError.message}`;
+    } else {
+      setSecretMissions((missionData ?? []) as SecretMission[]);
+    }
+
+    const { data: secretReviewData, error: secretReviewError } =
+      await supabase.rpc("cc_player_get_session_secret_review", {
+        p_join_code: code,
+        p_player_token: token,
+      });
+    if (secretReviewError) {
+      nextError =
+        nextError ||
+        `Secret mission review couldn't refresh: ${secretReviewError.message}`;
+    } else {
+      setSecretReview(secretReviewData as SecretReviewView);
+    }
+
+    const { data: evidenceData, error: evidenceError } = await supabase.rpc(
+      "cc_get_player_session_evidence",
+      {
+        p_join_code: code,
+        p_player_token: token,
+      },
+    );
+    if (evidenceError) {
+      nextError =
+        nextError || `Your uploads couldn't refresh: ${evidenceError.message}`;
+    } else {
+      setEvidence((evidenceData ?? []) as SessionEvidence[]);
+    }
+
+    if (activePage === "leaderboard") {
+      const { data: leaderboardData, error: leaderboardError } =
+        await supabase.rpc("cc_get_player_session_leaderboard", {
+          p_join_code: code,
+          p_player_token: token,
+        });
+      if (leaderboardError) {
+        nextError =
+          nextError ||
+          `The leaderboard couldn't refresh: ${leaderboardError.message}`;
+      } else {
+        setLeaderboard((leaderboardData ?? []) as LeaderboardEntry[]);
+      }
+    }
+
+    if (activePage === "final" || currentView?.session.final_gallery_open) {
+      const { data: galleryData, error: galleryError } = await supabase.rpc(
+        "cc_player_get_session_final_round_gallery",
+        {
+          p_join_code: code,
+          p_player_token: token,
+        },
+      );
+      if (galleryError) {
+        nextError =
+          nextError ||
+          `The final gallery couldn't refresh: ${galleryError.message}`;
+      } else {
+        const finalRoundData = galleryData as FinalGalleryView;
+        setFinalGalleryView(finalRoundData);
+        if (finalRoundData.voting_completed)
+          setLeaderboard(finalRoundData.leaderboard);
+      }
+    } else {
+      setFinalGalleryView(null);
+    }
+
+    setError(nextError);
+    setLoading(false);
+  }, [activePage, code, token]);
+
+  useEffect(() => {
+    if (!view) return;
+    const embeddedQuery = embeddedHostMode ? "?hostEmbed=1" : "";
+    if (view.session.final_gallery_open && activePage !== "final") {
+      navigate(`/play/${code}/final${embeddedQuery}`, { replace: true });
+    } else if (!view.session.final_gallery_open && activePage === "final") {
+      navigate(`/play/${code}/game${embeddedQuery}`, { replace: true });
+    }
+  }, [
+    activePage,
+    code,
+    embeddedHostMode,
+    navigate,
+    view?.session.final_gallery_open,
+  ]);
+
+  useEffect(() => {
+    let mounted = true;
+    const refresh = async () => {
+      if (mounted) await loadView();
+    };
+    void refresh();
+    const id = window.setInterval(() => {
+      if (mounted) void loadView();
+    }, 3000);
+    return () => {
+      mounted = false;
+      window.clearInterval(id);
+    };
+  }, [loadView]);
+
+  useEffect(() => {
+    const sessionId = view?.session.id;
+    if (
+      !sessionId ||
+      view?.session.status !== "live" ||
+      activePage !== "game"
+    ) {
+      setSharedTimer(null);
+      setSharedTimerError("");
+      setTimerReceivedAt(null);
+      sharedTimerSnapshotKey.current = null;
+      return;
+    }
+    let mounted = true;
+    let requestId = 0;
+    let latestAppliedRequestId = 0;
+    const refreshTimer = async () => {
+      const currentRequestId = ++requestId;
+      const { data, error: timerError } = await supabase
+        .from("cc_game_session_timers")
+        .select(
+          "session_id,round_number,remaining_seconds,is_running,is_on_break,resume_round_number,break_ends_at,updated_at",
+        )
+        .eq("session_id", sessionId)
+        .maybeSingle();
+      if (!mounted || currentRequestId < latestAppliedRequestId) return;
+      latestAppliedRequestId = currentRequestId;
+      if (timerError) {
+        setSharedTimerError(
+          "The shared timer is unavailable. Please ask the host to check the live timer connection.",
+        );
+        return;
+      }
+      setSharedTimerError("");
+      const nextTimer = (data as SharedGameTimer | null) ?? null;
+      const nextSnapshotKey = nextTimer
+        ? [
+            sessionId,
+            nextTimer.updated_at,
+            nextTimer.round_number,
+            nextTimer.remaining_seconds,
+            nextTimer.is_running,
+            nextTimer.is_on_break,
+            nextTimer.resume_round_number,
+            nextTimer.break_ends_at,
+          ].join(":")
+        : null;
+      if (nextSnapshotKey === sharedTimerSnapshotKey.current) return;
+      sharedTimerSnapshotKey.current = nextSnapshotKey;
+      const receivedAt = performance.now();
+      setSharedTimer(nextTimer);
+      setTimerReceivedAt(nextTimer ? receivedAt : null);
+      setTimerNow(receivedAt);
+    };
+    void refreshTimer();
+    const interval = window.setInterval(() => void refreshTimer(), 2000);
+    const timerChannel = supabase
+      .channel(`game-session-timer-${sessionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "cc_game_session_timers",
+          filter: `session_id=eq.${sessionId}`,
+        },
+        () => void refreshTimer(),
+      )
+      .subscribe();
+    return () => {
+      mounted = false;
+      window.clearInterval(interval);
+      void supabase.removeChannel(timerChannel);
+    };
+  }, [activePage, view?.session.id, view?.session.status]);
+
+  useEffect(() => {
+    if (!sharedTimer?.is_running) return;
+    const interval = window.setInterval(
+      () => setTimerNow(performance.now()),
+      1000,
+    );
+    return () => window.clearInterval(interval);
+  }, [sharedTimer?.is_running]);
+
+  useEffect(() => {
+    const playerId = view?.player.id;
+    if (
+      !playerId ||
+      activePage !== "game" ||
+      view?.session.status !== "live" ||
+      rewardRound ||
+      sharedTimer?.is_on_break
+    )
+      return;
+    const storageKey = `chaos-crawl-seen-secret-missions:${code}:${playerId}`;
+    let seenIds: string[] = [];
+    try {
+      const parsed = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
+      if (Array.isArray(parsed)) seenIds = parsed.map(String);
+    } catch {
+      /* Use in-memory dismissal if local storage is unavailable. */
+    }
+    const seen = new Set([
+      ...seenIds,
+      ...dismissedSecretMissionKeys
+        .filter((key) => key.startsWith(`${storageKey}:`))
+        .map((key) => key.slice(storageKey.length + 1)),
+    ]);
+    const unseenMission = secretMissions.find(
+      (mission) => !seen.has(mission.assignment_id),
+    );
+    setActiveSecretMissionId(unseenMission?.assignment_id ?? null);
+  }, [
+    activePage,
+    code,
+    dismissedSecretMissionKeys,
+    rewardRound,
+    secretMissions,
+    sharedTimer?.is_on_break,
+    view?.player.id,
+    view?.session.status,
+  ]);
+
+  useEffect(() => {
+    if (!code || !token || !view?.player.id) return;
+    let live = true;
+    const refreshRank = async () => {
+      const { data, error: rankError } = await supabase.rpc(
+        "cc_get_player_session_leaderboard",
+        {
+          p_join_code: code,
+          p_player_token: token,
+        },
+      );
+      if (rankError || !live) return;
+      const entries = (data ?? []) as LeaderboardEntry[];
+      const index = entries.findIndex(
+        (entry) => entry.player_id === view.player.id,
+      );
+      setPlayerRank(index >= 0 ? index + 1 : null);
+    };
+    void refreshRank();
+    const interval = window.setInterval(() => void refreshRank(), 15000);
+    return () => {
+      live = false;
+      window.clearInterval(interval);
+    };
+  }, [code, token, view?.player.id]);
+
+  useEffect(() => {
+    if (activePage !== "side-challenges" || !focusChallengeId) return;
+    const frame = window.requestAnimationFrame(() => {
+      document
+        .getElementById(`cc-side-challenge-${focusChallengeId}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activePage, focusChallengeId, view?.side_challenges.length]);
+
+  async function voteInRewardRound(candidateId: string) {
+    if (
+      !rewardRound ||
+      !token ||
+      !code ||
+      busyKey !== null ||
+      rewardRound.status !== "open"
+    )
+      return;
+    setBusyKey("reward-vote");
+    setError("");
+    const { error: voteError } = await supabase.rpc(
+      "cc_player_cast_session_reward_vote",
+      {
+        p_join_code: code,
+        p_player_token: token,
+        p_reward_round_id: rewardRound.id,
+        p_target_player_id:
+          rewardRound.target_kind === "player" ? candidateId : null,
+        p_target_team_id:
+          rewardRound.target_kind === "team" ? candidateId : null,
+      },
+    );
+    setBusyKey(null);
+    if (voteError) {
+      setError(voteError.message);
+      return;
+    }
+    await loadView();
+  }
+
+  const currentSubmission = useMemo(() => {
+    if (!view?.challenge) return null;
+    return (
+      view.my_submissions.find(
+        (item) => item.challenge_id === view.challenge?.id,
+      ) ?? null
+    );
+  }, [view]);
+  const navigatePlayerTour = useCallback(
+    (page: string) => {
+      if (page !== activePage) navigate(`/play/${code}/${page}`);
+    },
+    [activePage, code, navigate],
+  );
+
+  function mediaUrl(path: string) {
+    return supabase.storage.from("session-evidence").getPublicUrl(path).data
+      .publicUrl;
+  }
+
+  function evidenceForChallenge(challengeId: string) {
+    return evidence.filter(
+      (item) =>
+        item.challenge_id === challengeId && item.secret_assignment_id === null,
+    );
+  }
+
+  function evidenceForSecret(assignmentId: string) {
+    return evidence.filter(
+      (item) => item.secret_assignment_id === assignmentId,
+    );
+  }
+
+  async function uploadEvidence(
+    event: ChangeEvent<HTMLInputElement>,
+    parent:
+      | { type: "challenge"; challenge: ChallengeInfo }
+      | { type: "secret"; mission: SecretMission },
+  ) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    input.value = "";
+    if (!file || !view || !token || !code) return;
+
+    // Some browsers (notably on mobile) leave File.type blank for HEIC/MOV and other media.
+    // Infer the type from the extension as a fallback so valid photos/videos are not rejected.
+    const extFromName = file.name.includes(".")
+      ? (file.name.split(".").pop()?.toLowerCase() ?? "")
+      : "";
+    const imageExtensions = new Set([
+      "jpg",
+      "jpeg",
+      "png",
+      "gif",
+      "webp",
+      "avif",
+      "heic",
+      "heif",
+      "bmp",
+      "tif",
+      "tiff",
+    ]);
+    const videoExtensions = new Set([
+      "mp4",
+      "mov",
+      "qt",
+      "webm",
+      "ogg",
+      "ogv",
+      "3gp",
+      "3g2",
+      "m4v",
+      "mpeg",
+      "mpg",
+      "mp2",
+      "avi",
+      "mkv",
+      "wmv",
+      "flv",
+      "ts",
+      "mts",
+      "m2ts",
+      "asf",
+    ]);
+    const mime = (file.type || "").toLowerCase();
+    const mediaType = mime.startsWith("video/")
+      ? "video"
+      : mime.startsWith("image/")
+        ? "image"
+        : videoExtensions.has(extFromName)
+          ? "video"
+          : imageExtensions.has(extFromName)
+            ? "image"
+            : null;
+    if (!mediaType) {
+      setError(
+        "Choose a supported image or video (JPG, PNG, HEIC, MP4, MOV, WebM, and similar formats).",
+      );
+      return;
+    }
+    const maxBytes = 100 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setError(
+        "Files must be 100 MB or smaller. Try a shorter or compressed video.",
+      );
+      return;
+    }
+    if (file.size === 0) {
+      setError("That file is empty. Choose another photo or video.");
+      return;
+    }
+
+    const parentKey =
+      parent.type === "challenge"
+        ? parent.challenge.id
+        : parent.mission.assignment_id;
+    if (
+      parent.type === "challenge" &&
+      parent.challenge.submission_status === "approved"
+    ) {
+      setError(
+        "This challenge has already been approved, so no more evidence can be added.",
+      );
+      return;
+    }
+    if (parent.type === "secret") {
+      const finalReview = secretReview?.my_final_reviews.find(
+        (item) => item.assignment_id === parent.mission.assignment_id,
+      );
+      if (parent.mission.status === "approved" || finalReview) {
+        setError(
+          "This secret mission has a final result, so no more evidence can be added.",
+        );
+        return;
+      }
+    }
+
+    const allowedExtensions = new Set([
+      "jpg",
+      "jpeg",
+      "png",
+      "gif",
+      "webp",
+      "avif",
+      "heic",
+      "heif",
+      "bmp",
+      "tif",
+      "tiff",
+      "mp4",
+      "mov",
+      "qt",
+      "webm",
+      "ogg",
+      "ogv",
+      "3gp",
+      "3g2",
+      "m4v",
+      "mpeg",
+      "mpg",
+      "mp2",
+      "avi",
+      "mkv",
+      "wmv",
+      "flv",
+      "ts",
+      "mts",
+      "m2ts",
+      "asf",
+    ]);
+    const mimeExtension = mime.includes("quicktime")
+      ? "mov"
+      : mime.includes("matroska")
+        ? "mkv"
+        : mime.includes("msvideo")
+          ? "avi"
+          : mime.includes("ms-wmv")
+            ? "wmv"
+            : mime.includes("x-flv")
+              ? "flv"
+              : mime.includes("mp2t")
+                ? "ts"
+                : mime.includes("webm")
+                  ? "webm"
+                  : mime.includes("ogg")
+                    ? "ogv"
+                    : mime.includes("3gpp2")
+                      ? "3g2"
+                      : mime.includes("3gpp")
+                        ? "3gp"
+                        : mime.includes("m4v")
+                          ? "m4v"
+                          : mime.includes("mpeg")
+                            ? "mpeg"
+                            : mime.includes("mp4")
+                              ? "mp4"
+                              : mime.includes("x-ms-asf") ||
+                                  mime.includes("asf")
+                                ? "asf"
+                                : mime.includes("png")
+                                  ? "png"
+                                  : mime.includes("gif")
+                                    ? "gif"
+                                    : mime.includes("webp")
+                                      ? "webp"
+                                      : mime.includes("avif")
+                                        ? "avif"
+                                        : mime.includes("heic")
+                                          ? "heic"
+                                          : mime.includes("heif")
+                                            ? "heif"
+                                            : mime.includes("bmp")
+                                              ? "bmp"
+                                              : mime.includes("tiff")
+                                                ? "tiff"
+                                                : mediaType === "video"
+                                                  ? "mp4"
+                                                  : "jpg";
+    const extIsCompatible =
+      mediaType === "video"
+        ? videoExtensions.has(extFromName)
+        : imageExtensions.has(extFromName);
+    const ext =
+      extIsCompatible && allowedExtensions.has(extFromName)
+        ? extFromName
+        : mimeExtension;
+    const fallbackMimeByExtension: Record<string, string> = {
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      png: "image/png",
+      gif: "image/gif",
+      webp: "image/webp",
+      avif: "image/avif",
+      heic: "image/heic",
+      heif: "image/heif",
+      bmp: "image/bmp",
+      tif: "image/tiff",
+      tiff: "image/tiff",
+      mp4: "video/mp4",
+      mov: "video/quicktime",
+      qt: "video/quicktime",
+      webm: "video/webm",
+      ogg: "video/ogg",
+      ogv: "video/ogg",
+      "3gp": "video/3gpp",
+      "3g2": "video/3gpp2",
+      m4v: "video/x-m4v",
+      mpeg: "video/mpeg",
+      mpg: "video/mpeg",
+      mp2: "video/mpeg",
+      avi: "video/x-msvideo",
+      mkv: "video/x-matroska",
+      wmv: "video/x-ms-wmv",
+      flv: "video/x-flv",
+      ts: "video/mp2t",
+      mts: "video/mp2t",
+      m2ts: "video/mp2t",
+      asf: "video/x-ms-asf",
+    };
+    const allowedStorageMimeTypes = new Set(
+      Object.values(fallbackMimeByExtension),
+    );
+    const uploadContentType =
+      allowedStorageMimeTypes.has(mime) &&
+      ((mediaType === "video" && mime.startsWith("video/")) ||
+        (mediaType === "image" && mime.startsWith("image/")))
+        ? file.type
+        : (fallbackMimeByExtension[ext] ??
+          (mediaType === "video" ? "video/mp4" : "image/jpeg"));
+    const storagePath = `${view.session.id}/${view.player.id}/${crypto.randomUUID()}.${ext}`;
+
+    setBusyKey(`upload:${parentKey}`);
+    setError("");
+    const { error: storageError } = await supabase.storage
+      .from("session-evidence")
+      .upload(storagePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: uploadContentType,
+      });
+    if (storageError) {
+      setBusyKey(null);
+      setError(
+        `Upload failed: ${storageError.message}. Check the session-evidence Storage bucket and its upload policy.`,
+      );
+      return;
+    }
+
+    const { error: registerError } = await supabase.rpc(
+      "cc_player_add_session_evidence",
+      {
+        p_join_code: code,
+        p_player_token: token,
+        p_challenge_id:
+          parent.type === "challenge"
+            ? parent.challenge.id
+            : parent.mission.challenge_id,
+        p_secret_assignment_id:
+          parent.type === "secret" ? parent.mission.assignment_id : null,
+        p_storage_path: storagePath,
+        p_media_type: mediaType,
+      },
+    );
+    setBusyKey(null);
+    if (registerError) {
+      setError(
+        `The file uploaded but couldn't be attached to this task: ${registerError.message}`,
+      );
+      return;
+    }
+    setError("");
+    await loadView();
+  }
+
+  async function voteForFinalMedia(item: FinalGalleryItem) {
+    if (!token || !code) return;
+    setBusyKey(`vote:${item.id}`);
+    setError("");
+    const { error: voteError } = await supabase.rpc(
+      "cc_player_cast_session_final_round_vote",
+      {
+        p_join_code: code,
+        p_player_token: token,
+        p_evidence_id: item.id,
+      },
+    );
+    setBusyKey(null);
+    if (voteError) {
+      setError(voteError.message);
+      return;
+    }
+    await loadView();
+  }
+
+  async function chooseTeam(teamId: string) {
+    if (!token || !code) return;
+    setBusyKey(`team:${teamId}`);
+    setError("");
+    const { error: chooseError } = await supabase.rpc(
+      "cc_player_choose_session_team",
+      {
+        p_join_code: code,
+        p_player_token: token,
+        p_team_id: teamId,
+      },
+    );
+    setBusyKey(null);
+    if (chooseError) {
+      setError(chooseError.message);
+      return;
+    }
+    await loadView();
+  }
+
+  async function createTeam(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!token || !code || !teamName.trim()) return;
+    setBusyKey("create-team");
+    setError("");
+    const { error: createError } = await supabase.rpc(
+      "cc_player_create_session_team",
+      {
+        p_join_code: code,
+        p_player_token: token,
+        p_team_name: teamName.trim(),
+      },
+    );
+    setBusyKey(null);
+    if (createError) {
+      setError(createError.message);
+      return;
+    }
+    setTeamName("");
+    await loadView();
+  }
+
+  async function submitChallenge(challenge: ChallengeInfo) {
+    if (!token || !code) return;
+    if (
+      (challenge.kind === "side" || challenge.allow_photo_upload) &&
+      evidenceForChallenge(challenge.id).length === 0
+    ) {
+      setError(
+        "Upload at least one photo or video before marking this challenge complete.",
+      );
+      return;
+    }
+    setBusyKey(challenge.id);
+    setError("");
+    const { error: submitError } = await supabase.rpc(
+      "cc_player_submit_session_challenge",
+      {
+        p_join_code: code,
+        p_player_token: token,
+        p_challenge_id: challenge.id,
+      },
+    );
+    setBusyKey(null);
+    if (submitError) {
+      setError(submitError.message);
+      return;
+    }
+    await loadView();
+  }
+
+  async function submitSecretMission(mission: SecretMission) {
+    if (!token || !code) return;
+    if (
+      secretReview?.my_final_reviews.some(
+        (item) => item.assignment_id === mission.assignment_id,
+      )
+    ) {
+      setError(
+        "This secret mission has already received a final review result.",
+      );
+      return;
+    }
+    if (
+      mission.allow_photo_upload &&
+      evidenceForSecret(mission.assignment_id).length === 0
+    ) {
+      setError(
+        "Upload at least one photo or video before submitting this secret mission.",
+      );
+      return;
+    }
+    setBusyKey(mission.assignment_id);
+    setError("");
+    const { error: submitError } = await supabase.rpc(
+      "cc_player_submit_secret_mission",
+      {
+        p_join_code: code,
+        p_player_token: token,
+        p_assignment_id: mission.assignment_id,
+      },
+    );
+    setBusyKey(null);
+    if (submitError) {
+      setError(submitError.message);
+      return;
+    }
+    await loadView();
+  }
+
+  async function voteOnSecretReview(vote: "success" | "fail") {
+    if (
+      !token ||
+      !code ||
+      !secretReview?.assignment_id ||
+      !secretReview.voting_open
+    )
+      return;
+    setBusyKey("secret-review-vote");
+    setError("");
+    const { error: voteError } = await supabase.rpc(
+      "cc_player_cast_secret_review_vote",
+      {
+        p_join_code: code,
+        p_player_token: token,
+        p_assignment_id: secretReview.assignment_id,
+        p_vote: vote,
+      },
+    );
+    setBusyKey(null);
+    if (voteError) {
+      setError(voteError.message);
+      return;
+    }
+    await loadView();
+  }
+
+  function playSecretMission(mission: SecretMission) {
+    const playerId = view?.player.id;
+    if (!playerId) return;
+    const storageKey = `chaos-crawl-seen-secret-missions:${code}:${playerId}`;
+    const dismissalKey = `${storageKey}:${mission.assignment_id}`;
+    setDismissedSecretMissionKeys((keys) =>
+      keys.includes(dismissalKey) ? keys : [...keys, dismissalKey],
+    );
+    try {
+      const parsed = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
+      const seenIds = Array.isArray(parsed) ? parsed.map(String) : [];
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify([...new Set([...seenIds, mission.assignment_id])]),
+      );
+    } catch {
+      /* The mission remains dismissed for this visit. */
+    }
+    setActiveSecretMissionId(null);
+  }
+
+  function dismissCompletedSecretMission(mission: SecretMission) {
+    const playerId = view?.player.id;
+    if (!playerId) return;
+    const storageKey = `chaos-crawl-dismissed-secret-missions:${code}:${playerId}`;
+    const nextIds = [
+      ...new Set([...dismissedSecretMissionCardIds, mission.assignment_id]),
+    ];
+    setDismissedSecretMissionCardIds(nextIds);
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(nextIds));
+    } catch {
+      setError(
+        "The mission was dismissed for this visit, but the dismissal couldn't be saved on this device.",
+      );
+    }
+    playSecretMission(mission);
+  }
+
+  async function copyGameCode() {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopiedCode(true);
+      window.setTimeout(() => setCopiedCode(false), 1800);
+    } catch {
+      setError("Copy isn't available in this browser. Game code: " + code);
+    }
+  }
+
+  if (!token) {
+    return (
+      <main className="cc-player-auth">
+        <section className="cc-player-auth-card">
+          <h1>Rejoin the chaos</h1>
+          <p>Enter the game code and the mobile number you used to join.</p>
+          <Link
+            className="cc-player-primary-button"
+            to={`/join?code=${code}&returning=1`}
+          >
+            Rejoin game
+          </Link>
+        </section>
+      </main>
+    );
+  }
+
+  if (loading && !view) {
+    return (
+      <main
+        className={`cc-session-player-app${embeddedHostMode ? " cc-player-embedded" : ""}`}
+      >
+        <div className="cc-player-loading">
+          <LoaderCircle className="cc-spin" size={26} /> Loading your game…
+        </div>
+      </main>
+    );
+  }
+
+  if (!view) {
+    return (
+      <main className="cc-player-auth">
+        <section className="cc-player-auth-card">
+          <div className="cc-player-mascot">?</div>
+          <h1>We lost your place.</h1>
+          <p>{error || "Your saved player session could not be found."}</p>
+          <Link
+            className="cc-player-primary-button"
+            to={`/join?code=${code}&returning=1`}
+          >
+            Rejoin with mobile number
+          </Link>
+        </section>
+      </main>
+    );
+  }
+
+  const {
+    session,
+    player,
+    teams,
+    challenge,
+    side_challenges: sideChallenges,
+  } = view;
+  const finalRoundTakeover =
+    activePage === "final" && session.final_gallery_open;
+  const secretReviewTakeover = Boolean(
+    secretReview?.open && secretReview.mission,
+  );
+  const playerTourSteps: GuidedTourStep[] = [
+    {
+      target: '[data-tour="player-profile"]',
+      title: "Your player card",
+      body: "Your avatar, team and points live here. Your score updates as approved challenges and reward rounds are completed.",
+      page: "game",
+    },
+    {
+      target: '[data-tour="player-navigation"]',
+      title: "Move around the game",
+      body: "Use these tabs to switch between your current challenge, the leaderboard, side challenges and the final vote when it opens.",
+      page: "game",
+    },
+    {
+      target: '[data-tour="player-challenge"]',
+      title: "Your main challenge",
+      body: "Read the task, instructions and time allowance. The evidence label tells you whether a photo or video is required before you can submit.",
+      page: "game",
+    },
+    {
+      target: '[data-tour="player-upload"]',
+      title: "Upload and submit",
+      body: "Tap the upload control to add a photo or video. Once you've completed the task, mark it complete; your host reviews it before any main-challenge points are awarded.",
+      page: "game",
+    },
+    {
+      target: '[data-tour="player-leaderboard"]',
+      title: "Track the leaderboard",
+      body: "See how you rank against other players and how your team is doing. Scores refresh as the host approves work and awards points.",
+      page: "leaderboard",
+    },
+    {
+      target: '[data-tour="player-side-challenges"]',
+      title: "Find extra challenges",
+      body: "Complete a side challenge and upload evidence to receive 5 points automatically. Tied top submissions also receive the challenge bonus.",
+      page: "side-challenges",
+    },
+    ...(session.final_gallery_open
+      ? [
+          {
+            target: '[data-tour="player-final"]',
+            title: "Vote in the final gallery",
+            body: "The host opens one side challenge at a time. Vote for a favourite, then review the vote counts, voter identities and updated leaderboard after the host closes voting.",
+            page: "final",
+          },
+        ]
+      : []),
+  ];
+  const teamSelectionAllowed =
+    session.teams_enabled &&
+    !session.host_chooses_teams &&
+    (session.status === "lobby" ||
+      (session.status === "live" && !player.team_id));
+  const teamLeaderboard = teams
+    .map((team) => ({
+      ...team,
+      score: leaderboard
+        .filter((entry) => entry.team_id === team.id)
+        .reduce((total, entry) => total + entry.score, 0),
+    }))
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+  const activeSecretMission =
+    secretMissions.find(
+      (mission) => mission.assignment_id === activeSecretMissionId,
+    ) ?? null;
+  const visibleSecretMissions = secretMissions.filter(
+    (mission) => !dismissedSecretMissionCardIds.includes(mission.assignment_id),
+  );
+  const sharedTimerSeconds =
+    sharedTimer &&
+    (sharedTimer.is_on_break ||
+      sharedTimer.round_number === session.current_round_number)
+      ? Math.max(
+          0,
+          sharedTimer.remaining_seconds -
+            (sharedTimer.is_running && timerReceivedAt !== null
+              ? Math.floor((timerNow - timerReceivedAt) / 1000)
+              : 0),
+        )
+      : Math.max(0, Number(challenge?.duration_minutes ?? 0) * 60);
+  const sharedTimerLabel = `${Math.floor(sharedTimerSeconds / 60)
+    .toString()
+    .padStart(
+      2,
+      "0",
+    )}:${(sharedTimerSeconds % 60).toString().padStart(2, "0")}`;
+
+  return (
+    <main
+      className={`cc-session-player-app${embeddedHostMode ? " cc-player-embedded" : ""}${finalRoundTakeover ? " cc-player-final-takeover" : ""}${secretReviewTakeover ? " cc-player-secret-review-active" : ""}`}
+    >
+      {secretReviewTakeover && secretReview?.mission && (
+        <section
+          className="cc-player-secret-review-backdrop"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cc-secret-review-title"
+        >
+          <div className="cc-player-secret-review">
+            <span className="cc-player-secret-review-kicker">
+              SECRET MISSION REVIEW
+            </span>
+            <div className="cc-player-secret-review-owner">
+              {secretReview.mission.player_avatar_url ? (
+                <img src={secretReview.mission.player_avatar_url} alt="" />
+              ) : (
+                <span>
+                  {secretReview.mission.player_name.slice(0, 1).toUpperCase()}
+                </span>
+              )}
+              <strong>{secretReview.mission.player_name}'s mission</strong>
+            </div>
+            <h1 id="cc-secret-review-title">{secretReview.mission.title}</h1>
+            <p className="cc-player-secret-review-description">
+              {secretReview.mission.description}
+            </p>
+            {secretReview.media.length > 0 ? (
+              <div className="cc-player-secret-review-media">
+                {secretReview.media.map((item) =>
+                  item.media_type === "video" ? (
+                    <video
+                      key={item.id}
+                      src={mediaUrl(item.storage_path)}
+                      controls
+                      playsInline
+                      preload="metadata"
+                    />
+                  ) : (
+                    <img
+                      key={item.id}
+                      src={mediaUrl(item.storage_path)}
+                      alt={`Evidence for ${secretReview.mission?.title ?? "secret mission"}`}
+                    />
+                  ),
+                )}
+              </div>
+            ) : (
+              <div className="cc-player-secret-review-text-slide">
+                No photo or video submitted for this mission.
+              </div>
+            )}
+            {secretReview.voting_open ? (
+              <>
+                <p className="cc-player-secret-review-votes" aria-live="polite">
+                  {secretReview.votes_cast} vote
+                  {secretReview.votes_cast === 1 ? "" : "s"} cast · results
+                  appear when the host closes voting
+                </p>
+                <div className="cc-player-secret-review-actions">
+                  <button
+                    type="button"
+                    className={
+                      secretReview.my_vote === "success" ? "is-selected" : ""
+                    }
+                    disabled={busyKey !== null}
+                    onClick={() => void voteOnSecretReview("success")}
+                  >
+                    {busyKey === "secret-review-vote" ? (
+                      <LoaderCircle size={18} className="cc-spin" />
+                    ) : (
+                      "SUCCESS"
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    className={
+                      secretReview.my_vote === "fail"
+                        ? "is-selected is-fail"
+                        : "is-fail"
+                    }
+                    disabled={busyKey !== null}
+                    onClick={() => void voteOnSecretReview("fail")}
+                  >
+                    {busyKey === "secret-review-vote" ? (
+                      <LoaderCircle size={18} className="cc-spin" />
+                    ) : (
+                      "FAIL"
+                    )}
+                  </button>
+                </div>
+                {secretReview.my_vote && (
+                  <p className="cc-player-secret-review-voted">
+                    Your vote is saved. You can change it until voting closes.
+                  </p>
+                )}
+              </>
+            ) : secretReview.outcome ? (
+              <div className="cc-player-secret-review-results">
+                <strong
+                  className={
+                    secretReview.outcome === "success"
+                      ? "is-success"
+                      : "is-fail"
+                  }
+                >
+                  {secretReview.outcome === "success" ? "SUCCESS" : "FAIL"}
+                </strong>
+                <p>
+                  {secretReview.outcome === "success"
+                    ? `+${secretReview.mission.points} points awarded`
+                    : "No points awarded · final result"}
+                </p>
+                <div className="cc-player-secret-review-tally">
+                  <span>{secretReview.success_votes ?? 0} Success</span>
+                  <span>{secretReview.fail_votes ?? 0} Fail</span>
+                  <span>{secretReview.votes_cast} votes</span>
+                </div>
+                <h2>Who voted</h2>
+                <div className="cc-player-secret-review-voters">
+                  {secretReview.voters.map((voter) => (
+                    <span key={voter.id}>
+                      {voter.avatar_url ? (
+                        <img src={voter.avatar_url} alt="" />
+                      ) : (
+                        <i>{voter.name.slice(0, 1).toUpperCase()}</i>
+                      )}
+                      <b>{voter.name}</b>
+                      <small>{voter.vote}</small>
+                    </span>
+                  ))}
+                </div>
+                <h2>Leaderboard changes</h2>
+                <div className="cc-player-secret-review-leaderboard">
+                  {secretReview.leaderboard.slice(0, 8).map((entry, index) => (
+                    <div
+                      key={entry.player_id}
+                      className={entry.player_id === player.id ? "is-you" : ""}
+                    >
+                      <span>{index + 1}</span>
+                      <b>
+                        {entry.name}
+                        {entry.player_id === player.id ? " · YOU" : ""}
+                      </b>
+                      <small>{entry.team_name ?? "Solo"}</small>
+                      <strong>{entry.score} pts</strong>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="cc-player-secret-review-votes">
+                Waiting for the host to open voting…
+              </p>
+            )}
+          </div>
+        </section>
+      )}
+      {!embeddedHostMode && !secretReviewTakeover && (
+        <SessionPlayerProfile
+          viewerRole="player"
+          name={player.name}
+          subtitle={
+            player.team_name ||
+            (session.teams_enabled ? "Choose your team" : "Solo player")
+          }
+          avatarUrl={player.avatar_url}
+          score={player.score}
+          rank={playerRank ?? null}
+        />
+      )}
+
+      <div className="cc-player-game-content">
+        {embeddedHostMode && !secretReviewTakeover && (
+          <SessionPlayerProfile
+            viewerRole="player"
+            name={player.name}
+            subtitle={
+              player.team_name ||
+              (session.teams_enabled ? "Choose your team" : "Solo player")
+            }
+            avatarUrl={player.avatar_url}
+            score={player.score}
+            rank={playerRank ?? null}
+          />
+        )}
+        {!finalRoundTakeover && !secretReviewTakeover && (
+          <SessionGameTitlebar
+            name={session.name}
+            code={session.join_code}
+            photoUrl={gamePhotoUrl}
+            copied={copiedCode}
+            onCopy={() => void copyGameCode()}
+          />
+        )}
+        {!embeddedHostMode && !finalRoundTakeover && !secretReviewTakeover && (
+          <div className="cc-player-tour-row">
+            <button
+              type="button"
+              className="cc-tour-help-button"
+              onClick={() => setTourOpen(true)}
+            >
+              ✦ How to play / Take a tour
+            </button>
+          </div>
+        )}
+
+        {!embeddedHostMode && !finalRoundTakeover && !secretReviewTakeover && (
+          <nav
+            className="cc-player-page-nav"
+            data-tour="player-navigation"
+            aria-label="Game pages"
+          >
+            <Link
+              to={`/play/${code}/game`}
+              className={`cc-player-page-tab${activePage === "game" ? " is-active" : ""}`}
+              aria-current={activePage === "game" ? "page" : undefined}
+            >
+              <Gamepad2 size={17} />
+              <span>Game</span>
+            </Link>
+            <Link
+              to={`/play/${code}/leaderboard`}
+              className={`cc-player-page-tab${activePage === "leaderboard" ? " is-active" : ""}`}
+              aria-current={activePage === "leaderboard" ? "page" : undefined}
+            >
+              <Trophy size={17} />
+              <span>Scores</span>
+            </Link>
+            <Link
+              to={`/play/${code}/side-challenges`}
+              className={`cc-player-page-tab${activePage === "side-challenges" ? " is-active" : ""}`}
+              aria-current={
+                activePage === "side-challenges" ? "page" : undefined
+              }
+            >
+              <ClipboardList size={17} />
+              <span>Challenges</span>
+              {sideChallenges.length > 0 && (
+                <span className="cc-player-nav-count">
+                  {sideChallenges.length}
+                </span>
+              )}
+            </Link>
+          </nav>
+        )}
+
+        {(error || sharedTimerError) && (
+          <div className="cc-player-error" role="alert">
+            {error || sharedTimerError}
+          </div>
+        )}
+
+        {rewardRound && (
+          <section
+            className={`cc-player-reward-screen${rewardRound.status === "completed" ? " is-complete" : ""}`}
+            aria-live="polite"
+          >
+            <div className="cc-player-reward-kicker">
+              <Trophy size={17} /> REWARD POINTS
+            </div>
+            {rewardRound.status === "open" &&
+              rewardRound.method === "voting" && (
+                <>
+                  <span className="cc-player-eyebrow">HAVE YOUR SAY</span>
+                  <h2>Vote for the winner</h2>
+                  <p className="cc-player-reward-intro">
+                    {rewardRound.challenge_title} · {rewardRound.points} points
+                    at stake. Choose your favourite{" "}
+                    {rewardRound.target_kind === "team" ? "team" : "player"}.
+                    You can change your vote until the host closes voting.
+                  </p>
+                  <div className="cc-player-reward-vote-count">
+                    <strong>{rewardRound.votes_cast}</strong>
+                    <span>
+                      vote{rewardRound.votes_cast === 1 ? "" : "s"} cast so far
+                    </span>
+                  </div>
+                  <div className="cc-player-reward-candidates">
+                    {rewardRound.candidates.map((candidate) => {
+                      const votedFor =
+                        (rewardRound.target_kind === "player"
+                          ? rewardRound.my_vote_player_id
+                          : rewardRound.my_vote_team_id) === candidate.id;
+                      return (
+                        <button
+                          type="button"
+                          className={`cc-player-reward-candidate${votedFor ? " is-voted" : ""}`}
+                          key={candidate.id}
+                          disabled={
+                            busyKey !== null || rewardRound.status !== "open"
+                          }
+                          onClick={() => void voteInRewardRound(candidate.id)}
+                        >
+                          <span className="cc-player-reward-avatar">
+                            {candidate.name.slice(0, 1).toUpperCase()}
+                          </span>
+                          <span className="cc-player-reward-candidate-copy">
+                            <strong>{candidate.name}</strong>
+                            <small>
+                              {rewardRound.target_kind === "team"
+                                ? `${candidate.member_count ?? 0} players`
+                                : candidate.team_name || "Individual player"}
+                            </small>
+                          </span>
+                          <span className="cc-player-reward-vote-action">
+                            {busyKey === "reward-vote" ? (
+                              <LoaderCircle size={17} className="cc-spin" />
+                            ) : votedFor ? (
+                              <CheckCircle2 size={18} />
+                            ) : (
+                              "Vote"
+                            )}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {rewardRound.my_vote_player_id ||
+                  rewardRound.my_vote_team_id ? (
+                    <p className="cc-player-reward-footnote">
+                      Your vote is saved. Tap another name to change it.
+                    </p>
+                  ) : (
+                    <p className="cc-player-reward-footnote">
+                      Choose one name. Results stay hidden until the host closes
+                      voting.
+                    </p>
+                  )}
+                </>
+              )}
+
+            {rewardRound.status === "open" &&
+              rewardRound.method === "host_awards" && (
+                <div className="cc-player-reward-waiting">
+                  <div className="cc-player-reward-orbit">
+                    <LoaderCircle size={30} />
+                  </div>
+                  <span className="cc-player-eyebrow">HOST DECISION</span>
+                  <h2>Judgement is underway…</h2>
+                  <p>
+                    The host is choosing who deserves the points for{" "}
+                    <strong>{rewardRound.challenge_title}</strong>. Keep your
+                    eyes on the screen.
+                  </p>
+                  <div className="cc-player-reward-stake">
+                    {rewardRound.points} POINTS AT STAKE
+                  </div>
+                </div>
+              )}
+
+            {rewardRound.status === "open" &&
+              rewardRound.method === "audience_cheers" && (
+                <div className="cc-player-reward-waiting">
+                  <div className="cc-player-reward-cheer">✦</div>
+                  <span className="cc-player-eyebrow">MAKE SOME NOISE</span>
+                  <h2>Audience cheers!</h2>
+                  <p>
+                    The host will call out each{" "}
+                    {rewardRound.target_kind === "team" ? "team" : "player"} in
+                    turn. Cheer loudest for your favourite — then the host will
+                    record who wins.
+                  </p>
+                  <div className="cc-player-reward-stake">
+                    {rewardRound.points} POINTS AT STAKE
+                  </div>
+                </div>
+              )}
+
+            {rewardRound.status === "completed" && (
+              <>
+                <div className="cc-player-reward-result-icon">
+                  <Trophy size={33} />
+                </div>
+                <span className="cc-player-eyebrow">RESULTS ARE IN</span>
+                <h2>
+                  {rewardRound.winners.length
+                    ? "Points awarded!"
+                    : "No votes this time"}
+                </h2>
+                <p className="cc-player-reward-intro">
+                  {rewardRound.challenge_title}
+                </p>
+                {rewardRound.winners.length > 0 ? (
+                  <div className="cc-player-reward-winner-list">
+                    {rewardRound.winners.map((winner) => (
+                      <article key={`${winner.kind}-${winner.id}`}>
+                        <span>
+                          <Crown size={18} />
+                        </span>
+                        <strong>{winner.name}</strong>
+                        <b>+{winner.points} pts</b>
+                        {rewardRound.method === "voting" && (
+                          <small>
+                            {winner.votes} vote{winner.votes === 1 ? "" : "s"}
+                          </small>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="cc-player-reward-footnote">
+                    No eligible votes were cast, so no points were awarded.
+                  </p>
+                )}
+                <div className="cc-player-reward-scoreboard">
+                  <h3>Leaderboard changes</h3>
+                  {rewardRound.leaderboard.slice(0, 8).map((entry, index) => (
+                    <article
+                      key={entry.id}
+                      style={{ animationDelay: `${index * 70}ms` }}
+                      className={entry.id === player.id ? "is-you" : ""}
+                    >
+                      <span>{index + 1}</span>
+                      <strong>
+                        {entry.name}
+                        {entry.id === player.id ? " · YOU" : ""}
+                      </strong>
+                      <small>{entry.team_name || "Solo"}</small>
+                      <b>{entry.score} pts</b>
+                    </article>
+                  ))}
+                </div>
+                <p className="cc-player-reward-footnote">
+                  Waiting for the host to return everyone to the game…
+                </p>
+              </>
+            )}
+          </section>
+        )}
+
+        {!rewardRound && activePage === "game" && (
+          <>
+            {session.status === "lobby" && (
+              <section className="cc-player-state-card cc-player-state-card--lobby">
+                <div className="cc-player-state-icon">
+                  <Users size={25} />
+                </div>
+                <span className="cc-player-eyebrow">YOU'RE IN</span>
+                <h2>Waiting for the host…</h2>
+                <p>
+                  You're in <strong>{session.name}</strong>. The host will start
+                  the game when everyone is ready.
+                </p>
+                <div className="cc-player-lobby-count">
+                  {teams.reduce((sum, team) => sum + team.member_count, 0)}{" "}
+                  players in teams · {session.player_limit} player limit
+                </div>
+              </section>
+            )}
+
+            {session.status === "completed" && (
+              <section className="cc-player-state-card">
+                <div className="cc-player-state-icon">
+                  <Flag size={25} />
+                </div>
+                <span className="cc-player-eyebrow">THAT'S A WRAP</span>
+                <h2>Game over. Chaos achieved.</h2>
+                <p>
+                  You finished with <strong>{player.score} points</strong>.
+                  Thanks for playing!
+                </p>
+                <Link
+                  className="cc-player-inline-link"
+                  to={`/play/${code}/leaderboard`}
+                >
+                  See the final leaderboard →
+                </Link>
+              </section>
+            )}
+
+            {session.teams_enabled &&
+              session.host_chooses_teams &&
+              !player.team_id &&
+              session.status !== "completed" && (
+                <section className="cc-player-state-card">
+                  <div className="cc-player-state-icon">
+                    <Users size={25} />
+                  </div>
+                  <h2>The host is sorting teams.</h2>
+                  <p>Your team will appear here as soon as you're assigned.</p>
+                </section>
+              )}
+
+            {teamSelectionAllowed && (
+              <section className="cc-player-team-card">
+                <div className="cc-player-section-heading">
+                  <div>
+                    <span className="cc-player-eyebrow">SQUAD UP</span>
+                    <h2>Choose your team</h2>
+                  </div>
+                  <span className="cc-player-count-chip">
+                    {session.team_size} max
+                  </span>
+                </div>
+                <div className="cc-player-team-options">
+                  {teams.map((team) => {
+                    const full =
+                      team.member_count >= session.team_size &&
+                      player.team_id !== team.id;
+                    return (
+                      <button
+                        type="button"
+                        key={team.id}
+                        disabled={busyKey !== null || full}
+                        className={`cc-player-team-option${player.team_id === team.id ? " is-current" : ""}`}
+                        onClick={() => void chooseTeam(team.id)}
+                      >
+                        <span className="cc-player-team-dot">
+                          {team.name.slice(0, 1).toUpperCase()}
+                        </span>
+                        <span>
+                          <strong>{team.name}</strong>
+                          <small>
+                            {full
+                              ? "Team full"
+                              : `${team.member_count}/${session.team_size} players`}
+                          </small>
+                        </span>
+                        {player.team_id === team.id && (
+                          <CheckCircle2 size={19} />
+                        )}
+                      </button>
+                    );
+                  })}
+                  <form
+                    className="cc-player-create-team"
+                    onSubmit={(event) => void createTeam(event)}
+                  >
+                    <input
+                      value={teamName}
+                      onChange={(event) => setTeamName(event.target.value)}
+                      placeholder="Or name a new team…"
+                      aria-label="New team name"
+                      maxLength={40}
+                    />
+                    <button
+                      type="submit"
+                      disabled={busyKey !== null || !teamName.trim()}
+                    >
+                      {busyKey === "create-team" ? (
+                        <LoaderCircle size={17} className="cc-spin" />
+                      ) : (
+                        "Create team"
+                      )}
+                    </button>
+                  </form>
+                </div>
+              </section>
+            )}
+
+            {session.status === "live" && (
+              <>
+                {sharedTimer?.is_on_break ? (
+                  <section
+                    className="cc-player-state-card cc-player-break-card"
+                    aria-live="polite"
+                  >
+                    <span className="cc-player-eyebrow">
+                      ☕ BREAK IN PROGRESS
+                    </span>
+                    <h2>Take a breather</h2>
+                    {sharedTimer.is_running ? (
+                      <>
+                        <p>The game will resume in</p>
+                        <strong
+                          className="cc-player-break-countdown"
+                          aria-label={`Game resumes in ${sharedTimerLabel}`}
+                        >
+                          {sharedTimerLabel}
+                        </strong>
+                      </>
+                    ) : (
+                      <>
+                        <p>
+                          The break timer is paused. The game will resume when
+                          the host restarts the countdown.
+                        </p>
+                        <strong className="cc-player-break-countdown">
+                          PAUSED
+                        </strong>
+                      </>
+                    )}
+                    {sharedTimer.resume_round_number && (
+                      <div className="cc-player-break-next">
+                        Up next · Round {sharedTimer.resume_round_number}
+                      </div>
+                    )}
+                  </section>
+                ) : challenge ? (
+                  <SessionMainChallengeCard
+                    viewerRole="player"
+                    title={challenge.title}
+                    description={challenge.description}
+                    points={challenge.points}
+                    round={session.current_round_number}
+                    roundCount={session.round_count}
+                    durationMinutes={challenge.duration_minutes}
+                    timerLabel={sharedTimerLabel}
+                    timerCaption={
+                      sharedTimer?.is_on_break
+                        ? "BREAK"
+                        : sharedTimer?.is_running
+                          ? "TIME LEFT"
+                          : sharedTimer
+                            ? "READY"
+                            : "TIME"
+                    }
+                    actionTourTarget="player-upload"
+                  >
+                    {challenge.allow_photo_upload && (
+                      <div
+                        className="cc-player-evidence-block"
+                        data-tour="player-upload"
+                      >
+                        <div className="cc-player-evidence-tools">
+                          <label className="cc-player-upload-button">
+                            <Upload size={16} />
+                            {busyKey === `upload:${challenge.id}`
+                              ? "Uploading…"
+                              : "Upload Evidence"}
+                            <input
+                              type="file"
+                              accept="image/*,video/*"
+                              disabled={
+                                busyKey !== null ||
+                                currentSubmission?.status === "approved" ||
+                                evidenceForChallenge(challenge.id).length >= 6
+                              }
+                              onChange={(event) =>
+                                void uploadEvidence(event, {
+                                  type: "challenge",
+                                  challenge,
+                                })
+                              }
+                            />
+                          </label>
+                          <span className="cc-player-evidence-count">
+                            {evidenceForChallenge(challenge.id).length}/6 files
+                          </span>
+                        </div>
+                        {evidenceForChallenge(challenge.id).length > 0 && (
+                          <div className="cc-player-evidence-grid">
+                            {evidenceForChallenge(challenge.id).map((media) => (
+                              <div
+                                className="cc-player-evidence-item"
+                                key={media.id}
+                              >
+                                {media.media_type === "video" ? (
+                                  <video
+                                    src={mediaUrl(media.storage_path)}
+                                    controls
+                                    playsInline
+                                    preload="metadata"
+                                  />
+                                ) : (
+                                  <img
+                                    src={mediaUrl(media.storage_path)}
+                                    alt="Your challenge evidence"
+                                    loading="lazy"
+                                  />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {evidenceForChallenge(challenge.id).length === 0 && (
+                          <p className="cc-player-evidence-required">
+                            Upload at least one photo or video before marking
+                            this challenge complete.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    {currentSubmission?.status === "approved" ? (
+                      <div className="cc-player-submission-state is-approved">
+                        <CheckCircle2 size={19} /> Approved · +
+                        {currentSubmission.awarded_points} points
+                      </div>
+                    ) : currentSubmission?.status === "submitted" ? (
+                      <div className="cc-player-submission-state">
+                        <CheckCircle2 size={19} /> Submitted · waiting for host
+                        review
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="cc-player-primary-button"
+                        disabled={
+                          busyKey !== null ||
+                          (!player.team_id && session.teams_enabled)
+                        }
+                        onClick={() => void submitChallenge(challenge)}
+                      >
+                        {busyKey === challenge.id ? (
+                          <LoaderCircle size={19} className="cc-spin" />
+                        ) : (
+                          <CheckCircle2 size={19} />
+                        )}{" "}
+                        Mark challenge complete
+                      </button>
+                    )}
+                    {session.teams_enabled && !player.team_id && (
+                      <p className="cc-player-hint">
+                        Wait for the host to assign your team before submitting.
+                      </p>
+                    )}
+                  </SessionMainChallengeCard>
+                ) : (
+                  <section className="cc-player-state-card">
+                    <h2>Challenge not ready yet</h2>
+                    <p>Ask the host to select a round.</p>
+                  </section>
+                )}
+                {visibleSecretMissions.length > 0 && (
+                  <section
+                    className="cc-player-secret-section"
+                    aria-label="Your private secret missions"
+                  >
+                    <div className="cc-player-secret-list">
+                      {visibleSecretMissions.map((mission) => (
+                        <article
+                          className="cc-player-secret-card"
+                          key={mission.assignment_id}
+                        >
+                          <div className="cc-player-secret-card-top">
+                            <span className="cc-player-secret-label">
+                              SECRET MISSION
+                            </span>
+                            <span className="cc-player-points">
+                              +{mission.points} pts
+                            </span>
+                          </div>
+                          <span
+                            className="cc-player-secret-art"
+                            aria-hidden="true"
+                          >
+                            {challengeIcon(mission.title, mission.description)}
+                          </span>
+                          <h3>{mission.title}</h3>
+                          <p>{mission.description}</p>
+                          <div className="cc-player-evidence-tools">
+                            <label className="cc-player-upload-button">
+                              <Upload size={16} />
+                              {busyKey === `upload:${mission.assignment_id}`
+                                ? "Uploading…"
+                                : "Add photo / video evidence"}
+                              <input
+                                type="file"
+                                accept="image/*,video/*"
+                                disabled={
+                                  busyKey !== null ||
+                                  mission.status === "approved" ||
+                                  secretReview?.my_final_reviews.some(
+                                    (item) =>
+                                      item.assignment_id ===
+                                      mission.assignment_id,
+                                  ) ||
+                                  evidenceForSecret(mission.assignment_id)
+                                    .length >= 6
+                                }
+                                onChange={(event) =>
+                                  void uploadEvidence(event, {
+                                    type: "secret",
+                                    mission,
+                                  })
+                                }
+                              />
+                            </label>
+                            <span className="cc-player-evidence-count">
+                              {evidenceForSecret(mission.assignment_id).length}
+                              /6 files
+                            </span>
+                          </div>
+                          {evidenceForSecret(mission.assignment_id).length >
+                            0 && (
+                            <div className="cc-player-evidence-grid">
+                              {evidenceForSecret(mission.assignment_id).map(
+                                (media) => (
+                                  <div
+                                    className="cc-player-evidence-item"
+                                    key={media.id}
+                                  >
+                                    {media.media_type === "video" ? (
+                                      <video
+                                        src={mediaUrl(media.storage_path)}
+                                        controls
+                                        playsInline
+                                        preload="metadata"
+                                      />
+                                    ) : (
+                                      <img
+                                        src={mediaUrl(media.storage_path)}
+                                        alt="Your secret mission evidence"
+                                        loading="lazy"
+                                      />
+                                    )}
+                                  </div>
+                                ),
+                              )}
+                            </div>
+                          )}
+                          {mission.allow_photo_upload && (
+                            <p className="cc-player-evidence-required">
+                              Photo or video evidence is required before you can
+                              submit this mission.
+                            </p>
+                          )}
+                          <div
+                            className={`cc-player-secret-status cc-player-secret-status--${mission.status}`}
+                          >
+                            {mission.status === "sent"
+                              ? "Mission received — go do your thing"
+                              : mission.status === "submitted"
+                                ? "Marked complete · waiting for the group review"
+                                : mission.status === "approved"
+                                  ? `Mission approved · +${mission.awarded_points} points`
+                                  : secretReview?.my_final_reviews.some(
+                                        (item) =>
+                                          item.assignment_id ===
+                                            mission.assignment_id &&
+                                          item.outcome === "fail",
+                                      )
+                                    ? "Mission failed · final result · no points"
+                                    : "The host asked you to try again"}
+                          </div>
+                          {(mission.status === "sent" ||
+                            mission.status === "rejected") &&
+                            !secretReview?.my_final_reviews.some(
+                              (item) =>
+                                item.assignment_id === mission.assignment_id,
+                            ) && (
+                              <button
+                                type="button"
+                                className="cc-player-primary-button cc-player-secret-complete"
+                                disabled={busyKey !== null}
+                                onClick={() =>
+                                  void submitSecretMission(mission)
+                                }
+                              >
+                                {busyKey === mission.assignment_id ? (
+                                  <LoaderCircle className="cc-spin" size={18} />
+                                ) : (
+                                  <CheckCircle2 size={18} />
+                                )}{" "}
+                                {mission.status === "rejected"
+                                  ? "Try again — I've done it"
+                                  : "I've completed my mission"}
+                              </button>
+                            )}
+                          {(mission.status === "submitted" ||
+                            mission.status === "approved" ||
+                            secretReview?.my_final_reviews.some(
+                              (item) =>
+                                item.assignment_id === mission.assignment_id,
+                            )) && (
+                            <button
+                              type="button"
+                              className="cc-player-secret-dismiss"
+                              onClick={() =>
+                                dismissCompletedSecretMission(mission)
+                              }
+                            >
+                              Dismiss completed mission
+                            </button>
+                          )}
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
+          </>
+        )}
+
+        {!rewardRound && activePage === "leaderboard" && (
+          <section
+            className="cc-player-leaderboard-page"
+            data-tour="player-leaderboard"
+          >
+            <div className="cc-player-page-heading">
+              <div>
+                <span className="cc-player-eyebrow">THE RACE IS ON</span>
+                <h2>
+                  {session.status === "completed"
+                    ? "Final leaderboard"
+                    : "Leaderboard"}
+                </h2>
+                <p>
+                  Scores update automatically as the host approves challenges.
+                </p>
+              </div>
+              <span className="cc-player-count-chip">
+                {leaderboard.length} players
+              </span>
+            </div>
+            {session.status === "lobby" && (
+              <div className="cc-player-page-notice">
+                The leaderboard will start moving when the host starts the game.
+              </div>
+            )}
+            {leaderboard.length === 0 ? (
+              <div className="cc-player-state-card">
+                <h2>No players yet</h2>
+                <p>Once players join, their scores will appear here.</p>
+              </div>
+            ) : (
+              <div className="cc-player-leaderboard-list">
+                {leaderboard.map((entry, index) => (
+                  <article
+                    key={entry.player_id}
+                    className={`cc-player-rank-row${entry.player_id === player.id ? " is-you" : ""}`}
+                  >
+                    <div
+                      className={`cc-player-rank-number${index < 3 ? ` is-top rank-${index + 1}` : ""}`}
+                    >
+                      {index === 0 ? <Crown size={17} /> : index + 1}
+                    </div>
+                    <div className="cc-player-rank-avatar">
+                      {entry.name.slice(0, 1).toUpperCase()}
+                    </div>
+                    <div className="cc-player-rank-copy">
+                      <strong>
+                        {entry.name}
+                        {entry.player_id === player.id && (
+                          <span className="cc-player-you-chip">YOU</span>
+                        )}
+                      </strong>
+                      <span>{entry.team_name || "Solo player"}</span>
+                    </div>
+                    <div className="cc-player-rank-score">
+                      <strong>{entry.score}</strong>
+                      <span>PTS</span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            {session.teams_enabled && (
+              <div className="cc-player-team-leaderboard">
+                <div className="cc-player-section-heading">
+                  <div>
+                    <span className="cc-player-eyebrow">SQUAD SCORES</span>
+                    <h2>Team leaderboard</h2>
+                  </div>
+                  <span className="cc-player-count-chip">
+                    {teamLeaderboard.length} teams
+                  </span>
+                </div>
+                {teamLeaderboard.length === 0 ? (
+                  <p className="cc-player-empty-copy">
+                    Teams will appear when players create or join them.
+                  </p>
+                ) : (
+                  teamLeaderboard.map((team, index) => (
+                    <article
+                      className={`cc-player-team-rank-row${player.team_id === team.id ? " is-you" : ""}`}
+                      key={team.id}
+                    >
+                      <span className="cc-player-team-rank-number">
+                        {index + 1}
+                      </span>
+                      <span className="cc-player-team-dot">
+                        {team.name.slice(0, 1).toUpperCase()}
+                      </span>
+                      <strong>
+                        {team.name}
+                        {player.team_id === team.id && <small>YOUR TEAM</small>}
+                      </strong>
+                      <span className="cc-player-team-rank-score">
+                        {team.score} pts
+                      </span>
+                    </article>
+                  ))
+                )}
+                <p className="cc-player-score-footnote">
+                  Team scores are the combined points earned by members.
+                </p>
+              </div>
+            )}
+          </section>
+        )}
+
+        {!rewardRound && activePage === "side-challenges" && (
+          <section
+            className="cc-player-side-page"
+            data-tour="player-side-challenges"
+          >
+            <div className="cc-player-page-heading">
+              <div>
+                <span className="cc-player-eyebrow">EXTRA CHAOS</span>
+                <h2>Side challenges</h2>
+                <p>
+                  Each submission earns 5 points. Tied top submissions also
+                  receive the challenge bonus in the final vote.
+                </p>
+              </div>
+              <span className="cc-player-count-chip">
+                {sideChallenges.length}
+              </span>
+            </div>
+            {session.status === "lobby" && (
+              <div className="cc-player-page-notice">
+                Side challenges become active when the host starts the game.
+              </div>
+            )}
+            {session.status === "completed" && (
+              <div className="cc-player-page-notice">
+                The game has ended. Here's how your side challenges finished.
+              </div>
+            )}
+            {sideChallenges.length === 0 ? (
+              <div className="cc-player-state-card">
+                <h2>No side challenges added</h2>
+                <p>Ask the host if side challenges are part of this game.</p>
+              </div>
+            ) : (
+              <div className="cc-player-side-list">
+                {sideChallenges.map((item) => {
+                  const submitted = view.my_submissions.find(
+                    (sub) => sub.challenge_id === item.id,
+                  );
+                  const sideEvidence = evidenceForChallenge(item.id);
+                  const evidenceCount = sideEvidence.length;
+                  const submissionComplete =
+                    submitted?.status === "submitted" ||
+                    submitted?.status === "approved";
+                  return (
+                    <article
+                      className="cc-player-side-card"
+                      id={`cc-side-challenge-${item.id}`}
+                      key={item.id}
+                    >
+                      <div className="cc-player-side-card-copy">
+                        <div className="cc-player-side-card-top">
+                          <span
+                            className="cc-player-side-card-art"
+                            aria-hidden="true"
+                          >
+                            {challengeIcon(item.title, item.description)}
+                          </span>
+                          <div>
+                            <h3>{item.title}</h3>
+                            <span className="cc-player-points">
+                              Final vote bonus: +{item.points} pts
+                            </span>
+                          </div>
+                        </div>
+                        <p>{item.description}</p>
+                      </div>
+                      <div className="cc-player-side-evidence">
+                        <div className="cc-player-side-evidence-actions">
+                          {evidenceCount === 0 && !submissionComplete ? (
+                            <label className="cc-player-upload-button">
+                              <Upload size={15} />
+                              {busyKey === `upload:${item.id}`
+                                ? "Uploading…"
+                                : "Upload evidence"}
+                              <input
+                                type="file"
+                                accept="image/*,video/*"
+                                disabled={
+                                  busyKey !== null || session.status !== "live"
+                                }
+                                onChange={(event) =>
+                                  void uploadEvidence(event, {
+                                    type: "challenge",
+                                    challenge: item,
+                                  })
+                                }
+                              />
+                            </label>
+                          ) : (
+                            <button
+                              type="button"
+                              className="cc-player-upload-button"
+                              disabled={
+                                busyKey !== null ||
+                                submissionComplete ||
+                                session.status !== "live" ||
+                                (!player.team_id && session.teams_enabled)
+                              }
+                              onClick={() => void submitChallenge(item)}
+                            >
+                              {busyKey === item.id ? (
+                                <LoaderCircle size={15} className="cc-spin" />
+                              ) : (
+                                <CheckCircle2 size={15} />
+                              )}
+                              Done
+                            </button>
+                          )}
+                          {evidenceCount > 0 && !submissionComplete && (
+                            <label className="cc-player-side-add-evidence">
+                              <Upload size={13} />
+                              Add more
+                              <input
+                                type="file"
+                                accept="image/*,video/*"
+                                disabled={
+                                  busyKey !== null ||
+                                  session.status !== "live" ||
+                                  evidenceCount >= 6
+                                }
+                                onChange={(event) =>
+                                  void uploadEvidence(event, {
+                                    type: "challenge",
+                                    challenge: item,
+                                  })
+                                }
+                              />
+                            </label>
+                          )}
+                        </div>
+                        <span className="cc-player-evidence-count">
+                          {evidenceCount}/6
+                        </span>
+                        {sideEvidence.length > 0 && (
+                          <div className="cc-player-evidence-grid">
+                            {sideEvidence.map((media) => (
+                              <div
+                                className="cc-player-evidence-item"
+                                key={media.id}
+                              >
+                                {media.media_type === "video" ? (
+                                  <video
+                                    src={mediaUrl(media.storage_path)}
+                                    controls
+                                    playsInline
+                                    preload="metadata"
+                                  />
+                                ) : (
+                                  <img
+                                    src={mediaUrl(media.storage_path)}
+                                    alt="Your side challenge evidence"
+                                    loading="lazy"
+                                  />
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      {submitted?.status === "approved" ? (
+                        <span className="cc-player-submission-state is-approved">
+                          <CheckCircle2 size={16} />
+                          Completed · +{submitted.awarded_points} base points
+                        </span>
+                      ) : submitted?.status === "submitted" ? (
+                        <span className="cc-player-small-status">
+                          Submitted · +{submitted.awarded_points} pts
+                        </span>
+                      ) : submitted?.status === "rejected" ? (
+                        <span className="cc-player-small-status">
+                          Rejected · add evidence and submit again
+                        </span>
+                      ) : (
+                        <span className="cc-player-small-status">
+                          Not completed
+                        </span>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
+
+        {!rewardRound && activePage === "final" && (
+          <section className="cc-player-final-page" data-tour="player-final">
+            <div className="cc-player-page-heading">
+              <div>
+                <span className="cc-player-eyebrow">THE FINAL ROUND</span>
+                <h2>Side challenge voting</h2>
+                <p>
+                  Browse submitted side-challenge photos and videos, then vote
+                  for your favourite. Your vote is for the challenge currently
+                  selected by the host.
+                </p>
+              </div>
+              <span className="cc-player-count-chip">
+                {finalGallery?.items.length ?? 0} entries
+              </span>
+            </div>
+            {!finalGallery?.gallery_open ? (
+              <div className="cc-player-state-card">
+                <Heart size={24} />
+                <h2>The final vote isn't open yet</h2>
+                <p>
+                  The host will open the final round when it is time to
+                  celebrate the side-challenge submissions.
+                </p>
+              </div>
+            ) : (
+              <>
+                <article className="cc-player-final-challenge-card">
+                  <div className="cc-player-final-challenge-label">
+                    <span>SIDE CHALLENGE</span>
+                    <strong>
+                      +{finalGallery.challenge_points} BONUS POINTS
+                    </strong>
+                  </div>
+                  <h3>{finalGallery.challenge_title}</h3>
+                  {finalGallery.challenge_description && (
+                    <p>{finalGallery.challenge_description}</p>
+                  )}
+                </article>
+                <div className="cc-player-final-vote-status">
+                  {finalGallery.voting_open
+                    ? `${finalGallery.challenge_title}: voting is open. ${finalGallery.votes_cast} vote${finalGallery.votes_cast === 1 ? "" : "s"} cast so far; you can change your vote until the host closes it.`
+                    : finalGallery.voting_completed
+                      ? `${finalGallery.challenge_title}: voting is closed. ${finalGallery.votes_cast} vote${finalGallery.votes_cast === 1 ? "" : "s"} cast. ${finalGallery.votes_cast > 0 ? `Tied top submissions each earn +${finalGallery.challenge_points} points.` : "No bonus points were awarded."} ${finalGallery.sequence_completed ? "The final round is complete." : "The host will open the next challenge after reviewing these results."}`
+                      : `${finalGallery.challenge_title ?? "The selected challenge"} is waiting for voting to start.`}
+                </div>
+                {finalGallery.items.length === 0 ? (
+                  <div className="cc-player-state-card">
+                    <Film size={24} />
+                    <h2>No entries for this challenge</h2>
+                    <p>
+                      There are no submitted side-challenge photos or videos for
+                      the challenge currently selected by the host.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="cc-player-final-grid">
+                    {finalGallery.items.map((item) => (
+                      <article
+                        className={`cc-player-final-card${item.is_my_vote ? " is-voted" : ""}${item.is_winner ? " is-winner" : ""}`}
+                        key={item.id}
+                      >
+                        <div className="cc-player-final-media">
+                          {item.media_type === "video" ? (
+                            <video
+                              src={mediaUrl(item.storage_path)}
+                              controls
+                              playsInline
+                              preload="metadata"
+                            />
+                          ) : (
+                            <img
+                              src={mediaUrl(item.storage_path)}
+                              alt={`${item.player_name}'s entry for ${item.challenge_title}`}
+                              loading="lazy"
+                            />
+                          )}
+                        </div>
+                        <div className="cc-player-final-copy">
+                          <div className="cc-player-final-submitter">
+                            <span className="cc-player-final-submitter-avatar">
+                              {item.player_avatar_url ? (
+                                <img src={item.player_avatar_url} alt="" />
+                              ) : (
+                                item.player_name.slice(0, 1).toUpperCase()
+                              )}
+                            </span>
+                            <span className="cc-player-final-submitter-copy">
+                              <strong>{item.player_name}</strong>
+                              <small>{item.challenge_title}</small>
+                            </span>
+                            <CheckCircle2
+                              size={22}
+                              aria-label="Submission received"
+                            />
+                          </div>
+                          <div className="cc-player-final-vote-row">
+                            {finalGallery.voting_open ? (
+                              <button
+                                type="button"
+                                className={`cc-player-vote-button${item.is_my_vote ? " is-selected" : ""}`}
+                                disabled={busyKey !== null}
+                                onClick={() => void voteForFinalMedia(item)}
+                              >
+                                {busyKey === `vote:${item.id}` ? (
+                                  <LoaderCircle size={16} className="cc-spin" />
+                                ) : (
+                                  <Heart
+                                    size={16}
+                                    fill={
+                                      item.is_my_vote ? "currentColor" : "none"
+                                    }
+                                  />
+                                )}{" "}
+                                {item.is_my_vote
+                                  ? "Your vote"
+                                  : "Vote for this"}
+                              </button>
+                            ) : (
+                              <span
+                                className={`cc-player-small-status${item.is_my_vote ? " is-selected" : ""}`}
+                              >
+                                {item.is_my_vote
+                                  ? "Your vote"
+                                  : "Voting closed"}
+                              </span>
+                            )}
+                            {!finalGallery.voting_open &&
+                              item.vote_count !== null && (
+                                <strong className="cc-player-final-vote-count">
+                                  {item.vote_count} vote
+                                  {item.vote_count === 1 ? "" : "s"}
+                                </strong>
+                              )}
+                            {item.is_winner && (
+                              <span className="cc-player-final-winner-badge">
+                                Top submission
+                              </span>
+                            )}
+                          </div>
+                          {finalGallery.voting_completed && (
+                            <div
+                              className="cc-player-final-voters"
+                              aria-label={`Voters for ${item.player_name}'s submission`}
+                            >
+                              {item.voters.length === 0 ? (
+                                <span className="cc-player-final-no-voters">
+                                  No voters
+                                </span>
+                              ) : (
+                                item.voters.map((voter) => (
+                                  <span
+                                    className="cc-player-final-voter"
+                                    key={voter.id}
+                                    title={voter.name}
+                                  >
+                                    <span className="cc-player-final-voter-avatar">
+                                      {voter.avatar_url ? (
+                                        <img src={voter.avatar_url} alt="" />
+                                      ) : (
+                                        voter.name.slice(0, 1).toUpperCase()
+                                      )}
+                                    </span>
+                                    <span>{voter.name}</span>
+                                  </span>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+                {finalGallery.voting_completed && (
+                  <section className="cc-player-final-leaderboard">
+                    <div className="cc-player-section-heading">
+                      <div>
+                        <span className="cc-player-eyebrow">RESULTS</span>
+                        <h2>Updated leaderboard</h2>
+                      </div>
+                      <span className="cc-player-count-chip">
+                        {leaderboard.length} players
+                      </span>
+                    </div>
+                    {leaderboard.length === 0 ? (
+                      <p className="cc-player-empty-copy">
+                        Leaderboard scores are still refreshing.
+                      </p>
+                    ) : (
+                      <div className="cc-player-leaderboard-list">
+                        {leaderboard.map((entry, index) => (
+                          <article
+                            key={entry.player_id}
+                            className={`cc-player-rank-row${entry.player_id === player.id ? " is-you" : ""}`}
+                          >
+                            <div
+                              className={`cc-player-rank-number${index < 3 ? ` is-top rank-${index + 1}` : ""}`}
+                            >
+                              {index === 0 ? <Crown size={17} /> : index + 1}
+                            </div>
+                            <div className="cc-player-rank-avatar">
+                              {entry.avatar_url ? (
+                                <img src={entry.avatar_url} alt="" />
+                              ) : (
+                                entry.name.slice(0, 1).toUpperCase()
+                              )}
+                            </div>
+                            <div className="cc-player-rank-copy">
+                              <strong>
+                                {entry.name}
+                                {entry.player_id === player.id && (
+                                  <span className="cc-player-you-chip">
+                                    YOU
+                                  </span>
+                                )}
+                              </strong>
+                              <span>{entry.team_name || "Solo player"}</span>
+                            </div>
+                            <div className="cc-player-rank-score">
+                              <strong>{entry.score}</strong>
+                              <span>PTS</span>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                    {session.teams_enabled && (
+                      <div className="cc-player-team-leaderboard">
+                        <div className="cc-player-section-heading">
+                          <div>
+                            <span className="cc-player-eyebrow">
+                              SQUAD SCORES
+                            </span>
+                            <h2>Team leaderboard</h2>
+                          </div>
+                          <span className="cc-player-count-chip">
+                            {teamLeaderboard.length} teams
+                          </span>
+                        </div>
+                        {teamLeaderboard.map((team, index) => (
+                          <article
+                            className={`cc-player-team-rank-row${player.team_id === team.id ? " is-you" : ""}`}
+                            key={team.id}
+                          >
+                            <span className="cc-player-team-rank-number">
+                              {index + 1}
+                            </span>
+                            <span className="cc-player-team-dot">
+                              {team.name.slice(0, 1).toUpperCase()}
+                            </span>
+                            <strong>
+                              {team.name}
+                              {player.team_id === team.id && (
+                                <small>YOUR TEAM</small>
+                              )}
+                            </strong>
+                            <span className="cc-player-team-rank-score">
+                              {team.score} pts
+                            </span>
+                          </article>
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                )}
+              </>
+            )}
+          </section>
+        )}
+
+        {!embeddedHostMode && !finalRoundTakeover && (
+          <div className="cc-player-sync-note">
+            <span className="cc-player-live-dot" /> Live updates enabled{" "}
+            {lastUpdated && (
+              <span>
+                · synced{" "}
+                {lastUpdated.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
+                })}
+              </span>
+            )}
+          </div>
+        )}
+        {!embeddedHostMode && !finalRoundTakeover && (
+          <button
+            type="button"
+            className="cc-player-text-button"
+            onClick={() => navigate(`/join?code=${code}&returning=1`)}
+          >
+            <RotateCcw size={15} /> Need to rejoin on this device?
+          </button>
+        )}
+      </div>
+      {activeSecretMission &&
+        activePage === "game" &&
+        session.status === "live" &&
+        !rewardRound &&
+        !secretReviewTakeover && (
+          <div className="cc-player-secret-modal-backdrop">
+            <section
+              className="cc-player-secret-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="cc-player-secret-modal-title"
+              aria-describedby="cc-player-secret-modal-description"
+            >
+              <div className="cc-player-secret-modal-top">
+                <span className="cc-player-secret-modal-label">
+                  SECRET
+                  <br />
+                  MISSION
+                </span>
+                <span className="cc-player-secret-modal-art" aria-hidden="true">
+                  {challengeIcon(
+                    activeSecretMission.title,
+                    activeSecretMission.description,
+                  )}
+                </span>
+              </div>
+              <h2 id="cc-player-secret-modal-title">
+                {activeSecretMission.title}
+              </h2>
+              <p id="cc-player-secret-modal-description">
+                {activeSecretMission.description}
+              </p>
+              <div className="cc-player-secret-modal-points">
+                +{activeSecretMission.points} points
+              </div>
+              <button
+                type="button"
+                className="cc-player-secret-modal-play"
+                onClick={() => playSecretMission(activeSecretMission)}
+              >
+                Play <Check size={17} />
+              </button>
+            </section>
+          </div>
+        )}
+      {tourOpen && (
+        <GuidedTour
+          steps={playerTourSteps}
+          onNavigate={navigatePlayerTour}
+          onClose={() => setTourOpen(false)}
+          label="PLAYER TOUR"
+        />
+      )}
+    </main>
+  );
+}

@@ -4,7 +4,7 @@ import {
   type Page,
   type Response,
 } from "@playwright/test";
-const JOIN_URL = "./";
+const JOIN_URL = "./#/legacy/join";
 export type TestPlayer = {
   id: string;
   name: string;

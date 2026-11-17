@@ -125,7 +125,7 @@ vi.mock("../lib/supabase", () => ({ supabase: { from: mock.from } }));
 import VotePage from "./Vote";
 import VoteResults from "./VoteResults";
 import Leaderboard from "./Leaderboard";
-import Admin from "./Admin";
+import Admin from "./Admin-legacy";
 import App from "../App";
 
 function Location() {
@@ -501,10 +501,12 @@ describe("App route registration", () => {
       </MemoryRouter>,
     );
     expect(
-      await screen.findByRole("heading", { name: "Join the Chaos" }),
+      await screen.findByRole("heading", { name: /Join.*the chaos/i }),
     ).toBeTruthy();
-    expect(screen.getByRole("textbox", { name: "Your name" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Join Game" })).toBeTruthy();
+    expect(
+      screen.getByRole("textbox", { name: "Enter six digit game code" }),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Next/ })).toBeTruthy();
     expect(mock.from).not.toHaveBeenCalled();
   });
 });

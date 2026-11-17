@@ -59,6 +59,11 @@ export type GameState = {
   slideshow_open: boolean;
   scheduled_challenge_id: number | null;
   scheduled_reveal_at: string | null;
+  join_code?: string;
+  event_name?: string;
+  event_image_url?: string | null;
+  join_open?: boolean;
+  game_status?: "lobby" | "live" | "finished";
   updated_at?: string;
 };
 export type Media = {

@@ -73,6 +73,23 @@ test.beforeEach(async ({ page }) => {
   });
   await page.route("**/rest/v1/**", async (route) => {
     const request = route.request();
+    const pathname = new URL(request.url()).pathname;
+    if (pathname.includes("/rpc/")) {
+      // These RPCs only read the public TV state. All other RPCs are forbidden
+      // in this deterministic suite, including votes and host commands.
+      expect([
+        "/rest/v1/rpc/cc_get_session_final_slideshow",
+        "/rest/v1/rpc/cc_get_session_secret_review_slideshow",
+      ]).toContain(pathname);
+      expect(request.method()).toBe("POST");
+      expect(request.postDataJSON()).toEqual({ p_session_id: "test-session" });
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ open: false, items: [] }),
+      });
+      return;
+    }
     expect(request.method(), "Smoke tests must never mutate the database").toBe(
       "GET",
     );
@@ -118,13 +135,18 @@ test.beforeEach(async ({ page }) => {
 });
 
 for (const [path, heading] of [
-  ["/", "Join the Chaos"],
-  ["/join", "Join the Chaos"],
+  ["/", "Join the chaos"],
+  ["/join", "Join the chaos"],
   ["/game", "Dance"],
-  ["/admin", "Host Control"],
+  ["/legacy/join", "Join the Chaos"],
+  ["/host/login", "Welcome back."],
+  ["/admin", "Welcome back."],
+  ["/admin-legacy", "Welcome back."],
   ["/leaderboard", "Leaderboard"],
   ["/vote", "Vote!"],
   ["/vote-results", "Voting Results"],
+  ["/final-slideshow/test-session", "Slideshow is waiting"],
+  ["/secret-slideshow/test-session", "Slideshow is waiting"],
   ["/slideshow?host=true", "Anna's Chaos Crawl"],
   ["/challenge-review?type=main&id=1&title=Dance", "Dance"],
 ] as const) {

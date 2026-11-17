@@ -1,7 +1,7 @@
 import { supabase } from "./supabase";
 import { runApi, invalidResult, type ApiResult } from "./apiResult";
 
-import type { GameState, Challenge } from "../types/database";
+import type { GameState, Challenge, Pub } from "../types/database";
 
 export function getGameState(): Promise<ApiResult<GameState>> {
   return runApi<GameState>(() =>
@@ -21,6 +21,8 @@ export function updateGameState(values: {
   slideshow_open?: boolean;
   scheduled_challenge_id?: number | null;
   scheduled_reveal_at?: string | null;
+  join_open?: boolean;
+  game_status?: "lobby" | "live" | "finished";
 }): Promise<ApiResult<null>> {
   return runApi<null>(() =>
     supabase
@@ -64,10 +66,26 @@ export async function revealScheduledChallenge(
   if (!challenge.data)
     return invalidResult("The scheduled challenge no longer exists.");
   const row = challenge.data;
+  let pubName: string | undefined;
+  const pubId = row.pub_id;
+  if (pubId !== null) {
+    const pub = await runApi<Pub>(() =>
+      supabase
+        .from("pubs")
+        .select("*")
+        .eq("id", pubId)
+        .abortSignal(signal)
+        .maybeSingle(),
+    );
+    if (signal.aborted) return { data: null, error: null };
+    if (pub.error) return { data: null, error: pub.error };
+    pubName = pub.data?.name;
+  }
   return runApi<GameState>(() =>
     supabase
       .from("game_state")
       .update({
+        ...(pubName ? { current_pub: pubName } : {}),
         current_challenge_id: row.id,
         current_challenge: row.title,
         challenge_description: row.description ?? "",

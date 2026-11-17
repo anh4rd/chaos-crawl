@@ -28,7 +28,7 @@ vi.mock("../lib/supabase", () => ({ supabase: { from: mocks.from } }));
 vi.mock("../game/hooks/usePlayers", () => ({
   usePlayers: () => ({ ...mocks.players, reload: mocks.reload }),
 }));
-import Join from "./Join";
+import Join from "./LegacyJoin";
 import ChallengeReview from "./ChallengeReview";
 
 function Location() {

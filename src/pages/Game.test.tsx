@@ -181,7 +181,7 @@ describe("player game page", () => {
         screen.getByText(/Your player session was not found/),
       ).toBeTruthy();
       fireEvent.click(screen.getByRole("button", { name: "Join Game" }));
-      expect(mocks.navigate).toHaveBeenCalledWith("/join");
+      expect(mocks.navigate).toHaveBeenCalledWith("/legacy/join");
       expect(screen.queryByText("Your Task")).toBeNull();
     },
   );

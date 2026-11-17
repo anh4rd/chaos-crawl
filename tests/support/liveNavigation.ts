@@ -1,11 +1,29 @@
 import { expect, type Browser, type Page } from "@playwright/test";
 import { safeCloseContext } from "./livePlayers";
-const ADMIN_URL = "./#/admin";
+const ADMIN_URL = "./#/admin-legacy";
 export async function openAdmin(page: Page) {
   await page.goto(ADMIN_URL, {
     waitUntil: "domcontentloaded",
     timeout: 30_000,
   });
+
+  await expect(page.getByRole("heading").first()).toBeVisible();
+  if (page.url().includes("/host/login")) {
+    const email = process.env.SUPABASE_TEST_HOST_EMAIL;
+    const password = process.env.SUPABASE_TEST_HOST_PASSWORD;
+    if (!email || !password) {
+      throw new Error(
+        "Host journeys require SUPABASE_TEST_HOST_EMAIL and SUPABASE_TEST_HOST_PASSWORD for the disposable backend.",
+      );
+    }
+    await page.getByRole("textbox", { name: "Email" }).fill(email);
+    await page.getByLabel("Password", { exact: true }).fill(password);
+    await page
+      .getByRole("button", { name: "Log in to Host Hub", exact: true })
+      .click();
+    await expect(page).toHaveURL(/#\/host$/);
+    await page.goto(ADMIN_URL, { waitUntil: "domcontentloaded" });
+  }
 
   await expect(page.getByText("Host Control")).toBeVisible({
     timeout: 15_000,

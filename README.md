@@ -1,9 +1,14 @@
 # Anna's Chaos Crawl
 
-A React and TypeScript game for a pub crawl. Players join, complete challenges,
+A React and TypeScript game for hosted single-venue events and legacy pub crawls. Players join, complete challenges,
 upload images or videos, vote, and follow live screens. The host manages rounds,
 teams, submissions, and score awards. Vite builds the app for `/chaos-crawl/`;
 client routes use hash fragments, such as `/chaos-crawl/#/admin`.
+
+V2 uses `/join` (six-digit session code), `/play/:joinCode`, and the authenticated
+`/host` routes. The cleaned-up legacy workflows remain available at `/legacy/join`,
+`/game`, and `/admin-legacy`; both admin routes require a host login. Legacy players
+and V2 session players use separate storage keys and backend contracts.
 
 ## Local setup
 
@@ -19,13 +24,20 @@ Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to the project's public
 Supabase connection values. The client validates them on first use and reports
 connection errors in the UI. Never place a service-role key in a Vite variable.
 
-The database schema, storage bucket setup, triggers, and access policies are
+The legacy database schema, storage bucket setup, triggers, and access policies are
 managed outside this repository. The application contracts are documented in
 `src/types/database.ts`; they are inferred from existing queries, not generated
 from or verified against the deployed schema. The app uses `players`, `teams`,
 `pubs`, `challenges`, `side_challenges`, `game_state`, `challenge_completions`,
 `photos`, `votes`, and `score_events`, plus the `photos` storage bucket and
 Supabase Realtime.
+
+V2 queries share the same lazy Supabase client and auth session through
+`src/lib/sessionSupabase.ts`. Its dynamic schema boundary is separate from the
+legacy `Database` contracts until types can be generated from the deployed V2
+schema. V2 uses `host_games`, `host_favourites`, `cc_game_session_*` tables and
+`cc_*` RPCs, plus `game-assets` and `session-evidence` storage buckets. Local
+migrations are in `supabase/migrations`; merging code does not apply them.
 
 ## Commands
 
@@ -96,7 +108,10 @@ local test suite.
 Completion, award, leaderboard and vote behavior is covered by mocked regression
 tests. Real database round trips for those core event workflows remain unverified
 until a schema-compatible disposable backend is available. The explicit live
-suite currently covers joining, session persistence, navigation and player visibility.
+suite covers legacy joining, session persistence, navigation and player visibility;
+host journeys additionally require `SUPABASE_TEST_HOST_EMAIL` and
+`SUPABASE_TEST_HOST_PASSWORD` for a host account in the disposable backend.
+It does not validate V2 session RPCs or final/secret-mission voting.
 
 ## Code health
 

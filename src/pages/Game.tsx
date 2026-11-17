@@ -95,7 +95,7 @@ export default function Game() {
           Your player session was not found. Join again to save challenge
           completions and uploads.
         </p>
-        <Button type="button" onClick={() => navigate("/join")}>
+        <Button type="button" onClick={() => navigate("/legacy/join")}>
           Join Game
         </Button>
       </main>
