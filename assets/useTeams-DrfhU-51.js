@@ -1,0 +1,1 @@
+import{t as e}from"./supabase-Co7fYmdc.js";import{t}from"./useRealtimeQuery-DeIwKqi9.js";var n=[],r=t=>e.from(`teams`).select(`id, name`).order(`name`).abortSignal(t);function i(){return t(`teams`,r,n)}export{i as t};
