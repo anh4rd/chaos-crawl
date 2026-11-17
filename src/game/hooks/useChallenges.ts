@@ -1,95 +1,16 @@
-import {
-  useEffect,
-  useState,
-} from "react";
+import { supabase } from "../../lib/supabase";
+import type { Challenge } from "../../types/database";
+import { useRealtimeQuery } from "./useRealtimeQuery";
+export type { Challenge } from "../../types/database";
 
-import {
-  supabase,
-} from "../../lib/supabase";
-
-export interface Challenge {
-  id: number;
-  pub_id: number | null;
-
-  title: string;
-  description: string | null;
-
-  points: number;
-
-  reveal_order: number;
-
-  allow_photo_upload: boolean;
-}
+const initialData: Challenge[] = [];
+const load = (signal: AbortSignal) =>
+  supabase
+    .from("challenges")
+    .select("*")
+    .order("reveal_order", { ascending: true })
+    .abortSignal(signal);
 
 export function useChallenges() {
-  const [
-    challenges,
-    setChallenges,
-  ] = useState<Challenge[]>([]);
-
-  useEffect(() => {
-    async function loadChallenges() {
-      const {
-        data,
-        error,
-      } = await supabase
-        .from("challenges")
-        .select(`
-          id,
-          pub_id,
-          title,
-          description,
-          points,
-          reveal_order,
-          allow_photo_upload
-        `)
-        .order(
-          "reveal_order",
-          {
-            ascending: true,
-          }
-        );
-
-      if (error) {
-        console.error(
-          "LOAD CHALLENGES ERROR",
-          error
-        );
-
-        return;
-      }
-
-      setChallenges(
-        (data ?? []) as Challenge[]
-      );
-    }
-
-    loadChallenges();
-
-    const channel =
-      supabase
-        .channel(
-          "challenges-realtime"
-        )
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "challenges",
-          },
-          () => {
-            loadChallenges();
-          }
-        )
-        .subscribe();
-
-    return () => {
-      supabase.removeChannel(
-        channel
-      );
-    };
-  }, []);
-
-  return challenges;
+  return useRealtimeQuery("challenges", load, initialData);
 }

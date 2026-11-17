@@ -17,7 +17,9 @@ export default function HostGuard() {
       setChecking(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       if (!mounted) return;
       setSession(nextSession);
       setChecking(false);
@@ -30,7 +32,12 @@ export default function HostGuard() {
   }, []);
 
   if (checking) {
-    return <main className="host-auth-loading"><span className="host-spinner" />Checking your session…</main>;
+    return (
+      <main className="host-auth-loading">
+        <span className="host-spinner" />
+        Checking your session…
+      </main>
+    );
   }
 
   if (!session) return <Navigate to="/host/login" replace />;

@@ -1,294 +1,166 @@
-import {
-  test,
-  expect,
-  type Page,
-} from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
-const consoleErrors: string[] = [];
-const pageErrors: string[] = [];
-const failedRequests: string[] = [];
+const players = [{ id: "player-1", name: "Pat", team: "Team", score: 0 }];
+const defaultGame = {
+  id: 1,
+  current_pub: "Test Pub",
+  current_challenge: "Dance",
+  challenge_description: "Dance together",
+  current_challenge_id: 1,
+  current_challenge_order: 1,
+  voting_open: false,
+  voting_target: "player",
+  show_vote_results: false,
+  slideshow_open: false,
+  scheduled_challenge_id: null,
+  scheduled_reveal_at: null,
+};
 
-function watchForProblems(
-  page: Page
-) {
-  page.on("console", (message) => {
-    if (message.type() === "error") {
-      consoleErrors.push(
-        message.text()
-      );
-    }
-  });
-
-  page.on("pageerror", (error) => {
-    pageErrors.push(
-      error.message
-    );
-  });
-
-  page.on(
-    "requestfailed",
-    (request) => {
-      failedRequests.push(
-        `${request.method()} ${request.url()} :: ${
-          request.failure()?.errorText ??
-          "unknown error"
-        }`
-      );
-    }
-  );
-}
-
+// These route checks use a deterministic backend, so opening host controls never
+// reads or changes an actual event. Live multiplayer checks remain separate.
 test.beforeEach(async ({ page }) => {
-  consoleErrors.length = 0;
-  pageErrors.length = 0;
-  failedRequests.length = 0;
-
-  watchForProblems(page);
-});
-
-test.afterEach(async ({}, testInfo) => {
-  if (
-    consoleErrors.length > 0 ||
-    pageErrors.length > 0 ||
-    failedRequests.length > 0
-  ) {
-    await testInfo.attach(
-      "runtime-problems",
-      {
-        body: JSON.stringify(
-          {
-            consoleErrors,
-            pageErrors,
-            failedRequests,
-          },
-          null,
-          2
-        ),
-
-        contentType:
-          "application/json",
+  await page.addInitScript(() =>
+    localStorage.setItem("chaos-crawl-player-id", "player-1"),
+  );
+  await page.routeWebSocket("**/realtime/v1/**", (socket) => {
+    socket.onMessage((raw) => {
+      const message = JSON.parse(String(raw));
+      if (Array.isArray(message)) {
+        const [join, ref, topic, event, payload] = message;
+        if (event === "phx_join" || event === "heartbeat")
+          socket.send(
+            JSON.stringify([
+              join,
+              ref,
+              topic,
+              "phx_reply",
+              {
+                status: "ok",
+                response: {
+                  postgres_changes: (
+                    payload?.config?.postgres_changes ?? []
+                  ).map((filter: Record<string, unknown>, index: number) => ({
+                    ...filter,
+                    id: index,
+                  })),
+                },
+              },
+            ]),
+          );
+      } else if (
+        message.event === "phx_join" ||
+        message.event === "heartbeat"
+      ) {
+        socket.send(
+          JSON.stringify({
+            ...message,
+            event: "phx_reply",
+            payload: {
+              status: "ok",
+              response: {
+                postgres_changes: (
+                  message.payload?.config?.postgres_changes ?? []
+                ).map((filter: Record<string, unknown>, index: number) => ({
+                  ...filter,
+                  id: index,
+                })),
+              },
+            },
+          }),
+        );
       }
+    });
+  });
+  await page.route("**/rest/v1/**", async (route) => {
+    const request = route.request();
+    const pathname = new URL(request.url()).pathname;
+    if (pathname.includes("/rpc/")) {
+      // These RPCs only read the public TV state. All other RPCs are forbidden
+      // in this deterministic suite, including votes and host commands.
+      expect([
+        "/rest/v1/rpc/cc_get_session_final_slideshow",
+        "/rest/v1/rpc/cc_get_session_secret_review_slideshow",
+      ]).toContain(pathname);
+      expect(request.method()).toBe("POST");
+      expect(request.postDataJSON()).toEqual({ p_session_id: "test-session" });
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ open: false, items: [] }),
+      });
+      return;
+    }
+    expect(request.method(), "Smoke tests must never mutate the database").toBe(
+      "GET",
     );
-  }
+    const table = new URL(request.url()).pathname.split("/").pop();
+    const hash = new URL(page.url()).hash;
+    const game = {
+      ...defaultGame,
+      voting_open:
+        hash.startsWith("#/vote") && !hash.startsWith("#/vote-results"),
+      show_vote_results: hash.startsWith("#/vote-results"),
+      slideshow_open: hash.startsWith("#/slideshow"),
+    };
+    const rows: Record<string, unknown[]> = {
+      game_state: [game],
+      players,
+      teams: [{ id: "team-1", name: "Team" }],
+      pubs: [{ id: 1, name: "Test Pub", sort_order: 1 }],
+      challenges: [
+        {
+          id: 1,
+          pub_id: 1,
+          title: "Dance",
+          description: "Dance together",
+          points: 10,
+          reveal_order: 1,
+          allow_photo_upload: true,
+        },
+      ],
+      side_challenges: [],
+      challenge_completions: [],
+      score_events: [],
+      photos: [],
+      votes: [],
+    };
+    const data = rows[table ?? ""] ?? [];
+    const object = request.headers().accept?.includes("vnd.pgrst.object");
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(object ? (data[0] ?? null) : data),
+    });
+  });
 });
 
-test(
-  "app boots without blank screen",
-  async ({ page }) => {
-    await page.goto("/");
-
+for (const [path, heading] of [
+  ["/", "Join the chaos"],
+  ["/join", "Join the chaos"],
+  ["/game", "Dance"],
+  ["/legacy/join", "Join the Chaos"],
+  ["/host/login", "Welcome back."],
+  ["/admin", "Welcome back."],
+  ["/admin-legacy", "Welcome back."],
+  ["/leaderboard", "Leaderboard"],
+  ["/vote", "Vote!"],
+  ["/vote-results", "Voting Results"],
+  ["/final-slideshow/test-session", "Slideshow is waiting"],
+  ["/secret-slideshow/test-session", "Slideshow is waiting"],
+  ["/slideshow?host=true", "Anna's Chaos Crawl"],
+  ["/challenge-review?type=main&id=1&title=Dance", "Dance"],
+] as const) {
+  test(`renders ${path} through HashRouter`, async ({ page }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto(`./#${path}`);
     await expect(
-      page.locator("body")
+      page.getByRole("heading", { name: heading, exact: true }),
     ).toBeVisible();
-
-    const bodyText =
-      await page
-        .locator("body")
-        .innerText();
-
-    expect(
-      bodyText.trim().length
-    ).toBeGreaterThan(0);
-
-    expect(
-      pageErrors,
-      `Page crashed:\n${pageErrors.join(
-        "\n"
-      )}`
-    ).toEqual([]);
-  }
-);
-test(
-  "join page has usable UI",
-  async ({ page }) => {
-    await page.goto("/");
-
-    await page.waitForLoadState(
-      "networkidle"
-    );
-
-    const bodyText =
-      await page
-        .locator("body")
-        .innerText();
-
-    console.log(
-      "\nJOIN PAGE TEXT:\n",
-      bodyText
-    );
-
-    expect(
-      bodyText.trim().length
-    ).toBeGreaterThan(0);
-
-    const controls =
-      page.locator(
-        [
-          "input",
-          "button",
-          "a",
-          "[role='button']",
-          "select",
-          "textarea",
-        ].join(",")
-      );
-
-    const controlCount =
-      await controls.count();
-
-    console.log(
-      "JOIN CONTROL COUNT:",
-      controlCount
-    );
-
-    expect(
-      controlCount,
-      `Join page has no usable controls.\n\nVisible text:\n${bodyText}`
-    ).toBeGreaterThan(0);
-  }
-);
-
-test(
-  "game route does not crash",
-  async ({ page }) => {
-    await page.goto("/game");
-
-    await page.waitForTimeout(1500);
-
-    await expect(
-      page.locator("body")
-    ).toBeVisible();
-
-    expect(
-      pageErrors,
-      `Game route crashed:\n${pageErrors.join(
-        "\n"
-      )}`
-    ).toEqual([]);
-  }
-);
-
-test(
-  "admin route does not crash",
-  async ({ page }) => {
-    await page.goto("/admin");
-
-    await page.waitForTimeout(1500);
-
-    await expect(
-      page.locator("body")
-    ).toBeVisible();
-
-    expect(
-      pageErrors,
-      `Admin route crashed:\n${pageErrors.join(
-        "\n"
-      )}`
-    ).toEqual([]);
-  }
-);
-
-test(
-  "leaderboard route does not crash",
-  async ({ page }) => {
-    await page.goto(
-      "/leaderboard"
-    );
-
-    await page.waitForTimeout(1500);
-
-    await expect(
-      page.locator("body")
-    ).toBeVisible();
-
-    expect(
-      pageErrors,
-      `Leaderboard crashed:\n${pageErrors.join(
-        "\n"
-      )}`
-    ).toEqual([]);
-  }
-);
-
-test(
-  "vote route does not crash",
-  async ({ page }) => {
-    await page.goto("/vote");
-
-    await page.waitForTimeout(1500);
-
-    await expect(
-      page.locator("body")
-    ).toBeVisible();
-
-    expect(
-      pageErrors,
-      `Vote route crashed:\n${pageErrors.join(
-        "\n"
-      )}`
-    ).toEqual([]);
-  }
-);
-
-test(
-  "vote results route does not crash",
-  async ({ page }) => {
-    await page.goto(
-      "/vote-results"
-    );
-
-    await page.waitForTimeout(1500);
-
-    await expect(
-      page.locator("body")
-    ).toBeVisible();
-
-    expect(
-      pageErrors,
-      `Vote results crashed:\n${pageErrors.join(
-        "\n"
-      )}`
-    ).toEqual([]);
-  }
-);
-
-test(
-  "slideshow route does not crash",
-  async ({ page }) => {
-    await page.goto(
-      "/slideshow?host=true"
-    );
-
-    await page.waitForTimeout(1500);
-
-    await expect(
-      page.locator("body")
-    ).toBeVisible();
-
-    expect(
-      pageErrors,
-      `Slideshow crashed:\n${pageErrors.join(
-        "\n"
-      )}`
-    ).toEqual([]);
-  }
-);
-
-test(
-  "join alias does not become blank screen",
-  async ({ page }) => {
-    await page.goto("/join");
-
-    await page.waitForTimeout(500);
-
-    const bodyText =
-      await page
-        .locator("body")
-        .innerText();
-
-    expect(
-      bodyText.trim().length,
-      "/join rendered a blank page"
-    ).toBeGreaterThan(0);
-  }
-);
+    if (path.startsWith("/slideshow"))
+      await expect(
+        page.getByRole("button", { name: "End Slideshow" }),
+      ).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+}

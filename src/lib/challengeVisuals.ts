@@ -19,5 +19,7 @@ const challengeIconRules: Array<[RegExp, string]> = [
 /** A consistent comic-sticker emoji for library, host preview and player cards. */
 export function challengeIcon(title: string, description = ""): string {
   const copy = `${title} ${description}`;
-  return challengeIconRules.find(([pattern]) => pattern.test(copy))?.[1] ?? "🎯";
+  return (
+    challengeIconRules.find(([pattern]) => pattern.test(copy))?.[1] ?? "🎯"
+  );
 }

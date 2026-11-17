@@ -1,34 +1,218 @@
 /* Guided tour overlay: portal-mounted above app stacking contexts. */
-.cc-tour-layer{position:fixed;inset:0;z-index:2147483000;pointer-events:none;isolation:isolate}
-.cc-tour-scrim{position:fixed;background:rgba(17,8,55,.70);pointer-events:auto}
-.cc-tour-scrim--top{top:0;left:0;right:0}
-.cc-tour-scrim--left{left:0}
-.cc-tour-scrim--right{right:0}
-.cc-tour-scrim--bottom{ }
-.cc-tour-card{position:fixed;z-index:2147483002;box-sizing:border-box;max-height:min(70vh,520px);overflow:auto;padding:18px 20px 16px;background:#fff;border:3px solid #08051c;border-radius:23px;box-shadow:7px 7px 0 #23166e;pointer-events:auto;color:#17102f}
-.cc-tour-card-top,.cc-tour-actions,.cc-tour-actions>div{display:flex;align-items:center;justify-content:space-between;gap:9px}
-.cc-tour-card-top{font-size:11px;font-weight:1000;letter-spacing:.1em;color:#5c36fb}
-.cc-tour-card-top button{display:grid;place-items:center;border:0;border-radius:50%;width:32px;height:32px;background:#eee9ff;color:#23166e;cursor:pointer}
-.cc-tour-progress{display:flex;gap:5px;margin:12px 0}
-.cc-tour-progress i{height:5px;flex:1;border-radius:9px;background:#e8e2ff}
-.cc-tour-progress i.is-done{background:#5c36fb}
-.cc-tour-kicker{font-size:10px;font-weight:1000;letter-spacing:.1em;color:#fb377a}
-.cc-tour-card h2{margin:4px 0 5px;font-size:22px;line-height:1.1;font-weight:1000}
-.cc-tour-card p{margin:0;color:#514b66;line-height:1.45;font-size:14px}
-.cc-tour-actions{margin-top:17px}
-.cc-tour-actions button{min-height:39px;border:0;border-radius:12px;padding:0 13px;font:inherit;font-size:13px;font-weight:900;cursor:pointer}
-.cc-tour-skip{background:transparent;color:#655b7d}
-.cc-tour-back{display:inline-flex;align-items:center;gap:5px;background:#eee9ff;color:#23166e}
-.cc-tour-back:disabled{opacity:.35}
-.cc-tour-next{display:inline-flex;align-items:center;gap:6px;margin-left:6px;background:#d3fb6e;color:#17102f}
+.cc-tour-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+  isolation: isolate;
+}
+.cc-tour-scrim {
+  position: fixed;
+  background: rgba(17, 8, 55, 0.7);
+  pointer-events: auto;
+}
+.cc-tour-scrim--top {
+  top: 0;
+  left: 0;
+  right: 0;
+}
+.cc-tour-scrim--left {
+  left: 0;
+}
+.cc-tour-scrim--right {
+  right: 0;
+}
+.cc-tour-scrim--bottom {
+}
+.cc-tour-card {
+  position: fixed;
+  z-index: 2147483002;
+  box-sizing: border-box;
+  max-height: min(70vh, 520px);
+  overflow: auto;
+  padding: 18px 20px 16px;
+  background: #fff;
+  border: 3px solid #08051c;
+  border-radius: 23px;
+  box-shadow: 7px 7px 0 #23166e;
+  pointer-events: auto;
+  color: #17102f;
+}
+.cc-tour-card-top,
+.cc-tour-actions,
+.cc-tour-actions > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+}
+.cc-tour-card-top {
+  font-size: 11px;
+  font-weight: 1000;
+  letter-spacing: 0.1em;
+  color: #5c36fb;
+}
+.cc-tour-card-top button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  background: #eee9ff;
+  color: #23166e;
+  cursor: pointer;
+}
+.cc-tour-progress {
+  display: flex;
+  gap: 5px;
+  margin: 12px 0;
+}
+.cc-tour-progress i {
+  height: 5px;
+  flex: 1;
+  border-radius: 9px;
+  background: #e8e2ff;
+}
+.cc-tour-progress i.is-done {
+  background: #5c36fb;
+}
+.cc-tour-kicker {
+  font-size: 10px;
+  font-weight: 1000;
+  letter-spacing: 0.1em;
+  color: #fb377a;
+}
+.cc-tour-card h2 {
+  margin: 4px 0 5px;
+  font-size: 22px;
+  line-height: 1.1;
+  font-weight: 1000;
+}
+.cc-tour-card p {
+  margin: 0;
+  color: #514b66;
+  line-height: 1.45;
+  font-size: 14px;
+}
+.cc-tour-actions {
+  margin-top: 17px;
+}
+.cc-tour-actions button {
+  min-height: 39px;
+  border: 0;
+  border-radius: 12px;
+  padding: 0 13px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.cc-tour-skip {
+  background: transparent;
+  color: #655b7d;
+}
+.cc-tour-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #eee9ff;
+  color: #23166e;
+}
+.cc-tour-back:disabled {
+  opacity: 0.35;
+}
+.cc-tour-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 6px;
+  background: #d3fb6e;
+  color: #17102f;
+}
 /* The target is revealed by four scrim panels, not by raising its z-index.
    This avoids stacking-context bugs and keeps the target fully clickable/visible. */
-.cc-tour-highlight{position:relative!important;outline:3px solid #fb377a!important;outline-offset:5px!important;box-shadow:0 0 0 2px #fff,0 0 0 7px rgba(251,55,122,.28)!important;border-radius:16px!important;z-index:auto!important}
-.cc-tour-help-button{display:inline-flex;align-items:center;gap:7px;border:2px solid rgba(255,255,255,.45);border-radius:999px;padding:8px 12px;background:#23166e;color:#fff;font:inherit;font-size:12px;font-weight:900;cursor:pointer}
-.cc-tour-help-button--host{background:#fb377a;color:#23166e;border-color:#17102f}
-.cc-player-tour-row{display:flex;justify-content:flex-end;margin-top:-5px}
-.cc-host-tour-action{display:flex;justify-content:flex-end;margin:8px 0 10px}
-.cc-demo-tour-banner{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:2px solid #17102f;border-radius:14px;background:#fb377a;color:#17102f;padding:10px 12px;font-size:11px;font-weight:900}
-.cc-demo-tour-banner button{margin-left:auto;border:0;border-radius:99px;background:#23166e;color:#fff;padding:6px 10px;font:inherit}
-.cc-demo-disclaimer{margin:0;text-align:center;color:#fff;font-size:11px;font-weight:800}
-@media(max-width:520px){.cc-tour-card{padding:15px 16px 13px;border-radius:19px;max-height:58vh}.cc-tour-card h2{font-size:20px}.cc-tour-card p{font-size:13px}.cc-tour-actions{margin-top:12px}}
+.cc-tour-highlight {
+  position: relative !important;
+  outline: 3px solid #fb377a !important;
+  outline-offset: 5px !important;
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 7px rgba(251, 55, 122, 0.28) !important;
+  border-radius: 16px !important;
+  z-index: auto !important;
+}
+.cc-tour-help-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #23166e;
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.cc-tour-help-button--host {
+  background: #fb377a;
+  color: #23166e;
+  border-color: #17102f;
+}
+.cc-player-tour-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -5px;
+}
+.cc-host-tour-action {
+  display: flex;
+  justify-content: flex-end;
+  margin: 8px 0 10px;
+}
+.cc-demo-tour-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  border: 2px solid #17102f;
+  border-radius: 14px;
+  background: #fb377a;
+  color: #17102f;
+  padding: 10px 12px;
+  font-size: 11px;
+  font-weight: 900;
+}
+.cc-demo-tour-banner button {
+  margin-left: auto;
+  border: 0;
+  border-radius: 99px;
+  background: #23166e;
+  color: #fff;
+  padding: 6px 10px;
+  font: inherit;
+}
+.cc-demo-disclaimer {
+  margin: 0;
+  text-align: center;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+}
+@media (max-width: 520px) {
+  .cc-tour-card {
+    padding: 15px 16px 13px;
+    border-radius: 19px;
+    max-height: 58vh;
+  }
+  .cc-tour-card h2 {
+    font-size: 20px;
+  }
+  .cc-tour-card p {
+    font-size: 13px;
+  }
+  .cc-tour-actions {
+    margin-top: 12px;
+  }
+}
