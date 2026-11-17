@@ -54,6 +54,7 @@ export default defineConfig({
   ],
 
   webServer: {
+    env: { VITE_SENTRY_DSN: "" },
     command: `npm run dev -- --host 127.0.0.1 --port ${port} --strictPort`,
 
     url: baseURL,

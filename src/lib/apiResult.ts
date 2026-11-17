@@ -1,3 +1,5 @@
+import { reportError } from "./monitoring";
+
 export interface ApiError {
   message: string;
   code?: string;
@@ -34,10 +36,12 @@ export async function runApi<T>(
 ): Promise<ApiResult<T>> {
   try {
     const result = await operation();
+    if (result.error) reportError(result.error, "api");
     return result.error
       ? { data: null, error: apiError(result.error) }
       : { data: result.data, error: null };
   } catch (error) {
+    reportError(error, "api");
     return { data: null, error: apiError(error) };
   }
 }

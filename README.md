@@ -39,6 +39,42 @@ schema. V2 uses `host_games`, `host_favourites`, `cc_game_session_*` tables and
 `cc_*` RPCs, plus `game-assets` and `session-evidence` storage buckets. Local
 migrations are in `supabase/migrations`; merging code does not apply them.
 
+## Error reporting
+
+Create a React project in Sentry and set its public DSN as `VITE_SENTRY_DSN`
+in `.env.local` or the deployment build environment, then rebuild and deploy.
+Without a DSN, reporting is disabled. `VITE_SENTRY_ENVIRONMENT` defaults to the
+Vite mode; set it to `production` for the live site. Optionally set
+`VITE_SENTRY_RELEASE` to the deployed commit SHA or release version.
+
+Sentry captures uncaught browser errors, unhandled promise rejections, React
+rendering errors, and `console.error` calls. The shared API and legacy live-query
+helpers also report failures handled by the UI. React crashes show a reload
+button. Automatic collection of user identity, cookies, HTTP headers/bodies,
+query values, and database query data is disabled. Error logs are also sent to
+Sentry Logs. Tracing samples 100% in development and 10% in production; trace
+headers are not propagated to Supabase. Session replay is not enabled.
+
+The `chaos-crawl-frontend` Sentry project receives browser events. The separate
+`chaos-crawl-functions` project is reserved for Supabase Edge Functions, whose
+implementation currently lives outside this checkout. Instrumenting and deploying
+those functions is deferred until their source is available.
+
+For readable production stack traces, set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and
+`SENTRY_PROJECT` in the build environment (or `.env.local`). All three are
+required to enable source-map uploads. The build uploads hidden source maps and
+removes them from `dist` before publishing. Keep the auth token in CI secrets or
+an ignored local file, never in a `VITE_` variable. Ordinary builds work without
+these credentials.
+
+To verify delivery, configure a DSN for a test project, run the app, and execute
+`setTimeout(() => { throw new Error("Sentry verification"); }, 0)` in the browser
+console. Confirm the event arrives in Sentry Issues with the expected environment
+and release. Tests do not initialize Sentry or send events.
+
+Setup follows the [Sentry React guide](https://docs.sentry.io/platforms/javascript/guides/react/)
+and [Vite source-map guide](https://docs.sentry.io/platforms/javascript/guides/react/sourcemaps/uploading/vite/).
+
 ## Commands
 
 | Command                                   | Purpose                                                              |

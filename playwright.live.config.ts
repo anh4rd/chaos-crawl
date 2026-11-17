@@ -26,6 +26,10 @@ export default defineConfig({
     // Start a dedicated server with the explicit test connection, rather than
     // reusing a developer's server that could point at an actual event.
     reuseExistingServer: false,
-    env: { VITE_SUPABASE_URL: url, VITE_SUPABASE_ANON_KEY: key },
+    env: {
+      VITE_SUPABASE_URL: url,
+      VITE_SUPABASE_ANON_KEY: key,
+      VITE_SENTRY_DSN: "",
+    },
   },
 });
