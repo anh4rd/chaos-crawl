@@ -1,34 +1,21 @@
-import { useRef, useState, type ReactNode } from "react";
+import SessionExamples from "../features/styleguide/SessionExamples";
+import Icon from "../components/ui/Icon";
+import FormExamples from "../features/styleguide/FormExamples";
+
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  ArrowUpRight,
-  Check,
-  Copy,
-  Layers3,
-  Search,
-  Sparkles,
-  Star,
-  Trophy,
-} from "lucide-react";
+import { SessionGameTitlebar } from "../components/session/SessionGameTitlebar";
+import SessionMainChallengeCard from "../components/session/SessionMainChallengeCard";
+import { SessionPlayerProfile } from "../components/session/SessionPlayerProfile";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
-import DataError from "../components/ui/DataError";
-import SessionMainChallengeCard from "../components/session/SessionMainChallengeCard";
-import {
-  SessionGameTitlebar,
-  SessionPlayerProfile,
-} from "../components/session/SessionGameChrome";
-import GuidedTour from "../components/tour/GuidedTour";
-import ScheduledCountdown from "../features/ScheduledCountdown";
-import QueryPanel from "../features/admin/QueryPanel";
-import ChallengeActions, {
-  type ChallengeParticipation,
-} from "../features/game/ChallengeActions";
-import LiveTask from "../features/game/LiveTask";
-import SideChallenges from "../features/game/SideChallenges";
+import { Catalog } from "../features/styleguide/Catalog";
+import { Example } from "../features/styleguide/Example";
+import { FeedbackExamples } from "../features/styleguide/FeedbackExamples";
+import { ParticipationExamples } from "../features/styleguide/ParticipationExamples";
+import { Section } from "../features/styleguide/Section";
 import { componentCatalog } from "../features/styleguide/catalog";
-import type { GameState } from "../types/database";
 import "../styles/PlayerGame.css";
 import "../styles/HostPortal.css";
 import "../styles/HostTheme.css";
@@ -37,7 +24,7 @@ import "../styles/Styleguide.css";
 const sections = [
   ["foundations", "01", "Foundations"],
   ["primitives", "02", "UI primitives"],
-  ["player", "03", "Player components"],
+  ["player", "03", "Shared sessions"],
   ["feedback", "04", "Feedback & states"],
   ["host", "05", "Host patterns"],
   ["catalog", "06", "Component catalog"],
@@ -53,369 +40,6 @@ const colors = [
   ["Ink", "--black", "#060f13"],
   ["White", "--white", "#ffffff"],
 ];
-
-function Section({
-  id,
-  number,
-  title,
-  description,
-  children,
-}: {
-  id: string;
-  number: string;
-  title: string;
-  description: string;
-  children: ReactNode;
-}) {
-  return (
-    <section
-      id={`sg-${id}`}
-      className="sg-section"
-      aria-labelledby={`sg-${id}-title`}
-    >
-      <div className="sg-section-heading">
-        <span>{number}</span>
-        <div>
-          <h2 id={`sg-${id}-title`}>{title}</h2>
-          <p>{description}</p>
-        </div>
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function Example({
-  title,
-  source,
-  code,
-  children,
-}: {
-  title: string;
-  source: string;
-  code: string;
-  children: ReactNode;
-}) {
-  const [copyStatus, setCopyStatus] = useState("");
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopyStatus("Copied");
-    } catch {
-      setCopyStatus("Select the code to copy manually.");
-    }
-  }
-  return (
-    <article className="sg-example">
-      <header>
-        <h3>{title}</h3>
-        <code>{source}</code>
-      </header>
-      <div className="sg-preview">{children}</div>
-      <details>
-        <summary>Usage example</summary>
-        <div className="sg-code-toolbar">
-          <button type="button" onClick={() => void copy()}>
-            <Copy size={14} /> Copy code
-          </button>
-          <span role="status">{copyStatus}</span>
-        </div>
-        <pre>
-          <code>{code}</code>
-        </pre>
-      </details>
-    </article>
-  );
-}
-
-const demoGame: GameState = {
-  id: 1,
-  current_pub: "The starting line",
-  current_challenge: "Strike a pose",
-  challenge_description: "Get your whole team into one legendary photo.",
-  current_challenge_id: 1,
-  current_challenge_order: 1,
-  voting_open: false,
-  voting_target: "player",
-  show_vote_results: false,
-  slideshow_open: false,
-  scheduled_challenge_id: null,
-  scheduled_reveal_at: null,
-};
-
-function ParticipationExamples() {
-  const [completed, setCompleted] = useState<string[]>([]);
-  const [notice, setNotice] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const participation: ChallengeParticipation = {
-    fileInputRef,
-    uploadingKey: null,
-    completingKey: null,
-    error: null,
-    completionKey: (type, id) => `${type}:${id}`,
-    hasCompleted: (type, id) => completed.includes(`${type}:${id}`),
-    complete: async (type, id) => {
-      setCompleted((current) => [...current, `${type}:${id}`]);
-      setNotice("Demo challenge completed. No game data was changed.");
-    },
-    chooseUpload: () =>
-      setNotice(
-        "Photo / video upload selected. This demo does not upload files.",
-      ),
-    handleFileSelected: async () => {},
-  };
-  return (
-    <>
-      <Example
-        title="ChallengeActions"
-        source="src/features/game/ChallengeActions.tsx"
-        code={
-          '<ChallengeActions\n  challenge={{ id: 1, title: "Strike a pose", points: 20, type: "main" }}\n  allowMedia\n  participation={participation}\n/>\n// In a game, get participation from useChallengeParticipation.'
-        }
-      >
-        <ChallengeActions
-          challenge={{
-            id: 2,
-            title: "Strike a pose",
-            points: 20,
-            type: "main",
-          }}
-          allowMedia
-          participation={participation}
-        />
-        <p role="status" className="sg-note">
-          {notice || "Try the actions. Demo state stays on this page."}
-        </p>
-        <button
-          type="button"
-          className="sg-text-button"
-          onClick={() => {
-            setCompleted([]);
-            setNotice("Demo reset.");
-          }}
-        >
-          Reset demo
-        </button>
-      </Example>
-      <div className="sg-grid">
-        <Example
-          title="LiveTask"
-          source="src/features/game/LiveTask.tsx"
-          code={
-            "<LiveTask challenge={challenge} game={game} participation={participation} />\n// challenge: Challenge | undefined; game: GameState"
-          }
-        >
-          <LiveTask
-            challenge={{
-              id: 1,
-              pub_id: null,
-              title: demoGame.current_challenge,
-              description: demoGame.challenge_description,
-              points: 20,
-              reveal_order: 1,
-              allow_photo_upload: true,
-            }}
-            game={demoGame}
-            participation={participation}
-          />
-        </Example>
-        <Example
-          title="SideChallenges"
-          source="src/features/game/SideChallenges.tsx"
-          code={
-            "<SideChallenges challenges={sideChallenges} participation={participation} />\n// challenges: SideChallenge[]; completed items are hidden."
-          }
-        >
-          <SideChallenges
-            challenges={[
-              {
-                id: 1,
-                title: "Make a new friend",
-                description: "Introduce your team to someone new.",
-                points: 10,
-                active: true,
-              },
-            ]}
-            participation={participation}
-          />
-        </Example>
-      </div>
-    </>
-  );
-}
-
-function FeedbackExamples() {
-  const [failed, setFailed] = useState(true);
-  const [tour, setTour] = useState(false);
-  const [targetTime] = useState(() =>
-    new Date(Date.now() + 5 * 60_000).toISOString(),
-  );
-  return (
-    <>
-      <div className="sg-grid">
-        <Example
-          title="QueryPanel"
-          source="src/features/admin/QueryPanel.tsx"
-          code={
-            '<QueryPanel queries={[query]} loadingText="Loading challenges...">\n  <ChallengeList challenges={query.data} />\n</QueryPanel>\n// query supplies loading, error and async reload.'
-          }
-        >
-          <div className="sg-state">
-            <strong>Loading</strong>
-            <QueryPanel
-              queries={[{ loading: true, error: null, reload: async () => {} }]}
-              loadingText="Loading challenges…"
-            >
-              <p>Challenge list</p>
-            </QueryPanel>
-          </div>
-          <div className="sg-state">
-            <strong>Loaded / empty</strong>
-            <QueryPanel
-              queries={[
-                { loading: false, error: null, reload: async () => {} },
-              ]}
-              loadingText="Loading challenges…"
-            >
-              <p>No challenges yet. Add your first challenge to get started.</p>
-            </QueryPanel>
-          </div>
-        </Example>
-        <Example
-          title="DataError"
-          source="src/components/ui/DataError.tsx"
-          code={
-            '<DataError\n  error={new Error("Could not load the game.")}\n  retry={reload}\n/>\n// Page-level component: renders its own <main>.'
-          }
-        >
-          {failed ? (
-            <div role="region" aria-label="Error example">
-              <DataError
-                as="div"
-                error={new Error("Demo: could not load the game.")}
-                retry={async () => setFailed(false)}
-              />
-            </div>
-          ) : (
-            <div className="sg-state">
-              <p role="status">Demo recovered successfully.</p>
-              <button
-                className="sg-text-button"
-                type="button"
-                onClick={() => setFailed(true)}
-              >
-                Show error again
-              </button>
-            </div>
-          )}
-        </Example>
-        <Example
-          title="ScheduledCountdown"
-          source="src/features/ScheduledCountdown.tsx"
-          code={
-            "<ScheduledCountdown targetTime={scheduledRevealAt} />\n// ISO date string; null renders nothing."
-          }
-        >
-          <p className="sg-timer">
-            <ScheduledCountdown targetTime={targetTime} />
-          </p>
-          <p className="sg-note">
-            Live countdown · five minutes from opening this page
-          </p>
-          <p>
-            Expired: <ScheduledCountdown targetTime="2020-01-01T00:00:00Z" />
-          </p>
-        </Example>
-        <Example
-          title="GuidedTour"
-          source="src/components/tour/GuidedTour.tsx"
-          code={
-            '<GuidedTour\n  steps={[{ target: "#tour-target", title: "Start here", body: "Your next step." }]}\n  onClose={() => setTourOpen(false)}\n/>'
-          }
-        >
-          <Button fullWidth={false} type="button" onClick={() => setTour(true)}>
-            Preview guided tour
-          </Button>
-          <p className="sg-note">
-            Uses the real tour overlay and existing page targets.
-          </p>
-        </Example>
-      </div>
-      {tour && (
-        <GuidedTour
-          label="STYLEGUIDE TOUR"
-          steps={[
-            {
-              target: "#sg-feedback-title",
-              title: "Feedback that helps",
-              body: "Reuse loading, retry and countdown components to keep game states consistent.",
-            },
-            {
-              target: "#sg-catalog-title",
-              title: "Find the source",
-              body: "Search the catalog for component contracts, source paths and dependencies.",
-            },
-          ]}
-          onClose={() => setTour(false)}
-        />
-      )}
-    </>
-  );
-}
-
-function Catalog() {
-  const [search, setSearch] = useState("");
-  const entries = componentCatalog.filter((entry) =>
-    `${entry.name} ${entry.path} ${entry.group} ${entry.usage} ${entry.dependencies}`
-      .toLowerCase()
-      .includes(search.trim().toLowerCase()),
-  );
-  return (
-    <>
-      <label className="sg-search">
-        <Search size={19} />
-        <span className="sg-sr-only">Search component catalog</span>
-        <input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search components, props or source paths…"
-          type="search"
-        />
-      </label>
-      <p className="sg-note" role="status">
-        {entries.length} of {componentCatalog.length} component modules
-      </p>
-      <div className="sg-catalog">
-        {entries.map((entry) => (
-          <article key={entry.path}>
-            <div>
-              <span className="sg-tag">{entry.group}</span>
-              <h3>{entry.name}</h3>
-              <code>{entry.path}</code>
-            </div>
-            <div>
-              <p>{entry.usage}</p>
-              <p className="sg-note">{entry.dependencies}</p>
-            </div>
-          </article>
-        ))}
-      </div>
-      {entries.length === 0 && (
-        <div className="sg-empty">
-          <Search size={28} />
-          <p>No components match “{search}”.</p>
-          <button
-            className="sg-text-button"
-            type="button"
-            onClick={() => setSearch("")}
-          >
-            Clear search
-          </button>
-        </div>
-      )}
-    </>
-  );
-}
 
 export default function Styleguide() {
   const [name, setName] = useState("Team Chaos");
@@ -456,20 +80,20 @@ export default function Styleguide() {
       </a>
       <header className="sg-topbar">
         <Link to="/" className="sg-brand">
-          <Sparkles size={23} />
+          <Icon name="sparkles" className="icon--size-23" />
           <span>
             CHAOS<span>CRAWL</span>
           </span>
         </Link>
         <span className="sg-topbar-label">DESIGN REFERENCE</span>
         <Link to="/">
-          Open app <ArrowUpRight size={16} />
+          Open app <Icon name="arrow-up-right" className="icon--size-16" />
         </Link>
       </header>
       <div className="sg-layout">
         <aside className="sg-sidebar">
           <div className="sg-sidebar-label">
-            <Layers3 size={16} /> THE TOOLKIT
+            <Icon name="layers3" className="icon--size-16" /> THE TOOLKIT
           </div>
           <nav aria-label="Styleguide sections">
             {sections.map(([id, number, title]) => (
@@ -503,7 +127,8 @@ export default function Styleguide() {
             </p>
             <div>
               <span className="sg-hero-pill">
-                <Check size={15} /> Live component examples
+                <Icon name="check" className="icon--size-15" /> Live component
+                examples
               </span>
               <span className="sg-hero-pill">Local demo data</span>
             </div>
@@ -526,8 +151,8 @@ export default function Styleguide() {
             </div>
             <p className="sg-note">
               Player and host screens also use #d3fb6e for lime accents; the
-              legacy Button uses Tailwind lime-300. These are existing values,
-              not interchangeable tokens.
+              Button retains the original lime-300 value through an SCSS token.
+              These are existing values, not interchangeable tokens.
             </p>
             <div className="sg-grid sg-foundation-grid">
               <div className="sg-foundation">
@@ -548,10 +173,26 @@ export default function Styleguide() {
                   includes system fallbacks.
                 </p>
                 <div className="sg-icon-row" aria-label="Lucide icon examples">
-                  <Star aria-label="Star" />
-                  <Trophy aria-label="Trophy" />
-                  <Sparkles aria-label="Sparkles" />
-                  <Copy aria-label="Copy" />
+                  <Icon
+                    name="star"
+                    className="icon--size-24"
+                    aria-label="Star"
+                  />
+                  <Icon
+                    name="trophy"
+                    className="icon--size-24"
+                    aria-label="Trophy"
+                  />
+                  <Icon
+                    name="sparkles"
+                    className="icon--size-24"
+                    aria-label="Sparkles"
+                  />
+                  <Icon
+                    name="copy"
+                    className="icon--size-24"
+                    aria-label="Copy"
+                  />
                   <span>lucide-react · label icon-only actions</span>
                 </div>
               </div>
@@ -636,6 +277,7 @@ export default function Styleguide() {
                   </p>
                 </Card>
               </Example>
+              <FormExamples />
               <div className="sg-foundation">
                 <span className="sg-eyebrow">REUSE NOTES</span>
                 <h3>Compose first.</h3>
@@ -658,14 +300,14 @@ export default function Styleguide() {
           <Section
             id="player"
             number="03"
-            title="Player components"
-            description="The same components used in session games, styled by PlayerGame.css."
+            title="Shared session experience"
+            description="Host and player share a presentation layer. These examples use local state only."
           >
             <Example
               title="SessionPlayerProfile + SessionGameTitlebar"
-              source="src/components/session/SessionGameChrome.tsx"
+              source="src/components/session/SessionPlayerProfile.tsx"
               code={
-                'import { SessionPlayerProfile, SessionGameTitlebar }\n  from "./components/session/SessionGameChrome";\nimport "./styles/PlayerGame.css";\n\n<SessionPlayerProfile viewerRole="player" name="Alex"\n  subtitle="Team Chaos" score={120} rank={2} />\n<SessionGameTitlebar name="Friday Night Chaos" code="123456"\n  copied={copied} onCopy={copyCode} />'
+                'import { SessionPlayerProfile } from "./components/session/SessionPlayerProfile";\nimport { SessionGameTitlebar } from "./components/session/SessionGameTitlebar";\n\n<SessionPlayerProfile viewerRole="player" name="Alex"\n  subtitle="Team Chaos" score={120} rank={2} />\n<SessionGameTitlebar name="Friday Night Chaos" code="123456"\n  copied={copied} onCopy={copyCode} />'
               }
             >
               <div className="sg-player-chrome">
@@ -720,6 +362,7 @@ export default function Styleguide() {
                 countdown is needed.
               </p>
             </Example>
+            <SessionExamples />
             <ParticipationExamples />
           </Section>
           <Section
@@ -781,7 +424,7 @@ export default function Styleguide() {
             <Catalog />
           </Section>
           <footer className="sg-footer">
-            <Sparkles size={18} />
+            <Icon name="sparkles" className="icon--size-18" />
             <p>
               Keep this reference useful: reuse the source components and update
               their examples when contracts change. New component modules appear

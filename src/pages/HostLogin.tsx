@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, LockKeyhole, Mail, Sparkles } from "lucide-react";
+import Icon from "../components/ui/Icon";
 import { supabase } from "../lib/sessionSupabase";
 import "../styles/HostPortal.css";
 
@@ -72,7 +72,7 @@ export default function HostLogin() {
       <div className="host-auth-shell">
         <Link to="/" className="host-brand" aria-label="Chaos Crawl home">
           <span className="host-brand-mark">
-            <Sparkles size={22} />
+            <Icon name="sparkles" className="icon--size-22" />
           </span>
           <span>
             CHAOS<span className="host-brand-accent">CRAWL</span>
@@ -137,7 +137,11 @@ export default function HostLogin() {
             <label className="host-field">
               <span>Email address</span>
               <div className="host-input-icon">
-                <Mail size={18} aria-hidden="true" />
+                <Icon
+                  name="mail"
+                  className="icon--size-18"
+                  aria-hidden="true"
+                />
                 <input
                   type="email"
                   value={email}
@@ -151,7 +155,11 @@ export default function HostLogin() {
             <label className="host-field">
               <span>Password</span>
               <div className="host-input-icon">
-                <LockKeyhole size={18} aria-hidden="true" />
+                <Icon
+                  name="lock-keyhole"
+                  className="icon--size-18"
+                  aria-hidden="true"
+                />
                 <input
                   type="password"
                   value={password}
@@ -188,7 +196,7 @@ export default function HostLogin() {
                 : mode === "login"
                   ? "Log in to Host Hub"
                   : "Create host account"}
-              {!busy && <ArrowRight size={18} />}
+              {!busy && <Icon name="arrow-right" className="icon--size-18" />}
             </button>
           </form>
           <p className="host-auth-footnote">

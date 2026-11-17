@@ -1,0 +1,31 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.session-final-round {
+  display: flex;
+  flex-direction: column;
+  gap: layout.$spacing-unit * 4;
+  color: colors.$ink;
+  &__heading {
+    color: colors.$white;
+    font-size: layout.$session-header-size;
+    text-shadow: none;
+  }
+  &__challenge {
+    border: layout.$session-border-width solid colors.$ink;
+    border-radius: layout.$radius-lg;
+    background: colors.$white;
+    padding: layout.$spacing-unit * 4;
+  }
+  &__challenge h3 {
+    font-size: layout.$session-header-size;
+    margin-block: layout.$spacing-unit * 2;
+  }
+  &__entries {
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(min(100%, layout.$session-media-height), 1fr)
+    );
+    gap: layout.$spacing-unit * 4;
+  }
+}

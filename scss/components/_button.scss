@@ -1,0 +1,38 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/shadows";
+@use "../variables/motion";
+
+// Stay in the utilities layer while legacy callers still supply utility overrides.
+@layer utilities {
+  .btn {
+    border-radius: layout.$radius-pill;
+    background-color: colors.$action;
+    padding: layout.$spacing-unit * 4 layout.$spacing-unit * 6;
+    color: colors.$black;
+    font-weight: fonts.$weight-action;
+    text-transform: uppercase;
+    box-shadow: shadows.$action;
+    transition-property:
+      color, background-color, border-color, outline-color,
+      text-decoration-color, fill, stroke, opacity, box-shadow, transform,
+      translate, scale, rotate, filter, backdrop-filter, display,
+      content-visibility, overlay, pointer-events;
+    transition-duration: motion.$duration-interaction;
+    transition-timing-function: motion.$easing-interaction;
+
+    &--block {
+      width: 100%;
+    }
+
+    @media (hover: hover) {
+      &:hover {
+        scale: motion.$scale-hover;
+        background-color: colors.$black;
+        color: colors.$white;
+        box-shadow: shadows.$action-hover;
+      }
+    }
+  }
+}

@@ -1,17 +1,8 @@
+import type { User } from "@supabase/supabase-js";
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import {
-  Compass,
-  Gamepad2,
-  Heart,
-  Home,
-  LogOut,
-  Plus,
-  Sparkles,
-  CircleHelp,
-} from "lucide-react";
-import type { User } from "@supabase/supabase-js";
 import { supabase } from "../../lib/supabase";
+import Icon from "../ui/Icon";
 import "../../styles/HostTheme.css";
 
 interface HostShellProps {
@@ -67,7 +58,7 @@ export default function HostShell({
       <header className="host-app-header">
         <Link className="host-brand" to={homeHref}>
           <span className="host-brand-mark">
-            <Sparkles size={21} />
+            <Icon name="sparkles" className="icon--size-21" />
           </span>
           <span>
             CHAOS<span className="host-brand-accent">CRAWL</span>
@@ -80,7 +71,7 @@ export default function HostShell({
               `host-top-link${isActive ? " is-active" : ""}`
             }
           >
-            <Plus size={17} /> Plan game
+            <Icon name="plus" className="icon--size-17" /> Plan game
           </NavLink>
           <NavLink
             to="/host/games"
@@ -88,7 +79,7 @@ export default function HostShell({
               `host-top-link${isActive ? " is-active" : ""}`
             }
           >
-            <Gamepad2 size={17} /> My games
+            <Icon name="gamepad2" className="icon--size-17" /> My games
           </NavLink>
           <NavLink
             to="/host/explore"
@@ -96,7 +87,7 @@ export default function HostShell({
               `host-top-link${isActive ? " is-active" : ""}`
             }
           >
-            <Compass size={17} /> Explore
+            <Icon name="compass" className="icon--size-17" /> Explore
           </NavLink>
           <NavLink
             to="/host/saved"
@@ -104,11 +95,11 @@ export default function HostShell({
               `host-top-link${isActive ? " is-active" : ""}`
             }
           >
-            <Heart size={17} /> Saved
+            <Icon name="heart" className="icon--size-17" /> Saved
           </NavLink>
         </nav>
         <div className="host-header-right">
-          <CircleHelp size={21} className="host-header-help" />
+          <Icon name="circle-help" className="icon--size-21 host-header-help" />
           <div className="host-user-chip">
             <span className="host-user-avatar">
               {displayName.slice(0, 1).toUpperCase()}
@@ -124,7 +115,7 @@ export default function HostShell({
               title="Sign out"
               onClick={() => void signOut()}
             >
-              <LogOut size={18} />
+              <Icon name="log-out" className="icon--size-18" />
             </button>
           )}
         </div>
@@ -156,7 +147,7 @@ export default function HostShell({
                   onClick={() => navigate("/host/games/new")}
                   type="button"
                 >
-                  <Plus size={18} /> Create new game
+                  <Icon name="plus" className="icon--size-18" /> Create new game
                 </button>
               )}
             </div>
@@ -171,19 +162,19 @@ export default function HostShell({
       {!readOnlyPreview && (
         <nav className="host-mobile-nav" aria-label="Host navigation">
           <NavLink to="/host" end>
-            <Home size={18} />
+            <Icon name="home" className="icon--size-18" />
             <span>Home</span>
           </NavLink>
           <NavLink to="/host/games">
-            <Gamepad2 size={18} />
+            <Icon name="gamepad2" className="icon--size-18" />
             <span>Games</span>
           </NavLink>
           <NavLink to="/host/explore">
-            <Compass size={18} />
+            <Icon name="compass" className="icon--size-18" />
             <span>Explore</span>
           </NavLink>
           <NavLink to="/host/saved">
-            <Heart size={18} />
+            <Icon name="heart" className="icon--size-18" />
             <span>Saved</span>
           </NavLink>
         </nav>

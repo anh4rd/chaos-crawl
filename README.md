@@ -82,7 +82,7 @@ and [Vite source-map guide](https://docs.sentry.io/platforms/javascript/guides/r
 | `npm run dev`                             | Start the local development server                                   |
 | `npm run build`                           | Check strict TypeScript contracts and build production assets        |
 | `npm run preview`                         | Serve the production build locally                                   |
-| `npm run lint`                            | Check application and unit-test code with Oxlint                     |
+| `npm run lint`                            | Check TypeScript/JS, SCSS and formatting                             |
 | `npm test`                                | Run deterministic unit and component regression tests                |
 | `npm run test:watch`                      | Run unit tests in watch mode                                         |
 | `npm run format`                          | Format source, tests, configuration, and this document               |
@@ -110,6 +110,26 @@ journey, and deletes only players named with that invocation's random UUID
 prefix. Setup and cleanup failures fail the test. No live journeys are run by
 `npm run test:e2e`, and no live backend is needed for local unit or default browser
 regressions.
+
+## Agent guidance and styling migration
+
+[AGENTS.md](AGENTS.md) is the source of coding rules for this repository. Keep
+strict TypeScript and preserve the current routes, Supabase contracts and visual
+identity. [Refactor progress](docs/refactor-progress.md) records completed slices,
+verification evidence, and remaining work.
+
+New and migrated styles use project-owned SCSS in `scss/`, global BEM classes,
+and shared design tokens. `src/main.tsx` imports `scss/style.scss` once after the
+legacy globals. Existing CSS and Tailwind remain during the staged migration;
+keep their import order and do not expand their usage. The shared Button, Card,
+Input, DataError, Field, Toggle, Icon and Dialog now have SCSS blocks.
+
+`npm run lint` runs Oxlint, Stylelint and formatting checks. Run `npm run lint:js`
+or `npm run lint:scss` for an individual linter. `npm run review:load` reports the
+review-relevant diff against `main`, including uncommitted and untracked source.
+Above roughly 800 changed lines, supply a review map and distinguish mechanical
+verification from behavior needing human review. New runtime dependencies still
+require approval.
 
 ## Application boundaries
 

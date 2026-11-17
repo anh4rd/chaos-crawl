@@ -1,213 +1,24 @@
+import Icon from "../components/ui/Icon";
+
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import {
-  ArrowRight,
-  CalendarDays,
-  Check,
-  Clock3,
-  Edit3,
-  LoaderCircle,
-  MapPin,
-  Play,
-  Plus,
-  Sparkles,
-  Users,
-} from "lucide-react";
-import { supabase } from "../lib/sessionSupabase";
-import { challengeIcon } from "../lib/challengeVisuals";
 import HostShell from "../components/host/HostShell";
+import { GameCard } from "../features/host-hub/GameCard";
+import {
+  type HostDirectoryEntry,
+  type HostGame,
+  type HostPreviewIdentity,
+} from "../features/host-hub/types";
 import { createOrGetHostGameSession } from "../lib/gameSessions";
+import { supabase } from "../lib/sessionSupabase";
+import { dateLabel, localDateKey } from "../utils/hostDate";
 import "../styles/HostPortal.css";
 import "../styles/HostPlanning.css";
 import "../styles/HostHub.css";
 import "../styles/HostTheme.css";
 
-interface HostDirectoryEntry {
-  host_id: string;
-  email: string | null;
-  display_name: string | null;
-  created_at: string;
-  game_count: number;
-}
-
-interface HostPreviewIdentity {
-  id: string;
-  email: string | null;
-  display_name: string | null;
-}
-
-interface HostGame {
-  id: string;
-  name: string;
-  event_date: string | null;
-  start_time: string | null;
-  end_time: string | null;
-  player_count: number;
-  venue_name: string | null;
-  status: "draft" | "planned" | "live" | "completed";
-  plan_data?: {
-    gamePhotoUrl?: string | null;
-    selectedTasks?: Array<{
-      id?: string;
-      title: string;
-      description?: string;
-      kind?: string;
-    }>;
-  } | null;
-}
-
 const HOST_GAME_SUMMARY_FIELDS =
   "id,name,event_date,start_time,end_time,player_count,venue_name,status,plan_data";
-
-function localDateKey() {
-  const date = new Date();
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
-function dateLabel(value: string | null) {
-  if (!value) return "Date to be confirmed";
-  const date = new Date(`${value}T12:00:00`);
-  return date.toLocaleDateString(undefined, {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-function timeLabel(value: string | null) {
-  if (!value) return "Time TBC";
-  return value.slice(0, 5);
-}
-
-function GameCard({
-  game,
-  onEdit,
-  onPlay,
-  playing,
-  readOnly = false,
-}: {
-  game: HostGame;
-  onEdit: (id: string) => void;
-  onPlay: (game: HostGame) => void;
-  playing: boolean;
-  readOnly?: boolean;
-}) {
-  const completed =
-    game.status === "completed" ||
-    (game.event_date
-      ? new Date(`${game.event_date}T23:59:59`).getTime() < Date.now()
-      : false);
-  const canPlay = game.status === "planned" || game.status === "live";
-  const challengeTasks = (game.plan_data?.selectedTasks ?? []).filter(
-    (task) => !task.kind || task.kind === "main",
-  );
-
-  return (
-    <article className="host-game-card">
-      <div className="host-game-card-art">
-        {game.plan_data?.gamePhotoUrl ? (
-          <img src={game.plan_data.gamePhotoUrl} alt={`${game.name} cover`} />
-        ) : (
-          <>
-            <Sparkles size={27} />
-            <span>{game.name.slice(0, 1).toUpperCase() || "C"}</span>
-          </>
-        )}
-      </div>
-      <div className="host-game-card-content">
-        <div className="host-card-topline">
-          <span className={`host-status host-status--${game.status}`}>
-            {game.status === "planned"
-              ? "Planned"
-              : game.status === "draft"
-                ? "Draft"
-                : game.status === "live"
-                  ? "Live"
-                  : "Completed"}
-          </span>
-          <span className="host-muted host-small">
-            {completed ? "Past game" : readOnly ? "Host game" : "Your game"}
-          </span>
-        </div>
-        <h3>{game.name}</h3>
-        {challengeTasks.length > 0 && (
-          <div
-            className="host-game-challenge-icons"
-            aria-label="Challenges in this game"
-          >
-            {challengeTasks.slice(0, 4).map((task, index) => (
-              <span
-                key={task.id ?? `${task.title}-${index}`}
-                title={task.title}
-              >
-                {challengeIcon(task.title, task.description)}
-              </span>
-            ))}
-          </div>
-        )}
-        <div className="host-game-meta">
-          <span>
-            <CalendarDays size={15} />
-            {dateLabel(game.event_date)}
-          </span>
-          <span>
-            <Clock3 size={15} />
-            {timeLabel(game.start_time)}
-            {game.end_time ? `–${timeLabel(game.end_time)}` : ""}
-          </span>
-        </div>
-        <div className="host-game-meta">
-          <span>
-            <MapPin size={15} />
-            {game.venue_name || "Venue not set"}
-          </span>
-          <span>
-            <Users size={15} />
-            About {game.player_count} players
-          </span>
-        </div>
-        <div className="host-game-actions">
-          <button
-            type="button"
-            className="host-button host-button--secondary"
-            onClick={() => onEdit(game.id)}
-            disabled={readOnly}
-          >
-            <Edit3 size={15} />{" "}
-            {completed
-              ? "View plan"
-              : game.status === "draft"
-                ? "Continue setup"
-                : "Edit plan"}
-          </button>
-          {canPlay && (
-            <button
-              type="button"
-              className="host-button host-button--lime"
-              onClick={() => onPlay(game)}
-              disabled={playing || readOnly}
-            >
-              {playing ? (
-                <LoaderCircle size={15} className="host-button-spinner" />
-              ) : (
-                <Play size={15} />
-              )}
-              {playing
-                ? "Starting…"
-                : game.status === "live"
-                  ? "Resume live game"
-                  : "Play game"}
-            </button>
-          )}
-          {readOnly && (
-            <span className="host-preview-readonly-label">Read-only</span>
-          )}
-        </div>
-      </div>
-    </article>
-  );
-}
 
 export default function HostHub() {
   const navigate = useNavigate();
@@ -372,22 +183,22 @@ export default function HostHub() {
         {dashboardGame ? (
           <>
             <div className="host-context-art">
-              <Sparkles size={30} />
+              <Icon name="sparkles" className="icon--size-30" />
               <span>{dashboardGame.name.slice(0, 1).toUpperCase()}</span>
             </div>
             <div className="host-context-game-copy">
               <h3>{dashboardGame.name}</h3>
               <ul>
                 <li>
-                  <CalendarDays size={15} />
+                  <Icon name="calendar-days" className="icon--size-15" />
                   {dateLabel(dashboardGame.event_date)}
                 </li>
                 <li>
-                  <Users size={15} />
+                  <Icon name="users" className="icon--size-15" />
                   {dashboardGame.player_count} players (target)
                 </li>
                 <li>
-                  <MapPin size={15} />
+                  <Icon name="map-pin" className="icon--size-15" />
                   {dashboardGame.venue_name || "Venue not set"}
                 </li>
               </ul>
@@ -399,7 +210,7 @@ export default function HostHub() {
               onClick={() => editGame(dashboardGame.id)}
               disabled={Boolean(viewAsHostId)}
             >
-              <Edit3 size={17} />
+              <Icon name="edit3" className="icon--size-17" />
             </button>
           </>
         ) : (
@@ -425,7 +236,11 @@ export default function HostHub() {
               {setupChecks.map((item) => (
                 <li key={item.label} className={item.done ? "is-complete" : ""}>
                   <span className="host-context-check">
-                    {item.done ? <Check size={14} /> : "○"}
+                    {item.done ? (
+                      <Icon name="check" className="icon--size-14" />
+                    ) : (
+                      "○"
+                    )}
                   </span>
                   {item.label}
                 </li>
@@ -447,7 +262,7 @@ export default function HostHub() {
                 : dashboardGame.status === "planned"
                   ? "Play this game"
                   : "Continue setup"}{" "}
-              <ArrowRight size={16} />
+              <Icon name="arrow-right" className="icon--size-16" />
             </button>
           </>
         ) : (
@@ -457,12 +272,13 @@ export default function HostHub() {
             onClick={() => navigate("/host/games/new")}
             disabled={Boolean(viewAsHostId)}
           >
-            Plan your first game <ArrowRight size={16} />
+            Plan your first game{" "}
+            <Icon name="arrow-right" className="icon--size-16" />
           </button>
         )}
       </section>
       <div className="host-context-tip">
-        <Sparkles size={17} />
+        <Icon name="sparkles" className="icon--size-17" />
         <span>
           <strong>Make it yours.</strong> Edit a plan any time before the game
           starts.
@@ -592,7 +408,7 @@ export default function HostHub() {
         <section className="host-hub-summary" aria-label="Host Hub summary">
           <article>
             <span className="host-hub-summary-icon">
-              <CalendarDays size={22} />
+              <Icon name="calendar-days" className="icon--size-22" />
             </span>
             <div>
               <strong>{upcoming.length}</strong>
@@ -601,7 +417,7 @@ export default function HostHub() {
           </article>
           <article>
             <span className="host-hub-summary-icon">
-              <Users size={22} />
+              <Icon name="users" className="icon--size-22" />
             </span>
             <div>
               <strong>
@@ -612,7 +428,7 @@ export default function HostHub() {
           </article>
           <article>
             <span className="host-hub-summary-icon">
-              <Sparkles size={22} />
+              <Icon name="sparkles" className="icon--size-22" />
             </span>
             <div>
               <strong>{games.length}</strong>
@@ -659,7 +475,7 @@ export default function HostHub() {
               </div>
             ) : (
               <div className="host-empty-state">
-                <Sparkles size={25} />
+                <Icon name="sparkles" className="icon--size-25" />
                 <h3>No games yet</h3>
                 <p>Your saved game plans will appear here.</p>
                 {!viewAsHostId && (
@@ -668,7 +484,8 @@ export default function HostHub() {
                     onClick={() => navigate("/host/games/new")}
                     type="button"
                   >
-                    <Plus size={17} /> Create your first game
+                    <Icon name="plus" className="icon--size-17" /> Create your
+                    first game
                   </button>
                 )}
               </div>
@@ -688,7 +505,7 @@ export default function HostHub() {
             </div>
           ) : (
             <div className="host-empty-state">
-              <Sparkles size={25} />
+              <Icon name="sparkles" className="icon--size-25" />
               <h3>It's quiet… suspiciously quiet.</h3>
               <p>
                 Start with a few details. You can sort out the challenges next.
@@ -699,7 +516,8 @@ export default function HostHub() {
                   onClick={() => navigate("/host/games/new")}
                   type="button"
                 >
-                  <Plus size={17} /> Create your first game
+                  <Icon name="plus" className="icon--size-17" /> Create your
+                  first game
                 </button>
               )}
             </div>

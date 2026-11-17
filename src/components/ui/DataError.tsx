@@ -10,7 +10,7 @@ export default function DataError({
   as?: "main" | "div";
 }) {
   return (
-    <Container className="mx-auto max-w-md space-y-4 p-6">
+    <Container className="data-error">
       <p role="alert">{error.message}</p>
       <Button
         type="button"

@@ -6,7 +6,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, ArrowRight, X } from "lucide-react";
+import Icon from "../ui/Icon";
 import "../../styles/GuidedTour.css";
 
 export interface GuidedTourStep {
@@ -179,7 +179,7 @@ export default function GuidedTour({
             {label} · {index + 1} OF {steps.length}
           </span>
           <button type="button" onClick={onClose} aria-label="Close tour">
-            <X size={18} />
+            <Icon name="x" className="icon--size-18" />
           </button>
         </div>
         <div className="cc-tour-progress">
@@ -208,7 +208,7 @@ export default function GuidedTour({
               disabled={index === 0}
               onClick={() => setIndex((value) => Math.max(0, value - 1))}
             >
-              <ArrowLeft size={16} /> Back
+              <Icon name="arrow-left" className="icon--size-16" /> Back
             </button>
             <button
               type="button"
@@ -220,7 +220,7 @@ export default function GuidedTour({
               }
             >
               {index === steps.length - 1 ? "Finish" : "Next"}{" "}
-              <ArrowRight size={16} />
+              <Icon name="arrow-right" className="icon--size-16" />
             </button>
           </div>
         </div>

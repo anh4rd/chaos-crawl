@@ -1,0 +1,13 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/shadows";
+
+@layer utilities {
+  .card {
+    border-radius: layout.$radius-lg;
+    background-color: colors.$white;
+    padding: layout.$spacing-unit * 6;
+    box-shadow: shadows.$surface;
+    backdrop-filter: blur(layout.$surface-blur);
+  }
+}

@@ -1,0 +1,75 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/motion";
+
+.toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: layout.$toggle-gap;
+  margin: layout.$toggle-margin 0;
+  padding: layout.$toggle-padding;
+  border: layout.$toggle-border-width solid colors.$toggle-border;
+  border-radius: layout.$toggle-radius;
+  background: colors.$toggle-surface;
+  cursor: pointer;
+
+  span {
+    display: flex;
+    flex-direction: column;
+    gap: layout.$toggle-copy-gap;
+  }
+
+  strong {
+    font-size: fonts.$size-label;
+    color: colors.$toggle-title;
+  }
+
+  small {
+    font-size: fonts.$size-caption;
+    color: colors.$toggle-detail;
+    line-height: 1.4;
+  }
+
+  input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &__track {
+    position: relative;
+    width: layout.$toggle-track-width;
+    height: layout.$toggle-track-height;
+    flex: none;
+    border-radius: layout.$toggle-track-radius;
+    background: colors.$toggle-track;
+    transition: motion.$duration-toggle;
+
+    &::after {
+      position: absolute;
+      top: layout.$toggle-thumb-offset;
+      left: layout.$toggle-thumb-offset;
+      width: layout.$toggle-thumb-size;
+      height: layout.$toggle-thumb-size;
+      border-radius: 50%;
+      background: colors.$white;
+      content: "";
+      transition: motion.$duration-toggle;
+    }
+  }
+
+  input:focus-visible + .toggle__track {
+    box-shadow: 0 0 0 layout.$focus-ring-width colors.$purple;
+  }
+
+  input:checked + .toggle__track {
+    background: colors.$purple;
+
+    &::after {
+      left: layout.$toggle-thumb-checked-offset;
+      background: colors.$accent-soft;
+    }
+  }
+}

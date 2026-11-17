@@ -6,27 +6,9 @@ import {
   type FormEvent,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowRight,
-  BookmarkCheck,
-  Check,
-  Clock3,
-  Compass,
-  Heart,
-  MapPin,
-  Search,
-  Sparkles,
-  Users,
-  Wallet,
-  X,
-  Plus,
-  Send,
-  ShieldCheck,
-  CheckCircle2,
-  XCircle,
-} from "lucide-react";
-import { supabase } from "../lib/sessionSupabase";
 import HostShell from "../components/host/HostShell";
+import Icon from "../components/ui/Icon";
+import { supabase } from "../lib/sessionSupabase";
 import "../styles/HostPortal.css";
 import "../styles/HostPlanning.css";
 import "../styles/HostTheme.css";
@@ -1088,7 +1070,7 @@ export default function HostExplore() {
           </p>
         </div>
         <div className="host-explore-hero-art" aria-hidden="true">
-          <Sparkles size={52} />
+          <Icon name="sparkles" className="icon--size-52" />
           <span>
             IDEAS
             <br />
@@ -1108,7 +1090,8 @@ export default function HostExplore() {
           <div className="host-community-section-heading">
             <div>
               <span className="host-community-kicker">
-                <ShieldCheck size={14} /> PLATFORM MODERATION
+                <Icon name="shield-check" className="icon--size-14" /> PLATFORM
+                MODERATION
               </span>
               <h2>
                 Community review queue <span>{pendingSubmissions.length}</span>
@@ -1152,7 +1135,8 @@ export default function HostExplore() {
                       void reviewSubmission(submission, "approved")
                     }
                   >
-                    <CheckCircle2 size={15} /> Approve
+                    <Icon name="check-circle2" className="icon--size-15" />{" "}
+                    Approve
                   </button>
                   <button
                     type="button"
@@ -1162,7 +1146,7 @@ export default function HostExplore() {
                       void reviewSubmission(submission, "rejected")
                     }
                   >
-                    <XCircle size={15} /> Reject
+                    <Icon name="x-circle" className="icon--size-15" /> Reject
                   </button>
                 </div>
               </article>
@@ -1187,7 +1171,7 @@ export default function HostExplore() {
               setCategory("all");
             }}
           >
-            <Sparkles size={16} /> Tasks{" "}
+            <Icon name="sparkles" className="icon--size-16" /> Tasks{" "}
             <span>{tasks.length + communityTasks.length}</span>
           </button>
           <button
@@ -1200,7 +1184,8 @@ export default function HostExplore() {
               setCategory("all");
             }}
           >
-            <MapPin size={16} /> Locations <span>{locations.length}</span>
+            <Icon name="map-pin" className="icon--size-16" /> Locations{" "}
+            <span>{locations.length}</span>
           </button>
           <button
             type="button"
@@ -1212,11 +1197,12 @@ export default function HostExplore() {
               setCategory("all");
             }}
           >
-            <Compass size={16} /> Routes <span>{routes.length}</span>
+            <Icon name="compass" className="icon--size-16" /> Routes{" "}
+            <span>{routes.length}</span>
           </button>
         </div>
         <label className="host-explore-search">
-          <Search size={17} />
+          <Icon name="search" className="icon--size-17" />
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -1229,7 +1215,7 @@ export default function HostExplore() {
               onClick={() => setSearch("")}
               aria-label="Clear search"
             >
-              <X size={15} />
+              <Icon name="x" className="icon--size-15" />
             </button>
           )}
         </label>
@@ -1277,7 +1263,7 @@ export default function HostExplore() {
                 className="host-button host-button--primary"
                 onClick={() => setShowCreateChallenge(true)}
               >
-                <Plus size={16} /> Create challenge
+                <Icon name="plus" className="icon--size-16" /> Create challenge
               </button>
             )}
           </div>
@@ -1322,9 +1308,9 @@ export default function HostExplore() {
                       title={saved ? "Saved" : "Save for later"}
                     >
                       {saved ? (
-                        <BookmarkCheck size={18} />
+                        <Icon name="bookmark-check" className="icon--size-18" />
                       ) : (
-                        <Heart size={18} />
+                        <Icon name="heart" className="icon--size-18" />
                       )}
                     </button>
                   </div>
@@ -1334,26 +1320,26 @@ export default function HostExplore() {
                     {task.prepMinutes || task.performanceMinutes ? (
                       <>
                         <span>
-                          <Clock3 size={14} />
+                          <Icon name="clock3" className="icon--size-14" />
                           Prep {task.prepMinutes ?? 0} min
                         </span>
                         <span>
-                          <Clock3 size={14} />
+                          <Icon name="clock3" className="icon--size-14" />
                           Performance {task.performanceMinutes ?? 0} min
                         </span>
                       </>
                     ) : (
                       <span>
-                        <Clock3 size={14} />
+                        <Icon name="clock3" className="icon--size-14" />
                         {task.minutes} min
                       </span>
                     )}
                     <span>
-                      <Sparkles size={14} />
+                      <Icon name="sparkles" className="icon--size-14" />
                       {task.points} points
                     </span>
                     <span>
-                      <Wallet size={14} />
+                      <Icon name="wallet" className="icon--size-14" />
                       {task.setup === "none"
                         ? "No kit"
                         : task.setup === "basic"
@@ -1471,9 +1457,9 @@ export default function HostExplore() {
                       title={saved ? "Saved" : "Save for later"}
                     >
                       {saved ? (
-                        <BookmarkCheck size={18} />
+                        <Icon name="bookmark-check" className="icon--size-18" />
                       ) : (
-                        <Heart size={18} />
+                        <Icon name="heart" className="icon--size-18" />
                       )}
                     </button>
                   </div>
@@ -1481,11 +1467,11 @@ export default function HostExplore() {
                   <p>{location.description}</p>
                   <div className="host-explore-metadata">
                     <span>
-                      <Wallet size={14} />
+                      <Icon name="wallet" className="icon--size-14" />
                       {location.cost} cost
                     </span>
                     <span>
-                      <Users size={14} />
+                      <Icon name="users" className="icon--size-14" />
                       {location.bestFor[0]}
                     </span>
                   </div>
@@ -1507,7 +1493,8 @@ export default function HostExplore() {
                     className="host-button host-button--primary host-explore-use"
                     onClick={() => selectLocationIdea(location)}
                   >
-                    Use this venue idea <ArrowRight size={15} />
+                    Use this venue idea{" "}
+                    <Icon name="arrow-right" className="icon--size-15" />
                   </button>
                 </article>
               );
@@ -1542,9 +1529,9 @@ export default function HostExplore() {
                       title={saved ? "Saved" : "Save for later"}
                     >
                       {saved ? (
-                        <BookmarkCheck size={18} />
+                        <Icon name="bookmark-check" className="icon--size-18" />
                       ) : (
-                        <Heart size={18} />
+                        <Icon name="heart" className="icon--size-18" />
                       )}
                     </button>
                   </div>
@@ -1552,15 +1539,15 @@ export default function HostExplore() {
                   <p>{route.description}</p>
                   <div className="host-explore-metadata">
                     <span>
-                      <Clock3 size={14} />
+                      <Icon name="clock3" className="icon--size-14" />
                       {route.duration}
                     </span>
                     <span>
-                      <Wallet size={14} />
+                      <Icon name="wallet" className="icon--size-14" />
                       {route.budget} budget
                     </span>
                     <span>
-                      <MapPin size={14} />
+                      <Icon name="map-pin" className="icon--size-14" />
                       {route.stops.length} stops / stages
                     </span>
                   </div>
@@ -1576,7 +1563,7 @@ export default function HostExplore() {
                     onClick={() => toggleRoute(route.id)}
                   >
                     {expanded ? "Hide route outline" : "Preview route"}{" "}
-                    <ArrowRight size={15} />
+                    <Icon name="arrow-right" className="icon--size-15" />
                   </button>
                   {expanded && (
                     <div className="host-explore-route-outline">
@@ -1605,11 +1592,13 @@ export default function HostExplore() {
                   >
                     {saved ? (
                       <>
-                        <Check size={16} /> Saved route
+                        <Icon name="check" className="icon--size-16" /> Saved
+                        route
                       </>
                     ) : (
                       <>
-                        <Heart size={16} /> Save route
+                        <Icon name="heart" className="icon--size-16" /> Save
+                        route
                       </>
                     )}
                   </button>
@@ -1621,7 +1610,7 @@ export default function HostExplore() {
 
         {!itemCount && (
           <div className="host-empty-state">
-            <Search size={24} />
+            <Icon name="search" className="icon--size-24" />
             <h3>No matches</h3>
             <p>Try a different search or clear your filters.</p>
             <button
@@ -1678,7 +1667,7 @@ export default function HostExplore() {
                 }}
                 aria-label="Close"
               >
-                <X size={18} />
+                <Icon name="x" className="icon--size-18" />
               </button>
             </div>
             <form
@@ -1836,7 +1825,11 @@ export default function HostExplore() {
                           }))
                         }
                       >
-                        {selected ? <Check size={13} /> : <PlusIcon />}
+                        {selected ? (
+                          <Icon name="check" className="icon--size-13" />
+                        ) : (
+                          <PlusIcon />
+                        )}
                         {tag}
                       </button>
                     );
@@ -1848,7 +1841,7 @@ export default function HostExplore() {
               </fieldset>
               {!editingSubmission && (
                 <div className="host-community-submit-note">
-                  <ShieldCheck size={16} />
+                  <Icon name="shield-check" className="icon--size-16" />
                   <span>
                     Submissions are private until approved by the Chaos Crawl
                     team. Approved challenges become visible to all hosts.
@@ -1879,11 +1872,13 @@ export default function HostExplore() {
                     )
                   ) : editingSubmission ? (
                     <>
-                      <Check size={15} /> Save changes
+                      <Icon name="check" className="icon--size-15" /> Save
+                      changes
                     </>
                   ) : (
                     <>
-                      <Send size={15} /> Submit for review
+                      <Icon name="send" className="icon--size-15" /> Submit for
+                      review
                     </>
                   )}
                 </button>

@@ -1,36 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ArrowRight,
-  CalendarClock,
-  Check,
-  CheckCircle2,
-  ChevronRight,
-  CircleDot,
-  Clock3,
-  Flag,
-  ListChecks,
-  MapPin,
-  Minus,
-  Plus,
-  Radio,
-  Trophy,
-  Users,
-  X,
-} from "lucide-react";
+import Icon, { type IconName } from "../components/ui/Icon";
 
+import DataError from "../components/ui/DataError";
+import { useChallengeCompletions } from "../game/hooks/useChallengeCompletions";
+import { useChallenges, type Challenge } from "../game/hooks/useChallenges";
 import { useGameState } from "../game/hooks/useGameState";
 import { usePlayers, type Player } from "../game/hooks/usePlayers";
 import { usePubs } from "../game/hooks/usePubs";
-import { useChallenges, type Challenge } from "../game/hooks/useChallenges";
-import { useSideChallenges } from "../game/hooks/useSideChallenges";
-import { useChallengeCompletions } from "../game/hooks/useChallengeCompletions";
 import { useScoreEvents } from "../game/hooks/useScoreEvents";
+import { useSideChallenges } from "../game/hooks/useSideChallenges";
 import { updateGameState } from "../lib/gameApi";
-import { awardScore } from "../lib/scoreApi";
-import { deletePlayer, renamePlayer } from "../lib/playerApi";
-import DataError from "../components/ui/DataError";
 import { buildLeaderboards } from "../lib/leaderboard";
+import { deletePlayer, renamePlayer } from "../lib/playerApi";
+import { awardScore } from "../lib/scoreApi";
 import { supabase } from "../lib/supabase";
 import "../styles/HostPlanning.css";
 
@@ -53,12 +36,12 @@ interface Round {
 const TAB_ITEMS: Array<{
   id: HostTab;
   label: string;
-  Icon: typeof Radio;
+  icon: IconName;
 }> = [
-  { id: "live", label: "Live", Icon: Radio },
-  { id: "challenges", label: "Challenges", Icon: ListChecks },
-  { id: "scores", label: "Scores", Icon: Trophy },
-  { id: "players", label: "Players", Icon: Users },
+  { id: "live", label: "Live", icon: "radio" },
+  { id: "challenges", label: "Challenges", icon: "list-checks" },
+  { id: "scores", label: "Scores", icon: "trophy" },
+  { id: "players", label: "Players", icon: "users" },
 ];
 
 export default function AdminV2() {
@@ -507,7 +490,8 @@ export default function AdminV2() {
           </div>
           <div className="host-v2__event-row">
             <span>
-              <MapPin size={14} /> One venue · No travel between rounds
+              <Icon name="map-pin" className="icon--size-14" /> One venue · No
+              travel between rounds
             </span>
             <span>{players.length} players</span>
           </div>
@@ -535,7 +519,7 @@ export default function AdminV2() {
               <section className="host-v2__panel host-v2__panel--white">
                 <div className="host-v2__panel-topline">
                   <span className="host-v2__kicker">
-                    <Radio size={14} /> NOW
+                    <Icon name="radio" className="icon--size-14" /> NOW
                   </span>
                   {currentChallenge && (
                     <span className="host-v2__status host-v2__status--live">
@@ -547,7 +531,7 @@ export default function AdminV2() {
                   <>
                     <div className="host-v2__challenge-title-row">
                       <div className="host-v2__challenge-art">
-                        <Flag size={28} />
+                        <Icon name="flag" className="icon--size-28" />
                       </div>
                       <div className="host-v2__grow">
                         <h2>{currentChallenge.title}</h2>
@@ -562,7 +546,7 @@ export default function AdminV2() {
                     </div>
                     <div className="host-v2__meta-row">
                       <span>
-                        <CheckCircle2 size={15} />{" "}
+                        <Icon name="check-circle2" className="icon--size-15" />{" "}
                         {
                           completions.filter(
                             (item) =>
@@ -578,7 +562,8 @@ export default function AdminV2() {
                         className="host-v2__text-button"
                         onClick={() => openReview(currentChallenge)}
                       >
-                        Review <ChevronRight size={16} />
+                        Review{" "}
+                        <Icon name="chevron-right" className="icon--size-16" />
                       </button>
                     </div>
                   </>
@@ -593,18 +578,19 @@ export default function AdminV2() {
               <section className="host-v2__panel host-v2__panel--white">
                 <div className="host-v2__panel-topline">
                   <span className="host-v2__kicker">
-                    <ArrowRight size={14} /> NEXT
+                    <Icon name="arrow-right" className="icon--size-14" /> NEXT
                   </span>
                   {scheduledTime && (
                     <span className="host-v2__status host-v2__status--scheduled">
-                      <Clock3 size={13} /> {scheduledTime}
+                      <Icon name="clock3" className="icon--size-13" />{" "}
+                      {scheduledTime}
                     </span>
                   )}
                 </div>
                 {scheduledChallenge ? (
                   <div className="host-v2__challenge-title-row">
                     <div className="host-v2__challenge-art host-v2__challenge-art--lime">
-                      <CalendarClock size={25} />
+                      <Icon name="calendar-clock" className="icon--size-25" />
                     </div>
                     <div className="host-v2__grow">
                       <h2>{scheduledChallenge.title}</h2>
@@ -621,7 +607,7 @@ export default function AdminV2() {
                 ) : nextChallenge ? (
                   <div className="host-v2__challenge-title-row">
                     <div className="host-v2__challenge-art host-v2__challenge-art--lime">
-                      <CircleDot size={25} />
+                      <Icon name="circle-dot" className="icon--size-25" />
                     </div>
                     <div className="host-v2__grow">
                       <h2>{nextChallenge.title}</h2>
@@ -651,7 +637,7 @@ export default function AdminV2() {
                       {busyAction === `reveal-${nextChallenge.id}`
                         ? "Revealing…"
                         : "Reveal next challenge"}
-                      <ChevronRight size={17} />
+                      <Icon name="chevron-right" className="icon--size-17" />
                     </button>
                   )}
                   {scheduledChallenge && (
@@ -661,7 +647,8 @@ export default function AdminV2() {
                       disabled={Boolean(busyAction)}
                       onClick={() => void cancelScheduledReveal()}
                     >
-                      <X size={16} /> Cancel schedule
+                      <Icon name="x" className="icon--size-16" /> Cancel
+                      schedule
                     </button>
                   )}
                 </div>
@@ -687,7 +674,7 @@ export default function AdminV2() {
                       aria-label="Schedule next challenge"
                       onClick={() => void scheduleChallenge(nextChallenge)}
                     >
-                      <CalendarClock size={17} />
+                      <Icon name="calendar-clock" className="icon--size-17" />
                     </button>
                   </div>
                 )}
@@ -696,7 +683,8 @@ export default function AdminV2() {
               <section className="host-v2__panel host-v2__panel--tint">
                 <div className="host-v2__panel-topline">
                   <span className="host-v2__kicker">
-                    <Users size={14} /> LIVE CONTROLS
+                    <Icon name="users" className="icon--size-14" /> LIVE
+                    CONTROLS
                   </span>
                 </div>
                 <div className="host-v2__actions host-v2__actions--stack">
@@ -706,7 +694,8 @@ export default function AdminV2() {
                       className="host-v2__button host-v2__button--primary"
                       onClick={() => void setVoting(false)}
                     >
-                      Close voting & show results <Trophy size={17} />
+                      Close voting & show results{" "}
+                      <Icon name="trophy" className="icon--size-17" />
                     </button>
                   ) : game.show_vote_results ? (
                     <>
@@ -715,7 +704,8 @@ export default function AdminV2() {
                         className="host-v2__button host-v2__button--primary"
                         onClick={() => navigate("/vote-results")}
                       >
-                        View vote results <ChevronRight size={17} />
+                        View vote results{" "}
+                        <Icon name="chevron-right" className="icon--size-17" />
                       </button>
                       <button
                         type="button"
@@ -746,7 +736,8 @@ export default function AdminV2() {
                         disabled={!currentChallenge}
                         onClick={() => void setVoting(true, voteTarget)}
                       >
-                        Open voting <Trophy size={17} />
+                        Open voting{" "}
+                        <Icon name="trophy" className="icon--size-17" />
                       </button>
                     </>
                   )}
@@ -756,7 +747,7 @@ export default function AdminV2() {
                     onClick={() => void setSlideshow(!game.slideshow_open)}
                   >
                     {game.slideshow_open ? "Close slideshow" : "Open slideshow"}
-                    <ChevronRight size={17} />
+                    <Icon name="chevron-right" className="icon--size-17" />
                   </button>
                 </div>
               </section>
@@ -805,7 +796,11 @@ export default function AdminV2() {
                           key={challenge.id}
                         >
                           <div className="host-v2__list-icon">
-                            {isPast ? <Check size={17} /> : <Flag size={17} />}
+                            {isPast ? (
+                              <Icon name="check" className="icon--size-17" />
+                            ) : (
+                              <Icon name="flag" className="icon--size-17" />
+                            )}
                           </div>
                           <div className="host-v2__grow">
                             <div className="host-v2__title-line">
@@ -930,7 +925,8 @@ export default function AdminV2() {
               <section className="host-v2__panel host-v2__panel--white">
                 <div className="host-v2__panel-topline">
                   <span className="host-v2__kicker">
-                    <Plus size={14} /> POINTS ADJUSTMENT
+                    <Icon name="plus" className="icon--size-14" /> POINTS
+                    ADJUSTMENT
                   </span>
                 </div>
                 <div
@@ -963,14 +959,14 @@ export default function AdminV2() {
                     className={scoreAction === "award" ? "is-selected" : ""}
                     onClick={() => setScoreAction("award")}
                   >
-                    <Plus size={15} /> Award
+                    <Icon name="plus" className="icon--size-15" /> Award
                   </button>
                   <button
                     type="button"
                     className={scoreAction === "dock" ? "is-selected" : ""}
                     onClick={() => setScoreAction("dock")}
                   >
-                    <Minus size={15} /> Dock
+                    <Icon name="minus" className="icon--size-15" /> Dock
                   </button>
                 </div>
                 {scoreTarget === "player" ? (
@@ -1031,13 +1027,13 @@ export default function AdminV2() {
                   onClick={() => void handleAwardOrDock()}
                 >
                   {scoreAction === "award" ? "Award points" : "Dock points"}
-                  <ChevronRight size={17} />
+                  <Icon name="chevron-right" className="icon--size-17" />
                 </button>
               </section>
               <section className="host-v2__panel host-v2__panel--white">
                 <div className="host-v2__panel-topline">
                   <span className="host-v2__kicker">
-                    <Trophy size={14} /> LEADERBOARD
+                    <Icon name="trophy" className="icon--size-14" /> LEADERBOARD
                   </span>
                   <span className="host-v2__muted">
                     {scoresLoading ? "Updating…" : "Live scores"}
@@ -1106,7 +1102,8 @@ export default function AdminV2() {
                   className="host-v2__button host-v2__button--primary"
                   onClick={() => void setSlideshow(true)}
                 >
-                  Open slideshow <ChevronRight size={17} />
+                  Open slideshow{" "}
+                  <Icon name="chevron-right" className="icon--size-17" />
                 </button>
                 {game.show_vote_results && (
                   <button
@@ -1131,7 +1128,7 @@ export default function AdminV2() {
               <section className="host-v2__panel host-v2__panel--white">
                 <div className="host-v2__panel-topline">
                   <span className="host-v2__kicker">
-                    <Users size={14} /> TEAMS
+                    <Icon name="users" className="icon--size-14" /> TEAMS
                   </span>
                   <span className="host-v2__muted">{teams.length} teams</span>
                 </div>
@@ -1149,7 +1146,11 @@ export default function AdminV2() {
                     disabled={creatingTeam || !teamNameDraft.trim()}
                     onClick={() => void addTeam()}
                   >
-                    {creatingTeam ? "…" : <Plus size={18} />}
+                    {creatingTeam ? (
+                      "…"
+                    ) : (
+                      <Icon name="plus" className="icon--size-18" />
+                    )}
                   </button>
                 </div>
                 {teamsLoading ? (
@@ -1169,7 +1170,8 @@ export default function AdminV2() {
               <section className="host-v2__panel host-v2__panel--white">
                 <div className="host-v2__panel-topline">
                   <span className="host-v2__kicker">
-                    <Users size={14} /> PLAYER ROSTER
+                    <Icon name="users" className="icon--size-14" /> PLAYER
+                    ROSTER
                   </span>
                   <span className="host-v2__muted">
                     {players.length} players
@@ -1189,7 +1191,11 @@ export default function AdminV2() {
                     disabled={creatingPlayer || !newPlayerName.trim()}
                     onClick={() => void addPlayer()}
                   >
-                    {creatingPlayer ? "…" : <Plus size={18} />}
+                    {creatingPlayer ? (
+                      "…"
+                    ) : (
+                      <Icon name="plus" className="icon--size-18" />
+                    )}
                   </button>
                 </div>
                 {players.length ? (
@@ -1232,7 +1238,7 @@ export default function AdminV2() {
                           aria-label={`Remove ${player.name}`}
                           onClick={() => void removePlayer(player)}
                         >
-                          <X size={16} />
+                          <Icon name="x" className="icon--size-16" />
                         </button>
                       </article>
                     ))}
@@ -1249,7 +1255,7 @@ export default function AdminV2() {
         </div>
 
         <nav className="host-v2__bottom-nav" aria-label="Host navigation">
-          {TAB_ITEMS.map(({ id, label, Icon }) => (
+          {TAB_ITEMS.map(({ id, label, icon }) => (
             <button
               type="button"
               key={id}
@@ -1257,7 +1263,7 @@ export default function AdminV2() {
               aria-current={activeTab === id ? "page" : undefined}
               onClick={() => setActiveTab(id)}
             >
-              <Icon size={19} strokeWidth={2.5} />
+              <Icon name={icon} className="icon--size-19" strokeWidth={2.5} />
               <span>{label}</span>
             </button>
           ))}

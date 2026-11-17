@@ -1,0 +1,47 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.session-submission {
+  display: flex;
+  flex-direction: column;
+  gap: layout.$spacing-unit * 3;
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: layout.$spacing-unit * 3;
+  }
+  &__upload,
+  &__submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: layout.$spacing-unit * 2;
+    min-height: layout.$session-row-height;
+    padding: layout.$spacing-unit * 3;
+    border: layout.$session-border-width solid colors.$ink;
+    border-radius: layout.$radius-lg;
+    background: colors.$accent-soft;
+    color: colors.$purple-dark;
+    font-size: layout.$session-small-size;
+    font-weight: 900;
+    cursor: pointer;
+  }
+  &__upload {
+    position: relative;
+    overflow: hidden;
+  }
+  &__upload input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    width: 100%;
+    cursor: pointer;
+  }
+  &__upload:focus-within {
+    outline: layout.$session-border-width solid colors.$purple;
+  }
+  &__submit:disabled {
+    opacity: 0.56;
+    cursor: not-allowed;
+  }
+}

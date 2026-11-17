@@ -1,17 +1,18 @@
 import { useMemo, useState } from "react";
+import { LeaderboardCard } from "../features/leaderboard/LeaderboardCard";
 
 import { useNavigate } from "react-router-dom";
 
-import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
+import Card from "../components/ui/Card";
 import DataError from "../components/ui/DataError";
 
 import { usePlayers } from "../game/hooks/usePlayers";
 
 import { useScoreEvents } from "../game/hooks/useScoreEvents";
 
-import { buildLeaderboards, type LeaderboardEntry } from "../lib/leaderboard";
-import type { ScoreEvent } from "../types/database";
+import { buildLeaderboards } from "../lib/leaderboard";
+
 type LeaderboardMode = "teams" | "players";
 
 export default function Leaderboard() {
@@ -104,98 +105,5 @@ export default function Leaderboard() {
         Back to Game
       </Button>
     </main>
-  );
-}
-
-function ScoreHistoryRow({ event }: { event: ScoreEvent }) {
-  const awardedDate = event.awarded_at ? new Date(event.awarded_at) : null;
-
-  return (
-    <div className="rounded-xl border border-pink-500/50 bg-black/40 p-3">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="font-bold">{event.challenge_title}</h3>
-
-          <p className="mt-1 text-xs uppercase opacity-70">
-            {event.challenge_type}
-          </p>
-
-          {event.reason && <p className="mt-2 text-sm">{event.reason}</p>}
-
-          {awardedDate && (
-            <p className="mt-2 text-xs opacity-50">
-              {awardedDate.toLocaleString()}
-            </p>
-          )}
-        </div>
-
-        <strong className="text-xl">
-          {event.points > 0 ? "+" : ""}
-
-          {event.points}
-        </strong>
-      </div>
-    </div>
-  );
-}
-
-function LeaderboardCard({
-  entry,
-  index,
-  expanded,
-  onToggle,
-}: {
-  entry: LeaderboardEntry;
-  index: number;
-  expanded: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <Card>
-      <button type="button" onClick={onToggle} className="w-full text-left">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">
-              {index === 0
-                ? "👑"
-                : index === 1
-                  ? "🥈"
-                  : index === 2
-                    ? "🥉"
-                    : `${index + 1}.`}
-            </span>
-
-            <div>
-              <h2 className="text-xl font-bold">{entry.name}</h2>
-
-              <p className="text-sm opacity-70">
-                {entry.events.length} award
-                {entry.events.length === 1 ? "" : "s"}
-              </p>
-            </div>
-          </div>
-
-          <div className="text-right">
-            <div className="text-3xl font-bold">{entry.score}</div>
-
-            <div className="text-xs opacity-70">points</div>
-          </div>
-        </div>
-      </button>
-
-      {/* SCORE HISTORY */}
-
-      {expanded && (
-        <div className="mt-4 space-y-3 border-t border-white/20 pt-4">
-          {entry.events.length === 0 ? (
-            <p className="text-sm opacity-70">No points awarded yet.</p>
-          ) : (
-            entry.events.map((event) => (
-              <ScoreHistoryRow key={event.id} event={event} />
-            ))
-          )}
-        </div>
-      )}
-    </Card>
   );
 }

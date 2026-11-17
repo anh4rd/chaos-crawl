@@ -1,11 +1,11 @@
-import "./instrument";
 import * as Sentry from "@sentry/react";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { HashRouter } from "react-router-dom";
-
 import App from "./App";
+import "./instrument";
 import "./styles/Globals.css";
+import "../scss/style.scss";
 
 ReactDOM.createRoot(document.getElementById("root")!, {
   onUncaughtError: Sentry.reactErrorHandler(),

@@ -1,14 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import {
-  ArrowRight,
-  CalendarDays,
-  Clock3,
-  Gamepad2,
-  MapPin,
-  Play,
-  Users,
-} from "lucide-react";
+import Icon from "../components/ui/Icon";
 import { supabase } from "../lib/sessionSupabase";
 import "../styles/PreGameInvite.css";
 
@@ -113,23 +105,23 @@ export default function InviteLanding() {
           </p>
           <div className="pregame-meta">
             <span>
-              <CalendarDays size={17} />
+              <Icon name="calendar-days" className="icon--size-17" />
               {date}
             </span>
             {invite.start_time && (
               <span>
-                <Clock3 size={17} />
+                <Icon name="clock3" className="icon--size-17" />
                 {invite.start_time.slice(0, 5)}
               </span>
             )}
             {invite.venue_name && (
               <span>
-                <MapPin size={17} />
+                <Icon name="map-pin" className="icon--size-17" />
                 {invite.venue_name}
               </span>
             )}
             <span>
-              <Users size={17} />
+              <Icon name="users" className="icon--size-17" />
               {invite.joined_players} / {invite.player_limit} joined
             </span>
           </div>
@@ -139,13 +131,13 @@ export default function InviteLanding() {
               navigate(`/join?code=${encodeURIComponent(joinCode)}`)
             }
           >
-            Join the chaos <ArrowRight size={18} />
+            Join the chaos <Icon name="arrow-right" className="icon--size-18" />
           </button>
           <small>You'll choose your name and avatar when you join.</small>
         </section>
         <section className="pregame-card">
           <div className="pregame-section-title">
-            <Gamepad2 />
+            <Icon name="gamepad2" className="icon--size-24" />
             <h2>How to play</h2>
           </div>
           <div className="pregame-steps">
@@ -173,7 +165,8 @@ export default function InviteLanding() {
               className="pregame-secondary"
               onClick={() => navigate("/demo/player")}
             >
-              <Play size={17} /> Take the interactive game tour
+              <Icon name="play" className="icon--size-17" /> Take the
+              interactive game tour
             </button>
           )}
         </section>

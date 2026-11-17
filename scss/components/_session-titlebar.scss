@@ -1,0 +1,49 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.session-titlebar {
+  display: flex;
+  align-items: center;
+  gap: layout.$spacing-unit * 3;
+  padding: layout.$spacing-unit * 4;
+  background: colors.$white;
+  border: layout.$session-border-width solid colors.$ink;
+  border-radius: layout.$radius-lg;
+  &__art {
+    display: grid;
+    place-items: center;
+    width: layout.$session-avatar-size;
+    height: layout.$session-avatar-size;
+    overflow: hidden;
+    flex: none;
+    border-radius: layout.$radius-lg;
+    background: colors.$accent-soft;
+  }
+  &__art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  &__name {
+    flex: 1;
+    min-width: 0;
+  }
+  &__name strong,
+  &__name small,
+  &__code strong,
+  &__code small {
+    display: block;
+  }
+  &__code small,
+  &__name small {
+    font-size: layout.$session-label-size;
+  }
+  &__copy {
+    display: grid;
+    place-items: center;
+    min-height: layout.$session-row-height;
+    border: 0;
+    background: transparent;
+    color: colors.$purple;
+    cursor: pointer;
+  }
+}

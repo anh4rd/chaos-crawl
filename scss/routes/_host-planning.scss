@@ -1,0 +1,12 @@
+@use "../variables/layout";
+
+.host-app {
+  @media (max-width: layout.$host-mobile-breakpoint) {
+    .setup-navigation {
+      bottom: calc(
+        #{layout.$host-mobile-nav-height + layout.$setup-navigation-gap} +
+          env(safe-area-inset-bottom)
+      );
+    }
+  }
+}

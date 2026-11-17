@@ -2,22 +2,22 @@
 const notes: Record<string, { usage: string; dependencies: string }> = {
   Button: {
     usage:
-      'Primary action. fullWidth defaults to true; accepts native button props and className. Set type="button" outside form submission.',
+      'SCSS .btn primary action. fullWidth defaults to true; accepts native button props and className. Set type="button" outside form submission.',
     dependencies: "None. Import from src/components/ui/Button.",
   },
   Card: {
     usage:
-      "White rounded surface. Compose content through children; extend with className.",
+      "SCSS .card white rounded surface. Compose content through children; extend with className.",
     dependencies: "None. Import from src/components/ui/Card.",
   },
   Input: {
     usage:
-      "Text, email and number fields. Accepts native input props; provide a visible label with htmlFor.",
+      "SCSS .input text, email and number fields. Accepts native input props; provide a visible label with htmlFor.",
     dependencies: "None. Import from src/components/ui/Input.",
   },
   DataError: {
     usage:
-      'Full-page error and retry. Pass error: Error and retry: () => Promise<void>. Defaults to a main landmark; use as="div" when embedded in another page.',
+      'SCSS .data-error page error and retry. Pass error: Error and retry: () => Promise<void>. Defaults to a main landmark; use as="div" when embedded in another page.',
     dependencies: "None; retry is supplied by the caller.",
   },
   HostGuard: {
@@ -31,17 +31,140 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     dependencies:
       "Router, Supabase auth, HostPortal.css and HostTheme.css. Even previewUser mode reads auth.",
   },
-  SessionGameChrome: {
+  SessionPlayerProfile: {
     usage:
-      "Named exports: SessionPlayerProfile (viewerRole, name, subtitle, score, rank, optional avatarUrl/badge) and SessionGameTitlebar (name, code, onCopy, optional photoUrl/copied).",
+      "Player/host profile with score, rank, optional avatar and badge. See the live example above.",
     dependencies:
-      "PlayerGame.css; profile host link needs a Router. Both have live examples above.",
+      "SCSS .session-profile and Router for the host link. Data is supplied by the caller.",
+  },
+  SessionGameTitlebar: {
+    usage:
+      "Game title, optional art and copyable join code. Pass name, code, onCopy and optional copied/photoUrl.",
+    dependencies:
+      "SCSS .session-titlebar; clipboard behavior belongs to the caller.",
+  },
+  Field: {
+    usage:
+      "Visible label and optional hint wrapping a native input, select or textarea. Pass label, hint and children.",
+    dependencies: "SCSS .field. A live example appears in UI primitives.",
+  },
+  Toggle: {
+    usage: "Labeled native checkbox. Pass title, detail, checked and onChange.",
+    dependencies: "SCSS .toggle. A live example appears in UI primitives.",
+  },
+  Icon: {
+    usage:
+      "Semantic Lucide glyph. Pass name and an icon--size-* SCSS class; mark decorative icons aria-hidden.",
+    dependencies:
+      "lucide-react and SCSS .icon. Examples appear in Foundations and UI primitives.",
+  },
+  Dialog: {
+    usage:
+      "Mount when open. Pass label, onClose, optional className and panel children. Native modal focus and Escape handling.",
+    dependencies:
+      "Browser HTMLDialogElement and SCSS .dialog. A local demo appears in UI primitives.",
   },
   SessionMainChallengeCard: {
     usage:
       "Shared host/player challenge. Supply viewerRole, title, description, points, round, roundCount, durationMinutes, timerLabel and timerCaption. Compose buttons through action.",
     dependencies:
-      "PlayerGame.css. No data hooks; timer text is supplied by the caller.",
+      "SCSS .main-challenge. No data hooks; timer text is supplied by the caller.",
+  },
+  SessionPage: {
+    usage:
+      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+    dependencies:
+      "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionNavigation: {
+    usage:
+      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+    dependencies:
+      "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionNavItem: {
+    usage:
+      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+    dependencies:
+      "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionState: {
+    usage:
+      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+    dependencies:
+      "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionBreak: {
+    usage:
+      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+    dependencies:
+      "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionFeedback: {
+    usage:
+      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+    dependencies:
+      "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionLeaderboard: {
+    usage:
+      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+    dependencies:
+      "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionRankRow: {
+    usage:
+      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+    dependencies:
+      "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  EvidenceGallery: {
+    usage:
+      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+    dependencies:
+      "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionSubmission: {
+    usage:
+      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+    dependencies:
+      "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionChallengeCard: {
+    usage:
+      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+    dependencies:
+      "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionCandidate: {
+    usage:
+      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+    dependencies:
+      "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionVotingCard: {
+    usage:
+      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+    dependencies:
+      "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionFinalRound: {
+    usage:
+      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+    dependencies:
+      "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionRewardRound: {
+    usage:
+      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+    dependencies:
+      "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionReview: {
+    usage:
+      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+    dependencies:
+      "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },
   GuidedTour: {
     usage:

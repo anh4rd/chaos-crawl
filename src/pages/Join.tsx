@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { CheckCircle2, LoaderCircle, Users } from "lucide-react";
-import { supabase } from "../lib/sessionSupabase";
 import ChaosMonster from "../../public/chaos-logo.png";
+import Icon from "../components/ui/Icon";
+import { supabase } from "../lib/sessionSupabase";
 import "../styles/PlayerGame.css";
 
 type JoinMode = "join" | "rejoin";
@@ -154,7 +154,7 @@ export default function Join() {
 
         {notice && (
           <div className="join-message join-message--notice">
-            <CheckCircle2 size={17} />
+            <Icon name="check-circle2" className="icon--size-17" />
             <span>{notice}</span>
           </div>
         )}
@@ -202,7 +202,7 @@ export default function Join() {
                 <div className="join-form-card">
                   <label htmlFor="join-name">Your name?</label>
                   <div className="join-input-wrap">
-                    <Users size={17} />
+                    <Icon name="users" className="icon--size-17" />
                     <input
                       id="join-name"
                       autoComplete="given-name"
@@ -221,7 +221,7 @@ export default function Join() {
                   Used only to reconnect you to this game. No SMS is sent.
                 </p>
                 <div className="join-input-wrap">
-                  <Users size={17} />
+                  <Icon name="users" className="icon--size-17" />
                   <input
                     id="join-mobile"
                     type="tel"
@@ -245,7 +245,8 @@ export default function Join() {
           >
             {busy ? (
               <>
-                <LoaderCircle className="cc-spin" size={19} /> Joining…
+                <Icon name="loader-circle" className="icon--size-19 cc-spin" />{" "}
+                Joining…
               </>
             ) : (
               <>
@@ -254,7 +255,7 @@ export default function Join() {
                   : mode === "join"
                     ? "Join game"
                     : "Rejoin game"}{" "}
-                <CheckCircle2 size={18} />
+                <Icon name="check-circle2" className="icon--size-18" />
               </>
             )}
           </button>

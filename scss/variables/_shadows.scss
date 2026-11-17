@@ -1,0 +1,5 @@
+@use "colors";
+
+$action: 0 0 2px colors.$black;
+$action-hover: 0 0 15px colors.$action-glow;
+$surface: 0 0 1px colors.$black;

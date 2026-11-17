@@ -1,0 +1,22 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.evidence-gallery {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, layout.$session-media-height), 1fr)
+  );
+  gap: layout.$spacing-unit * 3;
+  &__item {
+    overflow: hidden;
+    border-radius: layout.$radius-lg;
+    background: colors.$purple-dark;
+  }
+  &__item img,
+  &__item video {
+    display: block;
+    width: 100%;
+    max-height: layout.$session-media-height;
+    object-fit: contain;
+  }
+}

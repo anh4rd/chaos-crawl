@@ -1,0 +1,17 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.session-leaderboard {
+  padding: layout.$spacing-unit * 4;
+  border-radius: layout.$radius-lg;
+  background: colors.$white;
+  border: layout.$session-border-width solid colors.$ink;
+  &__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: layout.$spacing-unit * 4;
+  }
+  &__heading h2 {
+    font-size: layout.$session-header-size;
+  }
+}

@@ -1,0 +1,36 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.session-candidate {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: layout.$spacing-unit * 3;
+  margin-block: layout.$spacing-unit * 2;
+  padding: layout.$spacing-unit * 3;
+  border: layout.$session-border-width solid colors.$control-border;
+  border-radius: layout.$radius-lg;
+  color: colors.$ink;
+  background: colors.$white;
+  text-align: left;
+  &[aria-pressed="true"] {
+    background: colors.$accent-soft;
+    border-color: colors.$purple;
+  }
+  &__avatar {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: layout.$session-avatar-size;
+    height: layout.$session-avatar-size;
+    border-radius: 50%;
+    background: colors.$control-border;
+    font-weight: 900;
+  }
+  &__copy {
+    flex: 1;
+  }
+  &__copy strong,
+  &__copy small {
+    display: block;
+  }
+}

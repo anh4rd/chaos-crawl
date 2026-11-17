@@ -1,18 +1,7 @@
-import { useState, useCallback } from "react";
-import {
-  Gamepad2,
-  Trophy,
-  ClipboardList,
-  Heart,
-  Upload,
-  Clock3,
-  Camera,
-  Sparkles,
-  Star,
-  Copy,
-} from "lucide-react";
-import { challengeIcon } from "../lib/challengeVisuals";
+import { useCallback, useState } from "react";
 import GuidedTour, { type GuidedTourStep } from "../components/tour/GuidedTour";
+import Icon from "../components/ui/Icon";
+import { challengeIcon } from "../lib/challengeVisuals";
 import "../styles/PlayerGame.css";
 import "../styles/GuidedTour.css";
 
@@ -85,11 +74,16 @@ export default function PlayerDemo() {
           </div>
           <div className="cc-player-score">
             <span className="cc-player-score-points">
-              <Star size={18} fill="currentColor" />
+              <Icon name="star" className="icon--size-18" fill="currentColor" />
               <strong>25</strong>
             </span>
             <span className="cc-player-score-rank">
-              <Trophy size={17} fill="currentColor" /> #3
+              <Icon
+                name="trophy"
+                className="icon--size-17"
+                fill="currentColor"
+              />{" "}
+              #3
             </span>
           </div>
         </section>
@@ -109,13 +103,13 @@ export default function PlayerDemo() {
               <strong>732471</strong>
             </span>
             <button type="button" aria-label="Copy sample game code">
-              <Copy size={19} />
+              <Icon name="copy" className="icon--size-19" />
             </button>
           </div>
         </section>
         <div className="cc-demo-tour-banner">
-          <Sparkles size={16} /> Interactive sample — nothing here changes a
-          real game{" "}
+          <Icon name="sparkles" className="icon--size-16" /> Interactive sample
+          — nothing here changes a real game{" "}
           <button type="button" onClick={() => setTourOpen(true)}>
             Restart tour
           </button>
@@ -129,21 +123,21 @@ export default function PlayerDemo() {
             className={`cc-player-page-tab${page === "game" ? " is-active" : ""}`}
             onClick={() => setPage("game")}
           >
-            <Gamepad2 size={17} />
+            <Icon name="gamepad2" className="icon--size-17" />
             <span>Game</span>
           </button>
           <button
             className={`cc-player-page-tab${page === "side-challenges" ? " is-active" : ""}`}
             onClick={() => setPage("side-challenges")}
           >
-            <ClipboardList size={17} />
+            <Icon name="clipboard-list" className="icon--size-17" />
             <span>Challenges</span>
           </button>
           <button
             className={`cc-player-page-tab${page === "leaderboard" ? " is-active" : ""}`}
             onClick={() => setPage("leaderboard")}
           >
-            <Trophy size={17} />
+            <Icon name="trophy" className="icon--size-17" />
             <span>Scores</span>
           </button>
         </nav>
@@ -177,7 +171,7 @@ export default function PlayerDemo() {
                 <span className="cc-player-time-chip">
                   <span>TIME</span>
                   <strong>
-                    <Clock3 size={15} />
+                    <Icon name="clock3" className="icon--size-15" />
                     11:03
                   </strong>
                 </span>
@@ -185,7 +179,8 @@ export default function PlayerDemo() {
               </div>
               <div className="cc-player-evidence-block" data-tour="demo-upload">
                 <label className="cc-player-upload-button">
-                  <Upload size={16} /> Upload Evidence
+                  <Icon name="upload" className="icon--size-16" /> Upload
+                  Evidence
                   <input
                     type="file"
                     accept="image/*,video/*"
@@ -207,7 +202,8 @@ export default function PlayerDemo() {
                 onClick={() => setSampleUpload(true)}
               >
                 {" "}
-                <Camera size={17} /> Mark challenge complete
+                <Icon name="camera" className="icon--size-17" /> Mark challenge
+                complete
               </button>
             </section>
             <section className="cc-player-state-card">
@@ -282,7 +278,8 @@ export default function PlayerDemo() {
               className="cc-player-vote-entry-link"
               onClick={() => setPage("final")}
             >
-              <Heart size={16} /> Open the final vote
+              <Icon name="heart" className="icon--size-16" /> Open the final
+              vote
             </button>
             <div className="cc-player-side-list">
               {[

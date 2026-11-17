@@ -1,0 +1,42 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: layout.$field-gap;
+  color: colors.$field-label;
+  font-size: fonts.$size-label;
+  font-weight: fonts.$weight-label;
+
+  small {
+    color: colors.$field-hint;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-caption;
+    line-height: 1.45;
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    min-height: layout.$control-height;
+    border: layout.$control-border-width solid colors.$control-border;
+    border-radius: layout.$control-radius;
+    padding: layout.$control-padding;
+    background: colors.$white;
+    color: colors.$control-text;
+    font: inherit;
+    outline: none;
+
+    &:focus {
+      border-color: colors.$purple;
+      box-shadow: 0 0 0 layout.$focus-ring-width colors.$control-focus-ring;
+    }
+  }
+
+  select[multiple] {
+    min-height: layout.$multiselect-height;
+  }
+}

@@ -1,3 +1,38 @@
+import SessionFeedback from "../components/session/SessionFeedback";
+import SessionReview from "../components/session/SessionReview";
+import SessionRewardRound from "../components/session/SessionRewardRound";
+import { rewardPresentation } from "../features/host-live/rewardPresentation";
+import SessionBreak from "../components/session/SessionBreak";
+import SessionChallengeCard from "../components/session/SessionChallengeCard";
+import SessionNavigation from "../components/session/SessionNavigation";
+import SessionPage from "../components/session/SessionPage";
+import SessionState from "../components/session/SessionState";
+import Icon from "../components/ui/Icon";
+import BreakTimerEditor from "../features/host-live/BreakTimerEditor";
+import ChallengeEditor from "../features/host-live/ChallengeEditor";
+import HostFinalRound from "../features/host-live/HostFinalRound";
+import HostManagement from "../features/host-live/HostManagement";
+import HostRewardRound from "../features/host-live/HostRewardRound";
+import HostSessionLeaderboard from "../features/host-live/HostSessionLeaderboard";
+import RoundOverrideDialog from "../features/host-live/RoundOverrideDialog";
+import type {
+  GameScheduleItem,
+  HostTab,
+  PlannedTaskInfo,
+  PresentationConnectionLike,
+  PresentationRequestConstructor,
+  RewardMethod,
+  RewardTargetKind,
+  SessionChallenge,
+  SessionPlayer,
+  SessionSubmission,
+  SessionTeam,
+} from "../features/host-live/types";
+import { useHostSessionData } from "../features/host-live/useHostSessionData";
+import SessionParticipant from "../features/session-player/SessionParticipant";
+import type { PlayerPage } from "../features/session-player/types";
+
+import { QRCodeSVG } from "qrcode.react";
 import {
   useCallback,
   useEffect,
@@ -7,282 +42,62 @@ import {
   type FormEvent,
 } from "react";
 import { Link, useParams } from "react-router-dom";
-import { QRCodeSVG } from "qrcode.react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  CalendarClock,
-  Check,
-  Clipboard,
-  Flag,
-  LoaderCircle,
-  Play,
-  RotateCcw,
-  Send,
-  Shield,
-  Users,
-  X,
-  Heart,
-  Trophy,
-  Crown,
-  Sparkles,
-  Gamepad2,
-  Medal,
-  ClipboardList,
-  Plus,
-  Pause,
-  Pencil,
-  Coffee,
-  Cast,
-  Upload,
-} from "lucide-react";
-import { supabase } from "../lib/sessionSupabase";
-import { challengeIcon } from "../lib/challengeVisuals";
 import SessionMainChallengeCard from "../components/session/SessionMainChallengeCard";
-import {
-  SessionGameTitlebar,
-  SessionPlayerProfile,
-} from "../components/session/SessionGameChrome";
+import GuidedTour, { type GuidedTourStep } from "../components/tour/GuidedTour";
+import { challengeIcon } from "../lib/challengeVisuals";
+import { supabase } from "../lib/sessionSupabase";
 import "../styles/HostPortal.css";
 import "../styles/HostLiveGame.css";
 import "../styles/PlayerGame.css";
-import GuidedTour, { type GuidedTourStep } from "../components/tour/GuidedTour";
-
-type SessionStatus = "lobby" | "live" | "completed";
-type RewardMethod = "voting" | "host_awards" | "audience_cheers";
-type RewardTargetKind = "player" | "team";
-type HostTab =
-  | "game"
-  | "leaderboard"
-  | "side-challenges"
-  | "reward-round"
-  | "final-round"
-  | "host-controls";
-interface GameSession {
-  id: string;
-  host_game_id: string | null;
-  host_id: string;
-  name: string;
-  event_date: string | null;
-  start_time: string | null;
-  end_time: string | null;
-  venue_name: string | null;
-  join_code: string;
-  status: SessionStatus;
-  teams_enabled: boolean;
-  host_chooses_teams: boolean;
-  team_size: number;
-  player_limit: number;
-  host_participates: boolean;
-  host_player_id: string | null;
-  current_round_number: number;
-  reward_methods: RewardMethod[];
-  created_at: string;
-  final_gallery_open: boolean;
-  final_voting_open: boolean;
-  final_vote_completed_at: string | null;
-  final_vote_winner_player_id: string | null;
-  final_vote_winner_evidence_id: string | null;
-  final_vote_winner_points: number;
-  final_vote_winner_vote_count: number;
-}
-interface SessionChallenge {
-  id: string;
-  session_id: string;
-  kind: "main" | "side" | "secret";
-  round_number: number | null;
-  title: string;
-  description: string;
-  points: number;
-  duration_minutes: number;
-  sort_order: number;
-  allow_photo_upload: boolean;
-}
-interface GameScheduleItem {
-  id?: string;
-  type: string;
-  title: string;
-  duration: number;
-  taskId?: string;
-  phase?: string;
-}
-interface PlannedTaskInfo {
-  id?: string;
-  title?: string;
-  equipment?: string[];
-  setup?: string;
-  prep?: string;
-}
-interface SessionPlayer {
-  id: string;
-  name: string;
-  avatar_url: string | null;
-  team_id: string | null;
-  score: number;
-  joined_at: string;
-  last_seen_at: string;
-}
-interface SessionTeam {
-  id: string;
-  name: string;
-  created_at: string;
-}
-interface SessionSubmission {
-  id: string;
-  player_id: string;
-  challenge_id: string;
-  status: "submitted" | "approved" | "rejected";
-  awarded_points: number;
-  submitted_at: string;
-}
-interface SecretMissionAssignment {
-  id: string;
-  session_id: string;
-  player_id: string;
-  challenge_id: string;
-  status:
-    "scheduled" | "sent" | "submitted" | "approved" | "rejected" | "cancelled";
-  scheduled_at: string;
-  sent_at: string | null;
-  submitted_at: string | null;
-  reviewed_at: string | null;
-  awarded_points: number;
-  final_review_outcome: "success" | "fail" | null;
-  created_at: string;
-}
-interface SecretReviewState {
-  session_id: string;
-  is_open: boolean;
-  voting_open: boolean;
-  current_assignment_id: string | null;
-  current_evidence_id: string | null;
-}
-interface SecretReviewAssignment {
-  session_id: string;
-  assignment_id: string;
-  status: "pending" | "voting" | "results";
-  success_votes: number;
-  fail_votes: number;
-  votes_cast: number;
-  outcome: "success" | "fail" | null;
-  points_awarded: number;
-  opened_at: string | null;
-  closed_at: string | null;
-}
-interface SecretReviewVote {
-  session_id: string;
-  assignment_id: string;
-  player_id: string;
-  vote: "success" | "fail";
-  voted_at: string;
-}
-interface SessionEvidence {
-  id: string;
-  session_id: string;
-  player_id: string;
-  challenge_id: string;
-  secret_assignment_id: string | null;
-  storage_path: string;
-  media_type: "image" | "video";
-  saved_for_final: boolean;
-  created_at: string;
-}
-interface SessionFinalVote {
-  session_id: string;
-  challenge_id: string;
-  player_id: string;
-  evidence_id: string;
-  voted_at: string;
-}
-interface SessionFinalRoundState {
-  session_id: string;
-  is_open: boolean;
-  voting_open: boolean;
-  slideshow_challenge_id: string | null;
-  slideshow_evidence_id: string | null;
-}
-interface SessionFinalRoundChallenge {
-  session_id: string;
-  challenge_id: string;
-  status: "pending" | "voting" | "results";
-  votes_cast: number;
-  opened_at: string | null;
-  closed_at: string | null;
-}
-interface PresentationConnectionLike {
-  state: string;
-  close: () => void;
-  addEventListener: (type: "statechange", listener: () => void) => void;
-}
-type PresentationRequestConstructor = new (urls: string[]) => {
-  start: () => Promise<PresentationConnectionLike>;
-};
-interface SessionRewardRound {
-  id: string;
-  session_id: string;
-  challenge_id: string;
-  reward_method: RewardMethod;
-  target_kind: RewardTargetKind;
-  points: number;
-  status: "open" | "completed" | "cancelled";
-  created_at: string;
-  started_at: string;
-  completed_at: string | null;
-  released_at: string | null;
-}
-interface SessionRewardVote {
-  id: string;
-  session_id: string;
-  reward_round_id: string;
-  voter_player_id: string;
-  target_player_id: string | null;
-  target_team_id: string | null;
-  voted_at: string;
-}
-interface SessionRewardAward {
-  id: string;
-  session_id: string;
-  reward_round_id: string;
-  winner_player_id: string | null;
-  winner_team_id: string | null;
-  points_awarded: number;
-  votes_received: number;
-}
 function hostPlayerStorageKey(sessionId: string) {
   return `chaos-crawl-host-player:${sessionId}`;
 }
 export default function HostLiveSession() {
   const { sessionId = "" } = useParams();
-  const [session, setSession] = useState<GameSession | null>(null);
-  const [challenges, setChallenges] = useState<SessionChallenge[]>([]);
-  const [players, setPlayers] = useState<SessionPlayer[]>([]);
-  const [teams, setTeams] = useState<SessionTeam[]>([]);
-  const [submissions, setSubmissions] = useState<SessionSubmission[]>([]);
-  const [secretAssignments, setSecretAssignments] = useState<
-    SecretMissionAssignment[]
-  >([]);
-  const [secretReviewState, setSecretReviewState] =
-    useState<SecretReviewState | null>(null);
-  const [secretReviewAssignments, setSecretReviewAssignments] = useState<
-    SecretReviewAssignment[]
-  >([]);
-  const [secretReviewVotes, setSecretReviewVotes] = useState<
-    SecretReviewVote[]
-  >([]);
-  const [evidence, setEvidence] = useState<SessionEvidence[]>([]);
-  const [finalVotes, setFinalVotes] = useState<SessionFinalVote[]>([]);
-  const [finalRoundState, setFinalRoundState] =
-    useState<SessionFinalRoundState | null>(null);
-  const [finalRoundChallenges, setFinalRoundChallenges] = useState<
-    SessionFinalRoundChallenge[]
-  >([]);
-  const [rewardRounds, setRewardRounds] = useState<SessionRewardRound[]>([]);
-  const [rewardVotes, setRewardVotes] = useState<SessionRewardVote[]>([]);
-  const [rewardAwards, setRewardAwards] = useState<SessionRewardAward[]>([]);
+  const {
+    session,
+    setSession,
+    challenges,
+    players,
+    teams,
+    submissions,
+    secretAssignments,
+    secretReviewState,
+    secretReviewAssignments,
+    secretReviewVotes,
+    evidence,
+    finalVotes,
+    finalRoundState,
+    finalRoundChallenges,
+    rewardRounds,
+    rewardVotes,
+    rewardAwards,
+    rewardChallengeId,
+    setRewardChallengeId,
+    rewardMethod,
+    setRewardMethod,
+    loading,
+    error,
+    setError,
+    load,
+  } = useHostSessionData(sessionId);
+  const [hostPlayerToken, setHostPlayerToken] = useState<string | null>(() =>
+    localStorage.getItem(hostPlayerStorageKey(sessionId)),
+  );
+  const [focusedHostChallenge, setFocusedHostChallenge] = useState<
+    string | null
+  >(null);
+  useEffect(() => {
+    setHostPlayerToken(localStorage.getItem(hostPlayerStorageKey(sessionId)));
+    setFocusedHostChallenge(null);
+  }, [sessionId]);
+  const navigateParticipant = useCallback(
+    (section: PlayerPage) =>
+      setActiveTab(section === "final" ? "final-round" : section),
+    [],
+  );
   const [showRewardSetup, setShowRewardSetup] = useState(false);
   const [showRewardOverlay, setShowRewardOverlay] = useState(false);
-  const [rewardChallengeId, setRewardChallengeId] = useState("");
-  const [rewardMethod, setRewardMethod] = useState<RewardMethod>("voting");
   const [rewardTargetKind, setRewardTargetKind] =
     useState<RewardTargetKind>("player");
   const [rewardPoints, setRewardPoints] = useState(10);
@@ -299,9 +114,7 @@ export default function HostLiveSession() {
   const [newSecretPoints, setNewSecretPoints] = useState(10);
   const [newSecretEvidenceRequired, setNewSecretEvidenceRequired] =
     useState(false);
-  const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [teamName, setTeamName] = useState("");
   const [activeTab, setActiveTab] = useState<HostTab>("game");
@@ -320,9 +133,6 @@ export default function HostLiveSession() {
   );
   const [teamPhotoUrls, setTeamPhotoUrls] = useState<Record<string, string>>(
     {},
-  );
-  const [leaderboardScope, setLeaderboardScope] = useState<"players" | "teams">(
-    "players",
   );
   const [hostPlayerName, setHostPlayerName] = useState("Host");
   const [hostDisplayName, setHostDisplayName] = useState("Host");
@@ -443,206 +253,6 @@ export default function HostLiveSession() {
   const navigateHostTour = useCallback((page: string) => {
     setActiveTab(page as HostTab);
   }, []);
-
-  const load = useCallback(async () => {
-    if (!sessionId) return;
-    // Send any scheduled missions whose time has arrived while this game is live.
-    const { error: dispatchError } = await supabase.rpc(
-      "cc_host_dispatch_due_secret_missions",
-      { p_session_id: sessionId },
-    );
-    if (dispatchError)
-      console.warn("SECRET MISSION DISPATCH:", dispatchError.message);
-
-    const [
-      sessionResult,
-      challengeResult,
-      playerResult,
-      teamResult,
-      submissionResult,
-      secretAssignmentResult,
-      secretReviewStateResult,
-      secretReviewAssignmentResult,
-      secretReviewVoteResult,
-      evidenceResult,
-      voteResult,
-      finalRoundStateResult,
-      finalRoundChallengesResult,
-      rewardRoundResult,
-      rewardVoteResult,
-      rewardAwardResult,
-    ] = await Promise.all([
-      supabase
-        .from("cc_game_sessions")
-        .select("*")
-        .eq("id", sessionId)
-        .single(),
-      supabase
-        .from("cc_game_session_challenges")
-        .select("*")
-        .eq("session_id", sessionId)
-        .order("sort_order", { ascending: true }),
-      supabase
-        .from("cc_game_session_players")
-        .select("id,name,avatar_url,team_id,score,joined_at,last_seen_at")
-        .eq("session_id", sessionId)
-        .order("joined_at", { ascending: true }),
-      supabase
-        .from("cc_game_session_teams")
-        .select("id,name,created_at")
-        .eq("session_id", sessionId)
-        .order("created_at", { ascending: true }),
-      supabase
-        .from("cc_game_session_submissions")
-        .select("id,player_id,challenge_id,status,awarded_points,submitted_at")
-        .eq("session_id", sessionId)
-        .order("submitted_at", { ascending: false }),
-      supabase
-        .from("cc_game_session_secret_assignments")
-        .select(
-          "id,session_id,player_id,challenge_id,status,scheduled_at,sent_at,submitted_at,reviewed_at,awarded_points,final_review_outcome,created_at",
-        )
-        .eq("session_id", sessionId)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("cc_game_session_secret_review_state")
-        .select(
-          "session_id,is_open,voting_open,current_assignment_id,current_evidence_id",
-        )
-        .eq("session_id", sessionId)
-        .maybeSingle(),
-      supabase
-        .from("cc_game_session_secret_review_assignments")
-        .select(
-          "session_id,assignment_id,status,success_votes,fail_votes,votes_cast,outcome,points_awarded,opened_at,closed_at",
-        )
-        .eq("session_id", sessionId),
-      supabase
-        .from("cc_game_session_secret_review_votes")
-        .select("session_id,assignment_id,player_id,vote,voted_at")
-        .eq("session_id", sessionId),
-      supabase
-        .from("cc_game_session_evidence")
-        .select(
-          "id,session_id,player_id,challenge_id,secret_assignment_id,storage_path,media_type,saved_for_final,created_at",
-        )
-        .eq("session_id", sessionId)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("cc_game_session_final_round_votes")
-        .select("session_id,challenge_id,player_id,evidence_id,voted_at")
-        .eq("session_id", sessionId),
-      supabase
-        .from("cc_game_session_final_round_state")
-        .select(
-          "session_id,is_open,voting_open,slideshow_challenge_id,slideshow_evidence_id",
-        )
-        .eq("session_id", sessionId)
-        .maybeSingle(),
-      supabase
-        .from("cc_game_session_final_round_challenges")
-        .select("session_id,challenge_id,status,votes_cast,opened_at,closed_at")
-        .eq("session_id", sessionId),
-      supabase
-        .from("cc_game_session_reward_rounds")
-        .select("*")
-        .eq("session_id", sessionId)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("cc_game_session_reward_votes")
-        .select(
-          "id,session_id,reward_round_id,voter_player_id,target_player_id,target_team_id,voted_at",
-        )
-        .eq("session_id", sessionId),
-      supabase
-        .from("cc_game_session_reward_awards")
-        .select(
-          "id,session_id,reward_round_id,winner_player_id,winner_team_id,points_awarded,votes_received",
-        )
-        .eq("session_id", sessionId),
-    ]);
-
-    if (sessionResult.error) {
-      setError(
-        `Couldn't load this game session: ${sessionResult.error.message}`,
-      );
-      setLoading(false);
-      return;
-    }
-    setSession(sessionResult.data as GameSession);
-    const loadedChallenges = (challengeResult.data ?? []) as SessionChallenge[];
-    setChallenges(loadedChallenges);
-    setRewardChallengeId(
-      (current) =>
-        current ||
-        loadedChallenges.find(
-          (item) =>
-            item.kind === "main" &&
-            item.round_number ===
-              Number(sessionResult.data.current_round_number),
-        )?.id ||
-        loadedChallenges.find((item) => item.kind === "main")?.id ||
-        loadedChallenges[0]?.id ||
-        "",
-    );
-    const allowedRewardMethods = ((sessionResult.data as GameSession)
-      .reward_methods ?? [
-      "voting",
-      "host_awards",
-      "audience_cheers",
-    ]) as RewardMethod[];
-    setRewardMethod((current) =>
-      allowedRewardMethods.includes(current)
-        ? current
-        : (allowedRewardMethods[0] ?? "host_awards"),
-    );
-    setPlayers((playerResult.data ?? []) as SessionPlayer[]);
-    setTeams((teamResult.data ?? []) as SessionTeam[]);
-    setSubmissions((submissionResult.data ?? []) as SessionSubmission[]);
-    setSecretAssignments(
-      (secretAssignmentResult.data ?? []) as SecretMissionAssignment[],
-    );
-    setSecretReviewState(
-      (secretReviewStateResult.data as SecretReviewState | null) ?? null,
-    );
-    setSecretReviewAssignments(
-      (secretReviewAssignmentResult.data ?? []) as SecretReviewAssignment[],
-    );
-    setSecretReviewVotes(
-      (secretReviewVoteResult.data ?? []) as SecretReviewVote[],
-    );
-    setEvidence((evidenceResult.data ?? []) as SessionEvidence[]);
-    setFinalVotes((voteResult.data ?? []) as SessionFinalVote[]);
-    setFinalRoundState(
-      (finalRoundStateResult.data as SessionFinalRoundState | null) ?? null,
-    );
-    setFinalRoundChallenges(
-      (finalRoundChallengesResult.data ?? []) as SessionFinalRoundChallenge[],
-    );
-    setRewardRounds((rewardRoundResult.data ?? []) as SessionRewardRound[]);
-    setRewardVotes((rewardVoteResult.data ?? []) as SessionRewardVote[]);
-    setRewardAwards((rewardAwardResult.data ?? []) as SessionRewardAward[]);
-    const loadError =
-      challengeResult.error ||
-      playerResult.error ||
-      teamResult.error ||
-      submissionResult.error ||
-      secretAssignmentResult.error ||
-      secretReviewStateResult.error ||
-      secretReviewAssignmentResult.error ||
-      secretReviewVoteResult.error ||
-      evidenceResult.error ||
-      voteResult.error ||
-      finalRoundStateResult.error ||
-      finalRoundChallengesResult.error ||
-      rewardRoundResult.error ||
-      rewardVoteResult.error ||
-      rewardAwardResult.error;
-    if (loadError)
-      setError(`Some game details could not load: ${loadError.message}`);
-    else setError("");
-    setLoading(false);
-  }, [sessionId]);
 
   useEffect(() => {
     let alive = true;
@@ -1180,6 +790,7 @@ export default function HostLiveSession() {
       return;
     }
     localStorage.setItem(hostPlayerStorageKey(session.id), playerToken);
+    setHostPlayerToken(playerToken);
     localStorage.setItem(
       `chaos-crawl-session-player:${joinCode.replace(/\D/g, "")}`,
       playerToken,
@@ -2333,35 +1944,16 @@ export default function HostLiveSession() {
   }
 
   async function openHostSideChallengeUpload(challenge: SessionChallenge) {
-    if (!session) return;
-    if (session.status !== "live") {
-      setError(
-        "Side-challenge evidence can be uploaded while the game is live.",
-      );
-      return;
-    }
-
-    const url = `${window.location.origin}${window.location.pathname}#/play/${session.join_code}/side-challenges?hostEmbed=1&challengeId=${challenge.id}`;
+    if (!session || session.status !== "live") return;
     if (
-      session.host_participates &&
-      localStorage.getItem(hostPlayerStorageKey(session.id))
+      !session.host_participates ||
+      !localStorage.getItem(hostPlayerStorageKey(session.id))
     ) {
-      window.open(url, "_blank", "noopener,noreferrer");
-      return;
+      await setHostParticipation(true);
     }
-
-    const uploadWindow = window.open("about:blank", "_blank");
-    if (!uploadWindow) {
-      setError("Allow pop-ups to open the host evidence uploader.");
-      return;
-    }
-    uploadWindow.opener = null;
-    const joined = await setHostParticipation(true);
-    if (!joined || !localStorage.getItem(hostPlayerStorageKey(session.id))) {
-      uploadWindow.close();
-      return;
-    }
-    uploadWindow.location.href = url;
+    if (!localStorage.getItem(hostPlayerStorageKey(session.id))) return;
+    setFocusedHostChallenge(challenge.id);
+    setActiveTab("side-challenges");
   }
 
   function openBreakChallengeEditor(challenge: SessionChallenge) {
@@ -2883,36 +2475,25 @@ export default function HostLiveSession() {
 
   if (loading) {
     return (
-      <main className="host-portal cc-host-live-standalone">
-        <div className="cc-host-standalone-loading">
-          <LoaderCircle className="cc-spin" size={24} /> Loading your game
-          session…
-        </div>
-      </main>
+      <SessionPage viewerRole="host">
+        <SessionState title="Loading your game session…" />
+      </SessionPage>
     );
   }
   if (!session) {
     return (
-      <main className="host-portal cc-host-live-standalone">
-        <section className="cc-host-standalone-error">
-          {error && (
-            <div className="host-alert host-alert--error" role="alert">
-              <span>{error}</span>
-              <button
-                type="button"
-                className="cc-host-alert-dismiss"
-                aria-label="Dismiss error"
-                onClick={() => setError("")}
-              >
-                <X size={16} />
-              </button>
-            </div>
-          )}
-          <Link className="host-button host-button--primary" to="/host">
-            Back to Host Hub
-          </Link>
-        </section>
-      </main>
+      <SessionPage viewerRole="host">
+        <SessionState
+          title="Could not load this game session"
+          action={
+            <Link className="btn" to="/host">
+              Back to Host Hub
+            </Link>
+          }
+        >
+          {error && <SessionFeedback message={error} />}
+        </SessionState>
+      </SessionPage>
     );
   }
 
@@ -2981,7 +2562,7 @@ export default function HostLiveSession() {
               GAME CODE <strong>{session.join_code}</strong>
             </span>
             <button type="button" onClick={() => void copyCode()}>
-              <Clipboard size={16} /> Copy code
+              <Icon name="clipboard" className="icon--size-16" /> Copy code
             </button>
           </div>
           <div className="cc-host-invite-qr">
@@ -3014,7 +2595,7 @@ export default function HostLiveSession() {
               {hostAvatarPreview ? (
                 <img src={hostAvatarPreview} alt="Profile preview" />
               ) : (
-                <Users size={27} />
+                <Icon name="users" className="icon--size-27" />
               )}
             </span>
             <span>
@@ -3039,9 +2620,9 @@ export default function HostLiveSession() {
               onClick={() => void setHostParticipation(true)}
             >
               {busy ? (
-                <LoaderCircle size={16} className="cc-spin" />
+                <Icon name="loader-circle" className="icon--size-16 cc-spin" />
               ) : (
-                <Gamepad2 size={16} />
+                <Icon name="gamepad2" className="icon--size-16" />
               )}{" "}
               Yes, I’ll play
             </button>
@@ -3051,7 +2632,7 @@ export default function HostLiveSession() {
               disabled={busy}
               onClick={() => void setHostParticipation(false)}
             >
-              <Shield size={16} /> No, I’ll host
+              <Icon name="shield" className="icon--size-16" /> No, I’ll host
             </button>
           </div>
           {hostPlayer && (
@@ -3218,7 +2799,7 @@ export default function HostLiveSession() {
                             {teamPhotoUrls[team.id] ? (
                               <img src={teamPhotoUrls[team.id]} alt="" />
                             ) : (
-                              <Users size={21} />
+                              <Icon name="users" className="icon--size-21" />
                             )}
                           </span>
                           <strong>{team.name}</strong>
@@ -3297,7 +2878,7 @@ export default function HostLiveSession() {
                 className="cc-host-team-start-shortcut"
                 onClick={() => goToLobbyStep(6)}
               >
-                Start Game <ArrowRight size={15} />
+                Start Game <Icon name="arrow-right" className="icon--size-15" />
               </button>
             </>
           )}
@@ -3325,7 +2906,7 @@ export default function HostLiveSession() {
                       {teamPhotoUrls[team.id] ? (
                         <img src={teamPhotoUrls[team.id]} alt="" />
                       ) : (
-                        <Users size={21} />
+                        <Icon name="users" className="icon--size-21" />
                       )}
                     </span>
                     <input
@@ -3356,7 +2937,7 @@ export default function HostLiveSession() {
                       {teamPhotoUrls[team.id] ? (
                         <img src={teamPhotoUrls[team.id]} alt="Team photo" />
                       ) : (
-                        <Plus size={20} />
+                        <Icon name="plus" className="icon--size-20" />
                       )}
                     </span>
                     <strong>Upload team picture</strong>
@@ -3462,7 +3043,7 @@ export default function HostLiveSession() {
             goToLobbyStep((lobbyStep - 1) as 1 | 2 | 3 | 4 | 5 | 6)
           }
         >
-          <ArrowLeft size={16} /> Back
+          <Icon name="arrow-left" className="icon--size-16" /> Back
         </button>
         {lobbyStep < 6 ? (
           <button
@@ -3472,7 +3053,8 @@ export default function HostLiveSession() {
               goToLobbyStep((lobbyStep + 1) as 1 | 2 | 3 | 4 | 5 | 6)
             }
           >
-            {lobbyStep === 5 ? "Next" : "Next"} <ArrowRight size={17} />
+            {lobbyStep === 5 ? "Next" : "Next"}{" "}
+            <Icon name="arrow-right" className="icon--size-17" />
           </button>
         ) : (
           <button
@@ -3482,9 +3064,9 @@ export default function HostLiveSession() {
             onClick={() => void startGame()}
           >
             {busy ? (
-              <LoaderCircle size={17} className="cc-spin" />
+              <Icon name="loader-circle" className="icon--size-17 cc-spin" />
             ) : (
-              <Play size={17} />
+              <Icon name="play" className="icon--size-17" />
             )}{" "}
             Start Game
           </button>
@@ -3493,397 +3075,410 @@ export default function HostLiveSession() {
     </section>
   );
 
+  const canParticipate = Boolean(
+    session.host_participates && hostPlayer && hostPlayerToken,
+  );
+  const participantSection =
+    activeTab === "final-round"
+      ? "final"
+      : activeTab === "leaderboard" || activeTab === "side-challenges"
+        ? activeTab
+        : "game";
   return (
-    <main className="host-portal cc-host-live-standalone">
-      <div className="cc-session-page cc-host-game-redesign cc-host-live-integrated">
-        <div className="cc-session-topbar" data-tour="host-overview">
-          <Link to="/host" className="cc-session-back">
-            <ArrowLeft size={17} /> Host Hub
-          </Link>
-          <div className="cc-host-topbar-right">
-            {headerPlayer && (
-              <span className="cc-host-topbar-score">
-                <Trophy size={15} />
-                {headerPlayer.score} pts · #{headerRank}
+    <SessionPage
+      viewerRole="host"
+      profile={{
+        name: hostPlayer?.name ?? headerPlayer?.name ?? hostDisplayName,
+        subtitle: hostPlayer
+          ? (teamById.get(hostPlayer.team_id ?? "")?.name ??
+            "Playing in this game")
+          : headerPlayer
+            ? "Current leader"
+            : "Game host",
+        avatarUrl: hostPlayer?.avatar_url ?? headerPlayer?.avatar_url,
+        score: headerPlayer?.score ?? 0,
+        rank: headerRank,
+        badge: hostPlayer ? "HOST" : headerPlayer ? "LEADER" : "HOST",
+      }}
+      game={{
+        name: session.name,
+        code: session.join_code,
+        photoUrl: gamePhotoUrl,
+        onCopy: () => void copyCode(),
+      }}
+      toolbar={
+        <HostManagement>
+          <div className="cc-session-topbar" data-tour="host-overview">
+            <Link to="/host" className="cc-session-back">
+              <Icon name="arrow-left" className="icon--size-17" /> Host Hub
+            </Link>
+            <div className="cc-host-topbar-right">
+              {headerPlayer && (
+                <span className="cc-host-topbar-score">
+                  <Icon name="trophy" className="icon--size-15" />
+                  {headerPlayer.score} pts · #{headerRank}
+                </span>
+              )}
+              <span className="cc-host-controls-badge">
+                <span className="cc-host-controls-dot" /> HOST CONTROLS
               </span>
-            )}
-            <span className="cc-host-controls-badge">
-              <span className="cc-host-controls-dot" /> HOST CONTROLS
-            </span>
-            <span
-              className={`cc-session-status cc-session-status--${session.status}`}
-            >
-              {session.status === "lobby"
-                ? "LOBBY"
-                : session.status === "live"
-                  ? "LIVE"
-                  : "COMPLETED"}
-            </span>
+              <span
+                className={`cc-session-status cc-session-status--${session.status}`}
+              >
+                {session.status === "lobby"
+                  ? "LOBBY"
+                  : session.status === "live"
+                    ? "LIVE"
+                    : "COMPLETED"}
+              </span>
+            </div>
           </div>
-        </div>
-
-        <SessionPlayerProfile
-          viewerRole="host"
-          name={hostPlayer?.name ?? headerPlayer?.name ?? hostDisplayName}
-          subtitle={
-            hostPlayer
-              ? (teamById.get(hostPlayer.team_id ?? "")?.name ??
-                "Playing in this game")
-              : headerPlayer
-                ? "Current leader"
-                : "Game host"
-          }
-          avatarUrl={hostPlayer?.avatar_url ?? headerPlayer?.avatar_url}
-          score={headerPlayer?.score ?? 0}
-          rank={headerRank}
-          badge={hostPlayer ? "HOST" : headerPlayer ? "LEADER" : "HOST"}
-        />
-        <SessionGameTitlebar
-          name={session.name}
-          code={session.join_code}
-          photoUrl={gamePhotoUrl}
-          onCopy={() => void copyCode()}
-        />
-
-        <section className="cc-host-live-intro" aria-label="Live game overview">
-          <div className="cc-host-live-intro-copy">
-            <span className="cc-host-live-eyebrow">
-              ONE GAME. EVERYONE PLAYS.
-            </span>
-            <h2>
-              Keep the chaos <span>moving.</span>
-            </h2>
-            <p>
-              Your player experience, with host controls where you need them.
-            </p>
-          </div>
-          <div
-            className="cc-host-live-role-legend"
-            aria-label="Control colour key"
-          >
-            <span>
-              <i className="cc-host-live-role-dot cc-host-live-role-dot--host" />{" "}
-              Host-only controls
-            </span>
-            <span>
-              <i className="cc-host-live-role-dot cc-host-live-role-dot--player" />{" "}
-              Player actions
-            </span>
-          </div>
-        </section>
-
-        {error && (
-          <div className="host-alert host-alert--error" role="alert">
-            <span>{error}</span>
-            <button
-              type="button"
-              className="cc-host-alert-dismiss"
-              aria-label="Dismiss error"
-              onClick={() => setError("")}
-            >
-              <X size={16} />
-            </button>
-          </div>
-        )}
-        {notice && (
-          <div className="host-alert host-alert--success" role="status">
-            <span>{notice}</span>
-            <button
-              type="button"
-              className="cc-host-alert-dismiss"
-              aria-label="Dismiss notice"
-              onClick={() => setNotice("")}
-            >
-              <X size={16} />
-            </button>
-          </div>
-        )}
-
-        <div className="cc-host-tour-action">
           <button
             type="button"
-            className="cc-tour-help-button cc-tour-help-button--host"
+            className="session-page__tour"
             onClick={() => setHostTourOpen(true)}
           >
             ✦ Take the host tour
           </button>
-        </div>
-        {session.status === "lobby" ? (
-          lobbyFlow
-        ) : (
-          <>
-            <nav
-              className="cc-host-game-tabs"
-              data-tour="host-sections"
-              aria-label="Game sections"
-            >
-              <button
-                type="button"
-                className={activeTab === "game" ? "is-active" : ""}
-                aria-current={activeTab === "game" ? "page" : undefined}
-                onClick={() => setActiveTab("game")}
-              >
-                <Gamepad2 size={18} />
-                <span>Game</span>
-              </button>
-              <button
-                type="button"
-                className={activeTab === "side-challenges" ? "is-active" : ""}
-                aria-current={
-                  activeTab === "side-challenges" ? "page" : undefined
-                }
-                onClick={() => setActiveTab("side-challenges")}
-              >
-                <ClipboardList size={18} />
-                <span>Challenges</span>
-                {submissions.filter(
-                  (item) =>
-                    item.status === "submitted" &&
-                    challengeById.get(item.challenge_id)?.kind !== "main",
-                ).length > 0 && (
-                  <b className="cc-host-tab-badge">
-                    {
-                      submissions.filter(
-                        (item) =>
-                          item.status === "submitted" &&
-                          challengeById.get(item.challenge_id)?.kind !== "main",
-                      ).length
-                    }
-                  </b>
+        </HostManagement>
+      }
+      navigation={
+        session.status !== "lobby" ? (
+          <SessionNavigation
+            active={
+              activeTab === "final-round"
+                ? "final"
+                : activeTab === "reward-round"
+                  ? "host-controls"
+                  : activeTab
+            }
+            showFinal
+            showHost
+            tourTarget="host-sections"
+            onSelect={(section) =>
+              setActiveTab(section === "final" ? "final-round" : section)
+            }
+          />
+        ) : undefined
+      }
+      feedback={
+        <>
+          {error && (
+            <SessionFeedback
+              message={error}
+              kind="error"
+              onDismiss={() => setError("")}
+            />
+          )}
+          {notice && (
+            <SessionFeedback
+              message={notice}
+              kind="success"
+              onDismiss={() => setNotice("")}
+            />
+          )}
+        </>
+      }
+      overlays={
+        <>
+          {editingBreakChallenge && (
+            <ChallengeEditor
+              busy={busy}
+              setEditingBreakChallenge={setEditingBreakChallenge}
+              saveBreakChallengeEdit={saveBreakChallengeEdit}
+              editingBreakChallenge={editingBreakChallenge}
+              editChallengeTitle={editChallengeTitle}
+              setEditChallengeTitle={setEditChallengeTitle}
+              editChallengeDescription={editChallengeDescription}
+              setEditChallengeDescription={setEditChallengeDescription}
+              editChallengeEquipment={editChallengeEquipment}
+              setEditChallengeEquipment={setEditChallengeEquipment}
+              editChallengeDuration={editChallengeDuration}
+              setEditChallengeDuration={setEditChallengeDuration}
+              editChallengePoints={editChallengePoints}
+              setEditChallengePoints={setEditChallengePoints}
+              editChallengeEvidence={editChallengeEvidence}
+              setEditChallengeEvidence={setEditChallengeEvidence}
+            />
+          )}
+          {editingBreakTimer && (
+            <BreakTimerEditor
+              busy={busy}
+              setEditingBreakTimer={setEditingBreakTimer}
+              saveBreakTimer={saveBreakTimer}
+              breakResumeRound={breakResumeRound}
+              session={session}
+              editBreakMinutes={editBreakMinutes}
+              setEditBreakMinutes={setEditBreakMinutes}
+              error={error}
+              setError={setError}
+            />
+          )}
+          {overridePrompt && (
+            <RoundOverrideDialog
+              busy={busy}
+              setOverridePrompt={setOverridePrompt}
+              overridePrompt={overridePrompt}
+              startOverrideReasons={startOverrideReasons}
+              players={players}
+              session={session}
+              unassignedPlayers={unassignedPlayers}
+              autoplayEnabled={autoplayEnabled}
+              teams={teams}
+              confirmHostOverride={confirmHostOverride}
+            />
+          )}
+          {hostTourOpen && (
+            <GuidedTour
+              steps={hostTourSteps}
+              onNavigate={navigateHostTour}
+              onClose={() => setHostTourOpen(false)}
+              label="HOST TOUR"
+            />
+          )}
+        </>
+      }
+    >
+      {session.status === "lobby" ? (
+        <HostManagement>{lobbyFlow}</HostManagement>
+      ) : (
+        <>
+          {canParticipate &&
+            activeTab !== "host-controls" &&
+            activeTab !== "reward-round" &&
+            activeTab !== "leaderboard" && (
+              <SessionParticipant
+                key={`${session.id}:${hostPlayerToken}`}
+                joinCode={session.join_code}
+                section={participantSection}
+                playerToken={hostPlayerToken ?? undefined}
+                embedded
+                onSectionChange={navigateParticipant}
+                onRecover={() => void openHostPlayerView()}
+                focusChallengeId={focusedHostChallenge}
+              />
+            )}
+          {!canParticipate &&
+            activeTab === "game" &&
+            activeRewardRound &&
+            !secretReviewState?.is_open && (
+              <SessionRewardRound
+                round={rewardPresentation(
+                  activeRewardRound,
+                  activeRewardChallenge?.title ?? "Reward round",
+                  activeRewardVotes,
+                  activeRewardAwards,
+                  rewardTargetRows,
+                  players,
+                  teams,
                 )}
-              </button>
-              <button
-                type="button"
-                className={activeTab === "leaderboard" ? "is-active" : ""}
-                aria-current={activeTab === "leaderboard" ? "page" : undefined}
-                onClick={() => setActiveTab("leaderboard")}
-              >
-                <Medal size={18} />
-                <span>Scores</span>
-              </button>
-              <button
-                type="button"
-                className={activeTab === "final-round" ? "is-active" : ""}
-                aria-current={activeTab === "final-round" ? "page" : undefined}
-                onClick={() => setActiveTab("final-round")}
-              >
-                <Heart size={18} />
-                <span>Final round</span>
-              </button>
-              <button
-                type="button"
-                data-tour="host-controls-tab"
-                className={`cc-host-controls-tab${activeTab === "host-controls" ? " is-active" : ""}`}
-                aria-current={
-                  activeTab === "host-controls" ? "page" : undefined
+              />
+            )}
+          {!canParticipate &&
+            activeTab === "game" &&
+            !activeRewardRound &&
+            !secretReviewState?.is_open &&
+            (session.status === "completed" ? (
+              <SessionState title="Game over. Chaos achieved." icon="flag">
+                <p>This session has finished.</p>
+              </SessionState>
+            ) : hostBreakActive ? (
+              <SessionBreak label={roundClockText} running={roundClockRunning}>
+                {nextBreakChallenge && (
+                  <p>
+                    Up next: {nextBreakChallenge.title} · starts{" "}
+                    {nextRoundStartAt?.toLocaleTimeString() ??
+                      "when the host resumes"}{" "}
+                    · ends{" "}
+                    {nextRoundEndAt?.toLocaleTimeString() ?? "after the timer"}
+                  </p>
+                )}
+              </SessionBreak>
+            ) : (
+              <SessionMainChallengeCard
+                viewerRole="host"
+                title={currentChallenge?.title ?? "Challenge not found"}
+                description={
+                  currentChallenge?.description ??
+                  "Check that this session has a main challenge assigned to the current round."
                 }
-                onClick={() => setActiveTab("host-controls")}
-              >
-                <Shield size={18} />
-                <span>Host</span>
-              </button>
-            </nav>
-
-            {activeTab === "game" && (
-              <section
-                className="cc-session-card cc-session-section cc-host-shared-game-card"
-                data-tour="host-player-game"
-              >
-                <div className="cc-session-section-heading cc-host-shared-game-heading">
-                  <div>
-                    <div className="cc-section-kicker">PLAYER EXPERIENCE</div>
-                    <h2>Game</h2>
-                    <p>
-                      You're in the same game space as players. Host-only
-                      actions live in their own tab.
-                    </p>
-                  </div>
+                points={currentChallenge?.points ?? 0}
+                round={session.current_round_number}
+                roundCount={mainRounds.length}
+                durationMinutes={currentChallenge?.duration_minutes ?? 0}
+                timerLabel={roundClockText}
+                timerCaption={
+                  hostBreakActive
+                    ? "BREAK"
+                    : roundClockRunning
+                      ? "TIME LEFT"
+                      : "READY"
+                }
+                actionTourTarget="host-round-timer"
+              />
+            ))}
+          {!canParticipate && activeTab === "side-challenges" && (
+            <section data-tour="player-side-challenges">
+              <h2 className="session-page__heading">Side challenges</h2>
+              {sideChallenges.length === 0 && (
+                <SessionState title="No side challenges added" />
+              )}
+              {sideChallenges.map((challenge) => (
+                <SessionChallengeCard
+                  key={challenge.id}
+                  id={challenge.id}
+                  title={challenge.title}
+                  description={challenge.description}
+                  points={challenge.points}
+                >
                   <button
                     type="button"
-                    className="host-button cc-host-control-shortcut"
-                    onClick={() => setActiveTab("host-controls")}
+                    className="btn"
+                    disabled={busy || session.status !== "live"}
+                    onClick={() => void openHostSideChallengeUpload(challenge)}
                   >
-                    <Shield size={15} /> Host controls
+                    Join & upload evidence
                   </button>
-                </div>
-                <div className="cc-host-game-preview-layout">
-                  <section className="cc-host-game-preview-main">
-                    {session.status === "completed" ? (
-                      <section className="cc-player-state-card">
-                        <span className="cc-player-eyebrow">GAME COMPLETE</span>
-                        <h2>That's a wrap!</h2>
-                        <p>
-                          Players can view their final scores and completed
-                          challenge history.
-                        </p>
-                      </section>
-                    ) : hostBreakActive ? (
-                      <section
-                        className="cc-host-break-card"
-                        aria-live="polite"
-                      >
-                        <div className="cc-host-break-header">
-                          <span className="cc-host-break-kicker">
-                            ✦ BREAK · ROUND{" "}
-                            {nextBreakChallenge?.round_number ??
-                              breakResumeRound ??
-                              session.current_round_number + 1}{" "}
-                            UP NEXT
-                          </span>
-                          <strong className="cc-host-break-countdown">
-                            {roundClockText}
-                          </strong>
-                        </div>
-                        <div className="cc-host-break-preview">
-                          {nextBreakChallenge ? (
-                            <>
-                              <div className="cc-host-break-challenge-title">
-                                <b aria-hidden="true">
-                                  {challengeIcon(
-                                    nextBreakChallenge.title,
-                                    nextBreakChallenge.description,
-                                  )}
-                                </b>
-                                <div>
-                                  <span>
-                                    UP NEXT · ROUND{" "}
-                                    {nextBreakChallenge.round_number}
-                                  </span>
-                                  <h2>{nextBreakChallenge.title}</h2>
-                                </div>
-                              </div>
-                              <p className="cc-host-break-description">
-                                {nextBreakChallenge.description}
-                              </p>
-                              <div className="cc-host-break-facts">
-                                <span>
-                                  <b>Duration</b>
-                                  {nextBreakChallenge.duration_minutes} min
-                                </span>
-                                <span>
-                                  <b>Points</b>
-                                  {nextBreakChallenge.points} pts
-                                </span>
-                                <span>
-                                  <b>Starts</b>
-                                  {nextRoundStartAt
-                                    ? nextRoundStartAt.toLocaleTimeString([], {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })
-                                    : "When break resumes"}
-                                </span>
-                                <span>
-                                  <b>Ends</b>
-                                  {nextRoundEndAt
-                                    ? nextRoundEndAt.toLocaleTimeString([], {
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      })
-                                    : "After timer"}
-                                </span>
-                              </div>
-                              <div className="cc-host-break-equipment">
-                                <b>Equipment needed</b>
-                                <p>
-                                  {nextBreakTask?.equipment?.length
-                                    ? nextBreakTask.equipment.join(" · ")
-                                    : "No equipment listed for this challenge."}
-                                </p>
-                                {nextBreakTask?.setup && (
-                                  <small>{nextBreakTask.setup}</small>
-                                )}
-                              </div>
-                              <button
-                                type="button"
-                                className="cc-host-break-edit"
-                                disabled={busy}
-                                onClick={() =>
-                                  openBreakChallengeEditor(nextBreakChallenge)
-                                }
-                              >
-                                <Pencil size={15} /> Edit this challenge
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              <h2>Take a breather</h2>
-                              <p>
-                                There is no upcoming challenge in this game
-                                plan.
-                              </p>
-                            </>
-                          )}
-                        </div>
-                        <p className="cc-host-break-timing">
-                          {roundClockRunning
-                            ? `Players see this break countdown. Round ${breakResumeRound ?? session.current_round_number + 1} will be ready when it ends; start the round timer when your announcement and setup are done.`
-                            : "The break timer is paused. Resume it when you want players to know when the next round begins."}
-                        </p>
-                      </section>
-                    ) : (
-                      <SessionMainChallengeCard
-                        viewerRole="host"
-                        title={currentChallenge?.title ?? "Challenge not found"}
-                        description={
-                          currentChallenge?.description ??
-                          "Check that this session has a main challenge assigned to the current round."
-                        }
-                        points={currentChallenge?.points ?? 0}
-                        round={session.current_round_number}
-                        roundCount={mainRounds.length}
-                        durationMinutes={
-                          currentChallenge?.duration_minutes ?? 0
-                        }
-                        timerLabel={roundClockText}
-                        timerCaption={
-                          hostBreakActive
-                            ? "BREAK"
-                            : roundClockRunning
-                              ? "TIME LEFT"
-                              : "READY"
-                        }
-                        actionTourTarget="host-round-timer"
-                        action={
-                          <p className="cc-host-shared-challenge-note">
-                            You and the players see the same challenge and
-                            countdown. Manage the timer and round from Host
-                            Controls below.
-                          </p>
-                        }
-                      />
-                    )}
-                  </section>
-                  <aside className="cc-host-join-as-player-panel cc-host-not-participating-panel">
-                    <div className="cc-host-player-illustration">
-                      <Trophy size={25} />
-                    </div>
-                    <span className="cc-section-kicker">
-                      LIVE PLAYER SCORES
-                    </span>
-                    <h3>
-                      {headerPlayer
-                        ? `${headerPlayer.name} is in the lead`
-                        : "Waiting for players"}
-                    </h3>
-                    <p>
-                      {headerPlayer
-                        ? `${headerPlayer.score} points · rank ${headerRank} of ${players.length}. Scores refresh from the live player roster.`
-                        : "Player scores and rankings will appear here as people join and earn points."}
-                    </p>
-                    <button
-                      type="button"
-                      className="host-button cc-host-control-shortcut"
-                      onClick={() => setActiveTab("leaderboard")}
-                    >
-                      <Medal size={15} /> View leaderboard
-                    </button>
-                  </aside>
-                </div>
-              </section>
+                </SessionChallengeCard>
+              ))}
+            </section>
+          )}
+          {!canParticipate &&
+            (activeTab === "game" || activeTab === "side-challenges") &&
+            session.status !== "completed" && (
+              <SessionState
+                title="Hosting without playing"
+                icon="shield"
+                action={
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={busy}
+                    onClick={() => void setHostParticipation(true)}
+                  >
+                    Join and play
+                  </button>
+                }
+              >
+                <p>
+                  Join the player list to submit your own evidence and vote.
+                  Host controls remain in the Host tab.
+                </p>
+              </SessionState>
             )}
-
-            {activeTab === "game" && (
+          {activeTab === "leaderboard" && (
+            <HostSessionLeaderboard
+              session={session}
+              players={players}
+              teams={teams}
+              busy={busy}
+              assignTeam={assignTeam}
+              teamById={teamById}
+            />
+          )}
+          {activeTab === "final-round" && (
+            <HostFinalRound
+              canVote={canParticipate}
+              participantView={canParticipate}
+              selectedFinalChallengeEvidence={selectedFinalChallengeEvidence}
+              sideChallenges={sideChallenges}
+              selectedFinalChallengeId={selectedFinalChallengeId}
+              busy={busy}
+              selectedFinalChallengeStatus={selectedFinalChallengeStatus}
+              selectFinalChallenge={selectFinalChallenge}
+              setFinalGallery={setFinalGallery}
+              selectedFinalChallengeVotes={selectedFinalChallengeVotes}
+              players={players}
+              session={session}
+              selectedFinalChallengeState={selectedFinalChallengeState}
+              reopenFinalChallengeVoting={reopenFinalChallengeVoting}
+              nextPendingFinalChallenge={nextPendingFinalChallenge}
+              advanceFinalChallenge={advanceFinalChallenge}
+              isFinalSlideshowConnected={isFinalSlideshowConnected}
+              selectedFinalEvidenceIndex={selectedFinalEvidenceIndex}
+              setFinalSlideshow={setFinalSlideshow}
+              selectedFinalEvidence={selectedFinalEvidence}
+              disconnectFinalSlideshow={disconnectFinalSlideshow}
+              castFinalSlideshow={castFinalSlideshow}
+              selectedFinalChallenge={selectedFinalChallenge}
+              playerById={playerById}
+              evidenceUrl={evidenceUrl}
+              castHostFinalVote={castHostFinalVote}
+              finalTopVoteCount={finalTopVoteCount}
+              finalWinningEvidenceIds={finalWinningEvidenceIds}
+              rankedPlayers={rankedPlayers}
+            />
+          )}
+          {secretReviewState?.is_open &&
+            selectedSecretReviewAssignment &&
+            selectedSecretReviewChallenge &&
+            (activeTab === "host-controls" ||
+              (!canParticipate && activeTab === "game")) && (
+              <SessionReview
+                title={selectedSecretReviewChallenge.title}
+                description={selectedSecretReviewChallenge.description}
+                owner={
+                  playerById.get(selectedSecretReviewAssignment.player_id)
+                    ?.name ?? "Player"
+                }
+                points={selectedSecretReviewChallenge.points}
+                evidence={selectedSecretReviewEvidence.map((item) => ({
+                  id: item.id,
+                  url: evidenceUrl(item.storage_path),
+                  mediaType: item.media_type,
+                  description: `Evidence for ${selectedSecretReviewChallenge.title}`,
+                }))}
+                open={secretReviewState.voting_open}
+                vote={hostSecretReviewVote?.vote}
+                outcome={
+                  secretReviewState.voting_open
+                    ? null
+                    : selectedSecretReview?.outcome
+                }
+                votesCast={currentSecretReviewVoteCount}
+                successVotes={
+                  secretReviewState.voting_open
+                    ? null
+                    : (selectedSecretReview?.success_votes ?? 0)
+                }
+                failVotes={
+                  secretReviewState.voting_open
+                    ? null
+                    : (selectedSecretReview?.fail_votes ?? 0)
+                }
+                busy={busy}
+                onVote={
+                  canParticipate
+                    ? (vote) => void castHostSecretReviewVote(vote)
+                    : undefined
+                }
+                voters={
+                  secretReviewState.voting_open
+                    ? []
+                    : secretReviewVotes
+                        .filter(
+                          (vote) =>
+                            vote.assignment_id ===
+                            selectedSecretReviewAssignmentId,
+                        )
+                        .map((vote) => ({
+                          id: vote.player_id,
+                          name:
+                            playerById.get(vote.player_id)?.name ?? "Player",
+                          vote: vote.vote,
+                        }))
+                }
+                leaderboard={rankedPlayers.map((player) => ({
+                  id: player.id,
+                  name: player.name,
+                  score: player.score,
+                  avatarUrl: player.avatar_url,
+                }))}
+                viewerId={session.host_player_id}
+              />
+            )}
+          <HostManagement>
+            {activeTab === "host-controls" && (
               <>
                 <section
                   className="cc-host-live-controls-card"
@@ -3907,7 +3502,8 @@ export default function HostLiveSession() {
                         className="cc-host-control-button cc-host-control-button--primary"
                         onClick={openPointReview}
                       >
-                        <Trophy size={17} /> Continue reward flow
+                        <Icon name="trophy" className="icon--size-17" />{" "}
+                        Continue reward flow
                       </button>
                     </div>
                   ) : hostBreakActive ? (
@@ -3936,7 +3532,8 @@ export default function HostLiveSession() {
                             )
                           }
                         >
-                          <Play size={16} /> Start Now
+                          <Icon name="play" className="icon--size-16" /> Start
+                          Now
                         </button>
                         <button
                           type="button"
@@ -3965,7 +3562,8 @@ export default function HostLiveSession() {
                             requestMoveToRound(session.current_round_number - 1)
                           }
                         >
-                          <ArrowLeft size={16} /> Previous Round
+                          <Icon name="arrow-left" className="icon--size-16" />{" "}
+                          Previous Round
                         </button>
                         <button
                           type="button"
@@ -3990,7 +3588,8 @@ export default function HostLiveSession() {
                             requestMoveToRound(session.current_round_number + 1)
                           }
                         >
-                          Next Round <ArrowRight size={16} />
+                          Next Round{" "}
+                          <Icon name="arrow-right" className="icon--size-16" />
                         </button>
                       </div>
                     </div>
@@ -4016,7 +3615,7 @@ export default function HostLiveSession() {
                           disabled={busy}
                           onClick={restartRoundTimer}
                         >
-                          <RotateCcw size={20} />
+                          <Icon name="rotate-ccw" className="icon--size-20" />
                         </button>
                       </div>
                       <button
@@ -4025,7 +3624,8 @@ export default function HostLiveSession() {
                         disabled={busy || enabledRewardMethods.length === 0}
                         onClick={openPointReview}
                       >
-                        <Trophy size={17} /> Review and award
+                        <Icon name="trophy" className="icon--size-17" /> Review
+                        and award
                       </button>
                     </div>
                   ) : roundClockRunning ? (
@@ -4041,7 +3641,7 @@ export default function HostLiveSession() {
                           disabled={busy}
                           onClick={runStartRoundControl}
                         >
-                          <Pause size={19} /> Pause
+                          <Icon name="pause" className="icon--size-19" /> Pause
                         </button>
                         <button
                           type="button"
@@ -4051,7 +3651,7 @@ export default function HostLiveSession() {
                           disabled={busy}
                           onClick={redoRoundTimer}
                         >
-                          <RotateCcw size={20} />
+                          <Icon name="rotate-ccw" className="icon--size-20" />
                         </button>
                       </div>
                     </div>
@@ -4071,7 +3671,8 @@ export default function HostLiveSession() {
                           disabled={busy}
                           onClick={runStartRoundControl}
                         >
-                          <Play size={17} /> Start Timer
+                          <Icon name="play" className="icon--size-17" /> Start
+                          Timer
                         </button>
                       </div>
                     </div>
@@ -4095,7 +3696,8 @@ export default function HostLiveSession() {
                             requestMoveToRound(session.current_round_number - 1)
                           }
                         >
-                          <ArrowLeft size={13} /> Back
+                          <Icon name="arrow-left" className="icon--size-13" />{" "}
+                          Back
                         </button>
                         <button
                           type="button"
@@ -4114,7 +3716,7 @@ export default function HostLiveSession() {
                               : skipTimerAndReview
                           }
                         >
-                          <Trophy size={13} />
+                          <Icon name="trophy" className="icon--size-13" />
                           {activeRewardRound
                             ? "Continue review"
                             : roundClockRunning
@@ -4133,7 +3735,8 @@ export default function HostLiveSession() {
                             requestMoveToRound(session.current_round_number + 1)
                           }
                         >
-                          Next <ArrowRight size={13} />
+                          Next{" "}
+                          <Icon name="arrow-right" className="icon--size-13" />
                         </button>
                       </div>
                     </div>
@@ -4186,14 +3789,14 @@ export default function HostLiveSession() {
                             openBreakChallengeEditor(nextBreakChallenge)
                           }
                         >
-                          <Pencil size={14} /> Edit next challenge
+                          <Icon name="pencil" className="icon--size-14" /> Edit
+                          next challenge
                         </button>
                       )}
                     </article>
                   )}
               </>
             )}
-
             {activeTab === "host-controls" && (
               <div className="cc-session-grid">
                 <section className="cc-session-card cc-invite-card">
@@ -4216,7 +3819,8 @@ export default function HostLiveSession() {
                       className="host-button host-button--secondary"
                       onClick={() => void copyCode()}
                     >
-                      <Clipboard size={16} /> Copy join code
+                      <Icon name="clipboard" className="icon--size-16" /> Copy
+                      join code
                     </button>
                     <a
                       className="host-button host-button--ghost"
@@ -4224,12 +3828,13 @@ export default function HostLiveSession() {
                       target="_blank"
                       rel="noreferrer"
                     >
-                      Open join screen <ArrowRight size={16} />
+                      Open join screen{" "}
+                      <Icon name="arrow-right" className="icon--size-16" />
                     </a>
                   </div>
                   <div className="cc-player-count">
-                    <Users size={17} /> {players.length} /{" "}
-                    {session.player_limit} players joined
+                    <Icon name="users" className="icon--size-17" />{" "}
+                    {players.length} / {session.player_limit} players joined
                   </div>
                   {session.teams_enabled && (
                     <p className="cc-helper-text">
@@ -4274,7 +3879,8 @@ export default function HostLiveSession() {
                             requestMoveToRound(session.current_round_number - 1)
                           }
                         >
-                          <RotateCcw size={16} /> Previous round
+                          <Icon name="rotate-ccw" className="icon--size-16" />{" "}
+                          Previous round
                         </button>
                         <button
                           type="button"
@@ -4287,7 +3893,8 @@ export default function HostLiveSession() {
                             requestMoveToRound(session.current_round_number + 1)
                           }
                         >
-                          Next round <ArrowRight size={16} />
+                          Next round{" "}
+                          <Icon name="arrow-right" className="icon--size-16" />
                         </button>
                       </div>
                       <div className="cc-round-list" aria-label="Jump to round">
@@ -4330,7 +3937,11 @@ export default function HostLiveSession() {
                                 )
                               }
                             >
-                              <ArrowLeft size={13} /> Back
+                              <Icon
+                                name="arrow-left"
+                                className="icon--size-13"
+                              />{" "}
+                              Back
                             </button>
                             <button
                               type="button"
@@ -4349,7 +3960,7 @@ export default function HostLiveSession() {
                                   : skipTimerAndReview
                               }
                             >
-                              <Trophy size={13} />
+                              <Icon name="trophy" className="icon--size-13" />
                               {activeRewardRound
                                 ? "Continue review"
                                 : roundClockRunning
@@ -4371,7 +3982,11 @@ export default function HostLiveSession() {
                                 )
                               }
                             >
-                              Next <ArrowRight size={13} />
+                              Next{" "}
+                              <Icon
+                                name="arrow-right"
+                                className="icon--size-13"
+                              />
                             </button>
                           </div>
                           {!activeRewardRound && (
@@ -4408,19 +4023,32 @@ export default function HostLiveSession() {
                                 "Start next round"
                               ) : currentRoundPointsAwarded ? (
                                 <>
-                                  <Coffee size={13} /> Take a break
+                                  <Icon
+                                    name="coffee"
+                                    className="icon--size-13"
+                                  />{" "}
+                                  Take a break
                                 </>
                               ) : roundClockRunning ? (
                                 <>
-                                  <Pause size={13} /> Pause timer
+                                  <Icon
+                                    name="pause"
+                                    className="icon--size-13"
+                                  />{" "}
+                                  Pause timer
                                 </>
                               ) : roundClockSeconds === 0 ? (
                                 <>
-                                  <RotateCcw size={13} /> Restart timer
+                                  <Icon
+                                    name="rotate-ccw"
+                                    className="icon--size-13"
+                                  />{" "}
+                                  Restart timer
                                 </>
                               ) : (
                                 <>
-                                  <Play size={13} /> Start timer
+                                  <Icon name="play" className="icon--size-13" />{" "}
+                                  Start timer
                                 </>
                               )}
                             </button>
@@ -4449,7 +4077,8 @@ export default function HostLiveSession() {
                               openBreakChallengeEditor(nextBreakChallenge)
                             }
                           >
-                            <Pencil size={14} /> Edit next challenge
+                            <Icon name="pencil" className="icon--size-14" />{" "}
+                            Edit next challenge
                           </button>
                         </div>
                       )}
@@ -4459,712 +4088,64 @@ export default function HostLiveSession() {
                         disabled={busy}
                         onClick={() => void finishGame()}
                       >
-                        <Flag size={16} /> Finish game
+                        <Icon name="flag" className="icon--size-16" /> Finish
+                        game
                       </button>
                     </>
                   )}
                 </section>
               </div>
             )}
-
-            {activeTab === "leaderboard" && (
-              <section
-                className="cc-session-card cc-session-section"
-                data-tour="host-leaderboard"
-              >
-                <div className="cc-session-section-heading">
-                  <div>
-                    <div className="cc-section-kicker">
-                      {session.teams_enabled ? "TEAM SETUP" : "PLAYER LOBBY"}
-                    </div>
-                    <h2>
-                      {session.teams_enabled ? "Players & teams" : "Players"}
-                    </h2>
-                    <p>
-                      {session.teams_enabled
-                        ? (session.host_chooses_teams
-                            ? "Assign players to teams."
-                            : "See who has joined and which teams they picked.") +
-                          ` Team limit: ${session.team_size} players.`
-                        : "Everyone who joins this game appears here."}
-                    </p>
-                  </div>
-                  <span className="cc-count-pill">
-                    {players.length} players
-                  </span>
-                </div>
-                <div
-                  className="cc-leaderboard-switch"
-                  role="tablist"
-                  aria-label="Leaderboard type"
-                >
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={leaderboardScope === "players"}
-                    className={
-                      leaderboardScope === "players" ? "is-active" : ""
-                    }
-                    onClick={() => setLeaderboardScope("players")}
-                  >
-                    Players
-                  </button>
-                  {session.teams_enabled && (
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={leaderboardScope === "teams"}
-                      className={
-                        leaderboardScope === "teams" ? "is-active" : ""
-                      }
-                      onClick={() => setLeaderboardScope("teams")}
-                    >
-                      Teams
-                    </button>
-                  )}
-                </div>
-                {session.teams_enabled &&
-                teams.length > 0 &&
-                leaderboardScope === "teams" ? (
-                  <div className="cc-team-leaderboard">
-                    {teams
-                      .map((team) => ({
-                        ...team,
-                        score: players
-                          .filter((player) => player.team_id === team.id)
-                          .reduce((sum, player) => sum + player.score, 0),
-                        count: players.filter(
-                          (player) => player.team_id === team.id,
-                        ).length,
-                      }))
-                      .sort(
-                        (a, b) =>
-                          b.score - a.score || a.name.localeCompare(b.name),
-                      )
-                      .map((team, index) => (
-                        <div className="cc-team-leaderboard-row" key={team.id}>
-                          <span className="cc-leaderboard-rank">
-                            {index + 1}
-                          </span>
-                          <span className="cc-team-badge">
-                            <Users size={18} />
-                          </span>
-                          <span className="cc-player-name">
-                            <strong>{team.name}</strong>
-                            <small>
-                              {team.count}/{session.team_size} players
-                            </small>
-                          </span>
-                          <strong className="cc-leaderboard-score">
-                            {team.score}
-                            <small> pts</small>
-                          </strong>
-                        </div>
-                      ))}
-                  </div>
-                ) : (
-                  <div className="cc-player-table">
-                    {[...players]
-                      .sort((a, b) =>
-                        session.status === "lobby"
-                          ? a.joined_at.localeCompare(b.joined_at)
-                          : b.score - a.score || a.name.localeCompare(b.name),
-                      )
-                      .map((player, index) => (
-                        <div className="cc-player-row" key={player.id}>
-                          <div className="cc-leaderboard-rank">{index + 1}</div>
-                          <div className="cc-player-avatar">
-                            {player.name.slice(0, 1).toUpperCase()}
-                          </div>
-                          <div className="cc-player-name">
-                            <strong>{player.name}</strong>
-                            <small>{player.score} points</small>
-                          </div>
-                          {session.teams_enabled &&
-                          session.host_chooses_teams &&
-                          session.status === "lobby" ? (
-                            <select
-                              aria-label={`Team for ${player.name}`}
-                              value={player.team_id ?? ""}
-                              disabled={busy}
-                              onChange={(event) =>
-                                void assignTeam(player, event.target.value)
-                              }
-                            >
-                              <option value="">Unassigned</option>
-                              {teams.map((team) => (
-                                <option key={team.id} value={team.id}>
-                                  {team.name}
-                                </option>
-                              ))}
-                            </select>
-                          ) : (
-                            <span className="cc-player-team">
-                              {session.teams_enabled
-                                ? (teamById.get(player.team_id ?? "")?.name ??
-                                  "No team yet")
-                                : "Joined"}
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    {players.length === 0 && (
-                      <p className="cc-helper-text">
-                        No players yet. Share the QR code or join code above.
-                      </p>
-                    )}
-                  </div>
-                )}
-              </section>
-            )}
-
             {(activeTab === "reward-round" || showRewardOverlay) && (
-              <section
-                className={`cc-session-card cc-session-section cc-reward-points-section${showRewardOverlay ? " cc-reward-points-overlay" : ""}`}
-                data-tour="host-reward"
-                role={showRewardOverlay ? "dialog" : undefined}
-                aria-modal={showRewardOverlay || undefined}
-                aria-label={
-                  showRewardOverlay ? "Review points and voting" : undefined
-                }
-              >
-                <div className="cc-session-section-heading">
-                  <div>
-                    <div className="cc-section-kicker">REWARD POINTS</div>
-                    <h2>Review points</h2>
-                    <p>
-                      Choose a challenge, then run the player vote or award flow
-                      without leaving the game screen.
-                    </p>
-                  </div>
-                  <span className="cc-count-pill">
-                    {enabledRewardMethods.length} methods enabled
-                  </span>
-                  {showRewardOverlay && (
-                    <button
-                      type="button"
-                      className="cc-reward-overlay-close"
-                      onClick={() => setShowRewardOverlay(false)}
-                      aria-label="Return to game"
-                    >
-                      ×
-                    </button>
-                  )}
-                </div>
-
-                {!activeRewardRound &&
-                  session.status === "live" &&
-                  !showRewardSetup && (
-                    <button
-                      type="button"
-                      className="host-button host-button--lime"
-                      disabled={busy || enabledRewardMethods.length === 0}
-                      onClick={() => setShowRewardSetup(true)}
-                    >
-                      <Sparkles size={16} /> Reward Points
-                    </button>
-                  )}
-
-                {!activeRewardRound &&
-                  showRewardSetup &&
-                  session.status === "live" && (
-                    <form
-                      className="cc-reward-setup-form"
-                      onSubmit={(event) => void startRewardRound(event)}
-                    >
-                      <label>
-                        <span>Challenge</span>
-                        <select
-                          required
-                          value={rewardChallengeId}
-                          onChange={(event) => {
-                            const nextId = event.target.value;
-                            setRewardChallengeId(nextId);
-                            const chosen = challenges.find(
-                              (item) => item.id === nextId,
-                            );
-                            if (chosen) setRewardPoints(chosen.points);
-                          }}
-                          disabled={busy}
-                        >
-                          <option value="">Choose challenge…</option>
-                          {challenges.map((challenge) => (
-                            <option key={challenge.id} value={challenge.id}>
-                              {challenge.kind === "main"
-                                ? `Round ${challenge.round_number}`
-                                : challenge.kind === "side"
-                                  ? "Side challenge"
-                                  : "Secret mission"}{" "}
-                              · {challenge.title}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        <span>Reward method</span>
-                        <select
-                          value={rewardMethod}
-                          onChange={(event) =>
-                            setRewardMethod(event.target.value as RewardMethod)
-                          }
-                          disabled={busy}
-                        >
-                          {enabledRewardMethods.map((method) => (
-                            <option key={method} value={method}>
-                              {rewardMethodLabel(method)}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        <span>Reward players or teams?</span>
-                        <select
-                          value={rewardTargetKind}
-                          onChange={(event) => {
-                            setRewardTargetKind(
-                              event.target.value as RewardTargetKind,
-                            );
-                            setSelectedRewardWinnerIds([]);
-                          }}
-                          disabled={busy}
-                        >
-                          <option value="player">Individual players</option>
-                          <option
-                            value="team"
-                            disabled={
-                              !session.teams_enabled || teams.length === 0
-                            }
-                          >
-                            Teams
-                          </option>
-                        </select>
-                      </label>
-                      <label>
-                        <span>Points per winner</span>
-                        <input
-                          type="number"
-                          min={0}
-                          max={10000}
-                          value={rewardPoints}
-                          onChange={(event) =>
-                            setRewardPoints(Number(event.target.value))
-                          }
-                          disabled={busy}
-                        />
-                      </label>
-                      <p className="cc-helper-text">
-                        The player screens will switch to the selected reward
-                        flow until you release them back to the game. If the
-                        vote is tied, every top-voted player/team wins.
-                      </p>
-                      <div className="cc-reward-actions">
-                        <button
-                          type="button"
-                          className="host-button host-button--ghost"
-                          disabled={busy}
-                          onClick={() => setShowRewardSetup(false)}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          className="host-button host-button--lime"
-                          disabled={
-                            busy ||
-                            !rewardChallengeId ||
-                            enabledRewardMethods.length === 0
-                          }
-                        >
-                          {busy ? (
-                            <LoaderCircle size={16} className="cc-spin" />
-                          ) : (
-                            <Play size={16} />
-                          )}{" "}
-                          Start reward flow
-                        </button>
-                      </div>
-                    </form>
-                  )}
-
-                {activeRewardRound && (
-                  <div className="cc-reward-live-panel">
-                    {!(
-                      activeRewardRound.status === "open" &&
-                      activeRewardRound.reward_method === "voting"
-                    ) && (
-                      <div className="cc-reward-mode-heading">
-                        <span
-                          className={`cc-reward-mode-icon cc-reward-mode-icon--${activeRewardRound.reward_method}`}
-                        >
-                          {activeRewardRound.reward_method === "voting"
-                            ? "VOTE"
-                            : activeRewardRound.reward_method === "host_awards"
-                              ? "HOST"
-                              : "CHEER"}
-                        </span>
-                        <div>
-                          <h3>
-                            {activeRewardChallenge?.title ?? "Reward round"}
-                          </h3>
-                          <p>
-                            {rewardMethodLabel(activeRewardRound.reward_method)}{" "}
-                            · {activeRewardRound.points} points per winner ·{" "}
-                            {activeRewardRound.target_kind === "team"
-                              ? "Teams"
-                              : "Players"}
-                          </p>
-                        </div>
-                        <span
-                          className={`cc-reward-status cc-reward-status--${activeRewardRound.status}`}
-                        >
-                          {activeRewardRound.status === "open"
-                            ? "In progress"
-                            : "Results shown"}
-                        </span>
-                      </div>
-                    )}
-
-                    {activeRewardRound.status === "open" &&
-                      activeRewardRound.reward_method === "voting" && (
-                        <section
-                          className="cc-player-reward-screen cc-host-reward-vote-screen"
-                          aria-label="Host vote"
-                          aria-live="polite"
-                        >
-                          <div className="cc-player-reward-kicker">
-                            <Trophy size={17} /> REWARD POINTS
-                          </div>
-                          <span className="cc-player-eyebrow">
-                            HAVE YOUR SAY
-                          </span>
-                          <h2>Vote for the winner</h2>
-                          <p className="cc-player-reward-intro">
-                            {activeRewardChallenge?.title ?? "Reward round"} ·{" "}
-                            {activeRewardRound.points} points at stake. Choose
-                            your favourite{" "}
-                            {activeRewardRound.target_kind === "team"
-                              ? "team"
-                              : "player"}
-                            . You can change your vote until voting closes.
-                          </p>
-                          <div className="cc-player-reward-vote-count">
-                            <strong>{activeRewardVotes.length}</strong>
-                            <span>
-                              vote{activeRewardVotes.length === 1 ? "" : "s"}{" "}
-                              cast so far
-                            </span>
-                          </div>
-                          <div className="cc-player-reward-candidates">
-                            {rewardTargetRows.map((candidate) => {
-                              const votedFor =
-                                hostRewardVoteTargetId === candidate.id;
-                              return (
-                                <button
-                                  type="button"
-                                  className={`cc-player-reward-candidate${votedFor ? " is-voted" : ""}`}
-                                  key={candidate.id}
-                                  disabled={busy}
-                                  onClick={() =>
-                                    void castHostRewardVote(candidate.id)
-                                  }
-                                >
-                                  <span className="cc-player-reward-avatar">
-                                    {candidate.name.slice(0, 1).toUpperCase()}
-                                  </span>
-                                  <span className="cc-player-reward-candidate-copy">
-                                    <strong>{candidate.name}</strong>
-                                    <small>
-                                      {activeRewardRound.target_kind === "team"
-                                        ? candidate.detail
-                                        : candidate.detail === "Player"
-                                          ? "Individual player"
-                                          : candidate.detail}
-                                    </small>
-                                  </span>
-                                  <span className="cc-player-reward-vote-action">
-                                    {busy ? (
-                                      <LoaderCircle
-                                        size={17}
-                                        className="cc-spin"
-                                      />
-                                    ) : votedFor ? (
-                                      <Check size={17} />
-                                    ) : (
-                                      "Vote"
-                                    )}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                          <p className="cc-player-reward-footnote">
-                            {hostRewardVoteTargetId
-                              ? `Your vote is saved for ${rewardTargetRows.find((candidate) => candidate.id === hostRewardVoteTargetId)?.name ?? "your selection"}. Tap another name to change it.`
-                              : session.host_participates &&
-                                  session.host_player_id
-                                ? "Choose one name. Your vote counts with the players’ votes."
-                                : "Choose a name to join as Host and cast your vote with the players."}
-                          </p>
-                          <div className="cc-reward-actions cc-host-voting-controls">
-                            <button
-                              type="button"
-                              className="host-button host-button--ghost"
-                              disabled={busy}
-                              onClick={() => void cancelRewardRound()}
-                            >
-                              Cancel flow
-                            </button>
-                            <button
-                              type="button"
-                              className="host-button host-button--lime"
-                              disabled={busy}
-                              onClick={() => void completeRewardRound()}
-                            >
-                              <Check size={16} /> Close voting &amp; award
-                              winner(s)
-                            </button>
-                          </div>
-                        </section>
-                      )}
-
-                    {activeRewardRound.status === "open" &&
-                      activeRewardRound.reward_method !== "voting" && (
-                        <>
-                          <div className="cc-reward-instructions">
-                            <strong>
-                              {activeRewardRound.reward_method ===
-                              "audience_cheers"
-                                ? "Call out the contenders"
-                                : "Select the winners"}
-                            </strong>
-                            <span>
-                              {activeRewardRound.reward_method ===
-                              "audience_cheers"
-                                ? "Players' screens explain the rules. Call each name in turn, listen for the loudest cheers, then select the winner or winners below."
-                                : "Players are waiting on their devices. Select one or more winners below, then confirm the award."}
-                            </span>
-                          </div>
-                          <label className="cc-reward-final-points">
-                            <span>Points to award each winner</span>
-                            <input
-                              type="number"
-                              min={0}
-                              max={10000}
-                              value={rewardFinalPoints}
-                              onChange={(event) =>
-                                setRewardFinalPoints(Number(event.target.value))
-                              }
-                              disabled={busy}
-                            />
-                          </label>
-                          <div className="cc-reward-candidate-list">
-                            {rewardTargetRows.map((candidate) => (
-                              <label
-                                className={`cc-reward-candidate-row cc-reward-candidate-row--selectable${selectedRewardWinnerIds.includes(candidate.id) ? " is-selected" : ""}`}
-                                key={candidate.id}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={selectedRewardWinnerIds.includes(
-                                    candidate.id,
-                                  )}
-                                  onChange={() =>
-                                    toggleRewardWinner(candidate.id)
-                                  }
-                                  disabled={busy}
-                                />
-                                <span className="cc-reward-candidate-avatar">
-                                  {candidate.name.slice(0, 1).toUpperCase()}
-                                </span>
-                                <span className="cc-reward-candidate-copy">
-                                  <strong>{candidate.name}</strong>
-                                  <small>{candidate.detail}</small>
-                                </span>
-                                <span className="cc-reward-candidate-score">
-                                  {candidate.score} pts
-                                </span>
-                              </label>
-                            ))}
-                          </div>
-                          <div className="cc-reward-actions">
-                            <button
-                              type="button"
-                              className="host-button host-button--ghost"
-                              disabled={busy}
-                              onClick={() => void cancelRewardRound()}
-                            >
-                              Cancel flow
-                            </button>
-                            <button
-                              type="button"
-                              className="host-button host-button--lime"
-                              disabled={
-                                busy || selectedRewardWinnerIds.length === 0
-                              }
-                              onClick={() => void completeRewardRound()}
-                            >
-                              <Check size={16} /> Confirm winners & award points
-                            </button>
-                          </div>
-                        </>
-                      )}
-
-                    {activeRewardRound.status === "completed" && (
-                      <>
-                        <div className="cc-reward-result-banner">
-                          <Trophy size={21} />
-                          <div>
-                            <strong>Points awarded</strong>
-                            <span>
-                              {activeRewardAwards.length
-                                ? `${activeRewardAwards.length} winner${activeRewardAwards.length === 1 ? "" : "s"} · ${activeRewardAwards.reduce((sum, award) => sum + award.points_awarded, 0)} total points allocated`
-                                : "No votes were cast, so no points were awarded."}
-                            </span>
-                          </div>
-                        </div>
-                        {activeRewardAwards.length > 0 && (
-                          <div className="cc-reward-winner-list">
-                            {activeRewardAwards.map((award) => {
-                              const winnerName = award.winner_player_id
-                                ? playerById.get(award.winner_player_id)?.name
-                                : teamById.get(award.winner_team_id ?? "")
-                                    ?.name;
-                              return (
-                                <div
-                                  className="cc-reward-winner-row"
-                                  key={award.id}
-                                >
-                                  <span>
-                                    <Crown size={16} />
-                                  </span>
-                                  <strong>{winnerName ?? "Winner"}</strong>
-                                  <span>
-                                    +{award.points_awarded} pts
-                                    {activeRewardRound.reward_method ===
-                                    "voting"
-                                      ? ` · ${award.votes_received} votes`
-                                      : ""}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                        <div className="cc-reward-scoreboard">
-                          <h4>Updated leaderboard</h4>
-                          {[...players]
-                            .sort(
-                              (a, b) =>
-                                b.score - a.score ||
-                                a.name.localeCompare(b.name),
-                            )
-                            .slice(0, 8)
-                            .map((player, index) => (
-                              <div
-                                className="cc-reward-score-row"
-                                key={player.id}
-                                style={{ animationDelay: `${index * 70}ms` }}
-                              >
-                                <span>{index + 1}</span>
-                                <strong>{player.name}</strong>
-                                <b>{player.score} pts</b>
-                              </div>
-                            ))}
-                        </div>
-                        <div className="cc-reward-actions">
-                          <button
-                            type="button"
-                            className="host-button host-button--lime"
-                            disabled={busy}
-                            onClick={() => void returnFromRewardRound()}
-                          >
-                            <ArrowRight size={16} /> Return everyone to game
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {session.status !== "live" && !activeRewardRound && (
-                  <p className="cc-helper-text">
-                    Start the game before opening a reward flow. Reward methods
-                    enabled in setup:{" "}
-                    {enabledRewardMethods.map(rewardMethodLabel).join(", ") ||
-                      "none"}
-                    .
-                  </p>
-                )}
-              </section>
+              <HostRewardRound
+                canParticipate={canParticipate}
+                showRewardOverlay={showRewardOverlay}
+                enabledRewardMethods={enabledRewardMethods}
+                setShowRewardOverlay={setShowRewardOverlay}
+                activeRewardRound={activeRewardRound}
+                session={session}
+                showRewardSetup={showRewardSetup}
+                busy={busy}
+                setShowRewardSetup={setShowRewardSetup}
+                startRewardRound={startRewardRound}
+                rewardChallengeId={rewardChallengeId}
+                setRewardChallengeId={setRewardChallengeId}
+                challenges={challenges}
+                setRewardPoints={setRewardPoints}
+                rewardMethod={rewardMethod}
+                setRewardMethod={setRewardMethod}
+                rewardMethodLabel={rewardMethodLabel}
+                rewardTargetKind={rewardTargetKind}
+                setRewardTargetKind={setRewardTargetKind}
+                setSelectedRewardWinnerIds={setSelectedRewardWinnerIds}
+                teams={teams}
+                rewardPoints={rewardPoints}
+                activeRewardChallenge={activeRewardChallenge}
+                activeRewardVotes={activeRewardVotes}
+                rewardTargetRows={rewardTargetRows}
+                hostRewardVoteTargetId={hostRewardVoteTargetId}
+                castHostRewardVote={castHostRewardVote}
+                cancelRewardRound={cancelRewardRound}
+                completeRewardRound={completeRewardRound}
+                rewardFinalPoints={rewardFinalPoints}
+                setRewardFinalPoints={setRewardFinalPoints}
+                selectedRewardWinnerIds={selectedRewardWinnerIds}
+                toggleRewardWinner={toggleRewardWinner}
+                activeRewardAwards={activeRewardAwards}
+                playerById={playerById}
+                teamById={teamById}
+                players={players}
+                returnFromRewardRound={returnFromRewardRound}
+              />
             )}
-
-            {activeTab === "side-challenges" && (
+            {activeTab === "host-controls" && (
               <>
-                <section className="cc-session-card cc-session-section cc-side-challenge-library">
-                  <div className="cc-session-section-heading">
-                    <div>
-                      <div className="cc-section-kicker">OPTIONAL MISSIONS</div>
-                      <h2>Side challenges</h2>
-                      <p>
-                        Each submission automatically earns 5 points; tied top
-                        submissions receive the challenge bonus.
-                      </p>
-                    </div>
-                    <span className="cc-count-pill">
-                      {sideChallenges.length} available
-                    </span>
-                  </div>
-                  {sideChallenges.length === 0 ? (
-                    <p className="cc-helper-text">
-                      No side challenges were added to this game plan.
-                    </p>
-                  ) : (
-                    <div className="cc-host-side-challenge-grid">
-                      {sideChallenges.map((challenge) => (
-                        <article
-                          className="cc-host-side-challenge-card"
-                          key={challenge.id}
-                        >
-                          <div className="cc-host-side-card-top">
-                            <span
-                              className="cc-host-side-icon cc-host-side-challenge-emoji"
-                              aria-hidden="true"
-                            >
-                              {challengeIcon(
-                                challenge.title,
-                                challenge.description,
-                              )}
-                            </span>
-                            <span className="cc-host-points-pill">
-                              Final bonus: {challenge.points} pts
-                            </span>
-                          </div>
-                          <h3>{challenge.title}</h3>
-                          <p>{challenge.description}</p>
-                          <small>Photo/video evidence required</small>
-                          <button
-                            type="button"
-                            className="host-button host-button--secondary"
-                            disabled={busy || session.status !== "live"}
-                            onClick={() =>
-                              void openHostSideChallengeUpload(challenge)
-                            }
-                          >
-                            <Upload size={15} />
-                            {session.host_participates && hostPlayer
-                              ? "Upload evidence"
-                              : "Join & upload evidence"}
-                          </button>
-                        </article>
-                      ))}
-                    </div>
-                  )}
-                </section>
                 <section className="cc-session-card cc-session-section cc-secret-management">
                   <div className="cc-session-section-heading">
                     <div>
                       <div className="cc-section-kicker cc-section-kicker--icon">
-                        <Shield size={14} /> PRIVATE MISSIONS
+                        <Icon name="shield" className="icon--size-14" /> PRIVATE
+                        MISSIONS
                       </div>
                       <h2>Secret missions</h2>
                       <p>
@@ -5227,7 +4208,11 @@ export default function HostLiveSession() {
                         </label>
                         <label className="cc-secret-time-field">
                           <span>
-                            <CalendarClock size={14} /> Deliver at (optional)
+                            <Icon
+                              name="calendar-clock"
+                              className="icon--size-14"
+                            />{" "}
+                            Deliver at (optional)
                           </span>
                           <input
                             type="datetime-local"
@@ -5254,9 +4239,12 @@ export default function HostLiveSession() {
                           }
                         >
                           {busy ? (
-                            <LoaderCircle size={16} className="cc-spin" />
+                            <Icon
+                              name="loader-circle"
+                              className="icon--size-16 cc-spin"
+                            />
                           ) : (
-                            <Send size={16} />
+                            <Icon name="send" className="icon--size-16" />
                           )}{" "}
                           Assign secret mission
                         </button>
@@ -5329,7 +4317,8 @@ export default function HostLiveSession() {
                             className="host-button host-button--secondary"
                             disabled={busy || !newSecretTitle.trim()}
                           >
-                            <Check size={16} /> Add mission
+                            <Icon name="check" className="icon--size-16" /> Add
+                            mission
                           </button>
                         </form>
                       </details>
@@ -5427,7 +4416,7 @@ export default function HostLiveSession() {
                     </div>
                   ) : (
                     <div className="cc-secret-empty">
-                      <Shield size={21} />
+                      <Icon name="shield" className="icon--size-21" />
                       <p>
                         {secretChallenges.length > 0
                           ? "No secret missions assigned yet. Pick one player and a mission above."
@@ -5616,26 +4605,6 @@ export default function HostLiveSession() {
                             <div className="cc-host-final-control-grid">
                               <button
                                 type="button"
-                                className={`cc-host-final-control-button${hostSecretReviewVote?.vote === "success" ? " is-primary" : ""}`}
-                                disabled={busy || !session?.host_participates}
-                                onClick={() =>
-                                  void castHostSecretReviewVote("success")
-                                }
-                              >
-                                Vote Success
-                              </button>
-                              <button
-                                type="button"
-                                className={`cc-host-final-control-button${hostSecretReviewVote?.vote === "fail" ? " is-primary" : ""}`}
-                                disabled={busy || !session?.host_participates}
-                                onClick={() =>
-                                  void castHostSecretReviewVote("fail")
-                                }
-                              >
-                                Vote Fail
-                              </button>
-                              <button
-                                type="button"
                                 className="cc-host-final-control-button is-wide is-primary"
                                 disabled={busy}
                                 onClick={() => void closeSecretReviewVote()}
@@ -5674,7 +4643,6 @@ export default function HostLiveSession() {
                 </section>
               </>
             )}
-
             {activeTab === "host-controls" && (
               <section className="cc-session-card cc-session-section">
                 <div className="cc-session-section-heading">
@@ -5721,7 +4689,6 @@ export default function HostLiveSession() {
                 </div>
               </section>
             )}
-
             {activeTab === "host-controls" &&
               secretReviewState?.is_open &&
               secretReviewState.current_assignment_id ===
@@ -5780,7 +4747,6 @@ export default function HostLiveSession() {
                   </button>
                 </section>
               )}
-
             {activeTab === "host-controls" && (
               <section
                 className="cc-session-card cc-session-section cc-host-main-review-card"
@@ -5910,7 +4876,11 @@ export default function HostLiveSession() {
                                     void reviewSubmission(submission, true)
                                   }
                                 >
-                                  <Check size={15} /> Approve & award points
+                                  <Icon
+                                    name="check"
+                                    className="icon--size-15"
+                                  />{" "}
+                                  Approve & award points
                                 </button>
                                 <button
                                   type="button"
@@ -5920,7 +4890,8 @@ export default function HostLiveSession() {
                                     void reviewSubmission(submission, false)
                                   }
                                 >
-                                  <X size={15} /> Reject
+                                  <Icon name="x" className="icon--size-15" />{" "}
+                                  Reject
                                 </button>
                               </div>
                             )}
@@ -5931,490 +4902,7 @@ export default function HostLiveSession() {
                 )}
               </section>
             )}
-
-            {activeTab === "final-round" && (
-              <section
-                className="cc-session-card cc-session-section cc-session-final-vote-card"
-                data-tour="host-final-round"
-              >
-                <div className="cc-session-section-heading">
-                  <div>
-                    <div className="cc-section-kicker">FINAL ROUND</div>
-                    <h2>Side challenge voting</h2>
-                    <p>
-                      Review one side challenge at a time. Share the results
-                      before moving on to the next challenge.
-                    </p>
-                  </div>
-                  <span className="cc-count-pill">
-                    {selectedFinalChallengeEvidence.length} entries
-                  </span>
-                </div>
-                <div className="cc-host-final-controls">
-                  <strong className="cc-host-final-controls-title">
-                    HOST CONTROLS
-                  </strong>
-                  <div className="cc-host-final-control-grid">
-                    {sideChallenges.length > 0 && (
-                      <label className="cc-host-final-challenge-picker">
-                        Choose side challenge
-                        <select
-                          value={selectedFinalChallengeId}
-                          disabled={
-                            busy || selectedFinalChallengeStatus === "voting"
-                          }
-                          title={
-                            selectedFinalChallengeStatus === "voting"
-                              ? "Close the current vote before changing challenges."
-                              : undefined
-                          }
-                          onChange={(event) =>
-                            void selectFinalChallenge(event.target.value)
-                          }
-                        >
-                          {sideChallenges.map((challenge) => (
-                            <option value={challenge.id} key={challenge.id}>
-                              {challenge.title}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
-                    {selectedFinalChallengeStatus === "pending" &&
-                      sideChallenges.length > 0 && (
-                        <>
-                          <button
-                            type="button"
-                            className="host-button cc-host-final-control-button is-primary"
-                            disabled={busy}
-                            onClick={() => void setFinalGallery(true, true)}
-                          >
-                            <Heart size={15} /> Open Voting
-                          </button>
-                        </>
-                      )}
-                    {selectedFinalChallengeStatus === "voting" && (
-                      <>
-                        <div className="cc-host-final-player-count">
-                          <span>Players voted</span>
-                          <strong>
-                            {selectedFinalChallengeVotes.length}/
-                            {players.length}
-                          </strong>
-                        </div>
-                        <button
-                          type="button"
-                          className="host-button cc-host-final-control-button is-primary"
-                          disabled={busy}
-                          onClick={() => void setFinalGallery(true, false)}
-                        >
-                          <Flag size={15} /> Show Results
-                        </button>
-                      </>
-                    )}
-                    {selectedFinalChallengeStatus === "results" && (
-                      <>
-                        {session.final_gallery_open ? (
-                          <>
-                            <div className="cc-host-final-player-count">
-                              <span>Results shared</span>
-                              <strong>
-                                {selectedFinalChallengeState?.votes_cast ?? 0}{" "}
-                                votes
-                              </strong>
-                            </div>
-                            <button
-                              type="button"
-                              className="host-button cc-host-final-control-button"
-                              disabled={busy}
-                              onClick={() => void reopenFinalChallengeVoting()}
-                            >
-                              <Heart size={15} /> Reopen Voting
-                            </button>
-                            {nextPendingFinalChallenge ? (
-                              <button
-                                type="button"
-                                className="host-button cc-host-final-control-button is-primary is-wide"
-                                disabled={busy}
-                                onClick={() => void advanceFinalChallenge()}
-                              >
-                                <ArrowRight size={15} /> Next challenge ·{" "}
-                                {nextPendingFinalChallenge.title}
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                className="host-button cc-host-final-control-button is-primary is-wide"
-                                disabled={busy}
-                                onClick={() =>
-                                  void setFinalGallery(false, false)
-                                }
-                              >
-                                Return all players to game
-                              </button>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              className="host-button cc-host-final-control-button"
-                              disabled={busy}
-                              onClick={() => void setFinalGallery(true, false)}
-                            >
-                              <Heart size={15} /> Show Results
-                            </button>
-                            <button
-                              type="button"
-                              className="host-button cc-host-final-control-button"
-                              disabled={busy}
-                              onClick={() => void reopenFinalChallengeVoting()}
-                            >
-                              <Heart size={15} /> Reopen Voting
-                            </button>
-                            {nextPendingFinalChallenge ? (
-                              <button
-                                type="button"
-                                className="host-button cc-host-final-control-button is-primary is-wide"
-                                disabled={busy || !session.final_gallery_open}
-                                title="Share the results before moving to the next challenge."
-                                onClick={() => void advanceFinalChallenge()}
-                              >
-                                <ArrowRight size={15} /> Next challenge ·{" "}
-                                {nextPendingFinalChallenge.title}
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                className="host-button cc-host-final-control-button is-primary is-wide"
-                                disabled={busy}
-                                onClick={() =>
-                                  void setFinalGallery(false, false)
-                                }
-                              >
-                                Return all players to game
-                              </button>
-                            )}
-                          </>
-                        )}
-                      </>
-                    )}
-                    {(selectedFinalChallengeStatus === "voting" ||
-                      selectedFinalChallengeStatus === "results") && (
-                      <>
-                        {isFinalSlideshowConnected && (
-                          <>
-                            <button
-                              type="button"
-                              className="host-button cc-host-final-control-button"
-                              disabled={
-                                busy ||
-                                selectedFinalChallengeEvidence.length < 2
-                              }
-                              onClick={() => {
-                                const index =
-                                  (selectedFinalEvidenceIndex -
-                                    1 +
-                                    selectedFinalChallengeEvidence.length) %
-                                  selectedFinalChallengeEvidence.length;
-                                const item =
-                                  selectedFinalChallengeEvidence[index];
-                                if (item)
-                                  void setFinalSlideshow(
-                                    selectedFinalChallengeId,
-                                    item.id,
-                                  );
-                              }}
-                            >
-                              <ArrowLeft size={15} /> Previous
-                            </button>
-                            <button
-                              type="button"
-                              className="host-button cc-host-final-control-button"
-                              disabled={
-                                busy ||
-                                selectedFinalChallengeEvidence.length < 2
-                              }
-                              onClick={() => {
-                                const index =
-                                  (selectedFinalEvidenceIndex + 1) %
-                                  selectedFinalChallengeEvidence.length;
-                                const item =
-                                  selectedFinalChallengeEvidence[index];
-                                if (item)
-                                  void setFinalSlideshow(
-                                    selectedFinalChallengeId,
-                                    item.id,
-                                  );
-                              }}
-                            >
-                              Next <ArrowRight size={15} />
-                            </button>
-                          </>
-                        )}
-                        <button
-                          type="button"
-                          className={`host-button cc-host-final-control-button${isFinalSlideshowConnected ? " is-primary" : ""}`}
-                          disabled={
-                            !isFinalSlideshowConnected &&
-                            (!selectedFinalEvidence || busy)
-                          }
-                          onClick={() =>
-                            isFinalSlideshowConnected
-                              ? disconnectFinalSlideshow()
-                              : void castFinalSlideshow()
-                          }
-                        >
-                          <Cast size={15} />
-                          {isFinalSlideshowConnected ? "Disconnect" : "Cast"}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-                {selectedFinalChallenge && (
-                  <article className="cc-player-final-challenge-card">
-                    <div className="cc-player-final-challenge-label">
-                      <span>SIDE CHALLENGE</span>
-                      <strong>
-                        +{selectedFinalChallenge.points} BONUS POINTS
-                      </strong>
-                    </div>
-                    <h3>{selectedFinalChallenge.title}</h3>
-                    <p>{selectedFinalChallenge.description}</p>
-                  </article>
-                )}
-                {selectedFinalChallengeStatus === "voting" &&
-                  selectedFinalChallengeEvidence.length > 0 && (
-                    <div className="cc-player-final-grid">
-                      {selectedFinalChallengeEvidence.map((item) => {
-                        const submitter = playerById.get(item.player_id);
-                        const hostVote = selectedFinalChallengeVotes.find(
-                          (vote) => vote.player_id === session.host_player_id,
-                        );
-                        const hostVotedForItem =
-                          hostVote?.evidence_id === item.id;
-                        return (
-                          <article
-                            className="cc-player-final-card"
-                            key={item.id}
-                          >
-                            <div className="cc-player-final-media">
-                              {item.media_type === "video" ? (
-                                <video
-                                  src={evidenceUrl(item.storage_path)}
-                                  controls
-                                  playsInline
-                                  preload="metadata"
-                                />
-                              ) : (
-                                <img
-                                  src={evidenceUrl(item.storage_path)}
-                                  alt={`${submitter?.name ?? "Player"}'s side challenge submission`}
-                                  loading="lazy"
-                                />
-                              )}
-                            </div>
-                            <div className="cc-player-final-copy">
-                              <div className="cc-player-final-submitter">
-                                <span className="cc-player-final-submitter-avatar">
-                                  {submitter?.avatar_url ? (
-                                    <img src={submitter.avatar_url} alt="" />
-                                  ) : (
-                                    submitter?.name.slice(0, 1).toUpperCase()
-                                  )}
-                                </span>
-                                <span className="cc-player-final-submitter-copy">
-                                  <strong>{submitter?.name ?? "Player"}</strong>
-                                  <small>
-                                    {selectedFinalChallenge?.title ??
-                                      "Side challenge"}
-                                  </small>
-                                </span>
-                                <Check
-                                  size={22}
-                                  aria-label="Submission received"
-                                />
-                              </div>
-                              <div className="cc-player-final-vote-row">
-                                <button
-                                  type="button"
-                                  className={`cc-player-vote-button${hostVotedForItem ? " is-selected" : ""}`}
-                                  disabled={busy}
-                                  onClick={() =>
-                                    void castHostFinalVote(item.id)
-                                  }
-                                >
-                                  <Heart
-                                    size={16}
-                                    fill={
-                                      hostVotedForItem ? "currentColor" : "none"
-                                    }
-                                  />
-                                  {hostVotedForItem
-                                    ? "Your vote"
-                                    : "Vote for this"}
-                                </button>
-                              </div>
-                            </div>
-                          </article>
-                        );
-                      })}
-                    </div>
-                  )}
-                {selectedFinalChallengeStatus === "results" && (
-                  <div className="cc-host-final-results">
-                    <div className="cc-session-final-vote-result">
-                      <strong>{selectedFinalChallenge?.title}: results</strong>
-                      <span>
-                        {selectedFinalChallengeState?.votes_cast ?? 0} vote
-                        {selectedFinalChallengeState?.votes_cast === 1
-                          ? ""
-                          : "s"}{" "}
-                        cast ·{" "}
-                        {finalTopVoteCount > 0
-                          ? `Tied top submissions each earn +${selectedFinalChallenge?.points ?? 0} points.`
-                          : "No votes were cast; no bonus points were awarded."}
-                      </span>
-                    </div>
-                    {selectedFinalChallengeEvidence.length === 0 ? (
-                      <p className="cc-helper-text">
-                        There were no submitted entries for this challenge.
-                      </p>
-                    ) : (
-                      <div className="cc-player-final-grid">
-                        {selectedFinalChallengeEvidence.map((item) => {
-                          const itemVotes = selectedFinalChallengeVotes.filter(
-                            (vote) => vote.evidence_id === item.id,
-                          );
-                          const isWinner = finalWinningEvidenceIds.has(item.id);
-                          return (
-                            <article
-                              className={`cc-player-final-card${isWinner ? " is-winner" : ""}`}
-                              key={item.id}
-                            >
-                              <div className="cc-player-final-media">
-                                {item.media_type === "video" ? (
-                                  <video
-                                    src={evidenceUrl(item.storage_path)}
-                                    controls
-                                    playsInline
-                                    preload="metadata"
-                                  />
-                                ) : (
-                                  <img
-                                    src={evidenceUrl(item.storage_path)}
-                                    alt={`${playerById.get(item.player_id)?.name ?? "Player"}'s final-round entry`}
-                                    loading="lazy"
-                                  />
-                                )}
-                              </div>
-                              <div className="cc-player-final-copy">
-                                <div className="cc-player-final-submitter">
-                                  <span className="cc-player-final-submitter-avatar">
-                                    {playerById.get(item.player_id)
-                                      ?.avatar_url ? (
-                                      <img
-                                        src={
-                                          playerById.get(item.player_id)
-                                            ?.avatar_url ?? ""
-                                        }
-                                        alt=""
-                                      />
-                                    ) : (
-                                      playerById
-                                        .get(item.player_id)
-                                        ?.name.slice(0, 1)
-                                        .toUpperCase()
-                                    )}
-                                  </span>
-                                  <span className="cc-player-final-submitter-copy">
-                                    <strong>
-                                      {playerById.get(item.player_id)?.name ??
-                                        "Player"}
-                                    </strong>
-                                    <small>
-                                      {selectedFinalChallenge?.title}
-                                    </small>
-                                  </span>
-                                  <Check
-                                    size={22}
-                                    aria-label="Submission received"
-                                  />
-                                </div>
-                                <div className="cc-player-final-vote-row">
-                                  <strong className="cc-player-final-vote-count">
-                                    {itemVotes.length} vote
-                                    {itemVotes.length === 1 ? "" : "s"}
-                                  </strong>
-                                  {isWinner && (
-                                    <span className="cc-player-final-winner-badge">
-                                      Top submission
-                                    </span>
-                                  )}
-                                </div>
-                                <div
-                                  className="cc-player-final-voters"
-                                  aria-label={`Voters for ${playerById.get(item.player_id)?.name ?? "player"}'s submission`}
-                                >
-                                  {itemVotes.length === 0 ? (
-                                    <span className="cc-player-final-no-voters">
-                                      No voters
-                                    </span>
-                                  ) : (
-                                    itemVotes.map((vote) => {
-                                      const voter = playerById.get(
-                                        vote.player_id,
-                                      );
-                                      if (!voter) return null;
-                                      return (
-                                        <span
-                                          className="cc-player-final-voter"
-                                          key={vote.player_id}
-                                          title={voter.name}
-                                        >
-                                          <span className="cc-player-final-voter-avatar">
-                                            {voter.avatar_url ? (
-                                              <img
-                                                src={voter.avatar_url}
-                                                alt=""
-                                              />
-                                            ) : (
-                                              voter.name
-                                                .slice(0, 1)
-                                                .toUpperCase()
-                                            )}
-                                          </span>
-                                          <span>{voter.name}</span>
-                                        </span>
-                                      );
-                                    })
-                                  )}
-                                </div>
-                              </div>
-                            </article>
-                          );
-                        })}
-                      </div>
-                    )}
-                    <div className="cc-session-final-vote-result">
-                      <strong>Updated player leaderboard</strong>
-                      <div className="cc-host-final-leaderboard">
-                        {rankedPlayers.map((player, index) => (
-                          <div key={player.id}>
-                            <span>{index + 1}</span>
-                            <strong>{player.name}</strong>
-                            <span>{player.score} pts</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </section>
-            )}
-
-            {activeTab === "side-challenges" && (
+            {activeTab === "host-controls" && (
               <section
                 className="cc-session-card cc-session-section cc-host-side-review-card"
                 data-tour="host-side-review"
@@ -6521,272 +5009,9 @@ export default function HostLiveSession() {
                 )}
               </section>
             )}
-          </>
-        )}
-      </div>
-      {editingBreakChallenge && (
-        <div
-          className="cc-host-override-backdrop"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget && !busy)
-              setEditingBreakChallenge(null);
-          }}
-        >
-          <form
-            className="cc-host-override-dialog cc-host-break-edit-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="cc-host-break-edit-title"
-            onSubmit={(event) => void saveBreakChallengeEdit(event)}
-          >
-            <span className="cc-host-override-kicker">
-              EDIT ROUND {editingBreakChallenge.round_number}
-            </span>
-            <h2 id="cc-host-break-edit-title">Update the upcoming challenge</h2>
-            <label>
-              Challenge title
-              <input
-                required
-                maxLength={100}
-                value={editChallengeTitle}
-                onChange={(event) => setEditChallengeTitle(event.target.value)}
-              />
-            </label>
-            <label>
-              Instructions
-              <textarea
-                rows={4}
-                value={editChallengeDescription}
-                onChange={(event) =>
-                  setEditChallengeDescription(event.target.value)
-                }
-              />
-            </label>
-            <label>
-              Equipment needed <small>Separate items with commas.</small>
-              <textarea
-                rows={2}
-                value={editChallengeEquipment}
-                onChange={(event) =>
-                  setEditChallengeEquipment(event.target.value)
-                }
-              />
-            </label>
-            <div className="cc-host-break-edit-numbers">
-              <label>
-                Minutes
-                <input
-                  type="number"
-                  min={1}
-                  max={240}
-                  value={editChallengeDuration}
-                  onChange={(event) =>
-                    setEditChallengeDuration(Number(event.target.value))
-                  }
-                />
-              </label>
-              <label>
-                Points
-                <input
-                  type="number"
-                  min={0}
-                  max={1000}
-                  value={editChallengePoints}
-                  onChange={(event) =>
-                    setEditChallengePoints(Number(event.target.value))
-                  }
-                />
-              </label>
-            </div>
-            <label className="cc-host-break-edit-check">
-              <input
-                type="checkbox"
-                checked={editChallengeEvidence}
-                onChange={(event) =>
-                  setEditChallengeEvidence(event.target.checked)
-                }
-              />{" "}
-              Players must submit photo or video evidence
-            </label>
-            <div className="cc-host-override-actions">
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => setEditingBreakChallenge(null)}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={busy || !editChallengeTitle.trim()}
-              >
-                {busy ? "Saving…" : "Save challenge"}
-              </button>
-            </div>
-          </form>
-        </div>
+          </HostManagement>
+        </>
       )}
-      {editingBreakTimer && (
-        <div
-          className="cc-host-override-backdrop"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget && !busy)
-              setEditingBreakTimer(false);
-          }}
-        >
-          <form
-            className="cc-host-override-dialog cc-host-break-edit-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="cc-host-break-timer-title"
-            onSubmit={(event) => void saveBreakTimer(event)}
-          >
-            <span className="cc-host-override-kicker">BREAK TIMER</span>
-            <h2 id="cc-host-break-timer-title">
-              Edit the time until the next round
-            </h2>
-            <p>
-              Round {breakResumeRound ?? session.current_round_number + 1} will
-              start when the break timer ends.
-            </p>
-            <label>
-              Break minutes
-              <input
-                type="number"
-                min={1}
-                max={240}
-                required
-                value={editBreakMinutes}
-                disabled={busy}
-                onChange={(event) =>
-                  setEditBreakMinutes(Number(event.target.value))
-                }
-              />
-            </label>
-            {error && (
-              <div className="cc-host-override-blocked" role="alert">
-                <span>{error}</span>
-                <button
-                  type="button"
-                  className="cc-host-alert-dismiss"
-                  aria-label="Dismiss error"
-                  onClick={() => setError("")}
-                >
-                  <X size={16} />
-                </button>
-              </div>
-            )}
-            <div className="cc-host-override-actions">
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => setEditingBreakTimer(false)}
-              >
-                Cancel
-              </button>
-              <button type="submit" disabled={busy || editBreakMinutes < 1}>
-                {busy ? "Saving…" : "Save timer"}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-      {overridePrompt && (
-        <div
-          className="cc-host-override-backdrop"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget && !busy)
-              setOverridePrompt(null);
-          }}
-        >
-          <section
-            className="cc-host-override-dialog"
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="cc-host-override-title"
-          >
-            <span className="cc-host-override-kicker">HOST CONTROL</span>
-            <h2 id="cc-host-override-title">
-              {overridePrompt.kind === "start"
-                ? "Start before everything is ready?"
-                : "Override autoplay?"}
-            </h2>
-            <p>
-              {overridePrompt.kind === "start"
-                ? "You can start the game now. Round 1 will be ready for everyone; start its timer when you are ready."
-                : overridePrompt.forceBreak
-                  ? `You are starting a break before Round ${overridePrompt.round}. The challenge timer will pause and players will see the planned resume time.`
-                  : `You are moving directly to Round ${overridePrompt.round}. Its timer will reset and stay paused until you start it. Later timings will shift to follow your start time.`}
-            </p>
-            {overridePrompt.kind === "start" && (
-              <ul>
-                {startOverrideReasons().map((reason) => (
-                  <li key={reason}>{reason}</li>
-                ))}
-              </ul>
-            )}
-            {overridePrompt.kind === "start" &&
-              players.length > 0 &&
-              session.teams_enabled &&
-              unassignedPlayers.length > 0 && (
-                <p className="cc-host-override-blocked">
-                  Assign every player to a team before starting. This
-                  requirement cannot be overridden.
-                </p>
-              )}
-            {autoplayEnabled && (
-              <p className="cc-host-override-note">
-                Autoplay is enabled. Confirming gives you manual control for the
-                rest of this game.
-              </p>
-            )}
-            <div className="cc-host-override-actions">
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => setOverridePrompt(null)}
-              >
-                Go back
-              </button>
-              <button
-                type="button"
-                disabled={
-                  busy ||
-                  (overridePrompt.kind === "start" &&
-                    (players.length === 0 ||
-                      (session.teams_enabled &&
-                        (teams.length === 0 || unassignedPlayers.length > 0))))
-                }
-                onClick={confirmHostOverride}
-              >
-                {busy
-                  ? "Working…"
-                  : overridePrompt.kind === "start" &&
-                      players.length > 0 &&
-                      session.teams_enabled &&
-                      (teams.length === 0 || unassignedPlayers.length > 0)
-                    ? "Assign teams first"
-                    : overridePrompt.kind === "start"
-                      ? "Override & start game"
-                      : overridePrompt.forceBreak
-                        ? "Override & start break"
-                        : "Override & move round"}
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
-      {hostTourOpen && (
-        <GuidedTour
-          steps={hostTourSteps}
-          onNavigate={navigateHostTour}
-          onClose={() => setHostTourOpen(false)}
-          label="HOST TOUR"
-        />
-      )}
-    </main>
+    </SessionPage>
   );
 }

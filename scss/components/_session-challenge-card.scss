@@ -1,0 +1,22 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.session-challenge-card {
+  margin-block: layout.$spacing-unit * 4;
+  padding: layout.$spacing-unit * 5;
+  border: layout.$session-border-width solid colors.$ink;
+  border-radius: layout.$radius-lg;
+  background: colors.$white;
+  &__heading {
+    display: flex;
+    align-items: center;
+    gap: layout.$spacing-unit * 4;
+  }
+  &__heading h3 {
+    margin: 0;
+    font-size: layout.$session-header-size;
+  }
+  &__heading strong {
+    font-size: layout.$session-small-size;
+    color: colors.$purple;
+  }
+}

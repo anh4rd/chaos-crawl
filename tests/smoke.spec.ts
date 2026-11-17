@@ -181,9 +181,9 @@ test("styleguide is public, searchable and uses local demo state", async ({
   const catalogSize = await page.locator(".sg-catalog article").count();
   expect(catalogSize).toBeGreaterThan(0);
   await page.getByLabel("Team name", { exact: true }).fill("The Trailblazers");
-  await expect(page.locator(".cc-player-profile-copy")).toContainText(
-    "The Trailblazers",
-  );
+  await expect(
+    page.locator(".sg-player-chrome .session-profile__copy"),
+  ).toContainText("The Trailblazers");
 
   await page.getByRole("button", { name: "Try again", exact: true }).click();
   await expect(
@@ -192,7 +192,9 @@ test("styleguide is public, searchable and uses local demo state", async ({
       .filter({ hasText: "Demo recovered successfully." }),
   ).toBeVisible();
 
-  await page.getByLabel("Search component catalog").fill("SessionGameChrome");
+  await page
+    .getByLabel("Search component catalog")
+    .fill("SessionPlayerProfile");
   await expect(page.locator(".sg-catalog article")).toHaveCount(1);
   await expect(page.locator(".sg-catalog")).toContainText(
     "SessionPlayerProfile",
@@ -215,5 +217,57 @@ test("styleguide is public, searchable and uses local demo state", async ({
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+  expect(backendRequests).toEqual([]);
+});
+
+test("styleguide controls work by keyboard and modal focus returns to its trigger", async ({
+  page,
+}) => {
+  await page.goto("#/styleguide");
+  const checkbox = page.getByRole("checkbox", {
+    name: "Demo challenge timers",
+  });
+  await checkbox.focus();
+  await page.keyboard.press("Space");
+  await expect(checkbox).toBeChecked();
+  const trigger = page.getByRole("button", { name: "Open dialog example" });
+  await trigger.focus();
+  await page.keyboard.press("Enter");
+  const dialog = page.getByRole("dialog", { name: "Styleguide dialog" });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Tab");
+  await expect
+    .poll(() => dialog.evaluate((el) => el.contains(document.activeElement)))
+    .toBe(true);
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  await expect(trigger).toBeFocused();
+});
+
+test("shared session styleguide switches roles and phases without backend access", async ({
+  page,
+}) => {
+  const backendRequests: string[] = [];
+  page.on("request", (request) => {
+    if (/\/rest\/v1\/|\/auth\/v1\/|\/storage\/v1\//.test(request.url()))
+      backendRequests.push(request.url());
+  });
+  await page.goto("#/styleguide");
+  await page.getByLabel("Preview as").selectOption("host");
+  const preview = page.locator(".session-page--preview");
+  await expect(
+    preview.getByRole("button", { name: "Host", exact: true }),
+  ).toBeVisible();
+  await page.getByLabel("Phase", { exact: true }).selectOption("review");
+  await expect(
+    preview.getByRole("heading", { name: "Make a dramatic entrance" }),
+  ).toBeVisible();
+  await preview.getByRole("button", { name: "SUCCESS", exact: true }).click();
+  await expect(
+    preview
+      .getByRole("status")
+      .filter({ hasText: "Local success vote recorded." }),
+  ).toContainText("Local success vote recorded.");
+  await expect(page.locator("main main")).toHaveCount(0);
   expect(backendRequests).toEqual([]);
 });

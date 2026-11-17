@@ -1,17 +1,9 @@
+import Dialog from "../components/ui/Dialog";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  ArrowLeft,
-  RefreshCw,
-  Search,
-  ShieldCheck,
-  Users,
-  Gamepad2,
-  CalendarDays,
-  X,
-} from "lucide-react";
-import { supabase } from "../lib/sessionSupabase";
 import HostShell from "../components/host/HostShell";
+import Icon from "../components/ui/Icon";
+import { supabase } from "../lib/sessionSupabase";
 import "../styles/HostPortal.css";
 import "../styles/HostPlanning.css";
 
@@ -102,7 +94,8 @@ export default function SuperAdmin() {
       <div className="sa-header">
         <div>
           <span className="sa-kicker">
-            <ShieldCheck size={15} /> PLATFORM OWNER
+            <Icon name="shield-check" className="icon--size-15" /> PLATFORM
+            OWNER
           </span>
           <h2>All games</h2>
           <p>View games created by every host account.</p>
@@ -111,7 +104,7 @@ export default function SuperAdmin() {
           className="host-button host-button--secondary"
           onClick={() => void load()}
         >
-          <RefreshCw size={16} /> Refresh
+          <Icon name="refresh-cw" className="icon--size-16" /> Refresh
         </button>
       </div>
       {error && <div className="host-alert host-alert--error">{error}</div>}
@@ -123,19 +116,19 @@ export default function SuperAdmin() {
       )}
       <div className="sa-stats">
         <article>
-          <Gamepad2 />
+          <Icon name="gamepad2" className="icon--size-24" />
           <strong>{games.length}</strong>
           <span>Total games</span>
         </article>
         <article>
-          <Users />
+          <Icon name="users" className="icon--size-24" />
           <strong>
             {games.reduce((n, g) => n + Number(g.player_count || 0), 0)}
           </strong>
           <span>Players across sessions</span>
         </article>
         <article>
-          <CalendarDays />
+          <Icon name="calendar-days" className="icon--size-24" />
           <strong>
             {
               games.filter((g) => g.status === "live" || g.live_sessions > 0)
@@ -148,7 +141,7 @@ export default function SuperAdmin() {
       <section className="sa-panel">
         <div className="sa-toolbar">
           <label>
-            <Search size={17} />
+            <Icon name="search" className="icon--size-17" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -212,13 +205,22 @@ export default function SuperAdmin() {
         )}
       </section>
       <Link className="sa-back" to="/host">
-        <ArrowLeft size={15} /> Back to Host Hub
+        <Icon name="arrow-left" className="icon--size-15" /> Back to Host Hub
       </Link>
       {(selected || detailLoading) && (
-        <div className="sa-modal-backdrop" onClick={() => setSelected(null)}>
-          <section className="sa-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="sa-close" onClick={() => setSelected(null)}>
-              <X />
+        <Dialog
+          label="Game inspector"
+          className="sa-modal-backdrop"
+          onClose={() => setSelected(null)}
+        >
+          <section className="sa-modal">
+            <button
+              type="button"
+              aria-label="Close game inspector"
+              className="sa-close"
+              onClick={() => setSelected(null)}
+            >
+              <Icon name="x" className="icon--size-24" />
             </button>
             {detailLoading ? (
               <p>Loading game details…</p>
@@ -254,7 +256,7 @@ export default function SuperAdmin() {
               )
             )}
           </section>
-        </div>
+        </Dialog>
       )}
     </HostShell>
   );

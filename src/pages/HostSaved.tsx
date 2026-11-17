@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Heart, MapPin, Trash2, ClipboardList, Compass } from "lucide-react";
-import { supabase } from "../lib/sessionSupabase";
 import HostShell from "../components/host/HostShell";
+import Icon from "../components/ui/Icon";
+import { supabase } from "../lib/sessionSupabase";
 import "../styles/HostPortal.css";
 import "../styles/HostTheme.css";
 
@@ -78,11 +78,11 @@ export default function HostSaved() {
       showCreate
     >
       {error && <div className="host-alert host-alert--error">{error}</div>}
-      <div className="host-tabs" role="tablist" aria-label="Saved items filter">
+      <div className="host-tabs" role="group" aria-label="Saved items filter">
         <button
           type="button"
           className={filter === "all" ? "is-active" : ""}
-          aria-selected={filter === "all"}
+          aria-pressed={filter === "all"}
           onClick={() => setFilter("all")}
         >
           Everything <span className="host-tab-count">{items.length}</span>
@@ -90,26 +90,26 @@ export default function HostSaved() {
         <button
           type="button"
           className={filter === "task" ? "is-active" : ""}
-          aria-selected={filter === "task"}
+          aria-pressed={filter === "task"}
           onClick={() => setFilter("task")}
         >
-          <ClipboardList size={15} /> Tasks
+          <Icon name="clipboard-list" className="icon--size-15" /> Tasks
         </button>
         <button
           type="button"
           className={filter === "venue" ? "is-active" : ""}
-          aria-selected={filter === "venue"}
+          aria-pressed={filter === "venue"}
           onClick={() => setFilter("venue")}
         >
-          <MapPin size={15} /> Locations
+          <Icon name="map-pin" className="icon--size-15" /> Locations
         </button>
         <button
           type="button"
           className={filter === "route" ? "is-active" : ""}
-          aria-selected={filter === "route"}
+          aria-pressed={filter === "route"}
           onClick={() => setFilter("route")}
         >
-          <Compass size={15} /> Routes
+          <Icon name="compass" className="icon--size-15" /> Routes
         </button>
       </div>
       {loading ? (
@@ -123,11 +123,11 @@ export default function HostSaved() {
               <article className="host-saved-card" key={item.id}>
                 <div className="host-saved-icon">
                   {item.item_type === "task" ? (
-                    <ClipboardList size={21} />
+                    <Icon name="clipboard-list" className="icon--size-21" />
                   ) : item.item_type === "route" ? (
-                    <Compass size={21} />
+                    <Icon name="compass" className="icon--size-21" />
                   ) : (
-                    <MapPin size={21} />
+                    <Icon name="map-pin" className="icon--size-21" />
                   )}
                 </div>
                 <div className="host-saved-copy">
@@ -157,7 +157,7 @@ export default function HostSaved() {
                   aria-label={`Remove ${title} from saved items`}
                   onClick={() => void remove(item)}
                 >
-                  <Trash2 size={17} />
+                  <Icon name="trash2" className="icon--size-17" />
                 </button>
               </article>
             );
@@ -165,7 +165,7 @@ export default function HostSaved() {
         </div>
       ) : (
         <div className="host-empty-state">
-          <Heart size={24} />
+          <Icon name="heart" className="icon--size-24" />
           <h3>Nothing saved yet</h3>
           <p>
             Save a challenge, venue idea or route template as you browse the

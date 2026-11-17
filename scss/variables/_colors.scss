@@ -1,0 +1,27 @@
+$purple: #5c36fb;
+$purple-mid: #7554fc;
+$purple-dark: #23166e;
+$pink: #fb377a;
+$lime: #e5ff00;
+$yellow: #ffe600;
+$ink: #060f13;
+$black: #000;
+$white: #fff;
+
+// These primitives used Tailwind's palette, which differs from the brand colors.
+$action: oklch(89.7% 0.196 126.665);
+$input-border: oklch(65.6% 0.241 354.308);
+$action-glow: #bdee41;
+$field-label: #20164e;
+$field-hint: #766f90;
+$control-border: #c8bdf3;
+$control-text: #17104b;
+$control-focus-ring: #5c36fb22;
+$toggle-border: #e1daf5;
+$toggle-surface: #fbfaff;
+$toggle-title: #21164f;
+$toggle-detail: #77708d;
+$toggle-track: #c8c2d8;
+$accent-soft: #d3fb6e;
+$feedback-error: #9e214c;
+$feedback-success: #385b11;

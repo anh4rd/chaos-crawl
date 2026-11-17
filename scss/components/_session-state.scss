@@ -1,0 +1,11 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.session-state {
+  padding: layout.$spacing-unit * 5;
+  border-radius: layout.$radius-lg;
+  border: layout.$session-border-width solid colors.$ink;
+  background: colors.$white;
+  h2 {
+    font-size: layout.$session-header-size;
+  }
+}

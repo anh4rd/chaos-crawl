@@ -1,0 +1,13 @@
+@use "../variables/layout";
+
+@layer utilities {
+  .data-error {
+    margin-inline: auto;
+    max-width: layout.$content-width;
+    padding: layout.$spacing-unit * 6;
+
+    :where(& > :not(:last-child)) {
+      margin-block: 0 layout.$spacing-unit * 4;
+    }
+  }
+}

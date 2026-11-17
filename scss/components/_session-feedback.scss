@@ -1,0 +1,28 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.session-feedback {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: layout.$spacing-unit * 3;
+  padding: layout.$spacing-unit * 4;
+  border: layout.$session-border-width solid currentColor;
+  border-radius: layout.$radius-lg;
+  background: colors.$white;
+  &--error {
+    color: colors.$feedback-error;
+  }
+  &--success {
+    color: colors.$feedback-success;
+  }
+  button {
+    display: grid;
+    place-items: center;
+    min-height: layout.$session-row-height;
+    min-width: layout.$session-row-height;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+}

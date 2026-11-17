@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Expand, LoaderCircle } from "lucide-react";
+import Icon from "../components/ui/Icon";
 import { supabase } from "../lib/sessionSupabase";
 import "../styles/PlayerGame.css";
 
@@ -132,7 +132,7 @@ export default function SessionFinalSlideshow() {
     return (
       <main className="cc-final-tv">
         <div className="cc-final-tv-waiting">
-          <LoaderCircle className="cc-spin" size={28} />
+          <Icon name="loader-circle" className="icon--size-28 cc-spin" />
           <span>Connecting to the final slideshow…</span>
         </div>
       </main>
@@ -206,7 +206,7 @@ export default function SessionFinalSlideshow() {
         onClick={() => void enterFullscreen()}
         aria-label="Enter fullscreen"
       >
-        <Expand size={18} />
+        <Icon name="expand" className="icon--size-18" />
       </button>
       {(error || mediaError) && (
         <p className="cc-final-tv-live-error" role="status">

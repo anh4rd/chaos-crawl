@@ -1,0 +1,21 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.session-reward-round {
+  border: layout.$session-border-width solid colors.$ink;
+  border-radius: layout.$radius-lg;
+  padding: layout.$spacing-unit * 5;
+  background: colors.$white;
+  color: colors.$ink;
+  h2 {
+    font-size: layout.$session-header-size;
+  }
+  &__kicker {
+    color: colors.$purple;
+    font-size: layout.$session-label-size;
+  }
+  &__winner {
+    padding: layout.$spacing-unit * 3;
+    border-radius: layout.$radius-lg;
+    background: colors.$accent-soft;
+  }
+}

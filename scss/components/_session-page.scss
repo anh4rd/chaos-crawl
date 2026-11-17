@@ -1,0 +1,43 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.session-page {
+  min-height: 100vh;
+  background: colors.$purple;
+  color: colors.$ink;
+  padding-bottom: calc(
+    #{layout.$session-dock-height} + env(safe-area-inset-bottom)
+  );
+  &__heading {
+    color: colors.$white;
+    font-size: layout.$session-header-size;
+    text-shadow: none;
+  }
+  &__tour {
+    border: 0;
+    padding: layout.$spacing-unit * 2;
+    background: transparent;
+    color: colors.$white;
+    cursor: pointer;
+  }
+  &__toolbar {
+    width: min(100%, layout.$session-content-width);
+    margin-inline: auto;
+    padding: layout.$spacing-unit * 4;
+    color: colors.$white;
+  }
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: layout.$spacing-unit * 4;
+    width: min(100%, layout.$session-content-width);
+    margin-inline: auto;
+    padding: layout.$spacing-unit * 4;
+  }
+  &--preview {
+    min-height: auto;
+
+    .session-navigation {
+      position: relative;
+    }
+  }
+}
