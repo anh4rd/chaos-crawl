@@ -164,3 +164,56 @@ for (const [path, heading] of [
     expect(errors).toEqual([]);
   });
 }
+
+test("styleguide is public, searchable and uses local demo state", async ({
+  page,
+}) => {
+  const backendRequests: string[] = [];
+  page.on("request", (request) => {
+    if (/\/rest\/v1\/|\/auth\/v1\/|\/storage\/v1\//.test(request.url())) {
+      backendRequests.push(request.url());
+    }
+  });
+  await page.goto("#/styleguide");
+  await expect(
+    page.getByRole("heading", { name: "Build on the good stuff." }),
+  ).toBeVisible();
+  const catalogSize = await page.locator(".sg-catalog article").count();
+  expect(catalogSize).toBeGreaterThan(0);
+  await page.getByLabel("Team name", { exact: true }).fill("The Trailblazers");
+  await expect(page.locator(".cc-player-profile-copy")).toContainText(
+    "The Trailblazers",
+  );
+
+  await page.getByRole("button", { name: "Try again", exact: true }).click();
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "Demo recovered successfully." }),
+  ).toBeVisible();
+
+  await page.getByLabel("Search component catalog").fill("SessionGameChrome");
+  await expect(page.locator(".sg-catalog article")).toHaveCount(1);
+  await expect(page.locator(".sg-catalog")).toContainText(
+    "SessionPlayerProfile",
+  );
+  await page.getByLabel("Search component catalog").fill("no-such-component");
+  await expect(
+    page.getByText("No components match", { exact: false }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Clear search" }).click();
+  await expect(page.locator(".sg-catalog article")).toHaveCount(catalogSize);
+
+  await page.getByRole("button", { name: "Preview guided tour" }).click();
+  await expect(
+    page.getByRole("dialog", { name: /STYLEGUIDE TOUR/ }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Close tour" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  expect(backendRequests).toEqual([]);
+});

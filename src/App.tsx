@@ -20,6 +20,7 @@ const HostLiveSession = lazy(() => import("./pages/HostLiveSession"));
 const HostLogin = lazy(() => import("./pages/HostLogin"));
 const InviteLanding = lazy(() => import("./pages/InviteLanding"));
 const PlayerDemo = lazy(() => import("./pages/PlayerDemo"));
+const Styleguide = lazy(() => import("./pages/Styleguide"));
 const SuperAdmin = lazy(() => import("./pages/SuperAdmin"));
 const HostHub = lazy(() => import("./pages/HostHub"));
 const HostPlanSetup = lazy(() => import("./pages/HostPlanSetup"));
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="/join" element={<Join />} />
         <Route path="/invite/:joinCode" element={<InviteLanding />} />
         <Route path="/demo/player" element={<PlayerDemo />} />
+        <Route path="/styleguide" element={<Styleguide />} />
         <Route path="/legacy/join" element={<LegacyJoin />} />
         <Route path="/challenge-review" element={<ChallengeReview />} />
         <Route path="/game" element={<Game />} />

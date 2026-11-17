@@ -113,6 +113,16 @@ regressions.
 
 ## Application boundaries
 
+Open `/chaos-crawl/#/styleguide` for the component reference (no login required).
+It includes live local demos, usage snippets, foundation colors and typography,
+host CSS patterns, and a searchable catalog of every component module in
+`src/components` and `src/features`. Connected features list their data and auth
+dependencies. Demos use local state and do not read or write game data.
+When adding or changing reusable UI, update the examples in
+`src/pages/Styleguide.tsx` and integration notes in
+`src/features/styleguide/catalog.ts`. New component modules appear in the catalog
+automatically; previews reuse the production components and styles.
+
 - `src/pages` composes routes. Admin tabs, game challenges, voting, slideshow
   playback, and submission review have focused components in `src/features`.
 - `src/game/hooks` owns live reads and challenge participation. Read hooks expose
