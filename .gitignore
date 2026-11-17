@@ -16,6 +16,7 @@ test-results/
 dist
 dist-ssr
 *.local
+.env.sentry-build-plugin
 
 # Editor directories and files
 .vscode/*

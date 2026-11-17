@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { reportError } from "../../lib/monitoring";
 import type { Database } from "../../types/database";
 
 type TableName = keyof Database["public"]["Tables"];
@@ -67,6 +68,7 @@ export function useRealtimeQuery<T>(
       update({ data: result.data ?? initialData });
     } catch (cause) {
       if (!active.current || version !== request.current) return;
+      reportError(cause, `query:${table}`);
       update({
         error: cause instanceof Error ? cause : new Error(String(cause)),
       });
@@ -74,7 +76,7 @@ export function useRealtimeQuery<T>(
       if (active.current && version === request.current)
         update({ loading: false });
     }
-  }, [load, initialData, queryKey, update, cancelPendingRequest]);
+  }, [load, initialData, queryKey, table, update, cancelPendingRequest]);
 
   useEffect(() => {
     active.current = true;
@@ -95,6 +97,7 @@ export function useRealtimeQuery<T>(
             active.current &&
             (status === "CHANNEL_ERROR" || status === "TIMED_OUT")
           ) {
+            reportError(new Error(`Realtime ${status}`), `realtime:${table}`);
             update({
               error: new Error(
                 `Live updates for ${table} disconnected. Retry to refresh the data.`,
@@ -103,6 +106,7 @@ export function useRealtimeQuery<T>(
           }
         });
     } catch (cause) {
+      reportError(cause, `realtime:${table}`);
       update({
         error: cause instanceof Error ? cause : new Error(String(cause)),
       });
