@@ -121,6 +121,14 @@ shared-layout choice is pending. Do not create duplicate shared session widgets
 from it or treat automatic continuation as design approval; continue independent
 migration work meanwhile.
 
+Card variant="idea" composes ContentPanel's entity surface and owns its header
+slot, layout, typography and hover frame in the card SCSS block. TaskCard,
+LocationCard and RouteCard reuse it with controlled header/content slots; keep
+badges, save controls and details in their respective pending styling slices.
+The local Shared idea card and catalogue references exercise the same component
+without connected controllers. Do not restore the retired catalogue card-frame
+selectors or duplicate their surface declarations.
+
 HostSaved composes features/host-saved/SavedItemsWorkspace. Its controller owns
 collection/filter/loading and separate query/action feedback. Effect-local cleanup
 rejects obsolete identity/query results, and commands check mount lifetime.

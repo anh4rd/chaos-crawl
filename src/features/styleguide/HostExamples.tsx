@@ -1,3 +1,4 @@
+import IdeaCardExample from "./IdeaCardExample";
 import CatalogueExample from "./CatalogueExample";
 import SavedItemsExample from "./SavedItemsExample";
 import StagePlanExample from "./StagePlanExample";
@@ -131,6 +132,7 @@ export default function HostExamples() {
       <HostDialogExample />
       <HostShellPreview />
       <CatalogueExample />
+      <IdeaCardExample />
       <Note>
         HostWorkspace connects authentication to the presentation-only
         HostShell. The catalog documents the host panels and their data

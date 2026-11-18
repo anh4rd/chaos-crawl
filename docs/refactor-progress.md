@@ -3140,6 +3140,53 @@ Next: migrate catalogue styling into owned SCSS and shared primitives, then the
 separately tested modal/tab accessibility and action-concurrency findings. Keep
 private/public selection and callback contracts in the coordinator/controllers.
 
+## Phase 5s — shared catalogue card frame
+
+Task, location and route cards now compose `Card variant="idea"` rather than
+repeating their native article/header frame. The required header slot preserves
+the native div; ContentPanel's existing entity variant supplies the common
+surface, border, radius and shadow. Card owns layout, title/body typography and
+hover geometry in SCSS. Default/poster Card contracts remain unchanged. The
+existing description color was promoted unchanged to a token. Badges, save
+controls, metadata, tags and details remain for subsequent styling slices.
+
+The backend-free Shared idea card example exercises a local action; the local
+catalogue reference continues to use the same controlled production views.
+Catalogue notes and agent guidance describe the shared frame and retained
+exceptions. No controller, persistence, accessibility behavior or dependency
+changed.
+
+Verification:
+
+- Lint/format, strict upload-disabled production build and Playwright type checks
+  passed. All **366 unit tests** and **36 affected desktop/mobile browser cases**
+  passed, including catalogue and saved-item local keyboard references.
+- The CSS audit retired eight selector arms: five in HostPlanning and three in
+  HostTheme. The remaining **317 legacy selector arms** retain exact conditions,
+  order and declarations; the other three audited legacy stylesheets are
+  byte-identical. All **1,391 prior expanded SCSS rule projections** retain their
+  declarations and order.
+- **34 desktop/mobile production comparisons** preserve native outerHTML,
+  controls, focus, geometry, every standard computed property and SDK traces.
+  Only the intentional root/header class renames and unused route-root class
+  removal are normalized. Independent initial GET ordering is compared as a
+  multiset; subsequent command/query order remains strict. Hover, saved hover,
+  native keyboard focus and reduced-motion hover are included.
+- **31 of 34 PNG pairs are pixel-exact.** The desktop approval scene and its
+  repeat each differ by 13 edge pixels (maximum channel delta 27); desktop
+  keyboard focus differs by 51 pixels (maximum channel delta 7). These small
+  raster differences remain recorded without masks or a claimed explanation;
+  DOM, geometry and computed styles match in those scenes too. The raw logs,
+  PNGs, snapshots and pixel-delta reports live under `/tmp/phase5s-*`.
+- Six additional desktop/mobile comparisons of the default Card, local saved
+  items and planning reference preserve native markup, geometry and all computed
+  properties, with no backend requests.
+
+Next: shared catalogue badges and save controls, then metadata/details and the
+remaining catalogue shell/editor styling. Modal/tab accessibility and duplicate
+route-save concurrency remain separate behavior slices. The full-refactor queue
+below remains active; final whole-suite verification and desloppify are pending.
+
 ## Queued phases for the full refactor
 
 Next: owned/shared HostExplore styling. Its thin route, focused controllers and

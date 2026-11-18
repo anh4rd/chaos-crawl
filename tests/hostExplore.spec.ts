@@ -6,7 +6,7 @@ import {
 } from "./support/hostExplore";
 import { hostId } from "./support/sessionBackend";
 
-const cards = (page: Page) => page.locator(".host-explore-card");
+const cards = (page: Page) => page.locator(".card--idea");
 const card = (page: Page, title: string) =>
   cards(page).filter({
     has: page.getByRole("heading", { name: title, exact: true }),
@@ -746,7 +746,7 @@ test("local catalogue uses controlled views for saves, moderation and forms with
   await activateByKeyboard(
     page,
     example
-      .locator(".host-explore-card")
+      .locator(".card--idea")
       .filter({
         has: page.getByRole("heading", {
           name: "Obtain the best thing",
@@ -837,6 +837,14 @@ test("local catalogue uses controlled views for saves, moderation and forms with
   await page.keyboard.press("Tab");
   await page.keyboard.press("Space");
   await expect(example.getByRole("alert")).toHaveText("Local catalogue error");
+  const shared = page.locator(".component-example").filter({
+    has: page.getByRole("heading", { name: "Shared idea card", exact: true }),
+  });
+  await activateByKeyboard(
+    page,
+    shared.getByRole("button", { name: "Choose locally", exact: true }),
+  );
+  await expect(shared.getByRole("status")).toHaveText("Idea chosen locally.");
   expect(backend.requests).toEqual([]);
   backend.verify();
 });

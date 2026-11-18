@@ -1,3 +1,4 @@
+import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
 
@@ -12,26 +13,31 @@ export default function RouteCard({
   onToggleExpanded,
 }: RouteCardModel) {
   return (
-    <article className="host-explore-card host-explore-route-card">
-      <div className="host-explore-card-top">
-        <span className="host-explore-type host-explore-type--route">
-          {route.style}
-        </span>
-        <button
-          type="button"
-          className={`host-explore-save${saved ? " is-saved" : ""}`}
-          disabled={busy}
-          onClick={() => onToggleSaved()}
-          aria-label={saved ? `Unsave ${route.title}` : `Save ${route.title}`}
-          title={saved ? "Saved" : "Save for later"}
-        >
-          {saved ? (
-            <Icon name="bookmark-check" className="icon--size-18" />
-          ) : (
-            <Icon name="heart" className="icon--size-18" />
-          )}
-        </button>
-      </div>
+    <Card
+      as="article"
+      variant="idea"
+      header={
+        <>
+          <span className="host-explore-type host-explore-type--route">
+            {route.style}
+          </span>
+          <button
+            type="button"
+            className={`host-explore-save${saved ? " is-saved" : ""}`}
+            disabled={busy}
+            onClick={() => onToggleSaved()}
+            aria-label={saved ? `Unsave ${route.title}` : `Save ${route.title}`}
+            title={saved ? "Saved" : "Save for later"}
+          >
+            {saved ? (
+              <Icon name="bookmark-check" className="icon--size-18" />
+            ) : (
+              <Icon name="heart" className="icon--size-18" />
+            )}
+          </button>
+        </>
+      }
+    >
       <h3>{route.title}</h3>
       <p>{route.description}</p>
       <div className="host-explore-metadata">
@@ -95,6 +101,6 @@ export default function RouteCard({
           </>
         )}
       </Button>
-    </article>
+    </Card>
   );
 }

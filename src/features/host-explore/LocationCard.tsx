@@ -1,3 +1,4 @@
+import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
 
@@ -11,28 +12,33 @@ export default function LocationCard({
   onUse,
 }: LocationCardModel) {
   return (
-    <article className="host-explore-card">
-      <div className="host-explore-card-top">
-        <span className="host-explore-type host-explore-type--location">
-          {location.oneVenue ? "Single venue" : "Outdoor idea"}
-        </span>
-        <button
-          type="button"
-          className={`host-explore-save${saved ? " is-saved" : ""}`}
-          disabled={busy}
-          onClick={() => onToggleSaved()}
-          aria-label={
-            saved ? `Unsave ${location.title}` : `Save ${location.title}`
-          }
-          title={saved ? "Saved" : "Save for later"}
-        >
-          {saved ? (
-            <Icon name="bookmark-check" className="icon--size-18" />
-          ) : (
-            <Icon name="heart" className="icon--size-18" />
-          )}
-        </button>
-      </div>
+    <Card
+      as="article"
+      variant="idea"
+      header={
+        <>
+          <span className="host-explore-type host-explore-type--location">
+            {location.oneVenue ? "Single venue" : "Outdoor idea"}
+          </span>
+          <button
+            type="button"
+            className={`host-explore-save${saved ? " is-saved" : ""}`}
+            disabled={busy}
+            onClick={() => onToggleSaved()}
+            aria-label={
+              saved ? `Unsave ${location.title}` : `Save ${location.title}`
+            }
+            title={saved ? "Saved" : "Save for later"}
+          >
+            {saved ? (
+              <Icon name="bookmark-check" className="icon--size-18" />
+            ) : (
+              <Icon name="heart" className="icon--size-18" />
+            )}
+          </button>
+        </>
+      }
+    >
       <h3>{location.title}</h3>
       <p>{location.description}</p>
       <div className="host-explore-metadata">
@@ -68,6 +74,6 @@ export default function LocationCard({
         Use this venue idea{" "}
         <Icon name="arrow-right" className="icon--size-15" />
       </Button>
-    </article>
+    </Card>
   );
 }

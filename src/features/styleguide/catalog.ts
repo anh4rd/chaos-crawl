@@ -22,19 +22,19 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     usage:
       "Task idea with supplied saved/busy values, optional admin actions and main/side callbacks. The caller decides availability and resolves community records.",
     dependencies:
-      "TaskCardModel, Button/Icon and the retained PlusMark. See Local catalogue; no SDK access or navigation.",
+      "TaskCardModel, shared Card idea, Button/Icon and the retained PlusMark. See Local catalogue; no SDK access or navigation.",
   },
   LocationCard: {
     usage:
       "Location idea with native practical-check disclosure and supplied save/use callbacks. Local catalogue demonstrates its controlled values.",
     dependencies:
-      "LocationCardModel and Button/Icon; caller owns persistence and planning navigation.",
+      "LocationCardModel, shared Card idea and Button/Icon; caller owns persistence and planning navigation.",
   },
   RouteCard: {
     usage:
       "Route template with caller-owned expansion and save state. Preserves existing icon-button busy and footer-action contracts; Local catalogue demonstrates both.",
     dependencies:
-      "RouteCardModel and Button/Icon. No route selection, live maps or queries.",
+      "RouteCardModel, shared Card idea and Button/Icon. No route selection, live maps or queries.",
   },
   CommunityReviewQueue: {
     usage:
@@ -611,7 +611,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Card: {
     usage:
-      "SCSS .card white rounded surface, with poster variant, accent modifier and div/section/article semantics. Compose content through children; extend with className.",
+      "Idea variant composes the shared entity surface with a required header slot and caller content. Shared idea card and Local catalogue demonstrate it without a backend. SCSS .card white rounded surface, with poster variant, accent modifier and div/section/article semantics. Compose content through children; extend with className.",
     dependencies: "None. Import from src/components/ui/Card.",
   },
   Input: {
