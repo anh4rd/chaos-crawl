@@ -2,7 +2,6 @@ import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useState, type FormEvent } from "react";
 import * as hostRewardCommands from "../../lib/hostRewardCommands";
 import * as sessionParticipantCommands from "../../lib/sessionParticipantCommands";
-import { hostPlayerStorageKey } from "./hostParticipationStorage";
 import type {
   GameSession,
   SessionRewardRound as HostRewardRoundData,
@@ -31,7 +30,7 @@ interface Options {
   setNotice: Dispatch<SetStateAction<string>>;
   load: () => Promise<void>;
   busy: boolean;
-  setHostParticipation: (participates: boolean) => Promise<boolean>;
+  ensureHostPlayerToken: (onRecovered?: () => void) => Promise<string | null>;
 }
 export function useHostRewards({
   onReturnToGame,
@@ -48,7 +47,7 @@ export function useHostRewards({
   setNotice,
   load,
   busy,
-  setHostParticipation,
+  ensureHostPlayerToken,
 }: Options) {
   const [rewardChallengeId, setRewardChallengeId] = useState("");
   const [rewardMethod, setRewardMethod] = useState<RewardMethod>("voting");
@@ -242,18 +241,8 @@ export function useHostRewards({
       busy
     )
       return;
-    let playerToken = localStorage.getItem(hostPlayerStorageKey(session.id));
-    if (!session.host_participates || !session.host_player_id || !playerToken) {
-      const joined = await setHostParticipation(true);
-      if (!joined) return;
-      playerToken = localStorage.getItem(hostPlayerStorageKey(session.id));
-    }
-    if (!playerToken) {
-      setError(
-        "Host participation was enabled, but the host player token is missing. Please rejoin as Host and try again.",
-      );
-      return;
-    }
+    const playerToken = await ensureHostPlayerToken();
+    if (!playerToken) return;
     if (!setBusy(true)) return;
     setError("");
     setNotice("");

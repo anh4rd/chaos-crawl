@@ -1,7 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import * as hostFinalCommands from "../../lib/hostFinalCommands";
 import * as sessionParticipantCommands from "../../lib/sessionParticipantCommands";
-import { hostPlayerStorageKey } from "./hostParticipationStorage";
 import type {
   GameSession,
   HostTab,
@@ -23,7 +22,7 @@ interface Options {
   busy: boolean;
   finalSideEvidence: SessionEvidence[];
   selectedFinalChallengeStatus: "voting" | "pending" | "results";
-  setHostParticipation: (participates: boolean) => Promise<boolean>;
+  ensureHostPlayerToken: (onRecovered?: () => void) => Promise<string | null>;
   setActiveTab: Dispatch<SetStateAction<HostTab>>;
 }
 export function useHostFinalRound({
@@ -39,7 +38,7 @@ export function useHostFinalRound({
   busy,
   finalSideEvidence,
   selectedFinalChallengeStatus,
-  setHostParticipation,
+  ensureHostPlayerToken,
   setActiveTab,
 }: Options) {
   async function setFinalGallery(galleryOpen: boolean, votingOpen: boolean) {
@@ -174,19 +173,10 @@ export function useHostFinalRound({
 
   async function castHostFinalVote(evidenceId: string) {
     if (!session || selectedFinalChallengeStatus !== "voting" || busy) return;
-    let playerToken = localStorage.getItem(hostPlayerStorageKey(session.id));
-    if (!session.host_participates || !session.host_player_id || !playerToken) {
-      const joined = await setHostParticipation(true);
-      if (!joined) return;
-      setActiveTab("final-round");
-      playerToken = localStorage.getItem(hostPlayerStorageKey(session.id));
-    }
-    if (!playerToken) {
-      setError(
-        "Host participation was enabled, but the host player token is missing. Please rejoin as Host and try again.",
-      );
-      return;
-    }
+    const playerToken = await ensureHostPlayerToken(() =>
+      setActiveTab("final-round"),
+    );
+    if (!playerToken) return;
     if (!setBusy(true)) return;
     setError("");
     setNotice("");

@@ -305,7 +305,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     setNotice,
     load,
     busy,
-    setHostParticipation: (...args) => setHostParticipation(...args),
+    ensureHostPlayerToken: (...args) => ensureHostPlayerToken(...args),
   });
   const {
     selectedSecretPlayerId,
@@ -352,7 +352,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     secretAssignments,
     challenges,
     secretReviewState,
-    setHostParticipation: (...args) => setHostParticipation(...args),
+    ensureHostPlayerToken: (...args) => ensureHostPlayerToken(...args),
     setActiveTab,
   });
   const {
@@ -375,7 +375,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     busy,
     finalSideEvidence,
     selectedFinalChallengeStatus,
-    setHostParticipation: (...args) => setHostParticipation(...args),
+    ensureHostPlayerToken: (...args) => ensureHostPlayerToken(...args),
     setActiveTab,
   });
   const {
@@ -403,6 +403,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   });
   const {
     hostPlayerToken,
+    ensureHostPlayerToken,
     focusedHostChallenge,
     hostJoinChoice,
     setHostAvatarFile,

@@ -29,7 +29,7 @@ function options(): Parameters<typeof useHostRewards>[0] {
     setNotice: vi.fn(),
     load: vi.fn(async () => {}),
     busy: false,
-    setHostParticipation: vi.fn(async () => true),
+    ensureHostPlayerToken: vi.fn(async () => "host-token"),
   };
 }
 it("retains an explicit challenge selection across data refreshes", () => {

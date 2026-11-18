@@ -66,16 +66,16 @@ export function useHostParticipation({
     setHostJoinChoice(participates);
     setSession({ ...session, host_participates: participates });
     if (participates) {
-      await openHostPlayerView();
+      return Boolean(await openHostPlayerView());
     } else {
       setNotice("You’ll host the game without joining the player list.");
     }
     return true;
   }
 
-  async function openHostPlayerView() {
-    if (!session) return;
-    if (!setBusy(true)) return;
+  async function openHostPlayerView(): Promise<string | null> {
+    if (!session) return null;
+    if (!setBusy(true)) return null;
     setError("");
     setNotice("");
     const { data, error: joinError } =
@@ -86,7 +86,7 @@ export function useHostParticipation({
     setBusy(false);
     if (joinError) {
       setError(joinError.message);
-      return;
+      return null;
     }
     const result = data as {
       join_code?: string;
@@ -99,7 +99,7 @@ export function useHostParticipation({
       setError(
         "The host player profile was created, but no player token was returned. Check the host participation migration.",
       );
-      return;
+      return null;
     }
     localStorage.setItem(hostPlayerStorageKey(session.id), playerToken);
     setHostPlayerToken(playerToken);
@@ -143,6 +143,25 @@ export function useHostParticipation({
         await load();
       }
     }
+    return playerToken;
+  }
+
+  async function ensureHostPlayerToken(
+    onRecovered?: () => void,
+  ): Promise<string | null> {
+    if (!session) return null;
+    let token = localStorage.getItem(hostPlayerStorageKey(session.id));
+    if (!session.host_participates || !session.host_player_id || !token) {
+      const joined = await setHostParticipation(true);
+      if (!joined) return null;
+      onRecovered?.();
+      token = localStorage.getItem(hostPlayerStorageKey(session.id));
+    }
+    if (!token)
+      setError(
+        "Host participation was enabled, but the host player token is missing. Please rejoin as Host and try again.",
+      );
+    return token;
   }
 
   async function openHostSideChallengeUpload(challenge: SessionChallenge) {
@@ -166,6 +185,7 @@ export function useHostParticipation({
   }, [session?.id]);
   return {
     hostPlayerToken,
+    ensureHostPlayerToken,
     focusedHostChallenge,
     hostJoinChoice,
     setHostAvatarFile,

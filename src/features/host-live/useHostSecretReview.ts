@@ -1,7 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import * as hostSecretCommands from "../../lib/hostSecretCommands";
 import * as sessionParticipantCommands from "../../lib/sessionParticipantCommands";
-import { hostPlayerStorageKey } from "./hostParticipationStorage";
 import type {
   GameSession,
   HostTab,
@@ -23,7 +22,7 @@ interface Options {
   secretAssignments: SecretMissionAssignment[];
   challenges: SessionChallenge[];
   secretReviewState: SecretReviewState | null;
-  setHostParticipation: (participates: boolean) => Promise<boolean>;
+  ensureHostPlayerToken: (onRecovered?: () => void) => Promise<string | null>;
   setActiveTab: Dispatch<SetStateAction<HostTab>>;
 }
 export function useHostSecretReview({
@@ -37,7 +36,7 @@ export function useHostSecretReview({
   secretAssignments,
   challenges,
   secretReviewState,
-  setHostParticipation,
+  ensureHostPlayerToken,
   setActiveTab,
 }: Options) {
   async function selectSecretReviewAssignment(assignmentId: string) {
@@ -170,19 +169,10 @@ export function useHostSecretReview({
       busy
     )
       return;
-    let playerToken = localStorage.getItem(hostPlayerStorageKey(session.id));
-    if (!session.host_participates || !session.host_player_id || !playerToken) {
-      const joined = await setHostParticipation(true);
-      if (!joined) return;
-      setActiveTab("side-challenges");
-      playerToken = localStorage.getItem(hostPlayerStorageKey(session.id));
-    }
-    if (!playerToken) {
-      setError(
-        "Host participation was enabled, but the host player token is missing. Please rejoin as Host and try again.",
-      );
-      return;
-    }
+    const playerToken = await ensureHostPlayerToken(() =>
+      setActiveTab("side-challenges"),
+    );
+    if (!playerToken) return;
     if (!setBusy(true)) return;
     setError("");
     setNotice("");

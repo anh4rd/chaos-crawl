@@ -4574,3 +4574,23 @@ browser,editor-browser}.log. Review read projections, lossless write guards and
 identity/error precedence separately from tests. Source delta is7files,
 +668/-74=742review-relevant lines before this note; the live workspace's newer
 named-command and timer overlays are intentionally excluded from this commit.
+
+## Shared host participation recovery
+
+Participation owns recovery of an actual usable host-player token. Reward, final
+and secret voting retain phase guards, payloads and destination callbacks, using
+that operation rather than repeating join/storage decisions. Failed joins return
+failure and preserve their specific message; no vote follows a missing token.
+The coordinator defers callback lookup through wrappers because participation is
+initialized after the voting hooks. Credential storage keys and inline host play
+remain unchanged.
+
+The isolated eight-file integration passes630units, app/browser strict types,
+full lint/build and six reward setup/award browser cases; the broader coherent
+participation milestone also passes59focused units and74desktop/mobile cases,
+including credential recovery and all eight assignment-specific upload/submit
+checks. Root final whole-runtime gate passes738units; the complete664-case browser
+run is in progress. Evidence: /tmp/live-credentials-*.log and
+/tmp/live-host-phase3-handoff.md. Source delta before this note is8files,
++374/-57=431review-relevant lines. Review participation outcomes and phase-specific
+navigation separately from the exact payload/error assertions.
