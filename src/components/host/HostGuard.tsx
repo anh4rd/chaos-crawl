@@ -10,9 +10,10 @@ export default function HostGuard() {
 
   useEffect(() => {
     let mounted = true;
+    let authChanged = false;
 
     void supabase.auth.getSession().then(({ data, error }) => {
-      if (!mounted) return;
+      if (!mounted || authChanged) return;
       if (error) console.error("HOST SESSION CHECK FAILED", error);
       setSession(data.session);
       setChecking(false);
@@ -22,6 +23,7 @@ export default function HostGuard() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       if (!mounted) return;
+      authChanged = true;
       setSession(nextSession);
       setChecking(false);
     });
@@ -37,5 +39,5 @@ export default function HostGuard() {
   }
 
   if (!session) return <Navigate to="/host/login" replace />;
-  return <Outlet />;
+  return <Outlet key={session.user.id} />;
 }
