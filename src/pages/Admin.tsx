@@ -1,3 +1,8 @@
+import ChallengeCatalogue from "../features/legacy-host/ChallengeCatalogue";
+import type {
+  ChallengeRoundModel,
+  SideChallengeItemModel,
+} from "../features/legacy-host/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Icon, { type IconName } from "../components/ui/Icon";
@@ -472,6 +477,52 @@ export default function AdminV2() {
       })
     : null;
 
+  const challengeRounds: ChallengeRoundModel[] =
+    activeTab === "challenges"
+      ? rounds.map((round) => ({
+          id: round.id,
+          label: round.label,
+          challenges: round.challenges.map((challenge) => ({
+            id: challenge.id,
+            title: challenge.title,
+            description: challenge.description,
+            points: challenge.points,
+            current: String(challenge.id) === String(game.current_challenge_id),
+            scheduled:
+              String(challenge.id) === String(game.scheduled_challenge_id),
+            past:
+              currentChallengeIndex >= 0 &&
+              orderedChallenges.findIndex(
+                (item) => String(item.id) === String(challenge.id),
+              ) < currentChallengeIndex,
+            onReveal: () => {
+              void revealChallenge(challenge);
+            },
+            onSchedule: () => {
+              void scheduleChallenge(challenge);
+            },
+          })),
+        }))
+      : [];
+  const optionalChallenges: SideChallengeItemModel[] =
+    activeTab === "challenges"
+      ? sideChallenges.map((challenge) => ({
+          id: challenge.id,
+          title: challenge.title,
+          description: challenge.description,
+          points: challenge.points,
+          completionCount: completions.filter(
+            (item) =>
+              item.challenge_type === "side" &&
+              String(item.challenge_id) === String(challenge.id),
+          ).length,
+          onReview: () =>
+            navigate(
+              `/challenge-review?type=side&id=${encodeURIComponent(String(challenge.id))}&title=${encodeURIComponent(challenge.title)}&from=admin-v2`,
+            ),
+        }))
+      : [];
+
   return (
     <main className="host-v2">
       <div className="host-v2__app">
@@ -755,162 +806,11 @@ export default function AdminV2() {
           )}
 
           {activeTab === "challenges" && (
-            <>
-              <div className="host-v2__page-intro">
-                <p className="host-v2__eyebrow">GAME CONTENT</p>
-                <h2>Challenges</h2>
-                <p>
-                  Rounds happen here at the venue. Reveal or schedule a
-                  challenge whenever you're ready.
-                </p>
-              </div>
-              {rounds.map((round) => (
-                <section
-                  className="host-v2__panel host-v2__panel--white"
-                  key={round.id}
-                >
-                  <div className="host-v2__panel-topline">
-                    <span className="host-v2__kicker">
-                      {round.label.toUpperCase()}
-                    </span>
-                    <span className="host-v2__muted">
-                      {round.challenges.length} challenges
-                    </span>
-                  </div>
-                  <div className="host-v2__list">
-                    {round.challenges.map((challenge) => {
-                      const isCurrent =
-                        String(challenge.id) ===
-                        String(game.current_challenge_id);
-                      const isScheduled =
-                        String(challenge.id) ===
-                        String(game.scheduled_challenge_id);
-                      const isPast =
-                        currentChallengeIndex >= 0 &&
-                        orderedChallenges.findIndex(
-                          (item) => String(item.id) === String(challenge.id),
-                        ) < currentChallengeIndex;
-                      return (
-                        <article
-                          className="host-v2__challenge-list-item"
-                          key={challenge.id}
-                        >
-                          <div className="host-v2__list-icon">
-                            {isPast ? (
-                              <Icon name="check" className="icon--size-17" />
-                            ) : (
-                              <Icon name="flag" className="icon--size-17" />
-                            )}
-                          </div>
-                          <div className="host-v2__grow">
-                            <div className="host-v2__title-line">
-                              <h3>{challenge.title}</h3>
-                              {isCurrent && (
-                                <span className="host-v2__status host-v2__status--live">
-                                  Live
-                                </span>
-                              )}
-                              {isScheduled && (
-                                <span className="host-v2__status host-v2__status--scheduled">
-                                  Scheduled
-                                </span>
-                              )}
-                            </div>
-                            <p>
-                              {challenge.description || "No description added."}
-                            </p>
-                            <span className="host-v2__points-inline">
-                              +{challenge.points} points
-                            </span>
-                          </div>
-                          <div className="host-v2__row-actions">
-                            <button
-                              type="button"
-                              className="host-v2__small-action"
-                              disabled={Boolean(busyAction) || isCurrent}
-                              onClick={() => void revealChallenge(challenge)}
-                            >
-                              {isCurrent ? "Live" : "Reveal"}
-                            </button>
-                            {!isCurrent && !isScheduled && (
-                              <button
-                                type="button"
-                                className="host-v2__small-action host-v2__small-action--quiet"
-                                disabled={Boolean(busyAction)}
-                                onClick={() =>
-                                  void scheduleChallenge(challenge)
-                                }
-                              >
-                                Schedule
-                              </button>
-                            )}
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                </section>
-              ))}
-              <section className="host-v2__panel host-v2__panel--tint">
-                <div className="host-v2__section-heading">
-                  <div>
-                    <p className="host-v2__eyebrow">OPTIONAL TASKS</p>
-                    <h2>Side challenges</h2>
-                  </div>
-                  <span className="host-v2__count-pill">
-                    {sideChallenges.length}
-                  </span>
-                </div>
-                <p className="host-v2__body-copy">
-                  These can be completed at any point during the party.
-                </p>
-                {sideChallenges.length ? (
-                  <div className="host-v2__list">
-                    {sideChallenges.map((challenge) => {
-                      const count = completions.filter(
-                        (item) =>
-                          item.challenge_type === "side" &&
-                          String(item.challenge_id) === String(challenge.id),
-                      ).length;
-                      return (
-                        <article
-                          className="host-v2__side-card"
-                          key={challenge.id}
-                        >
-                          <div className="host-v2__side-card-top">
-                            <h3>{challenge.title}</h3>
-                            <span className="host-v2__points">
-                              +{challenge.points} pts
-                            </span>
-                          </div>
-                          <p>{challenge.description}</p>
-                          <div className="host-v2__side-card-bottom">
-                            <span className="host-v2__muted">
-                              {count} completions recorded
-                            </span>
-                            <button
-                              type="button"
-                              className="host-v2__small-action"
-                              onClick={() =>
-                                navigate(
-                                  `/challenge-review?type=side&id=${encodeURIComponent(String(challenge.id))}&title=${encodeURIComponent(challenge.title)}&from=admin-v2`,
-                                )
-                              }
-                            >
-                              Review
-                            </button>
-                          </div>
-                        </article>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="host-v2__empty-copy">
-                    No active side challenges found.
-                  </p>
-                )}
-              </section>
-            </>
+            <ChallengeCatalogue
+              rounds={challengeRounds}
+              sideChallenges={optionalChallenges}
+              busy={Boolean(busyAction)}
+            />
           )}
 
           {activeTab === "scores" && (
