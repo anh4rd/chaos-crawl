@@ -1,3 +1,5 @@
+import { useId } from "react";
+import TabPanel from "../../components/ui/TabPanel";
 import FeatureBanner from "../../components/ui/FeatureBanner";
 import StickerArt from "../../components/ui/StickerArt";
 import ContentPanel from "../../components/ui/ContentPanel";
@@ -31,6 +33,7 @@ export default function CatalogueView({
   dialog,
 }: CatalogueViewModel) {
   const { tab } = filters;
+  const idPrefix = useId();
   let heading = "Route templates";
   let description =
     "Adapt these structures to your own city. They are templates, not verified mapped routes.";
@@ -42,6 +45,80 @@ export default function CatalogueView({
     heading = "Places to play";
     description = "Find a setting that fits your group, budget and energy.";
   }
+  const results = (
+    <>
+      <PageHeading
+        variant="results"
+        title={heading}
+        subtitle={description}
+        action={
+          <ControlRow variant="heading-actions">
+            <span>
+              {itemCount} {itemCount === 1 ? "result" : "results"}
+            </span>
+            {tab === "tasks" && (
+              <Button
+                type="button"
+                variant="comic-primary"
+                fullWidth={false}
+                onClick={onCreate}
+              >
+                <Icon name="plus" className="icon--size-16" /> Create challenge
+              </Button>
+            )}
+          </ControlRow>
+        }
+      />
+      {loadingFavourites && (
+        <Note as="div" variant="collection-loading">
+          Checking your saved items…
+        </Note>
+      )}
+      {tab === "tasks" && (
+        <PanelGrid variant="ideas">
+          {tasks.map((item) => (
+            <TaskCard key={item.task.id} {...item} />
+          ))}
+        </PanelGrid>
+      )}
+      {tab === "tasks" && historyItems.length > 0 && (
+        <SubmissionHistory items={historyItems} />
+      )}
+      {tab === "locations" && (
+        <PanelGrid variant="ideas">
+          {locations.map((item) => (
+            <LocationCard key={item.location.id} {...item} />
+          ))}
+        </PanelGrid>
+      )}
+      {tab === "routes" && (
+        <PanelGrid variant="ideas">
+          {routes.map((item) => (
+            <RouteCard key={item.route.id} {...item} />
+          ))}
+        </PanelGrid>
+      )}
+      {!itemCount && (
+        <EmptyState
+          variant="workspace"
+          icon="search"
+          title="No matches"
+          action={
+            <Button
+              type="button"
+              variant="comic-secondary"
+              fullWidth={false}
+              onClick={onClearFilters}
+            >
+              Clear filters
+            </Button>
+          }
+        >
+          Try a different search or clear your filters.
+        </EmptyState>
+      )}
+    </>
+  );
   return (
     <>
       <FeatureBanner
@@ -64,80 +141,28 @@ export default function CatalogueView({
         </ContentPanel>
       )}
       {reviewItems.length > 0 && <CommunityReviewQueue items={reviewItems} />}
-      <CatalogueFilters {...filters} />
-      <div>
-        <PageHeading
-          variant="results"
-          title={heading}
-          subtitle={description}
-          action={
-            <ControlRow variant="heading-actions">
-              <span>
-                {itemCount} {itemCount === 1 ? "result" : "results"}
-              </span>
-              {tab === "tasks" && (
-                <Button
-                  type="button"
-                  variant="comic-primary"
-                  fullWidth={false}
-                  onClick={onCreate}
-                >
-                  <Icon name="plus" className="icon--size-16" /> Create
-                  challenge
-                </Button>
-              )}
-            </ControlRow>
-          }
-        />
-        {loadingFavourites && (
-          <Note as="div" variant="collection-loading">
-            Checking your saved items…
-          </Note>
-        )}
-        {tab === "tasks" && (
-          <PanelGrid variant="ideas">
-            {tasks.map((item) => (
-              <TaskCard key={item.task.id} {...item} />
-            ))}
-          </PanelGrid>
-        )}
-        {tab === "tasks" && historyItems.length > 0 && (
-          <SubmissionHistory items={historyItems} />
-        )}
-        {tab === "locations" && (
-          <PanelGrid variant="ideas">
-            {locations.map((item) => (
-              <LocationCard key={item.location.id} {...item} />
-            ))}
-          </PanelGrid>
-        )}
-        {tab === "routes" && (
-          <PanelGrid variant="ideas">
-            {routes.map((item) => (
-              <RouteCard key={item.route.id} {...item} />
-            ))}
-          </PanelGrid>
-        )}
-        {!itemCount && (
-          <EmptyState
-            variant="workspace"
-            icon="search"
-            title="No matches"
-            action={
-              <Button
-                type="button"
-                variant="comic-secondary"
-                fullWidth={false}
-                onClick={onClearFilters}
-              >
-                Clear filters
-              </Button>
-            }
-          >
-            Try a different search or clear your filters.
-          </EmptyState>
-        )}
-      </div>
+      <CatalogueFilters {...filters} idPrefix={idPrefix} />
+      <TabPanel
+        id={`${idPrefix}-tasks-panel`}
+        labelledBy={`${idPrefix}-tasks-tab`}
+        active={tab === "tasks"}
+      >
+        {tab === "tasks" ? results : null}
+      </TabPanel>
+      <TabPanel
+        id={`${idPrefix}-locations-panel`}
+        labelledBy={`${idPrefix}-locations-tab`}
+        active={tab === "locations"}
+      >
+        {tab === "locations" ? results : null}
+      </TabPanel>
+      <TabPanel
+        id={`${idPrefix}-routes-panel`}
+        labelledBy={`${idPrefix}-routes-tab`}
+        active={tab === "routes"}
+      >
+        {tab === "routes" ? results : null}
+      </TabPanel>
       {dialog}
     </>
   );

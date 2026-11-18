@@ -21,8 +21,19 @@ async function openExplore(page: Page) {
   ).toHaveCount(0);
 }
 
-// Native tab buttons currently retain ordinary Tab navigation; arrow-key behavior
-// remains a separate accessibility slice.
+async function selectCatalogueTab(page: Page, name: RegExp) {
+  const list = page.getByRole("tablist", { name: "Explore catalogue" });
+  const target = list.getByRole("tab", { name });
+  await tabTo(page, list.getByRole("tab", { selected: true }));
+  for (let step = 0; step < 3; step += 1) {
+    if (await target.evaluate((element) => element === document.activeElement))
+      break;
+    await page.keyboard.press("ArrowRight");
+  }
+  await expect(target).toBeFocused();
+  await expect(target).toHaveAttribute("aria-selected", "true");
+}
+
 test("catalogue reads preserve contracts, approved visibility and local search/category/tab behavior", async ({
   page,
 }) => {
@@ -87,10 +98,7 @@ test("catalogue reads preserve contracts, approved visibility and local search/c
   await page
     .getByRole("textbox", { name: "Search tasks", exact: true })
     .fill("no-such-idea");
-  await activateByKeyboard(
-    page,
-    page.getByRole("tab", { name: /^Locations / }),
-  );
+  await selectCatalogueTab(page, /^Locations /);
   await expect(
     page.getByRole("textbox", { name: "Search locations", exact: true }),
   ).toHaveValue("no-such-idea");
@@ -106,7 +114,7 @@ test("catalogue reads preserve contracts, approved visibility and local search/c
   await expect(
     hall.getByText("Check access / step-free routes", { exact: true }),
   ).toBeVisible();
-  await activateByKeyboard(page, page.getByRole("tab", { name: /^Routes / }));
+  await selectCatalogueTab(page, /^Routes /);
   const route = card(page, "The classic three-stop");
   await activateByKeyboard(
     page,
@@ -236,10 +244,7 @@ test("location and route favourites preserve their separate records and route-sp
 }) => {
   const { backend, requests } = await installExploreBackend(page);
   await openExplore(page);
-  await activateByKeyboard(
-    page,
-    page.getByRole("tab", { name: /^Locations / }),
-  );
+  await selectCatalogueTab(page, /^Locations /);
   await page
     .getByRole("textbox", { name: "Search locations", exact: true })
     .fill("Community hall");
@@ -267,7 +272,7 @@ test("location and route favourites preserve their separate records and route-sp
     page,
     page.getByRole("button", { name: "Clear search", exact: true }),
   );
-  await activateByKeyboard(page, page.getByRole("tab", { name: /^Routes / }));
+  await selectCatalogueTab(page, /^Routes /);
   await page
     .getByRole("textbox", { name: "Search routes", exact: true })
     .fill("The classic three-stop");
@@ -701,10 +706,7 @@ test("built-in, community and venue plan imports preserve route query contracts"
   );
   await expect(page.getByLabel("Game name", { exact: true })).toBeVisible();
   await openExplore(page);
-  await activateByKeyboard(
-    page,
-    page.getByRole("tab", { name: /^Locations / }),
-  );
+  await selectCatalogueTab(page, /^Locations /);
   await page
     .getByRole("textbox", { name: "Search locations", exact: true })
     .fill("Community hall");
@@ -1195,3 +1197,96 @@ test("contribution modal backdrop dismissal clears edit identity before a new cr
   expect(requests.every((r) => r.method === "GET")).toBe(true);
   backend.verify();
 });
+
+for (const local of [false, true]) {
+  test(`catalogue tabs support keyboard selection and linked panels${local ? " in the local reference" : ""}`, async ({
+    page,
+  }) => {
+    const { backend, requests } = await installExploreBackend(page);
+    if (local) await page.goto("#/styleguide");
+    else await openExplore(page);
+    const scope = local
+      ? page.locator(".component-example").filter({
+          has: page.getByRole("heading", {
+            name: "Local catalogue",
+            exact: true,
+          }),
+        })
+      : page.locator("main");
+    const list = scope.getByRole("tablist", { name: "Explore catalogue" });
+    const tasks = list.getByRole("tab", { name: /^Tasks/ });
+    const locations = list.getByRole("tab", { name: /^Locations/ });
+    const routes = list.getByRole("tab", { name: /^Routes/ });
+    await expect(tasks).toHaveAttribute("tabindex", "0");
+    await expect(locations).toHaveAttribute("tabindex", "-1");
+    await expect(routes).toHaveAttribute("tabindex", "-1");
+    const panels = scope.getByRole("tabpanel", { includeHidden: true });
+    await expect(panels).toHaveCount(3);
+    for (const tab of [tasks, locations, routes]) {
+      const id = await tab.getAttribute("id");
+      const controlled = await tab.getAttribute("aria-controls");
+      expect(id).toBeTruthy();
+      expect(controlled).toBeTruthy();
+      expect(
+        await panels.evaluateAll(
+          (elements, relationship) =>
+            elements.some(
+              (element) =>
+                element.id === relationship.controlled &&
+                element.getAttribute("aria-labelledby") === relationship.id,
+            ),
+          { id, controlled },
+        ),
+      ).toBe(true);
+    }
+    await tabTo(page, tasks);
+    await page.keyboard.press("Tab");
+    await expect(
+      scope.getByRole("textbox", { name: "Search tasks" }),
+    ).toBeFocused();
+    await page.keyboard.press("Shift+Tab");
+    await expect(tasks).toBeFocused();
+    await page.keyboard.press("ArrowLeft");
+    await expect(routes).toBeFocused();
+    await expect(routes).toHaveAttribute("aria-selected", "true");
+    await expect(
+      scope.getByRole("tabpanel", { name: /^Routes/ }),
+    ).toBeVisible();
+    await expect(
+      scope.getByRole("heading", { name: "Route templates", exact: true }),
+    ).toBeVisible();
+    await page.keyboard.press("ArrowRight");
+    await expect(tasks).toBeFocused();
+    await expect(tasks).toHaveAttribute("aria-selected", "true");
+    await page.keyboard.press("ArrowRight");
+    await expect(locations).toBeFocused();
+    await expect(locations).toHaveAttribute("tabindex", "0");
+    await expect(tasks).toHaveAttribute("tabindex", "-1");
+    await expect(
+      scope.getByRole("tabpanel", { name: /^Locations/ }),
+    ).toBeVisible();
+    await page.keyboard.press("Home");
+    await expect(tasks).toBeFocused();
+    await page.keyboard.press("End");
+    await expect(routes).toBeFocused();
+    await page.keyboard.press("ArrowLeft");
+    await expect(locations).toBeFocused();
+    await page.keyboard.press("ArrowDown");
+    await expect(locations).toBeFocused();
+    await expect(locations).toHaveAttribute("aria-selected", "true");
+    const activePanel = scope.getByRole("tabpanel");
+    await tabTo(page, activePanel);
+    await expect(activePanel).toBeFocused();
+    expect(
+      await activePanel.evaluate(
+        (element) => getComputedStyle(element).outlineStyle,
+      ),
+    ).toBe("solid");
+    await tasks.click();
+    await expect(tasks).toHaveAttribute("tabindex", "0");
+    await expect(tasks).toHaveAttribute("aria-selected", "true");
+    await expect(scope.getByRole("tabpanel", { name: /^Tasks/ })).toBeVisible();
+    if (local) expect(requests).toHaveLength(0);
+    backend.verify();
+  });
+}

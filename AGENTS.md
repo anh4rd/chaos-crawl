@@ -173,8 +173,8 @@ collection-loading. CatalogueFilters composes TabList, Button collection-tab,
 CountBadge tab, SearchField and FilterGroup/Button category. These shared views
 accept controlled values/callbacks and own SCSS; the local catalogue reference
 never mounts connected controllers. Preserve the original 1140px/850px/650px/560px
-reflows and effective host typography. TabList retains ordinary Tab navigation;
-its arrow-key/focus semantics belong to the separate tested accessibility slice.
+reflows and effective host typography. TabList and linked TabPanel now provide the separately tested keyboard contract
+described below.
 Do not restore retired catalogue shell/filter selectors in legacy stylesheets.
 
 HostExplore's built-in records and tag choices live in features/host-explore/
@@ -212,6 +212,13 @@ permissions, database records, persistence or route imports. Workspace retains
 publication/identity filtering, dates, fallback copy and action binding. The local
 catalogue reference mounts only controlled views and state, including pending,
 loading, error and moderation examples; connected controllers never run there.
+Catalogue tabs compose the shared horizontal TabList and linked TabPanel primitives.
+Left/Right wrap; Home/End focus and activate native tab buttons through their
+supplied callbacks. The caller supplies selected state, roving tabIndex and unique
+IDs from useId; each tab controls a labelled panel, and inactive panels are hidden
+without mounting their content. Active panels have a visible keyboard focus ring.
+Keep filtering/category reset in the feature and exercise the same keyboard paths
+in the backend-free local catalogue reference.
 ChallengeContributionDialog composes the shared native Dialog contribution variant
 and controlled frame/form slots. Escape, backdrop, Cancel and Close use one feature
 callback: editing dismissal clears the edit identity/draft; unsent create drafts

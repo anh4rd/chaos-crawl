@@ -37,9 +37,15 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   TabList: {
     usage:
-      "Native controlled tab-list frame. Compose Button collection-tab and CountBadge tab; Local catalogue retains current ordinary Tab navigation. Arrow-key behavior remains a separately tested accessibility slice.",
+      "Native horizontal tab list. Compose controlled button tabs with roving tabIndex and linked TabPanel IDs. Left/Right wrap and Home/End focus and activate through supplied click callbacks; Local catalogue demonstrates keyboard operation.",
     dependencies:
       "Owned tab-list SCSS; caller owns selection and callbacks. No router, storage or queries.",
+  },
+  TabPanel: {
+    usage:
+      "Native linked tab panel with active/hidden state and a keyboard focus ring. Supply unique id, labelledBy, active and children; Local catalogue demonstrates all three panels without backend access.",
+    dependencies:
+      "Owned tab-panel SCSS and shared focus-ring fragment. Caller owns active selection and whether inactive children mount.",
   },
   SearchField: {
     usage:
@@ -75,7 +81,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     usage:
       "Controlled native catalogue tabs, search and category buttons. Caller owns selection, category reset and filtering; counts arrive explicitly.",
     dependencies:
-      "CatalogueFiltersModel, TabList/Button collection-tab/CountBadge tab, SearchField and FilterGroup/Button category with owned SCSS. Local catalogue uses state only. Existing tab arrow-key behavior remains separate accessibility work.",
+      "CatalogueFiltersModel, TabList/Button collection-tab/CountBadge tab, SearchField and FilterGroup/Button category with owned SCSS. Local catalogue uses state only. Selection, filtering and category reset remain caller-owned; tabs link to unique result panels.",
   },
   TaskCard: {
     usage:

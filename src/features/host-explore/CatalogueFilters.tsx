@@ -15,7 +15,8 @@ export default function CatalogueFilters({
   onTabChange,
   onSearchChange,
   onCategoryChange,
-}: CatalogueFiltersModel) {
+  idPrefix,
+}: CatalogueFiltersModel & { idPrefix: string }) {
   return (
     <>
       <div className="catalogue-filters">
@@ -26,6 +27,9 @@ export default function CatalogueFilters({
             type="button"
             role="tab"
             aria-selected={tab === "tasks"}
+            id={`${idPrefix}-tasks-tab`}
+            aria-controls={`${idPrefix}-tasks-panel`}
+            tabIndex={tab === "tasks" ? 0 : -1}
             onClick={() => {
               onTabChange("tasks");
             }}
@@ -39,6 +43,9 @@ export default function CatalogueFilters({
             type="button"
             role="tab"
             aria-selected={tab === "locations"}
+            id={`${idPrefix}-locations-tab`}
+            aria-controls={`${idPrefix}-locations-panel`}
+            tabIndex={tab === "locations" ? 0 : -1}
             onClick={() => {
               onTabChange("locations");
             }}
@@ -52,6 +59,9 @@ export default function CatalogueFilters({
             type="button"
             role="tab"
             aria-selected={tab === "routes"}
+            id={`${idPrefix}-routes-tab`}
+            aria-controls={`${idPrefix}-routes-panel`}
+            tabIndex={tab === "routes" ? 0 : -1}
             onClick={() => {
               onTabChange("routes");
             }}

@@ -3538,11 +3538,47 @@ Next: catalogue tab keyboard semantics and explicit results linkage; then
 synchronous favourite/moderation action guards. Continue the remaining V2/legacy
 migration and final full-suite/desloppify work below.
 
+## Phase 5y — catalogue keyboard tabs and linked panels
+
+The shared TabList now supports horizontal Left/Right wrapping and Home/End,
+focusing and activating supplied native tab buttons. The feature retains selected
+state and category/search rules; roving tabIndex leaves only the selected tab in
+the Tab order. useId supplies unique tab/panel relationships. Shared TabPanel owns
+native role/label/hidden state and a token-based keyboard focus ring. Inactive
+panels remain identifiable without mounting their content; only the active panel
+is keyboard-reachable. No controller, persistence or styling conversion is mixed
+into this accessibility slice.
+
+The backend-free local catalogue demonstrates the same primitives. Catalog notes
+and existing keyboard regressions now use arrow selection rather than trying to
+Tab to an inactive tab. New production/local-reference desktop/mobile journeys
+cover Tab entry/exit, wrapping, Home/End, ignored vertical arrows, selected-state
+updates, all three linked panels, visible panel focus and native mouse selection.
+
+Verification:
+
+- Four new browser cases failed against the committed pre-change tab behavior.
+  All **52 affected mocked desktop/mobile catalogue and saved-item cases** now
+  pass, including those four real keyboard journeys and the previous modal cases.
+- **372 unit tests**, lint/format, upload-disabled strict build, Playwright type
+  checks and git whitespace checks pass.
+- Six before/after production state pairs cover all three tabs at 393/1280px.
+  Every pair is **pixel-exact** and preserves native tags/text/control values,
+  focus, geometry and all standard computed properties. DOM comparisons normalize
+  only the explicit tab/list/panel accessibility attributes and class, and omit
+  the two new empty hidden panels. No text, controls or active content is ignored.
+  Evidence: `/tmp/phase5y-before-*`, `/tmp/phase5y-affected-*` and
+  `/tmp/phase5y-tabs-*`.
+
+Next: synchronous per-item favourite/moderation guards while preserving independent
+item concurrency, followed by remaining host/admin and V2 slideshow layers. Final
+full-suite verification and desloppify remain pending.
+
 ## Queued phases for the full refactor
 
-Next: separate catalogue tab accessibility and action-concurrency slices. Catalogue cards, shell, filters, review/history and contribution bodies now
+Next: catalogue action-concurrency guards. Catalogue cards, shell, filters, review/history and contribution bodies now
 compose shared primitives with owned SCSS; their thin route, controllers and
-controlled views are verified. Follow with separately tested tab accessibility and action-concurrency slices. Keep styling and intentional behavior fixes in
+controlled views are verified. Follow with separately tested action-concurrency guards. Keep styling and intentional behavior fixes in
 separate verified slices. Continue remaining host utilities/admin and V2 player/
 slideshow presentation, then legacy workflows and obsolete CSS/Tailwind retirement
 once their final consumers migrate. Preserve the shared host/player session base,
