@@ -35,14 +35,24 @@ import {
 import { useNavigate } from "react-router-dom";
 import HostWorkspace from "../features/host-workspace/HostWorkspace";
 import Icon from "../components/ui/Icon";
-import { supabase } from "../lib/sessionSupabase";
+import { readHostIdentity } from "../lib/hostAuth";
+import { readPlatformAdmin } from "../lib/hostHubQueries";
+import { removeHostFavourite } from "../lib/hostSavedCommands";
+import {
+  readExploreFavourites,
+  readCommunitySubmissions,
+} from "../lib/hostExploreQueries";
+import {
+  saveExploreFavourite,
+  createCommunityChallenge,
+  updateApprovedCommunityChallenge,
+  deleteApprovedCommunityChallenge,
+  reviewPendingCommunitySubmission,
+} from "../lib/hostExploreCommands";
+import { favouriteData } from "../features/host-explore/favouriteData";
 import "../styles/HostPortal.css";
 import "../styles/HostPlanning.css";
 import "../styles/HostTheme.css";
-
-function itemData(item: CatalogTask | LocationIdea | RouteIdea) {
-  return JSON.parse(JSON.stringify(item)) as Record<string, unknown>;
-}
 
 export default function HostExplore() {
   const navigate = useNavigate();
@@ -66,16 +76,15 @@ export default function HostExplore() {
 
   const loadFavourites = useCallback(async () => {
     setLoadingFavourites(true);
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const { data: userData, error: userError } = await readHostIdentity();
     if (userError || !userData.user) {
       setError("Your session has expired. Please log in again.");
       setLoadingFavourites(false);
       return;
     }
-    const { data, error: queryError } = await supabase
-      .from("host_favourites")
-      .select("id,item_type,item_id,item_data")
-      .eq("host_id", userData.user.id);
+    const { data, error: queryError } = await readExploreFavourites(
+      userData.user.id,
+    );
     setLoadingFavourites(false);
     if (queryError) {
       setError(
@@ -83,7 +92,7 @@ export default function HostExplore() {
       );
       return;
     }
-    setFavourites((data ?? []) as HostFavourite[]);
+    setFavourites(data ?? []);
   }, []);
 
   useEffect(() => {
@@ -92,10 +101,7 @@ export default function HostExplore() {
 
   const loadSubmissions = useCallback(async () => {
     const [{ data: userData }, { data: adminData, error: adminError }] =
-      await Promise.all([
-        supabase.auth.getUser(),
-        supabase.rpc("cc_is_platform_admin"),
-      ]);
+      await Promise.all([readHostIdentity(), readPlatformAdmin()]);
     if (adminError) {
       console.warn(
         "Platform-admin check unavailable; community review controls remain hidden.",
@@ -105,19 +111,14 @@ export default function HostExplore() {
     setIsPlatformAdmin(Boolean(adminData));
     if (!userData.user) return;
     setCurrentUserId(userData.user.id);
-    const { data, error: queryError } = await supabase
-      .from("cc_catalog_submissions")
-      .select(
-        "id,item_type,title,description,payload,status,submitted_by,review_note,created_at",
-      )
-      .order("created_at", { ascending: false });
+    const { data, error: queryError } = await readCommunitySubmissions();
     if (queryError) {
       setError(
         "Community submissions need the catalogue moderation migration. Run 20261112_community_catalog_and_host_view_as.sql in Supabase.",
       );
       return;
     }
-    setSubmissions((data ?? []) as CommunitySubmission[]);
+    setSubmissions(data ?? []);
   }, []);
 
   useEffect(() => {
@@ -160,10 +161,9 @@ export default function HostExplore() {
       (item) => item.item_type === type && item.item_id === id,
     );
     if (existing) {
-      const { error: deleteError } = await supabase
-        .from("host_favourites")
-        .delete()
-        .eq("id", existing.id);
+      const { error: deleteError } = await removeHostFavourite({
+        id: existing.id,
+      });
       setBusyFavourite(null);
       if (deleteError) {
         setError(deleteError.message);
@@ -175,23 +175,19 @@ export default function HostExplore() {
       return;
     }
 
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const { data: userData, error: userError } = await readHostIdentity();
     if (userError || !userData.user) {
       setBusyFavourite(null);
       setError("Your host session has expired. Please log in again.");
       return;
     }
 
-    const { data: saved, error: saveError } = await supabase
-      .from("host_favourites")
-      .insert({
-        host_id: userData.user.id,
-        item_type: type,
-        item_id: id,
-        item_data: itemData(data),
-      })
-      .select("id,item_type,item_id,item_data")
-      .single();
+    const { data: saved, error: saveError } = await saveExploreFavourite({
+      hostId: userData.user.id,
+      itemType: type,
+      itemId: id,
+      itemData: favouriteData(data),
+    });
     setBusyFavourite(null);
     if (saveError) {
       setError(
@@ -201,7 +197,7 @@ export default function HostExplore() {
       );
       return;
     }
-    if (saved) setFavourites((current) => [...current, saved as HostFavourite]);
+    if (saved) setFavourites((current) => [...current, saved]);
   }
 
   function addTaskToPlan(task: CatalogTask, kind: "main" | "side") {
@@ -232,32 +228,26 @@ export default function HostExplore() {
     event.preventDefault();
     setSubmittingChallenge(true);
     setError("");
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const { data: userData, error: userError } = await readHostIdentity();
     if (userError || !userData.user) {
       setError("Your session has expired. Please log in again.");
       setSubmittingChallenge(false);
       return;
     }
     const payload = challengePayload(challengeDraft);
-    const query = editingSubmission
-      ? supabase
-          .from("cc_catalog_submissions")
-          .update({
-            title: challengeDraft.title.trim(),
-            description: challengeDraft.description.trim(),
-            payload,
-          })
-          .eq("id", editingSubmission.id)
-          .eq("status", "approved")
-      : supabase.from("cc_catalog_submissions").insert({
-          item_type: "challenge",
+    const { error: insertError } = editingSubmission
+      ? await updateApprovedCommunityChallenge({
+          id: editingSubmission.id,
           title: challengeDraft.title.trim(),
           description: challengeDraft.description.trim(),
           payload,
-          status: "pending",
-          submitted_by: userData.user.id,
+        })
+      : await createCommunityChallenge({
+          title: challengeDraft.title.trim(),
+          description: challengeDraft.description.trim(),
+          payload,
+          submittedBy: userData.user.id,
         });
-    const { error: insertError } = await query;
     setSubmittingChallenge(false);
     if (insertError) {
       setError(insertError.message);
@@ -285,11 +275,9 @@ export default function HostExplore() {
       return;
     setReviewingId(submission.id);
     setError("");
-    const { error: deleteError } = await supabase
-      .from("cc_catalog_submissions")
-      .delete()
-      .eq("id", submission.id)
-      .eq("status", "approved");
+    const { error: deleteError } = await deleteApprovedCommunityChallenge({
+      id: submission.id,
+    });
     setReviewingId(null);
     if (deleteError) {
       setError(deleteError.message);
@@ -304,21 +292,18 @@ export default function HostExplore() {
   ) {
     setReviewingId(submission.id);
     setError("");
-    const { data: userData, error: userError } = await supabase.auth.getUser();
+    const { data: userData, error: userError } = await readHostIdentity();
     if (userError || !userData.user || !isPlatformAdmin) {
       setError("Only a platform administrator can review submissions.");
       setReviewingId(null);
       return;
     }
-    const { error: updateError } = await supabase
-      .from("cc_catalog_submissions")
-      .update({
-        status,
-        reviewed_by: userData.user.id,
-        reviewed_at: new Date().toISOString(),
-      })
-      .eq("id", submission.id)
-      .eq("status", "pending");
+    const { error: updateError } = await reviewPendingCommunitySubmission({
+      id: submission.id,
+      status,
+      reviewedBy: userData.user.id,
+      reviewedAt: new Date().toISOString(),
+    });
     setReviewingId(null);
     if (updateError) {
       setError(updateError.message);

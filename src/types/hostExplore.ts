@@ -16,3 +16,13 @@ export interface HostFavourite {
   item_id: string;
   item_data: Record<string, unknown>;
 }
+
+export interface CommunityChallengePayload {
+  kind: "main" | "side" | "secret";
+  points: number;
+  minutes: number;
+  prepMinutes: number;
+  performanceMinutes: number;
+  tags: string[];
+  setup: "none" | "basic" | "some";
+}

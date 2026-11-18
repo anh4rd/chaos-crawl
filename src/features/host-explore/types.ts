@@ -1,5 +1,7 @@
+import type { CommunityChallengePayload } from "../../types/hostExplore";
+
 export type CatalogTab = "tasks" | "locations" | "routes";
-export type TaskKind = "main" | "side" | "secret";
+export type TaskKind = CommunityChallengePayload["kind"];
 export interface CatalogTask {
   id: string;
   title: string;
@@ -10,7 +12,7 @@ export interface CatalogTask {
   performanceMinutes?: number;
   kind: TaskKind;
   tags: string[];
-  setup: "none" | "basic" | "some";
+  setup: CommunityChallengePayload["setup"];
 }
 
 export interface LocationIdea {

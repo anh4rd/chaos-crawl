@@ -2908,10 +2908,72 @@ Continue with typed persistence commands/queries, then focused controllers and
 controlled views. Keep lifecycle/error-behavior fixes and styling migration in
 separate explicitly verified slices.
 
+## Phase 5o — HostExplore typed persistence boundary
+
+hostExploreQueries owns the existing narrow host-favourites read and ordered
+community read. hostExploreCommands owns favourite insertion, new contribution,
+approved edit/delete and pending review commands. Shared hostAuth identity,
+hostHubQueries admin checks and hostSavedCommands removal replace equivalent
+inline SDK calls. No direct Supabase calls remain in HostExplore. Domain values
+and query results have explicit frontend contracts; they are not deployed schema
+validation or proof of server policy. UI trimming, confirmation, timestamps,
+feedback, busy state, refresh decisions and navigation remain in the coordinator.
+
+The favourite adapter returns a plain metadata record; the SDK's JSON serializer
+preserves the original stored request body, including omitted undefined values
+and non-finite numeric conversion, without a broad JSON/response assertion.
+Shared CommunityChallengePayload supplies the command contract and corresponding
+feature kind/equipment types. Query/command extraction retains the existing
+filters, field selections, single-row response mode and multi-step ordering.
+
+This slice intentionally standardizes **database exception recovery** through the
+existing runApi helper. Synchronous builder throws and rejected SDK promises now
+return ordinary errors and are reported through existing monitoring. A component
+regression fails against the original route with an unhandled save exception and
+no recovery feedback; it passes after extraction, proving visible feedback,
+released busy state and successful retry. Auth retains its existing SDK contract;
+this is not a claim that every auth/lifecycle failure has been fixed.
+
+Verification with source/documentation frozen during browser jobs:
+
+- All **358 unit/component tests**, lint/formatting, strict production build and
+  Playwright type checks pass. New regressions cover synchronous/rejected failures
+  across all seven new read/write functions, saved metadata JSON behavior and
+  route save recovery. Sentry uploads were disabled.
+- All **18 existing desktop/mobile catalogue journeys** pass after extraction,
+  including native interactions, exact payload/status filters, failures/retry,
+  moderation, confirmed/cancelled deletion and the planning imports.
+- **20 before/after comparisons** at 1280/393px cover initial/error reads and
+  completed/failed favourite saves, removal, contribution creation/failure, edits,
+  approval and rejection. SDK methods, URLs, Accept headers and bodies match.
+  Independent mount GETs are compared as a multiset (StrictMode retains both
+  copies); subsequent command/reload order remains strict. Raw traces are kept;
+  no write is reordered or omitted from the comparison.
+- For those same twenty states, raw DOM/attributes, geometry, every standard
+  computed property and viewport PNGs match exactly without normalization or
+  masks. JSX and the existing PlusIcon remain byte-identical. All **221 stylesheet
+  files** remain byte-identical; the shared auth SDK/client files are unchanged.
+- **39 complete metadata JSON bodies** match the old round-trip serialization,
+  covering all built-in records and community optional/non-finite cases.
+  No dependencies, live backend writes, migrations or deployment were introduced.
+
+| Review slice       | Scrutiny                                                                              | Evidence                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Typed persistence  | Exact selected fields, DTO mapping, id/status guards and single-row response contract | Eighteen SDK journeys and twenty before/after traces                     |
+| Coordinator wiring | Preserve UI decisions, confirmations and reload order; recover database exceptions    | Before-failing save regression, all unit gates, ordered post-read traces |
+| Metadata adapter   | Preserve stored JSON despite removing the broad assertion                             | Thirty-nine full-body comparisons and edge-case regression               |
+| Presentation       | No markup, styling or accessibility conversion                                        | Twenty exact DOM/style/PNG pairs and identical source markup/styles      |
+
+Next: focused favourites/community/contribution/moderation controllers and
+controlled feature views. Query lifetime, command/query feedback separation and
+interaction concurrency still need explicitly tested slices; do not infer those
+fixes from this persistence extraction. Follow with owned/shared styling and the
+separate modal/tab accessibility work.
+
 ## Queued phases for the full refactor
 
-Next: typed HostExplore persistence, then focused controllers and controlled
-views. The catalogue models and regression baseline are verified. Keep styling and intentional behavior fixes in
+Next: focused HostExplore controllers and controlled views. Catalogue models,
+typed persistence and their regression baseline are verified. Keep styling and intentional behavior fixes in
 separate verified slices. Continue remaining host utilities/admin and V2 player/
 slideshow presentation, then legacy workflows and obsolete CSS/Tailwind retirement
 once their final consumers migrate. Preserve the shared host/player session base,

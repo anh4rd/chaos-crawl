@@ -1,4 +1,7 @@
-import type { CommunitySubmission } from "../../types/hostExplore";
+import type {
+  CommunityChallengePayload,
+  CommunitySubmission,
+} from "../../types/hostExplore";
 import type { ChallengeDraft } from "./types";
 
 export function createChallengeDraft(): ChallengeDraft {
@@ -40,7 +43,9 @@ export function draftFromSubmission(
   };
 }
 
-export function challengePayload(draft: ChallengeDraft) {
+export function challengePayload(
+  draft: ChallengeDraft,
+): CommunityChallengePayload {
   return {
     kind: draft.kind,
     points: Math.max(0, Math.min(100, Number(draft.points) || 0)),
