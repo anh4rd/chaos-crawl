@@ -96,9 +96,13 @@ The local join reference uses state only and a section root. lib/playerAccess.ts
 preserves the SDK error objects because existing feedback distinguishes Error
 instances from plain database errors. Its consumed response type is a frontend
 contract, not verified deployed schema. Retained join CSS awaits its independent
-styling slice; stale pending completion remains a separately tested lifecycle
-finding. Keep URL hydration, entry-only mode selection, trimmed payloads, replaced
-history/welcomeBack state and legacy/V2 credential isolation intact.
+styling slice. Pending joins use a synchronous lock and a mounted code/mode
+generation: stale success/error cannot store credentials, redirect or publish
+feedback, including when the target changes away and back. The server request
+may still complete. Keep name/mobile fields editable, unlock after the request
+settles and allow a fresh current-target join. Keep URL hydration, entry-only mode
+selection, trimmed payloads, replaced history/welcomeBack state and legacy/V2
+credential isolation intact.
 
 Supabase auth is shared by the legacy and session clients. Legacy player IDs and V2 session-player credentials use different storage keys and are not interchangeable. Preserve RPC payloads, storage paths, query ordering, score semantics, subscription cleanup, timer behavior, error handling, and route/query parameters. Client storage is not an authorization boundary; policies and atomic awards require server enforcement.
 

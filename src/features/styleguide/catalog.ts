@@ -4,7 +4,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     usage:
       "Connected join/rejoin coordinator. The Join route supplies normalized URL code, entry mode and the successful credential redirect callback.",
     dependencies:
-      "usePlayerAccess and the typed SDK access boundary in lib/playerAccess.ts. Owns credential storage, command feedback and phase state; never mount in a local demo. SDK error behavior is preserved rather than normalized during this extraction.",
+      "usePlayerAccess and the typed SDK access boundary in lib/playerAccess.ts. Owns credential storage, command feedback and phase state. Pending joins are locked synchronously; unmount or target-code/mode changes invalidate their UI results without cancelling the server request. Name/mobile edits remain allowed. Never mount in a local demo. SDK error behavior is preserved rather than normalized during this extraction.",
   },
   PlayerAccessView: {
     usage:

@@ -376,3 +376,112 @@ test("local join reference advances by keyboard, exposes pending controls and ne
   expect(backend.requests).toHaveLength(0);
   backend.verify();
 });
+
+async function holdJoin(page: Page) {
+  let release = () => {};
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let received = false;
+  await page.route("**/rest/v1/rpc/cc_join_game_session", async (route) => {
+    received = true;
+    await gate;
+    await route.fallback();
+  });
+  return {
+    received: () => received,
+    release,
+    complete: async () => {
+      const response = page.waitForResponse(
+        "**/rest/v1/rpc/cc_join_game_session",
+      );
+      release();
+      await (await response).finished();
+    },
+  };
+}
+
+async function beginPendingJoin(
+  page: Page,
+  held: Awaited<ReturnType<typeof holdJoin>>,
+) {
+  await enterDetails(page);
+  await typeField(page, "Your name?", "Pat");
+  await typeField(page, "Your phone number?", "0712345678");
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Join game", exact: true }),
+  );
+  await expect.poll(held.received).toBe(true);
+  await expect(
+    page.getByRole("button", { name: "Joining…", exact: true }),
+  ).toBeDisabled();
+}
+
+test("a join finishing after leaving the form cannot store credentials or redirect away from the chosen page", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  const held = await holdJoin(page);
+  try {
+    await beginPendingJoin(page, held);
+    await page.evaluate(() => {
+      window.location.hash = "/styleguide";
+    });
+    await expect(
+      page.getByRole("heading", { name: "Local join and rejoin", exact: true }),
+    ).toBeVisible();
+    await held.complete();
+    await page.evaluate(
+      () =>
+        new Promise<void>((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        ),
+    );
+    await expect(page).toHaveURL(/\/styleguide$/);
+    expect(
+      await page.evaluate((key) => localStorage.getItem(key), credentialKey),
+    ).toBeNull();
+    expect(joinRequests(backend)).toHaveLength(1);
+    backend.verify();
+  } finally {
+    held.release();
+  }
+});
+
+for (const outcome of ["success", "failure"] as const) {
+  test(`an obsolete join ${outcome} cannot overwrite a changed query target or its feedback`, async ({
+    page,
+  }) => {
+    const backend = await installSessionBackend(page, { savedPlayer: false });
+    if (outcome === "failure") backend.failures.add("cc_join_game_session");
+    const held = await holdJoin(page);
+    try {
+      await beginPendingJoin(page, held);
+      await page.evaluate(() => {
+        window.location.hash = "/join?code=654321";
+      });
+      await expect(page.locator(".join-current-code strong")).toHaveText(
+        "654321",
+      );
+      await held.complete();
+      await expect(
+        page.getByRole("button", { name: "Join game", exact: true }),
+      ).toBeEnabled();
+      await expect(page).toHaveURL(/\/join\?code=654321$/);
+      await expect(page.getByRole("alert")).toHaveCount(0);
+      expect(
+        await page.evaluate((key) => localStorage.getItem(key), credentialKey),
+      ).toBeNull();
+      expect(joinRequests(backend)).toHaveLength(1);
+      expect(joinRequests(backend)[0].body).toEqual({
+        p_join_code: "123456",
+        p_name: "Pat",
+        p_mobile: "0712345678",
+      });
+      backend.verify();
+    } finally {
+      held.release();
+    }
+  });
+}

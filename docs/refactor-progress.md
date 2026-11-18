@@ -2531,15 +2531,65 @@ review regressions, structural extraction, styling and intentional accessibility
 behavior separately. The local checkpoint preserves the verified state; it does
 not mark the full refactor complete.
 
+## Phase 5h — pending join identity and lifetime
+
+usePlayerAccess now scopes completion to the mounted form and its target code/
+mode generation. Leaving, changing the query or local code, changing join mode,
+or changing away and back invalidates the old completion. A stale success cannot
+store credentials or redirect; a stale failure cannot log or display feedback.
+The form unlocks after its outstanding request settles. A synchronous pending
+lock also prevents repeated same-frame submissions from starting two RPCs.
+Name/mobile edits retain their existing pending contract and do not invalidate a
+current join. An old unmounted instance cannot unlock or authorize a new one.
+
+This is a separate intentional lifecycle fix. It does not abort or undo the
+server request. RPC payloads, SDK error handling for current requests, validation,
+native controls, storage keys and successful history state remain unchanged.
+
+Verification:
+
+- Twelve focused component regressions exercised the connected access feature
+  with deferred SDK replies. Before the guard, eleven fail and the ordinary
+  editable-fields success passes. All twelve now pass, including StrictMode,
+  unmount/remount, stale success/database/transport failure, changed query/local
+  code and mode, away-and-back identity, synchronous locking and a fresh join
+  after an obsolete request settles.
+- All **343 unit/component tests**, lint/formatting, strict TypeScript production
+  build and Playwright type checks pass. Sentry uploads were disabled. Build
+  caught unsupported Testing Library role-query options in the new test file;
+  they were corrected without relaxing the assertions.
+- All **26 affected browser cases** pass, thirteen desktop and thirteen mobile.
+  The three new journeys verify leaving the form and changed-query success/error
+  using held mocked responses; existing join/rejoin, storage failure, pending
+  edits, history and local-preview journeys also pass. Source and documentation
+  were frozen during browser jobs. Other browser workflows last passed in the
+  complete 330-case run at checkpoint ceb45f5; that complete suite was not rerun
+  for this feature-only lifecycle slice.
+- All 212 stylesheet sources, the three existing access component modules,
+  GameCodeInput, the route adapter, consumed response contract and SDK access
+  boundary remain byte-identical to ceb45f5. No markup, colors, backend payloads,
+  live writes, migrations, dependencies or deployment changed.
+
+| Review slice          | Intent / scrutiny                                                                | Proof                                                                                |
+| --------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Completion ownership  | Reject stale credentials, navigation and feedback without cancelling server work | Deferred replies before/after; unmount/remount and identity round-trip cases         |
+| Pending action lock   | Avoid duplicate RPCs while preserving editable fields and later recovery         | Same-frame double-submit regression; ordinary pending success and fresh-target retry |
+| Browser integration   | Keep the chosen route/code and recover current controls after stale completion   | Twenty-six affected desktop/mobile journeys with intercepted backend traffic         |
+| Presentation boundary | Preserve existing appearance and access contracts                                | Unchanged stylesheet/component/adapter/SDK bytes and existing join journeys          |
+
+The next phase migrates retained join CSS into owned SCSS and shared form/control
+appearances with raw DOM, computed-style and screenshot comparisons. Keep that
+styling move separate from this lifecycle behavior change. The full refactor and
+final desloppify audit remain outstanding.
+
 ## Queued phases for the full refactor
 
-Continue with separately tested pending-join lifecycle handling: prevent a late
-response from storing credentials or navigating after leaving the feature or
-changing its target code. Preserve the existing pending/editable-field contract
-and RPC payload. The route/controller/presentation extraction is verified.
-Then migrate owned join styles and shared form/control appearances, followed by
-local player demo reuse and remaining player UI. Preserve the verified mission
-reveal's explicit Play acceptance, storage keys and reward/review precedence.
+Continue with owned join styles and shared form/control appearances, followed by
+local player demo reuse and remaining player UI. The join route extraction and
+pending-response lifecycle are verified; preserve target generation, synchronous
+locking, editable name/mobile fields, payloads and legacy/V2 credential isolation.
+Preserve the verified mission reveal's explicit Play acceptance, storage keys
+and reward/review precedence.
 Preserve conditional visibility and query,
 subscription and timer boundaries. The three recorded contrast changes still
 await the existing design input request; do not treat automatic goal continuation

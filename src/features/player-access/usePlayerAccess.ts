@@ -1,5 +1,12 @@
 import type { JoinResult } from "../../types/playerAccess";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+} from "react";
 import { joinGameSession } from "../../lib/playerAccess";
 import type { JoinMode, JoinStep, PlayerAccessModel } from "./types";
 
@@ -24,6 +31,16 @@ export function usePlayerAccess({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const request = useRef({ mounted: false, generation: 0, pending: false });
+
+  useLayoutEffect(() => {
+    const lifecycle = request.current;
+    lifecycle.mounted = true;
+    return () => {
+      lifecycle.mounted = false;
+      lifecycle.generation += 1;
+    };
+  }, [codeFromUrl, code, mode]);
 
   useEffect(() => {
     if (codeFromUrl) setCode(codeFromUrl);
@@ -46,7 +63,11 @@ export function usePlayerAccess({
       if (code.replace(/\D/g, "").length === 6) setJoinStep(2);
       return;
     }
-    if (!canSubmit) return;
+    if (!canSubmit || request.current.pending) return;
+    request.current.pending = true;
+    const generation = request.current.generation;
+    const isCurrent = () =>
+      request.current.mounted && request.current.generation === generation;
     setBusy(true);
     try {
       const { data, error: joinError } = await joinGameSession({
@@ -54,6 +75,7 @@ export function usePlayerAccess({
         p_name: mode === "join" ? name.trim() : null,
         p_mobile: mobile.trim(),
       });
+      if (!isCurrent()) return;
       if (joinError) throw joinError;
       const result = data;
       if (!result?.player_token || !result?.join_code) {
@@ -65,6 +87,7 @@ export function usePlayerAccess({
       if (result.resumed) setNotice(`Welcome back, ${result.player_name}!`);
       onJoined(result);
     } catch (joinError) {
+      if (!isCurrent()) return;
       console.error("JOIN SESSION ERROR", joinError);
       setError(
         joinError instanceof Error
@@ -72,7 +95,8 @@ export function usePlayerAccess({
           : "Couldn't join this game. Check the code and try again.",
       );
     } finally {
-      setBusy(false);
+      request.current.pending = false;
+      if (request.current.mounted) setBusy(false);
     }
   }
 
