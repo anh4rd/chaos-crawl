@@ -25,7 +25,7 @@ interface Props {
     nextRound: number,
     confirmedOverride?: boolean,
     forceBreakMinutes?: number,
-  ) => Promise<void>;
+  ) => void;
   breakResumeRound: number | null;
   openBreakTimerEditor: () => void;
   requestMoveToRound: (nextRound: number) => void;
@@ -36,8 +36,8 @@ interface Props {
   roundClockRunning: boolean;
   restartRoundTimer: () => void;
   enabledRewardMethods: RewardMethod[];
-  runStartRoundControl: () => void;
-  redoRoundTimer: () => void;
+  startGameOrToggleTimer: () => void;
+  resetRoundTimer: () => void;
   skipTimerAndReview: () => void;
 }
 export default function HostRoundControls({
@@ -59,8 +59,8 @@ export default function HostRoundControls({
   roundClockRunning,
   restartRoundTimer,
   enabledRewardMethods,
-  runStartRoundControl,
-  redoRoundTimer,
+  startGameOrToggleTimer,
+  resetRoundTimer,
   skipTimerAndReview,
 }: Props) {
   return (
@@ -215,7 +215,7 @@ export default function HostRoundControls({
               variant="control"
               fullWidth={false}
               disabled={busy}
-              onClick={runStartRoundControl}
+              onClick={startGameOrToggleTimer}
             >
               <Icon name="pause" className="icon--size-19" /> Pause
             </Button>
@@ -227,7 +227,7 @@ export default function HostRoundControls({
               label="Redo timer"
               title="Redo timer"
               disabled={busy}
-              onClick={redoRoundTimer}
+              onClick={resetRoundTimer}
             />
           </ControlRow>
         </div>
@@ -243,7 +243,7 @@ export default function HostRoundControls({
               variant="control-primary"
               fullWidth={false}
               disabled={busy}
-              onClick={runStartRoundControl}
+              onClick={startGameOrToggleTimer}
             >
               <Icon name="play" className="icon--size-17" /> Start Timer
             </Button>

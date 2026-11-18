@@ -4612,3 +4612,26 @@ files add510raw lines; review the independent assignment/credential assertions a
 fixture state update, not a new backend contract. No live writes or schema claims.
 Evidence: /tmp/live-host-phase3-handoff.md and
 /tmp/live-host-phase3-after-browser.log.
+
+## Clock and round-transition ownership
+
+The timer owns snapshot parsing/serialization, synchronous clock storage, one-second
+ticks and serialized publication. Session actions own transition decisions,
+override prompts/autoplay state and expiry outcomes through concrete clock
+operations. Circular callbacks/raw timer setters/latch access are removed; reset
+pauses and restart runs. Existing manual expiry recovery is preserved, not newly
+invented. Rejected transitions now release their lock and surface feedback.
+Fractional lobby steps and invalid saved resume targets recover to the existing
+valid/fresh paused state; valid future round targets and supported elapsed-time
+semantics remain intact.
+
+Verified:36focused regressions,680frozen whole-tree units/build,28desktop/mobile
+cases and8exact DOM/all-computed-style/geometry/pixel pairs. The baseline passes24
+browser cases and fails4targeted corrupt-storage cases; its manual expiry recovery
+already passed. SDK expression/order proof and all302SCSS bytes remain exact.
+Evidence: /tmp/timer-flow-handoff.md, /tmp/timer-flow-source-proof.json,
+/tmp/timer-flow-parity.json. Review map: clock serialization/timing; transition
+ownership/explicit outcomes; semantic callback migration; malformed hydration;
+regression fixtures. This subsystem exceeds the800-line reviewer nudge; inspect
+behavior guards separately from mechanically proven neutral wiring. Root's final
+whole-runtime gate passes738units/types/lint/build; full browser run continues.

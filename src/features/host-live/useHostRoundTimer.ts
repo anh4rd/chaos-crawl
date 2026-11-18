@@ -8,6 +8,10 @@ import type {
   SessionChallenge,
 } from "./types";
 import type { SetHostBusy } from "./useHostOperation";
+import {
+  readRoundClockSnapshot,
+  writeRoundClockSnapshot,
+} from "./roundClockSnapshot";
 
 interface Options {
   mainRounds: SessionChallenge[];
@@ -17,16 +21,8 @@ interface Options {
   defaultBreakMinutes: number;
   currentChallenge: SessionChallenge | undefined;
   busy: boolean;
-  moveToRound: (
-    nextRound: number,
-    confirmedOverride?: boolean,
-    forceBreakMinutes?: number,
-  ) => Promise<void>;
-  startGame: (confirmedOverride?: boolean) => Promise<void>;
   setNotice: Dispatch<SetStateAction<string>>;
   setError: Dispatch<SetStateAction<string>>;
-  autoplayEnabled: boolean;
-  sessionId: string;
   setBusy: SetHostBusy;
   openPointReview: () => void;
 }
@@ -38,12 +34,8 @@ export function useHostRoundTimer({
   defaultBreakMinutes,
   currentChallenge,
   busy,
-  moveToRound,
-  startGame,
   setNotice,
   setError,
-  autoplayEnabled,
-  sessionId,
   setBusy,
   openPointReview,
 }: Options) {
@@ -55,21 +47,11 @@ export function useHostRoundTimer({
 
   const [hydratedRoundClockKey, setHydratedRoundClockKey] = useState("");
 
-  const [autoplayOverridden, setAutoplayOverridden] = useState(false);
-
-  const [overridePrompt, setOverridePrompt] = useState<
-    | null
-    | { kind: "start" }
-    | { kind: "round"; round: number; forceBreak?: boolean }
-  >(null);
-
   const [editingBreakTimer, setEditingBreakTimer] = useState(false);
 
   const [editBreakMinutes, setEditBreakMinutes] = useState(15);
 
   const [breakResumeRound, setBreakResumeRound] = useState<number | null>(null);
-
-  const breakAdvanceRequested = useRef(false);
 
   const roundClockSecondsRef = useRef(roundClockSeconds);
 
@@ -188,15 +170,9 @@ export function useHostRoundTimer({
     let onBreak = false;
     let resumeRound: number | null = null;
     try {
-      const saved = JSON.parse(
-        localStorage.getItem(roundClockStorageKey) ?? "null",
-      ) as {
-        seconds?: number;
-        running?: boolean;
-        onBreak?: boolean;
-        resumeRound?: number | null;
-        updatedAt?: number;
-      } | null;
+      const saved = readRoundClockSnapshot(
+        localStorage.getItem(roundClockStorageKey),
+      );
       if (saved && Number.isFinite(saved.seconds)) {
         seconds = Math.max(0, Number(saved.seconds));
         running = Boolean(saved.running);
@@ -282,41 +258,15 @@ export function useHostRoundTimer({
   ]);
 
   useEffect(() => {
-    if (
-      !session ||
-      session.status !== "live" ||
-      busy ||
-      !hostBreakActive ||
-      roundClockSeconds !== 0 ||
-      !breakResumeRound ||
-      breakAdvanceRequested.current
-    )
-      return;
-    breakAdvanceRequested.current = true;
-    void moveToRound(breakResumeRound);
-  }, [
-    breakResumeRound,
-    busy,
-    hostBreakActive,
-    roundClockSeconds,
-    session?.id,
-    session?.status,
-  ]);
-
-  useEffect(() => {
     if (!roundClockStorageKey || hydratedRoundClockKey !== roundClockKey)
       return;
     try {
-      localStorage.setItem(
-        roundClockStorageKey,
-        JSON.stringify({
-          seconds: roundClockSeconds,
-          running: roundClockRunning,
-          onBreak: hostBreakActive,
-          resumeRound: breakResumeRound,
-          updatedAt: Date.now(),
-        }),
-      );
+      writeRoundClockSnapshot(roundClockStorageKey, {
+        seconds: roundClockSeconds,
+        running: roundClockRunning,
+        onBreak: hostBreakActive,
+        resumeRound: breakResumeRound,
+      });
     } catch {
       /* The timer continues for this visit without persistence. */
     }
@@ -330,11 +280,7 @@ export function useHostRoundTimer({
     roundClockStorageKey,
   ]);
 
-  function runStartRoundControl() {
-    if (session?.status === "lobby") {
-      void startGame();
-      return;
-    }
+  function toggleTimer() {
     if (!session || !currentChallenge) return;
     const nextRunning = !roundClockRunning;
     const seconds =
@@ -363,14 +309,9 @@ export function useHostRoundTimer({
     );
   }
 
-  async function startScheduledBreak(
-    nextRound: number,
-    minutes: number,
-    confirmedOverride = false,
-  ) {
+  async function startScheduledBreak(nextRound: number, minutes: number) {
     if (!session || busy || minutes <= 0) return;
     const seconds = Math.round(minutes * 60);
-    breakAdvanceRequested.current = false;
     setHostBreakActive(true);
     setBreakResumeRound(nextRound);
     setRoundClockSeconds(seconds);
@@ -378,16 +319,12 @@ export function useHostRoundTimer({
     setError("");
     setNotice("");
     if (roundClockStorageKey) {
-      localStorage.setItem(
-        roundClockStorageKey,
-        JSON.stringify({
-          seconds,
-          running: true,
-          onBreak: true,
-          resumeRound: nextRound,
-          updatedAt: Date.now(),
-        }),
-      );
+      writeRoundClockSnapshot(roundClockStorageKey, {
+        seconds,
+        running: true,
+        onBreak: true,
+        resumeRound: nextRound,
+      });
     }
     await saveSharedTimer(
       session.current_round_number,
@@ -395,20 +332,6 @@ export function useHostRoundTimer({
       true,
       true,
       nextRound,
-    );
-    if (confirmedOverride && autoplayEnabled) {
-      localStorage.setItem(
-        `chaos-crawl-host-autoplay-override:${sessionId}`,
-        "1",
-      );
-      setAutoplayOverridden(true);
-    }
-    const resumeAt = new Date(Date.now() + seconds * 1000).toLocaleTimeString(
-      [],
-      { hour: "2-digit", minute: "2-digit" },
-    );
-    setNotice(
-      `Break started for ${minutes} minutes. The next round is scheduled to resume at ${resumeAt}.`,
     );
   }
 
@@ -440,16 +363,12 @@ export function useHostRoundTimer({
     if (!saved) return;
     setRoundClockSeconds(seconds);
     if (roundClockStorageKey) {
-      localStorage.setItem(
-        roundClockStorageKey,
-        JSON.stringify({
-          seconds,
-          running: roundClockRunning,
-          onBreak: true,
-          resumeRound: breakResumeRound,
-          updatedAt: Date.now(),
-        }),
-      );
+      writeRoundClockSnapshot(roundClockStorageKey, {
+        seconds,
+        running: roundClockRunning,
+        onBreak: true,
+        resumeRound: breakResumeRound,
+      });
     }
     setEditingBreakTimer(false);
     setNotice(
@@ -458,7 +377,7 @@ export function useHostRoundTimer({
   }
 
   function skipTimerAndReview() {
-    if (roundClockRunning && !hostBreakActive) runStartRoundControl();
+    if (roundClockRunning && !hostBreakActive) toggleTimer();
     openPointReview();
   }
 
@@ -473,22 +392,19 @@ export function useHostRoundTimer({
     setNotice("Round timer restarted.");
   }
 
-  function redoRoundTimer() {
+  function resetRoundTimer() {
     if (!session || !currentChallenge || hostBreakActive) return;
     const seconds =
       Math.max(0, Number(currentChallenge.duration_minutes) || 0) * 60;
     setRoundClockSeconds(seconds);
     setRoundClockRunning(false);
     if (roundClockStorageKey) {
-      localStorage.setItem(
-        roundClockStorageKey,
-        JSON.stringify({
-          seconds,
-          running: false,
-          onBreak: false,
-          updatedAt: Date.now(),
-        }),
-      );
+      writeRoundClockSnapshot(roundClockStorageKey, {
+        seconds,
+        running: false,
+        onBreak: false,
+        resumeRound: null,
+      });
     }
     void saveSharedTimer(session.current_round_number, seconds, false, false);
     setNotice("Round timer reset. Start it when you’re ready.");
@@ -533,68 +449,35 @@ export function useHostRoundTimer({
     return write;
   }
 
-  function requestMoveToRound(nextRound: number) {
-    if (autoplayEnabled && !autoplayOverridden) {
-      setOverridePrompt({ kind: "round", round: nextRound });
-      return;
-    }
-    void moveToRound(nextRound);
+  async function initializeRoundClock(
+    roundNumber: number,
+    durationMinutes: number,
+  ) {
+    if (!session) return;
+    const seconds = Math.max(0, Number(durationMinutes) || 0) * 60;
+    writeRoundClockSnapshot(
+      `chaos-crawl-host-round-clock:${session.id}:${roundNumber}`,
+      {
+        seconds,
+        running: false,
+        onBreak: false,
+        resumeRound: null,
+      },
+    );
+    await saveSharedTimer(roundNumber, seconds, false, false, null);
+    setHostBreakActive(false);
+    setBreakResumeRound(null);
   }
 
-  function requestStartBreak() {
-    if (
-      !session ||
-      session.status !== "live" ||
-      session.current_round_number >= mainRounds.length
-    )
-      return;
-    const nextRound = session.current_round_number + 1;
-    if (autoplayEnabled && !autoplayOverridden) {
-      setOverridePrompt({ kind: "round", round: nextRound, forceBreak: true });
-      return;
-    }
-    void moveToRound(
-      nextRound,
-      false,
-      plannedBreakAfter(session.current_round_number) || 15,
-    );
-  }
-
-  function confirmHostOverride() {
-    const prompt = overridePrompt;
-    setOverridePrompt(null);
-    if (prompt?.kind === "start") void startGame(true);
-    if (prompt?.kind === "round")
-      void moveToRound(
-        prompt.round,
-        true,
-        prompt.forceBreak
-          ? plannedBreakAfter(session?.current_round_number ?? 0) || 15
-          : 0,
-      );
-  }
-  useEffect(() => {
-    setAutoplayOverridden(
-      localStorage.getItem(
-        `chaos-crawl-host-autoplay-override:${sessionId}`,
-      ) === "1",
-    );
-  }, [sessionId]);
   return {
     hostBreakActive,
-    setHostBreakActive,
     roundClockSeconds,
     roundClockRunning,
-    setAutoplayOverridden,
-    overridePrompt,
-    setOverridePrompt,
     editingBreakTimer,
     setEditingBreakTimer,
     editBreakMinutes,
     setEditBreakMinutes,
     breakResumeRound,
-    setBreakResumeRound,
-    breakAdvanceRequested,
     nextBreakChallenge,
     nextBreakTask,
     nextRoundStartAt,
@@ -603,16 +486,14 @@ export function useHostRoundTimer({
     upcomingBreakMinutes,
     roundClockText,
     roundTimerHydrated,
-    runStartRoundControl,
+    toggleTimer,
+    initializeRoundClock,
     startScheduledBreak,
     openBreakTimerEditor,
     saveBreakTimer,
     skipTimerAndReview,
     restartRoundTimer,
-    redoRoundTimer,
+    resetRoundTimer,
     saveSharedTimer,
-    requestMoveToRound,
-    requestStartBreak,
-    confirmHostOverride,
   };
 }

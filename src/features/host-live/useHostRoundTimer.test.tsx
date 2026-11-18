@@ -19,12 +19,8 @@ function options() {
     defaultBreakMinutes: 0,
     currentChallenge: current,
     busy: false,
-    moveToRound: vi.fn(async () => {}),
-    startGame: vi.fn(async () => {}),
     setNotice: vi.fn(),
     setError: vi.fn(),
-    autoplayEnabled: false,
-    sessionId: "session",
     setBusy: vi.fn(() => true),
     openPointReview: vi.fn(),
   };
@@ -42,7 +38,7 @@ it("ticks once per second, publishes every five seconds and clears intervals on 
   const props = options();
   const { result, unmount } = renderHook(() => useHostRoundTimer(props));
   await act(async () => {});
-  act(() => result.current.runStartRoundControl());
+  act(() => result.current.toggleTimer());
   for (let tick = 0; tick < 5; tick += 1)
     await act(async () => {
       await vi.advanceTimersByTimeAsync(1000);
@@ -115,16 +111,97 @@ it("keeps the queue usable after a timer write error", async () => {
     expect.stringContaining("Timer denied"),
   );
 });
-it("resumes a scheduled break only once when its timer expires", async () => {
-  const props = options();
-  const { result } = renderHook(() => useHostRoundTimer(props));
+
+it.each([{}, "2", 2.5, 0, -1, null])(
+  "resets a corrupted saved break target %j before publishing or advancing",
+  async (resumeRound) => {
+    localStorage.setItem(
+      "chaos-crawl-host-round-clock:session:1",
+      JSON.stringify({
+        seconds: 0,
+        running: true,
+        onBreak: true,
+        resumeRound,
+        updatedAt: Date.now(),
+      }),
+    );
+    const props = options();
+    const { result } = renderHook(() => useHostRoundTimer(props));
+    await act(async () => {});
+    expect(result.current.hostBreakActive).toBe(false);
+    expect(result.current.roundClockSeconds).toBe(300);
+    expect(write.mock.calls[0]?.[0]).toMatchObject({
+      remaining_seconds: 300,
+      is_running: false,
+      is_on_break: false,
+      resume_round_number: null,
+    });
+  },
+);
+it("preserves a valid future break target even before its challenge is loaded", async () => {
+  localStorage.setItem(
+    "chaos-crawl-host-round-clock:session:1",
+    JSON.stringify({
+      seconds: 90,
+      running: false,
+      onBreak: true,
+      resumeRound: 9,
+      updatedAt: Date.now(),
+    }),
+  );
+  const { result } = renderHook(() => useHostRoundTimer(options()));
+  await act(async () => {});
+  expect(result.current.breakResumeRound).toBe(9);
+  expect(write.mock.calls[0]?.[0]).toMatchObject({
+    remaining_seconds: 90,
+    is_on_break: true,
+    resume_round_number: 9,
+  });
+});
+it("keeps pause, reset-paused and restart-running as distinct operations", async () => {
+  const { result } = renderHook(() => useHostRoundTimer(options()));
+  await act(async () => {});
+  act(() => result.current.toggleTimer());
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(2000);
+  });
+  act(() => result.current.toggleTimer());
+  expect(result.current.roundClockRunning).toBe(false);
+  expect(result.current.roundClockSeconds).toBe(298);
+  act(() => result.current.resetRoundTimer());
+  expect(result.current.roundClockSeconds).toBe(300);
+  expect(result.current.roundClockRunning).toBe(false);
+  act(() => result.current.restartRoundTimer());
+  expect(result.current.roundClockSeconds).toBe(300);
+  expect(result.current.roundClockRunning).toBe(true);
+});
+it("writes a scheduled break locally before the shared publish settles", async () => {
+  const { result } = renderHook(() => useHostRoundTimer(options()));
+  await act(async () => {});
+  let resolve: (value: ApiResult<unknown>) => void = () => {};
+  write.mockImplementationOnce(
+    () =>
+      new Promise<ApiResult<unknown>>((done) => {
+        resolve = done;
+      }),
+  );
+  let pending = Promise.resolve();
+  act(() => {
+    pending = result.current.startScheduledBreak(2, 2);
+  });
+  expect(
+    JSON.parse(
+      localStorage.getItem("chaos-crawl-host-round-clock:session:1") ?? "null",
+    ),
+  ).toMatchObject({
+    seconds: 120,
+    running: true,
+    onBreak: true,
+    resumeRound: 2,
+  });
   await act(async () => {});
   await act(async () => {
-    await result.current.startScheduledBreak(2, 1 / 60);
+    resolve({ data: null, error: null });
+    await pending;
   });
-  await act(async () => {
-    await vi.advanceTimersByTimeAsync(3000);
-  });
-  expect(props.moveToRound).toHaveBeenCalledTimes(1);
-  expect(props.moveToRound).toHaveBeenCalledWith(2);
 });

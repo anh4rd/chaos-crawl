@@ -30,12 +30,12 @@ interface Props {
   roundClockRunning: boolean;
   breakResumeRound: number | null;
   requestStartBreak: () => void;
-  runStartRoundControl: () => void;
+  startGameOrToggleTimer: () => void;
   roundClockSeconds: number;
   restartRoundTimer: () => void;
   nextBreakChallenge: SessionChallenge | undefined;
   openBreakChallengeEditor: (challenge: SessionChallenge) => void;
-  finishGame: () => Promise<void>;
+  finishGame: () => Promise<unknown>;
 }
 export default function HostRoundOverview({
   session,
@@ -53,7 +53,7 @@ export default function HostRoundOverview({
   roundClockRunning,
   breakResumeRound,
   requestStartBreak,
-  runStartRoundControl,
+  startGameOrToggleTimer,
   roundClockSeconds,
   restartRoundTimer,
   nextBreakChallenge,
@@ -173,10 +173,10 @@ export default function HostRoundOverview({
                       : currentRoundPointsAwarded
                         ? requestStartBreak
                         : roundClockRunning
-                          ? runStartRoundControl
+                          ? startGameOrToggleTimer
                           : roundClockSeconds === 0
                             ? restartRoundTimer
-                            : runStartRoundControl
+                            : startGameOrToggleTimer
                   }
                 >
                   {!roundTimerHydrated ? (

@@ -8,7 +8,14 @@ export function useHostLobbyFlow({ sessionId }: Options) {
     const saved = Number(
       localStorage.getItem(`chaos-crawl-host-flow:${sessionId}`),
     );
-    return saved >= 1 && saved <= 6 ? (saved as 1 | 2 | 3 | 4 | 5 | 6) : 1;
+    return saved === 1 ||
+      saved === 2 ||
+      saved === 3 ||
+      saved === 4 ||
+      saved === 5 ||
+      saved === 6
+      ? saved
+      : 1;
   });
 
   const goToLobbyStep = useCallback(

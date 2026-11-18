@@ -208,19 +208,13 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   }
   const {
     hostBreakActive,
-    setHostBreakActive,
     roundClockSeconds,
     roundClockRunning,
-    setAutoplayOverridden,
-    overridePrompt,
-    setOverridePrompt,
     editingBreakTimer,
     setEditingBreakTimer,
     editBreakMinutes,
     setEditBreakMinutes,
     breakResumeRound,
-    setBreakResumeRound,
-    breakAdvanceRequested,
     nextBreakChallenge,
     nextBreakTask,
     nextRoundStartAt,
@@ -229,17 +223,14 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     upcomingBreakMinutes,
     roundClockText,
     roundTimerHydrated,
-    runStartRoundControl,
+    toggleTimer,
+    initializeRoundClock,
     startScheduledBreak,
     openBreakTimerEditor,
     saveBreakTimer,
     skipTimerAndReview,
     restartRoundTimer,
-    redoRoundTimer,
-    saveSharedTimer,
-    requestMoveToRound,
-    requestStartBreak,
-    confirmHostOverride,
+    resetRoundTimer,
   } = useHostRoundTimer({
     mainRounds,
     session,
@@ -248,12 +239,8 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     defaultBreakMinutes,
     currentChallenge,
     busy,
-    moveToRound: (...args) => moveToRound(...args),
-    startGame: (...args) => startGame(...args),
     setNotice,
     setError,
-    autoplayEnabled,
-    sessionId,
     setBusy,
     openPointReview: (...args) => openPointReview(...args),
   });
@@ -403,13 +390,13 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   });
   const {
     hostPlayerToken,
-    ensureHostPlayerToken,
     focusedHostChallenge,
     hostJoinChoice,
     setHostAvatarFile,
     hostAvatarPreview,
     setHostAvatarPreview,
     setHostParticipation,
+    ensureHostPlayerToken,
     openHostPlayerView,
     openHostSideChallengeUpload,
   } = useHostParticipation({
@@ -435,32 +422,40 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     onTab: setActiveTab,
     onLobbyStep: goToLobbyStep,
   });
-  const { startOverrideReasons, startGame, moveToRound, finishGame } =
-    useHostSessionActions({
-      autoplayEnabled,
-      players,
-      session,
-      teams,
-      unassignedPlayers,
-      setError,
-      setOverridePrompt,
-      setBusy,
-      setNotice,
-      setSession,
-      sessionId,
-      setAutoplayOverridden,
-      mainRounds,
-      saveSharedTimer,
-      load,
-      busy,
-      activeRewardRound,
-      hostBreakActive,
-      plannedBreakAfter,
-      startScheduledBreak,
-      setHostBreakActive,
-      setBreakResumeRound,
-      breakAdvanceRequested,
-    });
+  const {
+    startOverrideReasons,
+    startGame,
+    moveToRound,
+    finishGame,
+    overridePrompt,
+    setOverridePrompt,
+    startGameOrToggleTimer,
+    requestMoveToRound,
+    requestStartBreak,
+    confirmHostOverride,
+  } = useHostSessionActions({
+    autoplayEnabled,
+    players,
+    session,
+    teams,
+    unassignedPlayers,
+    setError,
+    setBusy,
+    setNotice,
+    setSession,
+    sessionId,
+    mainRounds,
+    load,
+    busy,
+    activeRewardRound,
+    hostBreakActive,
+    plannedBreakAfter,
+    startScheduledBreak,
+    initializeRoundClock,
+    toggleTimer,
+    roundClockSeconds,
+    breakResumeRound,
+  });
   const { reviewSubmission } = useHostSubmissionReview({
     challenges,
     setError,
@@ -991,8 +986,8 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                   roundClockRunning={roundClockRunning}
                   restartRoundTimer={restartRoundTimer}
                   enabledRewardMethods={enabledRewardMethods}
-                  runStartRoundControl={runStartRoundControl}
-                  redoRoundTimer={redoRoundTimer}
+                  startGameOrToggleTimer={startGameOrToggleTimer}
+                  resetRoundTimer={resetRoundTimer}
                   skipTimerAndReview={skipTimerAndReview}
                 />
                 {upcomingStage && (
@@ -1042,7 +1037,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                   roundClockRunning={roundClockRunning}
                   breakResumeRound={breakResumeRound}
                   requestStartBreak={requestStartBreak}
-                  runStartRoundControl={runStartRoundControl}
+                  startGameOrToggleTimer={startGameOrToggleTimer}
                   roundClockSeconds={roundClockSeconds}
                   restartRoundTimer={restartRoundTimer}
                   nextBreakChallenge={nextBreakChallenge}

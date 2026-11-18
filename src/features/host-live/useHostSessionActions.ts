@@ -1,4 +1,10 @@
-import type { Dispatch, RefObject, SetStateAction } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import * as hostRosterCommands from "../../lib/hostRosterCommands";
 import * as hostSessionCommands from "../../lib/hostSessionCommands";
 import type {
@@ -16,39 +22,24 @@ interface Options {
   teams: SessionTeam[];
   unassignedPlayers: SessionPlayer[];
   setError: Dispatch<SetStateAction<string>>;
-  setOverridePrompt: Dispatch<
-    SetStateAction<
-      | { kind: "start" }
-      | { kind: "round"; round: number; forceBreak?: boolean }
-      | null
-    >
-  >;
   setBusy: SetHostBusy;
   setNotice: Dispatch<SetStateAction<string>>;
   setSession: Dispatch<SetStateAction<GameSession | null>>;
   sessionId: string;
-  setAutoplayOverridden: Dispatch<SetStateAction<boolean>>;
   mainRounds: SessionChallenge[];
-  saveSharedTimer: (
+  initializeRoundClock: (
     roundNumber: number,
-    remainingSeconds: number,
-    isRunning: boolean,
-    isOnBreak: boolean,
-    resumeRoundNumber?: number | null,
-  ) => Promise<boolean>;
+    durationMinutes: number,
+  ) => Promise<void>;
+  toggleTimer: () => void;
+  roundClockSeconds: number;
+  breakResumeRound: number | null;
   load: () => Promise<void>;
   busy: boolean;
   activeRewardRound: import("./types").SessionRewardRound | null;
   hostBreakActive: boolean;
   plannedBreakAfter: (roundNumber: number) => number;
-  startScheduledBreak: (
-    nextRound: number,
-    minutes: number,
-    confirmedOverride?: boolean,
-  ) => Promise<void>;
-  setHostBreakActive: Dispatch<SetStateAction<boolean>>;
-  setBreakResumeRound: Dispatch<SetStateAction<number | null>>;
-  breakAdvanceRequested: RefObject<boolean>;
+  startScheduledBreak: (nextRound: number, minutes: number) => Promise<void>;
 }
 export function useHostSessionActions({
   autoplayEnabled,
@@ -57,24 +48,69 @@ export function useHostSessionActions({
   teams,
   unassignedPlayers,
   setError,
-  setOverridePrompt,
   setBusy,
   setNotice,
   setSession,
   sessionId,
-  setAutoplayOverridden,
   mainRounds,
-  saveSharedTimer,
+  initializeRoundClock,
+  toggleTimer,
+  roundClockSeconds,
+  breakResumeRound,
   load,
   busy,
   activeRewardRound,
   hostBreakActive,
   plannedBreakAfter,
   startScheduledBreak,
-  setHostBreakActive,
-  setBreakResumeRound,
-  breakAdvanceRequested,
 }: Options) {
+  const [autoplayOverridden, setAutoplayOverridden] = useState(false);
+  const [overridePrompt, setOverridePrompt] = useState<
+    | null
+    | { kind: "start" }
+    | { kind: "round"; round: number; forceBreak?: boolean }
+  >(null);
+  const breakAdvance = useRef<"idle" | "pending" | "failed" | "succeeded">(
+    "idle",
+  );
+  useEffect(() => {
+    setAutoplayOverridden(
+      localStorage.getItem(
+        `chaos-crawl-host-autoplay-override:${sessionId}`,
+      ) === "1",
+    );
+  }, [sessionId]);
+  useEffect(() => {
+    breakAdvance.current = "idle";
+  }, [
+    session?.id,
+    session?.current_round_number,
+    hostBreakActive,
+    breakResumeRound,
+  ]);
+  useEffect(() => {
+    if (
+      session?.status !== "live" ||
+      busy ||
+      !hostBreakActive ||
+      roundClockSeconds !== 0 ||
+      !breakResumeRound ||
+      breakAdvance.current !== "idle"
+    )
+      return;
+    breakAdvance.current = "pending";
+    void moveToRound(breakResumeRound).then((outcome) => {
+      breakAdvance.current = outcome === "moved" ? "succeeded" : "failed";
+    });
+  }, [
+    session?.id,
+    session?.status,
+    busy,
+    hostBreakActive,
+    roundClockSeconds,
+    breakResumeRound,
+  ]);
+
   function startOverrideReasons() {
     const reasons: string[] = [];
     if (autoplayEnabled) reasons.push("You are taking control from autoplay.");
@@ -150,23 +186,9 @@ export function useHostSessionActions({
     const firstRound =
       mainRounds.find((round) => round.round_number === 1) ?? mainRounds[0];
     if (firstRound) {
-      const key = `chaos-crawl-host-round-clock:${session.id}:${firstRound.round_number}`;
-      const seconds =
-        Math.max(0, Number(firstRound.duration_minutes) || 0) * 60;
-      localStorage.setItem(
-        key,
-        JSON.stringify({
-          seconds,
-          running: false,
-          onBreak: false,
-          updatedAt: Date.now(),
-        }),
-      );
-      await saveSharedTimer(
+      await initializeRoundClock(
         Number(firstRound.round_number ?? 1),
-        seconds,
-        false,
-        false,
+        firstRound.duration_minutes ?? 0,
       );
     }
     setNotice(
@@ -181,69 +203,69 @@ export function useHostSessionActions({
     nextRound: number,
     confirmedOverride = false,
     forceBreakMinutes = 0,
-  ) {
-    if (!session || busy) return;
+  ): Promise<"moved" | "break-started" | "blocked" | "failed"> {
+    if (!session || busy) return "blocked";
     if (activeRewardRound) {
       setError(
         "Complete or cancel the reward flow before moving to another round.",
       );
-      return;
+      return "blocked";
     }
     if (!hostBreakActive && nextRound > session.current_round_number) {
       const breakMinutes =
         forceBreakMinutes || plannedBreakAfter(session.current_round_number);
       if (breakMinutes > 0) {
-        await startScheduledBreak(nextRound, breakMinutes, confirmedOverride);
-        return;
+        await startScheduledBreak(nextRound, breakMinutes);
+        if (confirmedOverride && autoplayEnabled) markAutoplayOverridden();
+        const resumeAt = new Date(
+          Date.now() + Math.round(breakMinutes * 60) * 1000,
+        ).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        setNotice(
+          `Break started for ${breakMinutes} minutes. The next round is scheduled to resume at ${resumeAt}.`,
+        );
+        return "break-started";
       }
     }
-    if (!setBusy(true)) return;
+    if (!setBusy(true)) return "blocked";
     setError("");
     setNotice("");
-    const { error: roundError } =
-      await hostSessionCommands.hostSetGameSessionRound({
-        p_session_id: session.id,
-        p_round_number: nextRound,
-      });
-    setBusy(false);
-    if (roundError) {
-      setError(roundError.message);
-      return;
-    }
-    if (confirmedOverride && autoplayEnabled) {
-      localStorage.setItem(
-        `chaos-crawl-host-autoplay-override:${sessionId}`,
-        "1",
+    try {
+      const { error: roundError } =
+        await hostSessionCommands.hostSetGameSessionRound({
+          p_session_id: session.id,
+          p_round_number: nextRound,
+        });
+      setBusy(false);
+      if (roundError) {
+        setError(roundError.message);
+        return "failed";
+      }
+      if (confirmedOverride && autoplayEnabled) {
+        localStorage.setItem(
+          `chaos-crawl-host-autoplay-override:${sessionId}`,
+          "1",
+        );
+        setAutoplayOverridden(true);
+      }
+      const targetRound = mainRounds.find(
+        (round) => round.round_number === nextRound,
       );
-      setAutoplayOverridden(true);
+      await initializeRoundClock(nextRound, targetRound?.duration_minutes ?? 0);
+      breakAdvance.current = "succeeded";
+      setNotice(
+        `Round ${nextRound} is ready. Announce the challenge, then start its timer when everyone is set. Later timings will follow from this change.`,
+      );
+      await load();
+      return "moved";
+    } catch (error) {
+      setBusy(false);
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Couldn't move to the next round. Try again.",
+      );
+      return "failed";
     }
-    const targetRound = mainRounds.find(
-      (round) => round.round_number === nextRound,
-    );
-    const clockKey = `chaos-crawl-host-round-clock:${session.id}:${nextRound}`;
-    localStorage.setItem(
-      clockKey,
-      JSON.stringify({
-        seconds: Math.max(0, Number(targetRound?.duration_minutes) || 0) * 60,
-        running: false,
-        onBreak: false,
-        updatedAt: Date.now(),
-      }),
-    );
-    await saveSharedTimer(
-      nextRound,
-      Math.max(0, Number(targetRound?.duration_minutes) || 0) * 60,
-      false,
-      false,
-      null,
-    );
-    setHostBreakActive(false);
-    setBreakResumeRound(null);
-    breakAdvanceRequested.current = false;
-    setNotice(
-      `Round ${nextRound} is ready. Announce the challenge, then start its timer when everyone is set. Later timings will follow from this change.`,
-    );
-    await load();
   }
 
   async function finishGame() {
@@ -275,5 +297,65 @@ export function useHostSessionActions({
     setNotice("Game completed.");
     await load();
   }
-  return { startOverrideReasons, startGame, moveToRound, finishGame };
+  function markAutoplayOverridden() {
+    localStorage.setItem(
+      `chaos-crawl-host-autoplay-override:${sessionId}`,
+      "1",
+    );
+    setAutoplayOverridden(true);
+  }
+  function startGameOrToggleTimer() {
+    if (session?.status === "lobby") void startGame();
+    else toggleTimer();
+  }
+  function requestMoveToRound(nextRound: number) {
+    if (autoplayEnabled && !autoplayOverridden) {
+      setOverridePrompt({ kind: "round", round: nextRound });
+      return;
+    }
+    void moveToRound(nextRound);
+  }
+  function requestStartBreak() {
+    if (
+      !session ||
+      session.status !== "live" ||
+      session.current_round_number >= mainRounds.length
+    )
+      return;
+    const nextRound = session.current_round_number + 1;
+    if (autoplayEnabled && !autoplayOverridden) {
+      setOverridePrompt({ kind: "round", round: nextRound, forceBreak: true });
+      return;
+    }
+    void moveToRound(
+      nextRound,
+      false,
+      plannedBreakAfter(session.current_round_number) || 15,
+    );
+  }
+  function confirmHostOverride() {
+    const prompt = overridePrompt;
+    setOverridePrompt(null);
+    if (prompt?.kind === "start") void startGame(true);
+    if (prompt?.kind === "round")
+      void moveToRound(
+        prompt.round,
+        true,
+        prompt.forceBreak
+          ? plannedBreakAfter(session?.current_round_number ?? 0) || 15
+          : 0,
+      );
+  }
+  return {
+    startOverrideReasons,
+    startGame,
+    moveToRound,
+    finishGame,
+    overridePrompt,
+    setOverridePrompt,
+    startGameOrToggleTimer,
+    requestMoveToRound,
+    requestStartBreak,
+    confirmHostOverride,
+  };
 }
