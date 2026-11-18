@@ -155,3 +155,53 @@ it("does not begin queries when identity resolves after unmount", async () => {
   expect(mocks.games).not.toHaveBeenCalled();
   expect(mocks.admin).not.toHaveBeenCalled();
 });
+it("settles a rejected identity read and recovers on a new view", async () => {
+  mocks.identity.mockRejectedValueOnce(new Error("Offline"));
+  const { result, rerender } = renderHook(
+    ({ view }: { view: "home" | "games" }) =>
+      useHostHub({ view, viewAsHostId: null, navigate }),
+    { initialProps: { view: "home" } },
+  );
+  await waitFor(() => expect(result.current.loading).toBe(false));
+  expect(result.current.error).toContain("session");
+  rerender({ view: "games" });
+  await waitFor(() => expect(result.current.games).toHaveLength(1));
+  expect(result.current.error).toBe("");
+});
+it.each(["games", "preview"])(
+  "recovers a rejected %s read through the matching feedback path",
+  async (stage) => {
+    if (stage === "games")
+      mocks.games.mockRejectedValueOnce(new Error("Offline"));
+    else {
+      mocks.admin.mockResolvedValue({ data: true, error: null });
+      mocks.preview.mockRejectedValueOnce(new Error("Preview offline"));
+    }
+    const { result } = renderHook(() =>
+      useHostHub({
+        view: "home",
+        viewAsHostId: stage === "preview" ? "other" : null,
+        navigate,
+      }),
+    );
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.error).toContain(
+      stage === "games" ? "Couldn't load your plans" : "Preview offline",
+    );
+  },
+);
+it("keeps a failed launch visible when a newer query succeeds", async () => {
+  mocks.launch.mockRejectedValueOnce(new Error("Launch failed"));
+  const { result, rerender } = renderHook(
+    ({ view }: { view: "home" | "games" }) =>
+      useHostHub({ view, viewAsHostId: null, navigate }),
+    { initialProps: { view: "home" } },
+  );
+  await waitFor(() => expect(result.current.loading).toBe(false));
+  await act(async () => {
+    await result.current.playGame(game("current"));
+  });
+  rerender({ view: "games" });
+  await waitFor(() => expect(result.current.loading).toBe(false));
+  expect(result.current.error).toBe("Launch failed");
+});

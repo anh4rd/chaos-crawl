@@ -42,7 +42,7 @@ export type ScheduleItem = {
 
 export type Favourite = {
   id: string;
-  item_type: "task" | "venue";
+  item_type: "task" | "venue" | "route";
   item_id: string;
 };
 

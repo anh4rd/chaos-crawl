@@ -4635,3 +4635,32 @@ ownership/explicit outcomes; semantic callback migration; malformed hydration;
 regression fixtures. This subsystem exceeds the800-line reviewer nudge; inspect
 behavior guards separately from mechanically proven neutral wiring. Root's final
 whole-runtime gate passes738units/types/lint/build; full browser run continues.
+
+## Host error recovery, telemetry and optional-time display
+
+Host sign-out navigates only after SDK success; failures remain visible and retryable.
+Read rejections settle current loading and ignore obsolete identity/session results.
+Favourites distinguish unavailable collection from empty success, preserve the
+same-owner snapshot and retry only that collection without re-importing a plan.
+Native identity reads use the shared auth boundary. Existing API results are not
+wrapped/reported again: failedResult handles unexpected rejection, and raw SDK
+operations use runApi once. New report-count regressions fail before correction
+and prove one report for returned service errors and unexpected rejects.
+
+Cleared/invalid optional start time displays existing Time TBC copy. All17280valid
+HH:mm/offset comparisons preserve original rollover/fraction behavior. Native
+clear→schedule→restore and failure-retry browser journeys pass. Error/read/action
+channels retain their intended precedence; SDK/filter/query order is unchanged.
+
+The final38affected browser cases, strict build, app/browser types and lint pass.
+Its controlled old-API snapshot has622passing units plus one explicitly identified
+peer new-API test mismatch; that peer assertion is excluded from this commit and
+lands with its matching command migration. Earlier telemetry snapshot passes all
+600units/34browser cases; root's complete current runtime passes738units with both
+API assertion and implementation together. Evidence:
+/tmp/host-read-recovery-final-handoff.md, /tmp/time-plus-valid-equivalence.json,
+/tmp/host-recovery-live-source-proof.json. Review map: workspace sign-out/identity;
+favourites availability/collection-only retry; lifetime-aware loaders; single
+telemetry ownership; native identity fallback; optional-time display/regressions.
+This25-file slice exceeds800lines; large loader indentation is mechanical, while
+error/identity/concurrency decisions deserve scrutiny. No styling/payload redesign.

@@ -6,7 +6,10 @@ export const today = () => {
 };
 
 export function timePlus(time: string, minutes: number) {
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time) || !Number.isFinite(minutes))
+    return "Time TBC";
   const [h, m] = time.split(":").map(Number);
   const d = new Date(2000, 0, 1, h, m + minutes);
+  if (Number.isNaN(d.getTime())) return "Time TBC";
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }

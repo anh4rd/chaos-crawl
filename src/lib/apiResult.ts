@@ -30,6 +30,11 @@ export function invalidResult(message: string): ApiResult<never> {
   return { data: null, error: { code: "INVALID_INPUT", message } };
 }
 
+export function failedResult(error: unknown): ApiResult<never> {
+  reportError(error, "api");
+  return { data: null, error: apiError(error) };
+}
+
 // Keep database failures and thrown transport/configuration failures on one path.
 export async function runApi<T>(
   operation: () => PromiseLike<{ data: T | null; error: unknown }>,
@@ -41,7 +46,6 @@ export async function runApi<T>(
       ? { data: null, error: apiError(result.error) }
       : { data: result.data, error: null };
   } catch (error) {
-    reportError(error, "api");
-    return { data: null, error: apiError(error) };
+    return failedResult(error);
   }
 }

@@ -86,3 +86,54 @@ it("stops polling and does not start queries after a late dispatch response on u
   expect(mocks.read).not.toHaveBeenCalled();
   expect(vi.getTimerCount()).toBe(0);
 });
+it("settles an initial rejected read and recovers through the existing reload", async () => {
+  mocks.read.mockRejectedValueOnce(new Error("Network lost"));
+  const { result } = renderHook(() => useHostSessionData("session"));
+  await waitFor(() => expect(result.current.loading).toBe(false));
+  expect(result.current.error).toContain("Network lost");
+  await act(async () => {
+    await result.current.load();
+  });
+  expect(result.current.session?.id).toBe("session");
+  expect(result.current.error).toBe("");
+});
+it("ignores a stale rejection after changing session and leaves current data intact", async () => {
+  let reject: (reason: Error) => void = () => {};
+  mocks.read.mockImplementation((table: string, id: string) =>
+    id === "old" && table === "cc_game_sessions"
+      ? new Promise((_resolve, fail) => {
+          reject = fail;
+        })
+      : Promise.resolve({
+          data: table === "cc_game_sessions" ? hostSessionFixture({ id }) : [],
+          error: null,
+        }),
+  );
+  const { result, rerender } = renderHook(({ id }) => useHostSessionData(id), {
+    initialProps: { id: "old" },
+  });
+  await waitFor(() =>
+    expect(mocks.read).toHaveBeenCalledWith("cc_game_sessions", "old"),
+  );
+  rerender({ id: "new" });
+  await waitFor(() => expect(result.current.session?.id).toBe("new"));
+  await act(async () => {
+    reject(new Error("Obsolete failure"));
+  });
+  expect(result.current.error).toBe("");
+  expect(result.current.session?.id).toBe("new");
+});
+it("retains a loaded snapshot through failed refresh and allows another refresh", async () => {
+  const { result } = renderHook(() => useHostSessionData("session"));
+  await waitFor(() => expect(result.current.session?.id).toBe("session"));
+  mocks.read.mockRejectedValueOnce(new Error("Refresh offline"));
+  await act(async () => {
+    await result.current.load();
+  });
+  expect(result.current.session?.id).toBe("session");
+  expect(result.current.error).toContain("Refresh offline");
+  await act(async () => {
+    await result.current.load();
+  });
+  expect(result.current.error).toBe("");
+});

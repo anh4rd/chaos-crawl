@@ -12,12 +12,20 @@ export default function HostGuard() {
     let mounted = true;
     let authChanged = false;
 
-    void supabase.auth.getSession().then(({ data, error }) => {
-      if (!mounted || authChanged) return;
-      if (error) console.error("HOST SESSION CHECK FAILED", error);
-      setSession(data.session);
-      setChecking(false);
-    });
+    void supabase.auth
+      .getSession()
+      .then(({ data, error }) => {
+        if (!mounted || authChanged) return;
+        if (error) console.error("HOST SESSION CHECK FAILED", error);
+        setSession(data.session);
+        setChecking(false);
+      })
+      .catch((error: unknown) => {
+        if (!mounted || authChanged) return;
+        console.error("HOST SESSION CHECK FAILED", error);
+        setSession(null);
+        setChecking(false);
+      });
 
     const {
       data: { subscription },

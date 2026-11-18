@@ -1,17 +1,15 @@
+import type { User } from "@supabase/supabase-js";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import { failedResult, runApi } from "../../lib/apiResult";
 import { readHostIdentity } from "../../lib/hostAuth";
-import {
-  readPlanFavourites,
-  readHostPlan,
-  readApprovedPlanTask,
-} from "../../lib/hostPlanApi";
+import { readHostPlan, readApprovedPlanTask } from "../../lib/hostPlanApi";
 import { hydratePlan } from "./planModel";
 import {
   attachPlanTask,
   communityPlanTask,
   explorePlanTask,
 } from "./planImports";
-import type { SetupForm, TaskKind, Favourite } from "./types";
+import type { SetupForm, TaskKind } from "./types";
 export function usePlanSource({
   id,
   communityTaskId,
@@ -19,7 +17,7 @@ export function usePlanSource({
   requestedChallengeKind,
   setForm,
   setStage,
-  setFavourites,
+  loadFavourites,
   setError,
   setNotice,
 }: {
@@ -29,28 +27,35 @@ export function usePlanSource({
   requestedChallengeKind: TaskKind;
   setForm: Dispatch<SetStateAction<SetupForm>>;
   setStage: Dispatch<SetStateAction<"create" | "build">>;
-  setFavourites: Dispatch<SetStateAction<Favourite[]>>;
+  loadFavourites: (hostId: string) => Promise<void>;
   setError: (message: string) => void;
   setNotice: (message: string) => void;
 }) {
+  const [attempt, setAttempt] = useState(0);
   const [loading, setLoading] = useState(
     Boolean(id || communityTaskId || exploreTaskJson),
   );
   useEffect(() => {
     let live = true;
     async function load() {
-      const { data: auth } = await readHostIdentity();
+      setError("");
+      setLoading(Boolean(id || communityTaskId || exploreTaskJson));
+      const { data: auth, error: authError } = await runApi<{
+        user: User | null;
+      }>(readHostIdentity);
       if (!live) return;
-      if (!auth.user) {
+      if (authError || !auth?.user) {
         setError("Your host session has expired. Please log in again.");
         setLoading(false);
         return;
       }
-      const { data: favs } = await readPlanFavourites(auth.user.id);
+      const userId = auth.user.id;
+      await loadFavourites(userId);
       if (!live) return;
-      setFavourites(favs ?? []);
       if (id) {
-        const { data, error: loadError } = await readHostPlan(id, auth.user.id);
+        const { data, error: loadError } = await readHostPlan(id, userId).catch(
+          failedResult,
+        );
         if (!live) return;
         if (loadError || !data) setError("Couldn't load this game plan.");
         else {
@@ -59,7 +64,7 @@ export function usePlanSource({
         }
       } else if (communityTaskId) {
         const { data: submission, error: communityError } =
-          await readApprovedPlanTask(communityTaskId);
+          await readApprovedPlanTask(communityTaskId).catch(failedResult);
         if (!live) return;
         if (communityError || !submission)
           setError(
@@ -92,15 +97,16 @@ export function usePlanSource({
       live = false;
     };
   }, [
+    attempt,
     id,
     communityTaskId,
     exploreTaskJson,
     requestedChallengeKind,
     setForm,
     setStage,
-    setFavourites,
+    loadFavourites,
     setError,
     setNotice,
   ]);
-  return { loading };
+  return { loading, reload: () => setAttempt((value) => value + 1) };
 }

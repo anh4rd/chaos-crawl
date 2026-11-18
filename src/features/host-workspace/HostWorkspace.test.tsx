@@ -101,3 +101,37 @@ it("preserves read-only preview identity and its encoded home link", async () =>
   ).toBe("/host?viewAs=host%2F2");
   await act(async () => {});
 });
+it.each(["returned", "rejected"])(
+  "keeps the workspace after a %s sign-out failure and allows retry",
+  async (failure) => {
+    if (failure === "returned")
+      signOut.mockResolvedValueOnce({
+        error: { message: "Sign-out unavailable" },
+      });
+    else signOut.mockRejectedValueOnce(new Error("Sign-out unavailable"));
+    render(
+      <MemoryRouter initialEntries={["/host"]}>
+        <Routes>
+          <Route
+            path="/host"
+            element={
+              <HostWorkspace title="Workspace">
+                <p>Content</p>
+              </HostWorkspace>
+            }
+          />
+          <Route path="/host/login" element={<h1>Login destination</h1>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await screen.findByText("Alex Chaos");
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    await screen.findByRole("alert");
+    expect(
+      screen.queryByRole("heading", { name: "Login destination" }),
+    ).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Sign out" }));
+    await screen.findByRole("heading", { name: "Login destination" });
+    expect(signOut).toHaveBeenCalledTimes(2);
+  },
+);

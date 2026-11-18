@@ -557,3 +557,37 @@ test("planning reorders side, secret and timeline items from the keyboard and sa
   });
   backend.verify();
 });
+test("a cleared start time stays usable through schedule navigation and recovers when restored", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  await page.goto("#/host/games/new");
+  await page.getByLabel("Game name", { exact: true }).fill("Time recovery");
+  await page.getByLabel("Start time", { exact: true }).fill("");
+  await page
+    .getByRole("button", { name: /Next: Players/i })
+    .first()
+    .click();
+  await section(page, "Schedule");
+  await expect(
+    page.getByText("Time TBC", { exact: true }).first(),
+  ).toBeVisible();
+  await expect(page.getByText("NaN:NaN", { exact: true })).toHaveCount(0);
+  await page
+    .getByRole("navigation", { name: "Game setup steps" })
+    .getByRole("button")
+    .filter({ has: page.getByText("Game basics", { exact: true }) })
+    .click();
+  await page.getByLabel("Start time", { exact: true }).fill("18:00");
+  await page
+    .getByRole("button", { name: /Next: Players/i })
+    .first()
+    .click();
+  await section(page, "Schedule");
+  await expect(page.getByText("Time TBC", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("18:00", { exact: true }).first()).toBeVisible();
+  backend.verify();
+});

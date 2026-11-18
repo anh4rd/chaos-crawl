@@ -1,5 +1,7 @@
+import type { User } from "@supabase/supabase-js";
+import { runApi } from "../../lib/apiResult";
 import { useEffect, useState } from "react";
-import { supabase } from "../../lib/sessionSupabase";
+import { readHostIdentity } from "../../lib/hostAuth";
 
 export function useHostIdentity() {
   const [hostPlayerName, setHostPlayerName] = useState("Host");
@@ -8,11 +10,11 @@ export function useHostIdentity() {
 
   useEffect(() => {
     let alive = true;
-    void supabase.auth.getUser().then(({ data }) => {
+    void runApi<{ user: User | null }>(readHostIdentity).then(({ data }) => {
       if (!alive) return;
       const name = String(
-        data.user?.user_metadata?.display_name ??
-          data.user?.email?.split("@")[0] ??
+        data?.user?.user_metadata?.display_name ??
+          data?.user?.email?.split("@")[0] ??
           "Host",
       );
       setHostDisplayName(name);

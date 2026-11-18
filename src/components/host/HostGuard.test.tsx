@@ -178,3 +178,25 @@ it("ignores obsolete empty recovery after a host has signed in", async () => {
     "Host B draft",
   );
 });
+it("fails closed instead of remaining on a spinner when session recovery rejects", async () => {
+  mocks.getSession.mockRejectedValueOnce(new Error("Session unavailable"));
+  openGuard();
+  await screen.findByText("Host login");
+  expect(screen.queryByText("Checking your session…")).toBeNull();
+});
+it("ignores a rejected recovery read after a newer auth notification", async () => {
+  let reject: (reason: Error) => void = () => {};
+  mocks.getSession.mockReturnValueOnce(
+    new Promise((_resolve, fail) => {
+      reject = fail;
+    }),
+  );
+  openGuard();
+  notify(session("current"));
+  await screen.findByLabelText("Private draft");
+  await act(async () => {
+    reject(new Error("Old recovery failed"));
+  });
+  expect(screen.getByLabelText("Private draft")).toBeTruthy();
+  expect(screen.queryByText("Host login")).toBeNull();
+});

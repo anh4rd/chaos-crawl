@@ -1,3 +1,4 @@
+import Button from "../../components/ui/Button";
 import FeedbackNotice from "../../components/ui/FeedbackNotice";
 import EmptyState from "../../components/ui/EmptyState";
 import PlanBuilder from "./PlanBuilder";
@@ -43,6 +44,7 @@ export default function PlanEditor({
   const [tab, setTab] = useState<BuilderTab>("players");
   const [form, setForm] = useState<SetupForm>(defaultForm);
   const [error, setError] = useState("");
+  const [sourceError, setSourceError] = useState("");
   const [notice, setNotice] = useState("");
   const [dragged, setDragged] = useState<string | null>(null);
   const update = <K extends keyof SetupForm>(key: K, value: SetupForm[K]) =>
@@ -59,18 +61,25 @@ export default function PlanEditor({
     liveFinalMinutes,
     calculatedEnd,
   } = derivePlan(form);
-  const { favourites, setFavourites, toggleFavourite } = usePlanFavourites({
+  const {
+    favourites,
+    loadFavourites,
+    reloadFavourites,
+    favouritesLoading,
+    favouritesError,
+    toggleFavourite,
+  } = usePlanFavourites({
     setError,
   });
-  const { loading } = usePlanSource({
+  const { loading, reload: reloadSource } = usePlanSource({
     id,
     communityTaskId,
     exploreTaskJson,
     requestedChallengeKind,
     setForm,
     setStage,
-    setFavourites,
-    setError,
+    loadFavourites,
+    setError: setSourceError,
     setNotice,
   });
   const {
@@ -210,9 +219,26 @@ export default function PlanEditor({
         />
       }
     >
-      {error && (
+      {(error || sourceError) && (
         <FeedbackNotice tone="error" role="alert">
-          {error}
+          {error || sourceError}
+        </FeedbackNotice>
+      )}
+      {!error && sourceError && (
+        <Button variant="comic-ghost" disabled={loading} onClick={reloadSource}>
+          Retry loading plan
+        </Button>
+      )}
+      {favouritesError && (
+        <FeedbackNotice tone="error" role="alert">
+          {favouritesError}{" "}
+          <Button
+            variant="comic-ghost"
+            disabled={favouritesLoading}
+            onClick={() => void reloadFavourites()}
+          >
+            Retry favourites
+          </Button>
         </FeedbackNotice>
       )}
       {notice && (

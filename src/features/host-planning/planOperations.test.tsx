@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
   url: vi.fn(),
   addFavourite: vi.fn(),
   removeFavourite: vi.fn(),
+  readFavourites: vi.fn(),
 }));
 vi.mock("../../lib/hostAuth", () => ({ readHostIdentity: mocks.identity }));
 vi.mock("../../lib/hostPlanApi", () => ({
@@ -22,6 +23,7 @@ vi.mock("../../lib/hostPlanApi", () => ({
   planCoverUrl: mocks.url,
   addPlanFavourite: mocks.addFavourite,
   removePlanFavourite: mocks.removeFavourite,
+  readPlanFavourites: mocks.readFavourites,
 }));
 function pending<T>() {
   let resolve: (value: T) => void = () => {};
@@ -40,6 +42,7 @@ beforeEach(() => {
     data: { user: { id: "host-one" } },
     error: null,
   });
+  mocks.readFavourites.mockResolvedValue({ data: [], error: null });
   mocks.create.mockResolvedValue({ data: { id: "saved-plan" }, error: null });
   mocks.upload.mockResolvedValue({ data: null, error: null });
   mocks.url.mockReturnValue("https://example.test/cover.png");
@@ -125,6 +128,9 @@ it("prevents duplicate favourite inserts while the first one is pending", async 
     pending<ApiResult<{ id: string; item_type: "task"; item_id: string }>>();
   mocks.addFavourite.mockReturnValue(deferred.promise);
   const { result } = renderHook(() => usePlanFavourites({ setError }));
+  await act(async () => {
+    await result.current.loadFavourites("host-one");
+  });
   let first = Promise.resolve(),
     second = Promise.resolve();
   await act(async () => {

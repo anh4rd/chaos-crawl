@@ -1,3 +1,5 @@
+import type { User } from "@supabase/supabase-js";
+import { failedResult, runApi } from "../../lib/apiResult";
 import { useEffect, useState } from "react";
 import { createOrGetHostGameSession } from "../../lib/gameSessions";
 import { readHostIdentity } from "../../lib/hostAuth";
@@ -30,6 +32,7 @@ export function useHostHub({
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [playingId, setPlayingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -37,18 +40,26 @@ export function useHostHub({
     async function loadGames() {
       setLoading(true);
       setError("");
-      const { data: userData, error: userError } = await readHostIdentity();
+      const { data: userData, error: userError } = await runApi<{
+        user: User | null;
+      }>(readHostIdentity);
       if (!current) return;
-      if (userError || !userData.user) {
+      if (userError || !userData?.user) {
         setLoading(false);
         setError("Your session has expired. Please log in again.");
         return;
       }
 
+      const userId = userData.user.id;
       const dateKey = localDateKey();
-      const gamesRequest = readHostGames(userData.user.id, view, dateKey);
+      const gamesRequest = readHostGames(userId, view, dateKey).catch(
+        failedResult,
+      );
       const [{ data: adminData, error: adminError }, gamesResult] =
-        await Promise.all([readPlatformAdmin(), gamesRequest]);
+        await Promise.all([
+          readPlatformAdmin().catch(failedResult),
+          gamesRequest,
+        ]);
       if (!current) return;
       const platformAdmin = !adminError && Boolean(adminData);
       setIsPlatformAdmin(platformAdmin);
@@ -64,7 +75,7 @@ export function useHostHub({
           return;
         }
         const { data: previewData, error: previewError } =
-          await readHostPreview(viewAsHostId);
+          await readHostPreview(viewAsHostId).catch(failedResult);
         if (!current) return;
         setLoading(false);
         if (previewError || !previewData) {
@@ -95,7 +106,8 @@ export function useHostHub({
       setLoading(false);
       if (platformAdmin && view === "home") {
         setHostDirectory([]);
-        const { data: hosts, error: hostsError } = await readHostDirectory();
+        const { data: hosts, error: hostsError } =
+          await readHostDirectory().catch(failedResult);
         if (!current) return;
         if (hostsError) {
           console.warn("Could not load host directory", hostsError);
@@ -136,6 +148,7 @@ export function useHostHub({
       return;
     }
 
+    setActionError("");
     setPlayingId(game.id);
     setError("");
     try {
@@ -143,7 +156,7 @@ export function useHostHub({
       navigate(`/host/live/${session.id}`);
     } catch (launchError) {
       console.error("CREATE HOST GAME SESSION ERROR", launchError);
-      setError(
+      setActionError(
         launchError instanceof Error
           ? launchError.message
           : "Couldn't prepare this game. Check that the multi-game migration has been applied.",
@@ -162,7 +175,7 @@ export function useHostHub({
     hostDirectory,
     viewingHost,
     loading,
-    error,
+    error: actionError || error,
     playingId,
     editGame,
     playGame,
