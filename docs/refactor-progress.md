@@ -4252,3 +4252,18 @@ relevant lines, above the nudge; the shared/default, component conversion,
 controlled extraction and reference slices above form its review map. The full
 working-tree review command reports 6,765 lines across 198 files because it also
 includes independent unfinished milestones; it does not measure this slice alone.
+
+## Finishing plan implementation
+
+Resumed the approved finishing plan from 54e84f6. Scope includes repository-wide
+confirmed cleanup findings; current designs/colors remain, with targeted visible
+labels and focus repairs permitted. No new runtime dependencies, deployments,
+live backend writes or schema changes are authorized. The initial current-source
+checkpoint passes 546 units, forced strict types, full lint and production build.
+
+Default Playwright discovery now includes every mocked spec and explicitly
+excludes tests/live. The opt-in live configuration overrides that exclusion.
+Read-only discovery proves 598 mocked cases across 39 files and 40 opt-in live
+cases across three files; no live journeys were executed. This closes the three
+previously omitted host foundation, roster-focus and pending-team specifications.
+Subsequent new mocked specs are discovered automatically.
