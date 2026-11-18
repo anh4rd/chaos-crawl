@@ -243,6 +243,21 @@ inferred consumed shapes, not deployed schema types. Keep connected hooks out of
 local examples. Existing sa-* styles and recorded lifecycle/label defects await
 separate tested behavior and shared-primitives/SCSS slices.
 
+Legacy /admin Challenges composes controlled feature-private views under
+features/legacy-host. Admin owns round/status/count projections, persistence,
+subscriptions and review URL creation. Preserve incoming order, command payloads
+and legacy host-v2 styles during extraction; other legacy tabs remain separate.
+
+Platform search/status controls have visible native labels and scoped table
+headers. Preserve the original16px text at weight 400 control type; default FormLabel typography
+is not equivalent. Shared-toolbar/owned-style and keyboard focus treatment are
+separate follow-ups. No color or field redesign is authorized by adding labels.
+
+PageFrame supplies the shared native main/div boundary for legacy join, gameplay
+and leaderboard. Existing caller utility layout remains an extraction exception
+until its separate owned-SCSS slice. Local Shared legacy page frame uses div and
+static children; never mount connected routes in a primitive reference.
+
 Catalogue reads settle current loading on rejected identity/read operations and
 ignore obsolete failures. Missing/rejected community identity clears user/admin
 presentation and cached private rows, retaining approved public data. Initial

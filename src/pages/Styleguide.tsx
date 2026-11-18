@@ -6,6 +6,7 @@ import ExampleGrid from "../features/styleguide/ExampleGrid";
 import ButtonExample from "../features/styleguide/ButtonExample";
 import InputExample from "../features/styleguide/InputExample";
 import CardExample from "../features/styleguide/CardExample";
+import PageFrameExample from "../features/styleguide/PageFrameExample";
 import ReuseNotes from "../features/styleguide/ReuseNotes";
 import FormExamples from "../features/styleguide/FormExamples";
 import PosterExamples from "../features/styleguide/PosterExamples";
@@ -40,6 +41,7 @@ export default function Styleguide() {
           <ButtonExample />
           <InputExample name={name} setName={setName} />
           <CardExample />
+          <PageFrameExample />
           <FormExamples />
           <PosterExamples />
           <ReuseNotes />

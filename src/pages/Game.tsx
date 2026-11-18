@@ -1,3 +1,4 @@
+import PageFrame from "../components/ui/PageFrame";
 import { useEffect } from "react";
 import { GameStatus } from "../features/game/GameStatus";
 
@@ -75,19 +76,19 @@ export default function Game() {
     scoresQuery,
   ];
   const failedQuery = queries.find((query) => query.error);
-  if (failedQuery)
-    return <DataError error={failedQuery.error!} retry={failedQuery.reload} />;
+  if (failedQuery?.error)
+    return <DataError error={failedQuery.error} retry={failedQuery.reload} />;
   if (!game || queries.some((query) => query.loading)) {
     return (
-      <main className="p-6">
+      <PageFrame className="p-6">
         <p>Loading game...</p>
-      </main>
+      </PageFrame>
     );
   }
 
   if (!currentPlayer)
     return (
-      <main className="mx-auto min-h-screen max-w-md space-y-4 p-6">
+      <PageFrame className="mx-auto min-h-screen max-w-md space-y-4 p-6">
         <h1 className="text-2xl font-bold">Join the game to take part</h1>
         <p>
           Your player session was not found. Join again to save challenge
@@ -96,7 +97,7 @@ export default function Game() {
         <Button type="button" onClick={() => navigate("/legacy/join")}>
           Join Game
         </Button>
-      </main>
+      </PageFrame>
     );
 
   const teamScore = currentPlayer?.team
@@ -112,9 +113,7 @@ export default function Game() {
     challenges.find((challenge) => challenge.title === game.current_challenge);
 
   return (
-    <main className="mx-auto min-h-screen max-w-md space-y-6 p-6">
-      {/* TITLE */}
-
+    <PageFrame className="mx-auto min-h-screen max-w-md space-y-6 p-6">
       <header>
         <img
           src={`${import.meta.env.BASE_URL}Title.png`}
@@ -122,8 +121,6 @@ export default function Game() {
           className="mx-auto mb-4 w-full"
         />
       </header>
-
-      {/* HIDDEN FILE INPUT */}
 
       <input
         ref={fileInputRef}
@@ -151,8 +148,6 @@ export default function Game() {
         participation={participation}
       />
 
-      {/* NAVIGATION */}
-
       <div className="space-y-3">
         <Button
           type="button"
@@ -163,6 +158,6 @@ export default function Game() {
           Leaderboard
         </Button>
       </div>
-    </main>
+    </PageFrame>
   );
 }

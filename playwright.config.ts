@@ -29,6 +29,8 @@ export default defineConfig({
     "**/hostExploreConcurrency.spec.ts",
     "**/hostExploreReads.spec.ts",
     "**/hostIdentity.spec.ts",
+    "**/legacyHostChallenges.spec.ts",
+    "**/legacyPages.spec.ts",
     "**/superAdmin.spec.ts",
     "**/sessionSlideshow.spec.ts",
   ],

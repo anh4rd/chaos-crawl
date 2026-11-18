@@ -1,3 +1,4 @@
+import PageFrame from "../components/ui/PageFrame";
 import { useMemo, useState } from "react";
 import { LeaderboardCard } from "../features/leaderboard/LeaderboardCard";
 
@@ -39,10 +40,11 @@ export default function Leaderboard() {
     : scoreQuery.error
       ? scoreQuery
       : null;
-  if (failed) return <DataError error={failed.error!} retry={failed.reload} />;
+  if (failed?.error)
+    return <DataError error={failed.error} retry={failed.reload} />;
 
   return (
-    <main className="mx-auto min-h-screen max-w-md space-y-6 p-6">
+    <PageFrame className="mx-auto min-h-screen max-w-md space-y-6 p-6">
       <Card>
         <h1 className="text-4xl font-bold">Leaderboard</h1>
 
@@ -50,8 +52,6 @@ export default function Leaderboard() {
           Tap a player or team to see where their points came from.
         </p>
       </Card>
-
-      {/* MODE TABS */}
 
       <div className="grid grid-cols-2 gap-3">
         <Button
@@ -74,8 +74,6 @@ export default function Leaderboard() {
           {mode === "players" ? "✓ Players" : "Players"}
         </Button>
       </div>
-
-      {/* LOADING */}
 
       {loading || playersQuery.loading ? (
         <Card>
@@ -104,6 +102,6 @@ export default function Leaderboard() {
       <Button type="button" onClick={() => navigate("/game")}>
         Back to Game
       </Button>
-    </main>
+    </PageFrame>
   );
 }

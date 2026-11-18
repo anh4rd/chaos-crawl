@@ -60,6 +60,41 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     dependencies:
       "Shared Dialog/Icon and frontend-inferred PlatformGameDetail. Connected inspector lifecycle stays in useGameInspector; errors and retry remain inside the modal, and pending reads can be dismissed. Do not mount that hook in local references.",
   },
+  ChallengeCatalogue: {
+    usage:
+      "Controlled legacy-host challenge catalogue with ordered round/side models and callbacks. Admin owns query, command, current/scheduled/past and completion-count projections.",
+    dependencies:
+      "Feature-private legacy-host presentation models and views with retained host-v2 classes. No backend or route imports; distinct from V2 session challenge rules.",
+  },
+  RoundChallengeList: {
+    usage: "Controlled legacy round heading and caller-ordered challenge rows.",
+    dependencies:
+      "ChallengeRoundModel and feature ChallengeListItem; state flags and callbacks arrive from Admin.",
+  },
+  ChallengeListItem: {
+    usage:
+      "Legacy challenge copy/status and reveal/schedule actions with supplied flags and callbacks.",
+    dependencies:
+      "Feature-private model, native controls and retained host-v2 styling; no queries or scheduling decisions.",
+  },
+  SideChallengeList: {
+    usage:
+      "Controlled legacy side-challenge collection with supplied completion counts and review callbacks.",
+    dependencies:
+      "Feature SideChallengeItem and caller order; no completion queries or navigation construction.",
+  },
+  SideChallengeItem: {
+    usage:
+      "Legacy side-challenge copy, supplied completion count and review action.",
+    dependencies:
+      "Feature-private presentation model and retained native styling; no persistence or route parameters.",
+  },
+  PageFrame: {
+    usage:
+      "Shared native main/div frame for legacy join, gameplay and leaderboard. Native attributes and caller classes pass through; Shared legacy page frame uses div to avoid a nested main and never mounts connected routes.",
+    dependencies:
+      "Page-frame BEM identity. Existing caller utility layout is retained during extraction; owned styling conversion is the next separate slice. No routing, data, storage or coordination.",
+  },
   MetadataList: {
     usage:
       "Native metadata group. Compose MetadataItem children; callers retain label formatting and selection. See Shared idea card and Local catalogue.",

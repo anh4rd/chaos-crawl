@@ -3849,6 +3849,86 @@ of the registered full suite. Next: TV owned SCSS/BEM, admin visible labels/focu
 and owned styling, and legacy-host Challenges presentation. Remaining V2/legacy
 migration, complete mocked-suite verification and final desloppify remain pending.
 
+## Phase 6h — controlled legacy-host Challenges presentation
+
+The legacy /admin Challenges tab composes ChallengeCatalogue, RoundChallengeList,
+ChallengeListItem, SideChallengeList and SideChallengeItem. Small feature-private
+presentation models carry ordered copy, state flags and callbacks. Admin retains
+all queries/subscriptions, round ordering/current/scheduled/past projections,
+completion counts, reveal/schedule commands, busy state and review URL construction.
+Scores, players and live views are untouched; no styles or accessibility behavior
+changed. This remains the legacy game-state workflow, distinct from V2 sessions.
+
+Seven strengthened AdminV2 unit tests and **eight mocked desktop/mobile browser
+cases** pass before and after extraction. The new legacy fixture correctly echoes
+Realtime binding acknowledgements and uses a deterministic past date compatible
+with its mocked auth session; failed fixture attempts are retained separately.
+
+All **14 before/after pairs** preserve exact outerHTML without normalization,
+controls, focus, scroll, geometry, standard computed properties and SDK traces
+(independent initial GET order only normalized). Thirteen PNG pairs are exact;
+one unchanged desktop Live progress edge differs by two pixels, maximum channel
+delta3. All 232 style sources are identical. All 13 named existing actions, 49
+existing top-level query/state/projection/helper declarations and the teams
+subscription are byte-identical; two page presentation adapters are new. Immutable
+846-file baseline/852-file after manifests and all 10 owned live files are verified.
+Evidence: `/tmp/legacy-challenges-{parity-summary,controller-proof,source-proof}.json`.
+
+Owned review load is **10 files, +928/−168 = 1,096 lines**, above the review nudge.
+Review regression/Realtime fixture assumptions first; skim the proven markup moves
+second; scrutinize the page's presentation flags/callback binding third. Remaining
+legacy Admin concerns include team-read lifetimes/assertion, synchronous busy
+locking, score/player/live layers and owned styles; none are claimed fixed here.
+
+## Phase 6i — visible platform control labels and table semantics
+
+Platform search/status now have visible native labels, and all seven table headers
+have column scope with a named Actions column. Existing controls, placeholders,
+options, handlers and behavior remain. The first shared FormLabel attempt inherited
+12px text at weight 1000 control type; review rejected that unnecessary typography change. Native
+wrappers preserve original16px text at weight 400 typography, line-height and color until the
+separate shared-styling slice can compose primitives without drift.
+
+Two new unit cases and both new desktop/mobile browser cases failed before the
+markup change. All **23 scoped units and20 browser cases** now pass. Eight
+before/after screenshot/computed pairs cover default/search focus/status focus/
+filtered at 393/1280px, retaining native values/focus/placeholder and exact SDK
+traces. Search keeps 46px height; select keeps 45px intrinsic height (desktop baseline
+48px was stretch; mobile unchanged). Visible inline labels/equal wells intentionally
+change arrangement and may wrap on mobile. All 232style and seven controller/
+query/type/route modules are identical. No pixel-neutral visual claim is made.
+Evidence: `/tmp/admin-labels-native-comparisons.json`,
+`/tmp/admin-labels-native-live-proof.json` and the labels-native-after PNGs.
+Review load: **four files, +118/−8 = 126 lines**. Keyboard focus still has the recorded
+legacy outline:none treatment; shared toolbar styling and its separately tested
+focus-ring fix remain queued.
+
+## Phase 6j — shared native frame for legacy pages
+
+Legacy join, gameplay, missing-player/loading views and leaderboard compose the
+shared PageFrame native main/div boundary. Caller layout classes remain unchanged
+in this extraction; owned layout/token migration follows separately. The public
+local frame reference uses div to avoid nesting main and mounts no connected
+controller. Native props/children pass through; no queries, state, navigation or
+persistence live in the frame. Removed explanatory JSX labels and replaced two
+error non-null assertions with equivalent explicit truthy guards while touching
+those routes; interaction contracts and query order remain unchanged.
+
+All **six mocked desktop/mobile legacy browser cases** pass before/after, covering
+native join validation, missing-player recovery, ledger scores and leaderboard
+navigation/filtering. Existing Game/participation/page-integration units pass.
+All **14 desktop/mobile join/error/missing/game/team/player/history state pairs**
+are pixel-exact and preserve DOM/control values/focus/geometry/all standard computed
+properties, normalizing only the new page-frame class. Evidence:
+`/tmp/legacy-pages-{before,after}-styled-*`, `/tmp/legacy-frame-{before,after}-browser.log`
+and `/tmp/legacy-frame-pixels.json`.
+
+The integrated immutable checkpoint passes **470 unit tests**, complete lint/format,
+upload-disabled production build, Playwright type checks and a forced strict
+TypeScript rebuild. Snapshot source/config remains frozen during browser jobs;
+live independent work continues. Final full-suite verification/desloppify and
+remaining legacy/V2 styling are still required.
+
 ## Queued phases for the full refactor
 
 Next: TV owned styles, platform accessibility/shared styles and legacy host layering. Catalogue cards, shell, filters, review/history and contribution bodies now

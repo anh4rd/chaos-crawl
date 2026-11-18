@@ -1,3 +1,4 @@
+import PageFrame from "../components/ui/PageFrame";
 import { useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import Card from "../components/ui/Card";
@@ -51,7 +52,7 @@ export default function Join() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-md space-y-6 p-6">
+    <PageFrame className="mx-auto min-h-screen max-w-md space-y-6 p-6">
       <header>
         <img
           src={`${import.meta.env.BASE_URL}Title.png`}
@@ -89,6 +90,6 @@ export default function Join() {
           </div>
         </form>
       </Card>
-    </main>
+    </PageFrame>
   );
 }
