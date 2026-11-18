@@ -296,10 +296,104 @@
 }
 
 .content-panel {
+  &--console {
+    border-radius: (layout.$pixel-unit * 5.5);
+    padding: (layout.$pixel-unit * 4.25);
+    box-shadow: 0 (layout.$pixel-unit * 1.75) 0 colors.$console-panel-shadow;
+  }
+  &--console-white {
+    background: colors.$white;
+    color: colors.$ink;
+  }
+  &--console-tint {
+    background: colors.$console-panel-tint;
+    border: (layout.$pixel-unit * 0.25) solid colors.$plan-navigation-border;
+    color: colors.$white;
+  }
+  &--console-tint .overline--console {
+    color: colors.$white;
+  }
+  &--console-card h3 {
+    margin: 0;
+    color: colors.$ink;
+    font-size: fonts.$size-label;
+    font-weight: fonts.$weight-heading;
+  }
+  &--console-card {
+    padding: (layout.$pixel-unit * 3);
+    border-radius: (layout.$pixel-unit * 3.75);
+    background: colors.$white;
+    color: colors.$ink;
+  }
+  &--console-card p {
+    margin: (layout.$pixel-unit * 1.75) 0 (layout.$pixel-unit * 2);
+    color: colors.$console-card-copy;
+    font-size: fonts.$size-small;
+    line-height: 1.4;
+  }
+}
+
+.content-panel {
+  &--private-feed {
+    margin-top: layout.$pixel-unit * -0.5;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    box-shadow: none;
+  }
+}
+
+.content-panel {
+  &--ledger {
+    padding: layout.$spacing-unit * 4;
+    border: layout.$pixel-unit * 0.25 solid colors.$legacy-border;
+    border-radius: layout.$spacing-unit * 3;
+    background-color: color-mix(in oklab, colors.$black 50%, transparent);
+  }
+  &--scheduled {
+    margin-top: layout.$spacing-unit * 4;
+    padding: layout.$spacing-unit * 3;
+    border: layout.$pixel-unit * 0.25 solid
+      color-mix(in oklab, colors.$legacy-warning-border 60%, transparent);
+    border-radius: layout.$spacing-unit * 3;
+    background-color: color-mix(
+      in oklab,
+      colors.$legacy-warning-surface 20%,
+      transparent
+    );
+  }
+  &--ranking {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: layout.$spacing-unit * 3;
+    background-color: color-mix(in oklab, colors.$black 50%, transparent);
+    padding: layout.$spacing-unit * 3;
+  }
+  &--round,
   &--challenge {
     border-radius: layout.$radius-lg;
     border: layout.$session-border-width solid colors.$input-border;
     background-color: color-mix(in oklab, colors.$black 70%, transparent);
     padding: layout.$spacing-unit * 4;
+  }
+  &--round.content-panel--live {
+    border-color: colors.$legacy-yellow;
+    background-color: colors.$input-border;
+  }
+  &--round.content-panel--past {
+    border-color: colors.$legacy-border;
+    background-color: colors.$legacy-stat-surface;
+    opacity: 0.6;
+  }
+  &--challenge.content-panel--complete {
+    border-color: colors.$legacy-success-border;
+    background-color: color-mix(
+      in oklab,
+      colors.$legacy-success-surface 40%,
+      transparent
+    );
   }
 }

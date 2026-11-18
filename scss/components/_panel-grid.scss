@@ -58,3 +58,72 @@
     }
   }
 }
+
+.panel-grid {
+  &--console-list {
+    grid-template-columns: none;
+    align-items: normal;
+  }
+  &--console-roster {
+    grid-template-columns: none;
+    align-items: normal;
+  }
+  &--console-ranking {
+    grid-template-columns: none;
+    align-items: normal;
+  }
+  &--console-list {
+    display: grid;
+    gap: (layout.$pixel-unit * 3);
+    margin-top: (layout.$pixel-unit * 3.25);
+  }
+  &--console-ranking {
+    display: grid;
+    gap: (layout.$pixel-unit * 1.75);
+    margin: (layout.$pixel-unit * 3) 0 (layout.$pixel-unit * 3.75);
+  }
+  &--console-roster {
+    display: grid;
+    gap: (layout.$pixel-unit * 2.75);
+    margin-top: (layout.$pixel-unit * 3.5);
+  }
+}
+
+.panel-grid {
+  &--private-feed {
+    grid-template-columns: none;
+    align-items: normal;
+    gap: layout.$pixel-unit * 3;
+  }
+}
+
+.panel-grid {
+  &--feed,
+  &--feed-tight,
+  &--feed-page,
+  &--feed-feedback {
+    display: block;
+    grid-template-columns: none;
+    align-items: normal;
+    gap: normal;
+  }
+  &--feed,
+  &--feed-tight {
+    margin-top: layout.$spacing-unit * 4;
+  }
+  &--feed-page {
+    margin-top: layout.$spacing-unit * 6;
+  }
+  &--feed > :where(:not(:last-child)) {
+    margin-block: 0 layout.$spacing-unit * 4;
+  }
+  &--feed-tight > :where(:not(:last-child)) {
+    margin-block: 0 layout.$spacing-unit * 3;
+  }
+  &--feed-page > :where(:not(:last-child)) {
+    margin-block: 0 layout.$spacing-unit * 6;
+  }
+  &--feed-feedback > :where(:not(:last-child)) {
+    margin-block: 0 layout.$spacing-unit * 2;
+  }
+}

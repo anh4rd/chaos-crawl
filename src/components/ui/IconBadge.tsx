@@ -19,7 +19,10 @@ export default function IconBadge({
           | "stage"
           | "stage-break"
           | "reveal"
-          | "entity";
+          | "entity"
+          | "console-challenge"
+          | "console-challenge-lime"
+          | "console-item";
         children: ReactNode;
         icon?: never;
       }
@@ -28,7 +31,7 @@ export default function IconBadge({
   return (
     <Container
       {...props}
-      className={`icon-badge icon-badge--${tone}${variant ? ` icon-badge--${variant}` : ""} ${className}`.trim()}
+      className={`icon-badge icon-badge--${tone}${variant === "console-challenge-lime" ? " icon-badge--console-challenge" : ""}${variant ? ` icon-badge--${variant}` : ""} ${className}`.trim()}
     >
       {children ?? (icon && <Icon name={icon} className="icon--size-22" />)}
     </Container>

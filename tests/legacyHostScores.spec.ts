@@ -118,7 +118,7 @@ test("legacy team deductions retain drafts across tabs and display reset command
   await expect(page.getByLabel("Points", { exact: true })).toHaveValue("9");
   await expect(
     page.getByRole("button", { name: "Team scores", exact: true }),
-  ).toHaveClass("is-selected");
+  ).toHaveClass(/btn--console-selected/);
   await activateByKeyboard(
     page,
     page.getByRole("button", { name: "Dock points", exact: true }),

@@ -26,7 +26,7 @@ test("legacy host challenges preserve round order, scheduled/current controls, s
   const { backend, writes } = await installLegacyHostChallenges(page);
   await page.clock.setFixedTime(new Date("2026-11-17T12:00:00Z"));
   await openChallenges(page);
-  await expect(page.locator(".host-v2__challenge-list-item h3")).toHaveText([
+  await expect(page.locator(".challenge-item h3")).toHaveText([
     "Past challenge",
     "Current challenge",
     "Later challenge",
@@ -61,14 +61,12 @@ test("legacy host challenges preserve round order, scheduled/current controls, s
     page,
     page.getByRole("button", { name: "Scores", exact: true }),
   );
-  await expect(page.locator(".host-v2__leader-row")).toHaveText(["1Pat10 pts"]);
+  await expect(page.locator(".ranking-row")).toHaveText(["1Pat10 pts"]);
   await activateByKeyboard(
     page,
     page.getByRole("button", { name: "Team scores", exact: true }),
   );
-  await expect(page.locator(".host-v2__leader-row")).toHaveText([
-    "1Ducks15 pts",
-  ]);
+  await expect(page.locator(".ranking-row")).toHaveText(["1Ducks15 pts"]);
   expect(writes).toHaveLength(0);
   backend.verify();
 });
@@ -150,7 +148,7 @@ test("legacy host empty challenge collections retain their message and read-only
   await expect(
     page.getByText("No active side challenges found.", { exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".host-v2__challenge-list-item")).toHaveCount(0);
+  await expect(page.locator(".challenge-item")).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Review", exact: true }),
   ).toHaveCount(0);

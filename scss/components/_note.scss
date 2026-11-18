@@ -142,3 +142,174 @@
     font-size: inherit;
   }
 }
+
+.note {
+  &--console-points {
+    display: inline;
+    margin: 0;
+  }
+  &--console-body {
+    display: inline;
+    margin: 0;
+  }
+  &--console-muted {
+    display: inline;
+    margin: 0;
+  }
+  &--console-empty {
+    display: inline;
+    margin: 0;
+  }
+  &--console-points {
+    display: inline-block;
+    margin-top: (layout.$pixel-unit * 1.75);
+    color: colors.$purple;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-heading;
+  }
+  &--console-body {
+    margin: (layout.$pixel-unit * 2) 0 0;
+    color: colors.$console-body-copy;
+    font-size: fonts.$size-small;
+    line-height: 1.5;
+  }
+  &--console-muted {
+    color: colors.$console-muted;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-medium-bold;
+  }
+  &--console-empty {
+    margin: (layout.$pixel-unit * 3) 0 (layout.$pixel-unit * 1);
+    color: colors.$console-muted;
+    font-size: fonts.$size-small;
+    line-height: 1.45;
+  }
+}
+
+.note {
+  &--console-body,
+  &--console-empty {
+    display: block;
+  }
+}
+p.note--console-muted {
+  display: block;
+}
+
+.note {
+  &--participant-count {
+    margin: layout.$pixel-unit * 3.75 0 0;
+    padding-top: layout.$pixel-unit * 3;
+    border-top: layout.$pixel-unit * 0.25 solid
+      colors.$participant-count-divider;
+    color: colors.$purple;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-extra-bold;
+  }
+}
+
+.note {
+  &--description,
+  &--metadata,
+  &--body,
+  &--empty,
+  &--empty-muted,
+  &--detail,
+  &--status,
+  &--help,
+  &--summary,
+  &--warning,
+  &--success,
+  &--secondary,
+  &--quiet,
+  &--media,
+  &--schedule,
+  &--emphasis,
+  &--total {
+    margin: 0;
+    font-size: inherit;
+    line-height: inherit;
+    font-weight: inherit;
+    color: inherit;
+  }
+  &--description {
+    margin-top: layout.$spacing-unit * 2;
+    font-size: fonts.$size-legacy-small;
+    line-height: fonts.$line-height-legacy-small;
+    color: colors.$unavailable-upload-copy;
+  }
+  &--metadata {
+    margin-top: layout.$spacing-unit * 1;
+    font-size: fonts.$size-legacy-small;
+    line-height: fonts.$line-height-legacy-small;
+    color: colors.$unavailable-upload-copy;
+  }
+  &--body {
+    margin-top: layout.$spacing-unit * 2;
+  }
+  &--empty {
+    margin-top: layout.$spacing-unit * 4;
+  }
+  &--empty-muted {
+    margin-top: layout.$spacing-unit * 4;
+    color: colors.$unavailable-upload-copy;
+  }
+  &--detail {
+    margin-top: layout.$spacing-unit * 1;
+  }
+  &--status {
+    margin-top: layout.$spacing-unit * 1;
+    font-weight: fonts.$weight-bold;
+  }
+  &--help {
+    margin-top: layout.$spacing-unit * 2;
+    font-size: fonts.$size-legacy-small;
+    line-height: fonts.$line-height-legacy-small;
+  }
+  &--summary {
+    margin-top: layout.$spacing-unit * 3;
+    font-size: fonts.$size-brand-mobile;
+    line-height: fonts.$line-height-legacy-emphasis;
+    font-weight: fonts.$weight-bold;
+  }
+  &--warning {
+    margin-top: layout.$spacing-unit * 4;
+    color: colors.$legacy-yellow;
+  }
+  &--success {
+    margin-top: layout.$spacing-unit * 4;
+    color: colors.$legacy-positive;
+    font-weight: fonts.$weight-bold;
+  }
+  &--secondary {
+    margin-top: layout.$spacing-unit * 1;
+    font-size: fonts.$size-legacy-small;
+    line-height: fonts.$line-height-legacy-small;
+    color: colors.$legacy-muted-light;
+  }
+  &--quiet {
+    margin-top: layout.$spacing-unit * 1;
+    font-size: fonts.$size-legacy-small;
+    line-height: fonts.$line-height-legacy-small;
+    color: colors.$legacy-quiet;
+  }
+  &--media {
+    margin-top: layout.$spacing-unit * 2;
+    font-size: fonts.$size-legacy-small;
+    line-height: fonts.$line-height-legacy-small;
+    color: colors.$legacy-pink-light;
+  }
+  &--schedule {
+    color: colors.$legacy-warning-strong;
+    font-weight: fonts.$weight-bold;
+  }
+  &--emphasis {
+    margin-top: layout.$spacing-unit * 2;
+    font-weight: fonts.$weight-bold;
+  }
+  &--total {
+    font-size: fonts.$size-legacy-emphasis;
+    line-height: fonts.$line-height-legacy-emphasis;
+    font-weight: fonts.$weight-bold;
+  }
+}

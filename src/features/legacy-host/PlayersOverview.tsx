@@ -1,3 +1,5 @@
+import Overline from "../../components/ui/Overline";
+import PageIntroduction from "../../components/ui/PageIntroduction";
 import TeamPanel from "./TeamPanel";
 import PlayerRoster from "./PlayerRoster";
 import type { TeamPanelModel, PlayerRosterModel } from "./types";
@@ -10,11 +12,13 @@ export default function PlayersOverview({
 }) {
   return (
     <>
-      <div className="host-v2__page-intro">
-        <p className="host-v2__eyebrow">THE PARTY</p>
+      <PageIntroduction>
+        <Overline variant="console-eyebrow" as="p">
+          THE PARTY
+        </Overline>
         <h2>Players & teams</h2>
         <p>Manage your roster and keep teams balanced.</p>
-      </div>
+      </PageIntroduction>
       <TeamPanel {...teams} />
       <PlayerRoster {...roster} />
     </>

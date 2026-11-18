@@ -1,3 +1,6 @@
+import LiveStatus from "../../components/ui/LiveStatus";
+import DisplayHeading from "../../components/ui/DisplayHeading";
+import Overline from "../../components/ui/Overline";
 import Icon from "../../components/ui/Icon";
 export default function HostGameHeader({
   currentAvailable,
@@ -7,20 +10,21 @@ export default function HostGameHeader({
   playerCount: number;
 }) {
   return (
-    <header className="host-v2__header">
-      <div className="host-v2__brand-row">
+    <header className="legacy-host__header">
+      <div className="legacy-host__brand-row">
         <div>
-          <p className="host-v2__eyebrow">CHAOS · HOST CONTROL</p>
-          <h1 className="host-v2__brand">Run the game</h1>
+          <Overline variant="console-eyebrow" as="p">
+            CHAOS · HOST CONTROL
+          </Overline>
+          <DisplayHeading variant="console-brand" as="h1">
+            Run the game
+          </DisplayHeading>
         </div>
-        <span
-          className={`host-v2__live-pill ${currentAvailable ? "is-live" : "is-ready"}`}
-        >
-          <span className="host-v2__live-dot" />
+        <LiveStatus live={currentAvailable}>
           {currentAvailable ? "LIVE" : "READY"}
-        </span>
+        </LiveStatus>
       </div>
-      <div className="host-v2__event-row">
+      <div className="legacy-host__event-row">
         <span>
           <Icon name="map-pin" className="icon--size-14" /> One venue · No
           travel between rounds

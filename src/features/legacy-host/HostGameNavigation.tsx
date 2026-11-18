@@ -1,3 +1,4 @@
+import Button from "../../components/ui/Button";
 import Icon, { type IconName } from "../../components/ui/Icon";
 import type { HostTab } from "./types";
 const TAB_ITEMS: Array<{
@@ -18,18 +19,20 @@ export default function HostGameNavigation({
   onTabChange: (tab: HostTab) => void;
 }) {
   return (
-    <nav className="host-v2__bottom-nav" aria-label="Host navigation">
+    <nav className="legacy-host__navigation" aria-label="Host navigation">
       {TAB_ITEMS.map(({ id, label, icon }) => (
-        <button
+        <Button
+          fullWidth={false}
+          variant="console-navigation"
           type="button"
           key={id}
-          className={activeTab === id ? "is-active" : ""}
+          className={activeTab === id ? "btn--console-active" : ""}
           aria-current={activeTab === id ? "page" : undefined}
           onClick={() => onTabChange(id)}
         >
           <Icon name={icon} className="icon--size-19" strokeWidth={2.5} />
           <span>{label}</span>
-        </button>
+        </Button>
       ))}
     </nav>
   );

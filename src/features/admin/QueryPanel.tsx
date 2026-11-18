@@ -1,12 +1,11 @@
+import PanelGrid from "../../components/ui/PanelGrid";
 import { useEffect, useState, type ReactNode } from "react";
 import Button from "../../components/ui/Button";
-
 type QueryStatus = {
   loading: boolean;
   error: Error | null;
   reload: () => Promise<void>;
 };
-
 /** Keep a usable snapshot visible during refresh, but never mistake a failed
  * first load for a successful empty collection. */
 export default function QueryPanel({
@@ -29,7 +28,7 @@ export default function QueryPanel({
       {queries.map(
         ({ error, reload }, index) =>
           error && (
-            <div key={index} className="space-y-2">
+            <PanelGrid key={index} variant="feed-feedback">
               <p role="alert">{error.message}</p>
               <Button
                 type="button"
@@ -39,7 +38,7 @@ export default function QueryPanel({
               >
                 Try again
               </Button>
-            </div>
+            </PanelGrid>
           ),
       )}
       {!ready && queries.some((query) => query.loading) && <p>{loadingText}</p>}

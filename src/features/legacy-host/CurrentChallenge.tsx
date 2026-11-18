@@ -1,3 +1,12 @@
+import EmptyState from "../../components/ui/EmptyState";
+import Button from "../../components/ui/Button";
+import ContentCopy from "../../components/ui/ContentCopy";
+import IconBadge from "../../components/ui/IconBadge";
+import ControlRow from "../../components/ui/ControlRow";
+import Badge from "../../components/ui/Badge";
+import Overline from "../../components/ui/Overline";
+import PanelHeading from "../../components/ui/PanelHeading";
+import ContentPanel from "../../components/ui/ContentPanel";
 import Icon from "../../components/ui/Icon";
 import type { CurrentChallengeModel } from "./types";
 
@@ -7,54 +16,53 @@ export default function CurrentChallenge({
   onReview,
 }: CurrentChallengeModel) {
   return (
-    <section className="host-v2__panel host-v2__panel--white">
-      <div className="host-v2__panel-topline">
-        <span className="host-v2__kicker">
+    <ContentPanel variant="console-white">
+      <PanelHeading variant="console">
+        <Overline variant="console">
           <Icon name="radio" className="icon--size-14" /> NOW
-        </span>
+        </Overline>
         {currentChallenge && (
-          <span className="host-v2__status host-v2__status--live">
-            Live challenge
-          </span>
+          <Badge variant="console-live">Live challenge</Badge>
         )}
-      </div>
+      </PanelHeading>
       {currentChallenge ? (
         <>
-          <div className="host-v2__challenge-title-row">
-            <div className="host-v2__challenge-art">
+          <ControlRow variant="console-preview">
+            <IconBadge variant="console-challenge" as="div">
               <Icon name="flag" className="icon--size-28" />
-            </div>
-            <div className="host-v2__grow">
+            </IconBadge>
+            <ContentCopy variant="console">
               <h2>{currentChallenge.title}</h2>
               <p>
                 {currentChallenge.description ||
                   "No extra instructions for this challenge."}
               </p>
-            </div>
-            <span className="host-v2__points">
+            </ContentCopy>
+            <Badge variant="console-points">
               +{currentChallenge.points} pts
-            </span>
-          </div>
-          <div className="host-v2__meta-row">
+            </Badge>
+          </ControlRow>
+          <ControlRow variant="console-meta">
             <span>
               <Icon name="check-circle2" className="icon--size-15" />{" "}
               {submissionCount} {"submissions"}
             </span>
-            <button
+            <Button
               type="button"
-              className="host-v2__text-button"
+              fullWidth={false}
+              variant="console-text"
               onClick={onReview}
             >
               {"Review"} <Icon name="chevron-right" className="icon--size-16" />
-            </button>
-          </div>
+            </Button>
+          </ControlRow>
         </>
       ) : (
-        <div className="host-v2__empty">
+        <EmptyState variant="console">
           <h2>No challenge is live yet</h2>
           <p>Reveal the first challenge when everyone is ready.</p>
-        </div>
+        </EmptyState>
       )}
-    </section>
+    </ContentPanel>
   );
 }

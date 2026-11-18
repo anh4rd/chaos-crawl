@@ -1,0 +1,14 @@
+@use "../variables/layout";
+@use "../variables/colors";
+
+.challenge-item {
+  display: flex;
+  align-items: flex-start;
+  gap: (layout.$pixel-unit * 2.5);
+  padding-top: (layout.$pixel-unit * 3);
+  border-top: (layout.$pixel-unit * 0.25) solid colors.$outline-divider;
+  &:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+}

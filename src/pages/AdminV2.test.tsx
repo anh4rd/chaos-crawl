@@ -309,7 +309,7 @@ it("preserves grouped challenge ordering, current/scheduled controls, fallback c
   configureChallenges();
   openChallenges();
   expect(
-    [...document.querySelectorAll(".host-v2__challenge-list-item h3")].map(
+    [...document.querySelectorAll(".challenge-item h3")].map(
       (heading) => heading.textContent,
     ),
   ).toEqual([
@@ -601,7 +601,7 @@ it("score target, action, selected team, drafts and leaderboard view survive lea
   expect(
     screen
       .getByRole("button", { name: "Team scores" })
-      .classList.contains("is-selected"),
+      .classList.contains("btn--console-selected"),
   ).toBe(true);
   expect(awardScore).not.toHaveBeenCalled();
 });

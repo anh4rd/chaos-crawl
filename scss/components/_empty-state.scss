@@ -65,3 +65,27 @@
     }
   }
 }
+
+.empty-state {
+  &--console {
+    text-align: start;
+    color: inherit;
+  }
+  &--console {
+    padding: (layout.$pixel-unit * 2.5) 0 (layout.$pixel-unit * 0.75);
+  }
+  &--console h2 {
+    margin: 0;
+    color: colors.$ink !important;
+    font-size: fonts.$size-brand-mobile !important;
+    font-weight: fonts.$weight-action !important;
+    letter-spacing: 0 !important;
+    text-shadow: none !important;
+  }
+  &--console p {
+    margin: (layout.$pixel-unit * 2) 0 0;
+    color: colors.$console-body-copy;
+    font-size: fonts.$size-small;
+    line-height: 1.5;
+  }
+}

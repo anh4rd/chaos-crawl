@@ -1,0 +1,17 @@
+@use "../variables/colors";
+@use "../variables/effects";
+@use "../variables/layout";
+@use "../variables/layers";
+.admin-navigation {
+  position: sticky;
+  top: 0;
+  z-index: layers.$admin-navigation;
+  margin-inline: layout.$spacing-unit * -6;
+  margin-top: layout.$spacing-unit * 6;
+  overflow-x: auto;
+  border-color: colors.$legacy-dark-surface;
+  border-block: layout.$pixel-unit * 0.25 solid colors.$legacy-dark-surface;
+  background-color: color-mix(in oklab, colors.$black 95%, transparent);
+  padding: layout.$spacing-unit * 3 layout.$spacing-unit * 6;
+  backdrop-filter: blur(layout.$pixel-unit * 2);
+}

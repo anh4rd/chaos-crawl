@@ -1,3 +1,7 @@
+import ContentPanel from "../../../components/ui/ContentPanel";
+import PanelGrid from "../../../components/ui/PanelGrid";
+import Note from "../../../components/ui/Note";
+import DisplayHeading from "../../../components/ui/DisplayHeading";
 import Card from "../../../components/ui/Card";
 export interface CompletionReviewItem {
   id: string | number;
@@ -14,35 +18,32 @@ export default function CompletionReviewView({
 }) {
   return (
     <Card>
-      <h2 className="text-2xl font-bold">Challenge Review</h2>
+      <DisplayHeading variant="plain">Challenge Review</DisplayHeading>
 
-      <p className="mt-2 text-sm text-zinc-400">
+      <Note variant="description">
         Completion records and points linked to each challenge.
-      </p>
+      </Note>
 
       {completions.length === 0 ? (
-        <p className="mt-4">No completions yet.</p>
+        <Note variant="empty">No completions yet.</Note>
       ) : (
-        <div className="mt-4 space-y-3">
+        <PanelGrid variant="feed-tight">
           {completions.map((completion) => (
-            <div
-              key={completion.id}
-              className="rounded-xl border border-zinc-700 bg-black/50 p-4"
-            >
+            <ContentPanel key={completion.id} as="div" variant="ledger">
               <strong>{completion.playerName}</strong>
 
-              <p className="mt-1">{completion.challengeTitle}</p>
+              <Note variant="detail">{completion.challengeTitle}</Note>
 
-              <p className="mt-1 text-sm text-zinc-400">
+              <Note variant="metadata">
                 {completion.kind} • +{completion.points} points
-              </p>
+              </Note>
 
               {completion.hasMedia && (
-                <p className="mt-2 text-sm text-pink-400">📸 Media attached</p>
+                <Note variant="media">📸 Media attached</Note>
               )}
-            </div>
+            </ContentPanel>
           ))}
-        </div>
+        </PanelGrid>
       )}
     </Card>
   );

@@ -1,3 +1,7 @@
+import Button from "../../components/ui/Button";
+import Overline from "../../components/ui/Overline";
+import PanelHeading from "../../components/ui/PanelHeading";
+import ContentPanel from "../../components/ui/ContentPanel";
 import Icon from "../../components/ui/Icon";
 import type { ScoreDisplayControlsModel } from "./types";
 
@@ -7,26 +11,28 @@ export default function ScoreDisplayControls({
   onReturnToGame,
 }: ScoreDisplayControlsModel) {
   return (
-    <section className="host-v2__panel host-v2__panel--tint">
-      <div className="host-v2__panel-topline">
-        <span className="host-v2__kicker">DISPLAY CONTROLS</span>
-      </div>
-      <button
+    <ContentPanel variant="console-tint">
+      <PanelHeading variant="console">
+        <Overline variant="console">DISPLAY CONTROLS</Overline>
+      </PanelHeading>
+      <Button
         type="button"
-        className="host-v2__button host-v2__button--primary"
+        fullWidth={false}
+        variant="console-primary"
         onClick={onOpenSlideshow}
       >
         Open slideshow <Icon name="chevron-right" className="icon--size-17" />
-      </button>
+      </Button>
       {showVoteResults && (
-        <button
+        <Button
           type="button"
-          className="host-v2__button host-v2__button--subtle"
+          fullWidth={false}
+          variant="console-subtle"
           onClick={onReturnToGame}
         >
           Return everyone to game
-        </button>
+        </Button>
       )}
-    </section>
+    </ContentPanel>
   );
 }

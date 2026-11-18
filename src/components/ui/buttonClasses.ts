@@ -1,4 +1,16 @@
 export type ButtonVariant =
+  | "navigation-tab"
+  | "participant-rejoin"
+  | "participant-leaderboard"
+  | "console-primary"
+  | "console-subtle"
+  | "console-text"
+  | "console-square"
+  | "console-small"
+  | "console-quiet"
+  | "console-remove"
+  | "console-segment"
+  | "console-navigation"
   | "table-action"
   | "back-link"
   | "panel-close"
@@ -148,5 +160,5 @@ export function buttonClasses({
   const controlBase = variant?.startsWith("control-") ? " btn--control" : "";
   const flowBase = variant === "flow-action" ? " btn--flow" : "";
   const dialogBase = variant === "dialog-primary" ? " btn--dialog" : "";
-  return `btn${moderationClass}${editorClass}${ideaActionClass}${ideaSaveClass}${reviewClass}${sessionClass}${variant === "session-send" ? " btn--session-send" : ""}${roundClass}${chipBase}${dialogBase}${controlBase}${flowBase}${comicTone ? " btn--comic" : ""}${appearance === "comic-icon-danger" ? " btn--comic-icon" : ""}${appearance ? ` btn--${appearance}` : ""}${fullWidth ? " btn--block" : ""}${comic && fullWidth ? " btn--comic-block" : ""} ${className}`.trim();
+  return `btn${variant === "console-primary" || variant === "console-subtle" ? " btn--console" : ""}${variant === "console-quiet" ? " btn--console-small" : ""}${moderationClass}${editorClass}${ideaActionClass}${ideaSaveClass}${reviewClass}${sessionClass}${variant === "session-send" ? " btn--session-send" : ""}${roundClass}${chipBase}${dialogBase}${controlBase}${flowBase}${comicTone ? " btn--comic" : ""}${appearance === "comic-icon-danger" ? " btn--comic-icon" : ""}${appearance ? ` btn--${appearance}` : ""}${fullWidth ? " btn--block" : ""}${comic && fullWidth ? " btn--comic-block" : ""} ${className}`.trim();
 }

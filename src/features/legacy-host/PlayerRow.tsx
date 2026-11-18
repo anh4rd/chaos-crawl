@@ -1,4 +1,6 @@
-import Icon from "../../components/ui/Icon";
+import IconButton from "../../components/ui/IconButton";
+import Avatar from "../../components/ui/Avatar";
+import FormLabel from "../../components/ui/FormLabel";
 import type { PlayerRowModel } from "./types";
 export default function PlayerRow({
   player,
@@ -8,19 +10,22 @@ export default function PlayerRow({
   teams: string[];
 }) {
   return (
-    <article className="host-v2__player-row">
-      <div className="host-v2__avatar" aria-hidden="true">
-        {player.initial}
-      </div>
-      <div className="host-v2__grow">
+    <article className="roster-row">
+      <Avatar
+        as="div"
+        variant="console"
+        name={player.initial}
+        aria-hidden="true"
+      />
+      <div className="roster-row__controls">
         <input
           aria-label={`Rename ${player.name}`}
-          className="host-v2__player-name"
+          className="roster-row__name"
           defaultValue={player.name}
           key={`${player.id}-${player.name}`}
           onBlur={(event) => void player.onRename(event.target.value)}
         />
-        <label className="host-v2__team-select">
+        <FormLabel variant="console-team">
           <span>Team</span>
           <select
             value={player.team}
@@ -33,16 +38,17 @@ export default function PlayerRow({
               </option>
             ))}
           </select>
-        </label>
+        </FormLabel>
       </div>
-      <button
+      <IconButton
         type="button"
-        className="host-v2__remove-button"
-        aria-label={`Remove ${player.name}`}
+
+        variant="console-remove"
+        label={`Remove ${player.name}`}
         onClick={player.onRemove}
-      >
-        <Icon name="x" className="icon--size-16" />
-      </button>
+        icon="x"
+        iconClassName="icon--size-16"
+      />
     </article>
   );
 }

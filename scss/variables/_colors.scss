@@ -549,12 +549,8 @@ $preview-dock-shadow: #1f0f68;
 $preview-live-caption: #151039;
 $preview-upload-surface: #c4ed00;
 $preview-description: #3b3745;
-$preview-challenge-art-surface: #f5edff;
-$preview-game-art: linear-gradient(
-  135deg,
-  $preview-challenge-art-surface,
-  $white
-);
+$preview-game-art-surface: #f5edff;
+$preview-game-art: linear-gradient(135deg, $preview-game-art-surface, $white);
 $preview-challenge-art:
   radial-gradient(circle, $challenge-icon-glow 0 34%, transparent 35%),
   radial-gradient(
@@ -571,6 +567,39 @@ $preview-side-art:
   ),
   $preview-side-art-surface;
 
+$console-glow: rgba(221, 214, 255, 0.34);
+$console-mid-glow: rgba(117, 84, 252, 0.8);
+$console-violet-light: #8b70ff;
+$console-header-border: rgba(255, 255, 255, 0.16);
+$console-header-surface: rgba(70, 39, 230, 0.72);
+$console-live-surface: rgba(35, 22, 110, 0.86);
+$console-ready-surface: rgba(255, 255, 255, 0.18);
+$console-event-copy: rgba(255, 255, 255, 0.85);
+$console-progress-copy: rgba(255, 255, 255, 0.88);
+$console-progress-track: rgba(35, 22, 110, 0.42);
+$console-panel-shadow: rgba(35, 22, 110, 0.15);
+$console-panel-tint: rgba(35, 22, 110, 0.36);
+$console-art: #fbd5e4;
+$console-art-lime: #efffc4;
+$console-copy: #383347;
+$console-points-shadow: rgba(125, 20, 67, 0.16);
+$console-action-shadow: rgba(35, 22, 110, 0.18);
+$console-control-border: #d6d0e6;
+$console-body-copy: #5a546a;
+$console-item-art: #f8d8e6;
+$console-disabled: #ece8f5;
+$console-disabled-copy: #6b6578;
+$console-card-copy: #514b60;
+$console-remove: #ffe1ec;
+$console-remove-copy: #a91e50;
+$console-navigation-border: rgba(255, 255, 255, 0.22);
+$console-navigation-surface: rgba(35, 22, 110, 0.97);
+$console-navigation-active-shadow: rgba(255, 255, 255, 0.08);
+$console-frame-border: rgba(255, 255, 255, 0.28);
+
+$console-muted: #716b83;
+
+// Existing Tailwind palette promoted for legacy player parity.
 $legacy-yellow: oklch(85.2% 0.199 91.936);
 $legacy-positive: oklch(79.2% 0.209 151.711);
 $legacy-pink-soft: oklch(82.3% 0.12 346.018);
@@ -578,3 +607,32 @@ $legacy-pink-light: oklch(71.8% 0.202 349.761);
 $legacy-pink-dark: oklch(28.4% 0.109 3.907);
 $legacy-muted-light: oklch(87.1% 0.006 286.286);
 $legacy-stat-surface: oklch(21% 0.006 285.885);
+
+$console-background:
+  radial-gradient(ellipse at 12% 16%, $console-glow 0 13%, transparent 30%),
+  radial-gradient(ellipse at 92% 38%, $console-mid-glow 0 15%, transparent 34%),
+  conic-gradient(
+    from 35deg at 54% 52%,
+    $purple,
+    $purple-mid,
+    $purple,
+    $console-violet-light,
+    $purple
+  );
+
+$participant-count-divider: #eae7f3;
+$participant-sync-copy: rgba($white, 0.7);
+$live-indicator: $preview-live;
+$live-indicator-glow: rgba($live-indicator, 0.17);
+
+$legacy-border: oklch(37% 0.013 285.805);
+$legacy-dark-surface: oklch(27.4% 0.006 286.033);
+$legacy-quiet: oklch(55.2% 0.016 285.938);
+$legacy-success-border: oklch(72.3% 0.219 149.579);
+$legacy-success-surface: oklch(26.6% 0.065 152.934);
+$legacy-completion-surface: oklch(39.3% 0.095 152.535);
+$legacy-warning-strong: oklch(90.5% 0.182 98.111);
+$legacy-warning-border: oklch(79.5% 0.184 86.047);
+$legacy-warning-surface: oklch(28.6% 0.066 53.813);
+
+$preview-challenge-art-surface: #f5edff;

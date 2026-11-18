@@ -9,6 +9,7 @@ export default function Note({
 }: HTMLAttributes<HTMLElement> & {
   compact?: boolean;
   variant?:
+    | "participant-count"
     | "playback-loading"
     | "playback-waiting"
     | "playback-notice"
@@ -23,7 +24,28 @@ export default function Note({
     | "access-help"
     | "collection-loading"
     | "inverse"
-    | "record";
+    | "record"
+    | "console-points"
+    | "console-body"
+    | "console-muted"
+    | "console-empty"
+    | "description"
+    | "metadata"
+    | "body"
+    | "empty"
+    | "empty-muted"
+    | "detail"
+    | "status"
+    | "help"
+    | "summary"
+    | "warning"
+    | "success"
+    | "secondary"
+    | "quiet"
+    | "media"
+    | "schedule"
+    | "emphasis"
+    | "total";
   as?: "p" | "output" | "small" | "div" | "span";
 }) {
   return (

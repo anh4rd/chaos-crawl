@@ -1,3 +1,8 @@
+import ContentPanel from "../../../components/ui/ContentPanel";
+import PanelGrid from "../../../components/ui/PanelGrid";
+import NativeSelect from "../../../components/ui/NativeSelect";
+import Note from "../../../components/ui/Note";
+import DisplayHeading from "../../../components/ui/DisplayHeading";
 import Card from "../../../components/ui/Card";
 import Button from "../../../components/ui/Button";
 export default function VotingView({
@@ -15,7 +20,11 @@ export default function VotingView({
     voting_open: boolean;
     show_vote_results: boolean;
   } | null;
-  liveResults: readonly { id: string; name: string; votes: number }[];
+  liveResults: readonly {
+    id: string;
+    name: string;
+    votes: number;
+  }[];
   onTarget: (value: string) => Promise<void>;
   onOpenVoting: () => Promise<void>;
   onCloseVoting: () => Promise<void>;
@@ -27,23 +36,23 @@ export default function VotingView({
       {game ? (
         <>
           <Card>
-            <h2 className="text-xl font-bold">Voting</h2>
+            <DisplayHeading variant="plain-compact">Voting</DisplayHeading>
 
-            <p className="mt-2 text-sm text-zinc-400">
+            <Note variant="description">
               Current challenge: {game.current_challenge}
-            </p>
+            </Note>
 
-            <select
+            <NativeSelect
               value={game.voting_target ?? "player"}
               onChange={(event) => onTarget(event.target.value)}
-              className="mt-4 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
+              spacing="wide"
             >
               <option value="player">Vote for Player</option>
 
               <option value="team">Vote for Team</option>
-            </select>
+            </NativeSelect>
 
-            <div className="mt-4 space-y-3">
+            <PanelGrid variant="feed-tight">
               {!game.voting_open && !game.show_vote_results && (
                 <Button type="button" onClick={onOpenVoting}>
                   Open Voting
@@ -79,33 +88,34 @@ export default function VotingView({
                   </Button>
                 </>
               )}
-            </div>
+            </PanelGrid>
           </Card>
 
           <Card>
-            <h2 className="text-xl font-bold">Live Voting Results</h2>
+            <DisplayHeading variant="plain-compact">
+              Live Voting Results
+            </DisplayHeading>
 
-            <p className="mt-2">{game.current_challenge}</p>
+            <Note variant="body">{game.current_challenge}</Note>
 
             {liveResults.length === 0 ? (
-              <p className="mt-4 text-zinc-400">No votes yet.</p>
+              <Note variant="empty-muted">No votes yet.</Note>
             ) : (
-              <div className="mt-4 space-y-3">
+              <PanelGrid variant="feed-tight">
                 {liveResults.map((result, index) => (
-                  <div
-                    key={result.id}
-                    className="flex items-center justify-between rounded-xl bg-black/50 p-3"
-                  >
+                  <ContentPanel key={result.id} as="div" variant="ranking">
                     <strong>
                       {index === 0 ? "👑 " : ""}
 
                       {result.name}
                     </strong>
 
-                    <span className="text-xl font-bold">{result.votes}</span>
-                  </div>
+                    <Note as="span" variant="total">
+                      {result.votes}
+                    </Note>
+                  </ContentPanel>
                 ))}
-              </div>
+              </PanelGrid>
             )}
           </Card>
         </>

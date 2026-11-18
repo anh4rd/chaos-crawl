@@ -1,14 +1,17 @@
+import PageFrame from "../../components/ui/PageFrame";
 import type { ReactNode } from "react";
 import HostGameHeader from "./HostGameHeader";
 import HostGameNavigation from "./HostGameNavigation";
 import type { HostTab } from "./types";
 export default function HostGameFrame({
+  contained = false,
   currentAvailable,
   playerCount,
   activeTab,
   onTabChange,
   children,
 }: {
+  contained?: boolean;
   currentAvailable: boolean;
   playerCount: number;
   activeTab: HostTab;
@@ -16,15 +19,19 @@ export default function HostGameFrame({
   children: ReactNode;
 }) {
   return (
-    <main className="host-v2">
-      <div className="host-v2__app">
+    <PageFrame
+      as={contained ? "div" : "main"}
+      variant="bare"
+      className={`legacy-host${contained ? " legacy-host--preview" : ""}`}
+    >
+      <div className="legacy-host__app">
         <HostGameHeader
           currentAvailable={currentAvailable}
           playerCount={playerCount}
         />
-        <div className="host-v2__content">{children}</div>
+        <div className="legacy-host__content">{children}</div>
         <HostGameNavigation activeTab={activeTab} onTabChange={onTabChange} />
       </div>
-    </main>
+    </PageFrame>
   );
 }

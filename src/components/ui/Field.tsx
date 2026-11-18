@@ -9,7 +9,7 @@ export function Field({
   label: string;
   hint?: string;
   children: ReactNode;
-  variant?: "comic" | "lobby";
+  variant?: "comic" | "lobby" | "console";
 }) {
   return (
     <label className={`field${variant ? ` field--${variant}` : ""}`}>

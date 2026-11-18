@@ -1,3 +1,6 @@
+import StepProgress from "../../components/ui/StepProgress";
+import Overline from "../../components/ui/Overline";
+import PanelHeading from "../../components/ui/PanelHeading";
 import type { RoundProgressModel } from "./types";
 
 export default function RoundProgress({
@@ -7,20 +10,20 @@ export default function RoundProgress({
   progressPercent,
 }: RoundProgressModel) {
   return (
-    <section className="host-v2__round-overview">
-      <div className="host-v2__section-heading">
+    <section className="round-progress">
+      <PanelHeading variant="console-section">
         <div>
-          <p className="host-v2__eyebrow">GAME PROGRESS</p>
+          <Overline variant="console-eyebrow" as="p">
+            GAME PROGRESS
+          </Overline>
           <h2>{roundLabel}</h2>
         </div>
-        <span className="host-v2__progress-number">
+        <span className="round-progress__number">
           {revealedCount}
           {" /"} {totalCount}
         </span>
-      </div>
-      <div className="host-v2__progress">
-        <span style={{ width: `${progressPercent}%` }} />
-      </div>
+      </PanelHeading>
+      <StepProgress variant="console" value={progressPercent} total={100} />
     </section>
   );
 }

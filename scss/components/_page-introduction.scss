@@ -1,0 +1,26 @@
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/colors";
+
+.page-introduction {
+  & h2 {
+    margin: 0;
+    color: colors.$white !important;
+    font-family: fonts.$family-console-display !important;
+    font-size: fonts.$size-art-symbol !important;
+    line-height: fonts.$line-height-console-section !important;
+    letter-spacing: fonts.$tracking-console-title !important;
+    text-shadow: (layout.$pixel-unit * 0.375) (layout.$pixel-unit * 0.375) 0
+      colors.$purple-dark !important;
+  }
+  padding: (layout.$pixel-unit * 1.75) (layout.$pixel-unit * 1)
+    (layout.$pixel-unit * 0.25);
+  & > p:last-child {
+    margin: (layout.$pixel-unit * 2.25) 0 0;
+    max-width: layout.$console-introduction-width;
+    color: colors.$stat-surface;
+    font-size: fonts.$size-label;
+    line-height: 1.45;
+    font-weight: fonts.$weight-hint;
+  }
+}

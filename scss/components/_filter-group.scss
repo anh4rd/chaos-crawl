@@ -27,3 +27,25 @@
     max-width: none;
   }
 }
+
+.filter-group {
+  &--console {
+    flex-wrap: nowrap;
+    border: 0;
+    border-style: solid;
+    width: auto;
+    max-width: none;
+  }
+  &--console {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: (layout.$pixel-unit * 1);
+    margin: (layout.$pixel-unit * 3.25) 0;
+    padding: (layout.$pixel-unit * 1);
+    border-radius: layout.$badge-radius;
+    background: colors.$hint-surface;
+  }
+  &--console-action .btn--console-segment.btn--console-selected {
+    background: colors.$pink;
+  }
+}

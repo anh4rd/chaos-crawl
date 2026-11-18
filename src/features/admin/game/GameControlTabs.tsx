@@ -1,12 +1,10 @@
+import RoundMovementControls from "./RoundMovementControls";
 import { useGameControls } from "./useGameControls";
 import QueryPanel from "../QueryPanel";
 import RoundChallenges from "./RoundChallenges";
 import LiveGameSelection from "./LiveGameSelection";
-import Card from "../../../components/ui/Card";
-import Button from "../../../components/ui/Button";
 import TonightControls from "./TonightControls";
 import ScreenControls from "./ScreenControls";
-
 export default function GameControlTabs({
   activeTab,
 }: {
@@ -30,24 +28,12 @@ export default function GameControlTabs({
                 nextRoundChallenge={controls.nextRoundChallenge}
                 revealRoundChallenge={controls.revealRoundChallenge}
               />
-              <Card>
-                <h2 className="text-xl font-bold">Move Round</h2>
-                <p className="mt-2 text-sm text-zinc-400">
-                  Current pub: <strong>{game.current_pub}</strong>
-                </p>
-                <p className="mt-2 text-sm text-zinc-400">
-                  Next pub: <strong>{controls.nextPub?.name ?? "None"}</strong>
-                </p>
-                <div className="mt-4">
-                  <Button
-                    type="button"
-                    disabled={!controls.nextPub}
-                    onClick={controls.moveToNextPub}
-                  >
-                    Move to Next Pub
-                  </Button>
-                </div>
-              </Card>
+              <RoundMovementControls
+                currentPub={game.current_pub}
+                nextPubName={controls.nextPub?.name}
+                canAdvance={Boolean(controls.nextPub)}
+                onNext={controls.moveToNextPub}
+              />
               <LiveGameSelection
                 game={game}
                 selectedPub={controls.selectedPub}

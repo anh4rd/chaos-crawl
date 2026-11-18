@@ -149,7 +149,10 @@ export default function RewardSetupForm({
           }
         >
           {busy ? (
-            <Icon name="loader-circle" className="icon--size-16 cc-spin" />
+            <Icon
+              name="loader-circle"
+              className="icon--size-16 icon--spinning-session"
+            />
           ) : (
             <Icon name="play" className="icon--size-16" />
           )}{" "}

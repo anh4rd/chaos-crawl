@@ -1,3 +1,9 @@
+import Button from "../../components/ui/Button";
+import Note from "../../components/ui/Note";
+import Badge from "../../components/ui/Badge";
+import ControlRow from "../../components/ui/ControlRow";
+import ContentCopy from "../../components/ui/ContentCopy";
+import IconBadge from "../../components/ui/IconBadge";
 import Icon from "../../components/ui/Icon";
 import type { ChallengeListItemModel } from "./types";
 
@@ -9,51 +15,49 @@ export default function ChallengeListItem({
   busy: boolean;
 }) {
   return (
-    <article className="host-v2__challenge-list-item">
-      <div className="host-v2__list-icon">
+    <article className="challenge-item">
+      <IconBadge variant="console-item" as="div">
         {challenge.past ? (
           <Icon name="check" className="icon--size-17" />
         ) : (
           <Icon name="flag" className="icon--size-17" />
         )}
-      </div>
-      <div className="host-v2__grow">
-        <div className="host-v2__title-line">
+      </IconBadge>
+      <ContentCopy variant="console-list">
+        <ControlRow variant="console-title">
           <h3>{challenge.title}</h3>
-          {challenge.current && (
-            <span className="host-v2__status host-v2__status--live">Live</span>
-          )}
+          {challenge.current && <Badge variant="console-live">Live</Badge>}
           {challenge.scheduled && (
-            <span className="host-v2__status host-v2__status--scheduled">
-              Scheduled
-            </span>
+            <Badge variant="console-scheduled">Scheduled</Badge>
           )}
-        </div>
+        </ControlRow>
         <p>{challenge.description || "No description added."}</p>
-        <span className="host-v2__points-inline">
+        <Note variant="console-points" as="span">
           +{challenge.points} points
-        </span>
-      </div>
-      <div className="host-v2__row-actions">
-        <button
+        </Note>
+      </ContentCopy>
+      <ControlRow variant="console-row-actions">
+        <Button
           type="button"
-          className="host-v2__small-action"
+          fullWidth={false}
+          variant="console-small"
           disabled={busy || challenge.current}
           onClick={challenge.onReveal}
         >
           {challenge.current ? "Live" : "Reveal"}
-        </button>
+        </Button>
         {!challenge.current && !challenge.scheduled && (
-          <button
+          <Button
             type="button"
-            className="host-v2__small-action host-v2__small-action--quiet"
+            fullWidth={false}
+            variant="console-quiet"
             disabled={busy}
             onClick={challenge.onSchedule}
           >
             Schedule
-          </button>
+          </Button>
         )}
-      </div>
+      </ControlRow>
     </article>
   );
 }

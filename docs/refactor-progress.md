@@ -4267,3 +4267,44 @@ Read-only discovery proves 598 mocked cases across 39 files and 40 opt-in live
 cases across three files; no live journeys were executed. This closes the three
 previously omitted host foundation, roster-focus and pending-team specifications.
 Subsequent new mocked specs are discovered automatically.
+
+## Consolidated remaining neutral presentation
+
+The verified console, legacy administration and participant-helper styling slices
+are assembled from their frozen source blobs. Accessibility changes remain in
+separate working-tree overlays. Console proof covers40native/style/geometry/SDK
+states and30production+2localbrowsercases; its focus paint outlier and stable
+recheck remain documented. The independent24state Field probe also proves default,
+comic and actual access controls unchanged; :where keeps specificity0,1,0.
+
+Legacy administration proof covers42exactDOM/style/focus/geometry/pixelpairs and
+16browsercases. Shared NativeSelect/UploadInput and local eight-panel examples
+retain native contracts. Participant helpers cover26exactDOM/style/geometry pairs
+and60browsercases; seven screenshots differ only at two unchanged titlebar-edge
+pixels. All14legacy helper/spinner rules and PlayerGame.css imports are retired;
+existing1second and0.8second icon animation contracts remain distinct.
+
+The proposed integration checkpoint passes534units and strict app/browser types.
+Eight old snapshot files needed formatting; all eight transpile to byte-identical
+runtime JavaScript. Shared/token/index unions preserve committed player work.
+Handoffs: /tmp/legacy-host-style-handoff.md, /tmp/legacy-admin-style-handoff.md,
+/tmp/session-helper-handoff.md. Proposed-source provenance is
+/tmp/finishing-neutral-staged-provenance.json. Review slices are console primitives
+and owned blocks; admin primitives/native bindings; participant status/spinner
+retirement; local references/catalog; existing-value token promotions; and
+regression fixtures. Review native prop forwarding/cascade carefully; command and
+query behavior remains unchanged in these neutral slices.
+
+The corrected neutral union passes strict app/browser types, full lint, production
+build and534units. One omitted verified motion token was restored before rerunning
+Sass/build; the failed draft and stopped browser run are retained, not counted as
+passes. The corrected full mocked suite is running from
+/tmp/chaos-finishing-neutral-corrected with no live tests. At this checkpoint its
+completed journeys pass; final total/result will be recorded after termination.
+The neutral delta is137files,+4420/-746=5166reviewlines before final report text.
+Use the six review slices above and separate later accessibility/async changes.
+
+Completed historical phase JSON was losslessly archived to keep verification
+space available:2210files,5634.8MiB→401.2MiB,5233.6MiB reclaimed. Every decompressed
+SHA was verified before unlink and recorded in the restoration journal. Active
+snapshots and current proof files were excluded.

@@ -12,7 +12,6 @@ import { useSlideshowData } from "./useSlideshowData";
 import { useSlideshowSelection } from "./useSlideshowSelection";
 import { useEvidencePlayback } from "./useEvidencePlayback";
 import { useSlideshowFullscreen } from "./useSlideshowFullscreen";
-import "../../styles/PlayerGame.css";
 
 export default function FinalSlideshow({ sessionId }: { sessionId: string }) {
   const { view, currentIndex, applyView, advance } =
@@ -49,7 +48,10 @@ export default function FinalSlideshow({ sessionId }: { sessionId: string }) {
     return (
       <SlideshowScreen>
         <SlideshowMessage>
-          <Icon name="loader-circle" className="icon--size-28 cc-spin" />
+          <Icon
+            name="loader-circle"
+            className="icon--size-28 icon--spinning-session"
+          />
           <Note as="span" variant="slideshow-copy">
             Connecting to the final slideshow…
           </Note>

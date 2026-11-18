@@ -1,3 +1,9 @@
+import Button from "../../components/ui/Button";
+import Note from "../../components/ui/Note";
+import ControlRow from "../../components/ui/ControlRow";
+import Badge from "../../components/ui/Badge";
+import PanelHeading from "../../components/ui/PanelHeading";
+import ContentPanel from "../../components/ui/ContentPanel";
 import type { SideChallengeItemModel } from "./types";
 
 export default function SideChallengeItem({
@@ -6,24 +12,25 @@ export default function SideChallengeItem({
   challenge: SideChallengeItemModel;
 }) {
   return (
-    <article className="host-v2__side-card">
-      <div className="host-v2__side-card-top">
+    <ContentPanel variant="console-card" as="article">
+      <PanelHeading variant="console-card">
         <h3>{challenge.title}</h3>
-        <span className="host-v2__points">+{challenge.points} pts</span>
-      </div>
+        <Badge variant="console-points">+{challenge.points} pts</Badge>
+      </PanelHeading>
       <p>{challenge.description}</p>
-      <div className="host-v2__side-card-bottom">
-        <span className="host-v2__muted">
+      <ControlRow variant="console-card-actions">
+        <Note variant="console-muted" as="span">
           {challenge.completionCount} completions recorded
-        </span>
-        <button
+        </Note>
+        <Button
           type="button"
-          className="host-v2__small-action"
+          fullWidth={false}
+          variant="console-small"
           onClick={challenge.onReview}
         >
           Review
-        </button>
-      </div>
-    </article>
+        </Button>
+      </ControlRow>
+    </ContentPanel>
   );
 }

@@ -1,5 +1,10 @@
 import { isSecretVotingOpen } from "./votingState";
 import Button from "../../components/ui/Button";
+import ButtonLink from "../../components/ui/ButtonLink";
+import Note from "../../components/ui/Note";
+import ContentPanel from "../../components/ui/ContentPanel";
+import PanelGrid from "../../components/ui/PanelGrid";
+import SyncStatus from "../../components/session/SyncStatus";
 import SessionBreak from "../../components/session/SessionBreak";
 import SessionFeedback from "../../components/session/SessionFeedback";
 import SessionNavigation from "../../components/session/SessionNavigation";
@@ -30,7 +35,6 @@ import SessionMainChallengeCard from "../../components/session/SessionMainChalle
 import GuidedTour, {
   type GuidedTourStep,
 } from "../../components/tour/GuidedTour";
-import "../../styles/PlayerGame.css";
 function playerStorageKey(code: string) {
   return `chaos-crawl-session-player:${code.replace(/\D/g, "")}`;
 }
@@ -394,10 +398,10 @@ export default function SessionParticipant({
                     You're in <strong>{session.name}</strong>. The host will
                     start the game when everyone is ready.
                   </p>
-                  <div className="cc-player-lobby-count">
+                  <Note as="div" variant="participant-count">
                     {teams.reduce((sum, team) => sum + team.member_count, 0)}{" "}
                     players in teams · {session.player_limit} player limit
-                  </div>
+                  </Note>
                 </SessionState>
               )}
 
@@ -407,8 +411,9 @@ export default function SessionParticipant({
                     You finished with <strong>{player.score} points</strong>.
                     Thanks for playing!
                   </p>
-                  <Link
-                    className="cc-player-inline-link"
+                  <ButtonLink
+                    variant="participant-leaderboard"
+                    fullWidth={false}
                     to={`/play/${code}/leaderboard`}
                     onClick={
                       onSectionChange
@@ -420,7 +425,7 @@ export default function SessionParticipant({
                     }
                   >
                     See the final leaderboard →
-                  </Link>
+                  </ButtonLink>
                 </SessionState>
               )}
 
@@ -508,11 +513,11 @@ export default function SessionParticipant({
                     </SessionState>
                   )}
                   {visibleSecretMissions.length > 0 && (
-                    <section
-                      className="cc-player-secret-section"
+                    <ContentPanel
+                      variant="private-feed"
                       aria-label="Your private secret missions"
                     >
-                      <div className="cc-player-secret-list">
+                      <PanelGrid variant="private-feed">
                         {visibleSecretMissions.map((mission) => (
                           <SecretMissionCard
                             key={mission.assignment_id}
@@ -547,8 +552,8 @@ export default function SessionParticipant({
                             }
                           />
                         ))}
-                      </div>
-                    </section>
+                      </PanelGrid>
+                    </ContentPanel>
                   )}
                 </>
               )}
@@ -592,8 +597,8 @@ export default function SessionParticipant({
           )}
 
           {!embeddedHostMode && !finalRoundTakeover && (
-            <div className="cc-player-sync-note">
-              <span className="cc-player-live-dot" /> Live updates enabled{" "}
+            <SyncStatus>
+              Live updates enabled{" "}
               {lastUpdated && (
                 <span>
                   · synced{" "}
@@ -604,18 +609,19 @@ export default function SessionParticipant({
                   })}
                 </span>
               )}
-            </div>
+            </SyncStatus>
           )}
 
           {!embeddedHostMode && !finalRoundTakeover && (
-            <button
+            <Button
               type="button"
-              className="cc-player-text-button"
+              variant="participant-rejoin"
+              fullWidth={false}
               onClick={() => navigate(`/join?code=${code}&returning=1`)}
             >
               <Icon name="rotate-ccw" className="icon--size-15" /> Need to
               rejoin on this device?
-            </button>
+            </Button>
           )}
 
           {activeSecretMission &&

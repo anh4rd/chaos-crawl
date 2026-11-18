@@ -19,3 +19,25 @@
     transition: width motion.$duration-toggle ease;
   }
 }
+
+.step-progress {
+  &--console {
+    border: 0;
+    border-style: solid;
+  }
+  &--console {
+    height: (layout.$pixel-unit * 1.75);
+    margin-top: (layout.$pixel-unit * 3.25);
+    overflow: hidden;
+    border-radius: layout.$radius-compact-pill;
+    background: colors.$console-progress-track;
+  }
+  &--console span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: colors.$accent-soft;
+    // Width is the revealed-round ratio supplied by the caller.
+    transition: width motion.$duration-toggle motion.$easing-default;
+  }
+}

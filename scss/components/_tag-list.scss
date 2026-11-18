@@ -21,3 +21,20 @@
     margin-bottom: layout.$pixel-unit * 3;
   }
 }
+
+.tag-list {
+  &--console {
+    display: flex;
+    flex-wrap: wrap;
+    gap: (layout.$pixel-unit * 1.75);
+    margin-top: (layout.$pixel-unit * 3.25);
+  }
+  &--console .badge--console-team {
+    padding: (layout.$pixel-unit * 1.75) (layout.$pixel-unit * 2.5);
+    border-radius: layout.$badge-radius;
+    background: colors.$hint-surface;
+    color: colors.$purple-dark;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-label;
+  }
+}

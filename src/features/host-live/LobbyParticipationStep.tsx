@@ -78,7 +78,10 @@ export default function LobbyParticipationStep({
           onClick={() => void setHostParticipation(true)}
         >
           {busy ? (
-            <Icon name="loader-circle" className="icon--size-16 cc-spin" />
+            <Icon
+              name="loader-circle"
+              className="icon--size-16 icon--spinning-session"
+            />
           ) : (
             <Icon name="gamepad2" className="icon--size-16" />
           )}{" "}

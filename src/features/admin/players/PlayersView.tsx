@@ -1,3 +1,8 @@
+import ControlRow from "../../../components/ui/ControlRow";
+import Note from "../../../components/ui/Note";
+import ContentPanel from "../../../components/ui/ContentPanel";
+import PanelGrid from "../../../components/ui/PanelGrid";
+import DisplayHeading from "../../../components/ui/DisplayHeading";
 import type { ReactNode } from "react";
 import Card from "../../../components/ui/Card";
 import Button from "../../../components/ui/Button";
@@ -23,23 +28,18 @@ export default function PlayersView({
   return (
     <>
       <Card>
-        <h2 className="text-2xl font-bold">Players</h2>
+        <DisplayHeading variant="plain">Players</DisplayHeading>
 
-        <div className="mt-4 space-y-4">
+        <PanelGrid variant="feed">
           {players.map((player) => (
-            <div
-              key={player.id}
-              className="rounded-xl border border-zinc-700 bg-black/50 p-4"
-            >
+            <ContentPanel key={player.id} as="div" variant="ledger">
               {renderNameEditor(player)}
 
-              <p className="mt-2 text-sm">
-                Team: {player.team ?? "Unassigned"}
-              </p>
+              <Note variant="help">Team: {player.team ?? "Unassigned"}</Note>
 
-              <p className="mt-1 font-bold">Score: {player.score}</p>
+              <Note variant="status">Score: {player.score}</Note>
 
-              <div className="mt-3 grid grid-cols-3 gap-2">
+              <ControlRow variant="score-actions">
                 <Button
                   type="button"
                   disabled={savingPlayerId !== null}
@@ -63,19 +63,19 @@ export default function PlayersView({
                 >
                   -5
                 </Button>
-              </div>
+              </ControlRow>
 
-              <div className="mt-3">
+              <ControlRow variant="slot-tight">
                 <Button
                   type="button"
                   onClick={() => onRemove(player.id, player.name)}
                 >
                   Delete Player
                 </Button>
-              </div>
-            </div>
+              </ControlRow>
+            </ContentPanel>
           ))}
-        </div>
+        </PanelGrid>
       </Card>
     </>
   );

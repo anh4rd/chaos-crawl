@@ -1,3 +1,9 @@
+import Button from "../../components/ui/Button";
+import { Field } from "../../components/ui/Field";
+import FilterGroup from "../../components/ui/FilterGroup";
+import Overline from "../../components/ui/Overline";
+import PanelHeading from "../../components/ui/PanelHeading";
+import ContentPanel from "../../components/ui/ContentPanel";
 import Icon from "../../components/ui/Icon";
 import type { ScoreAdjustmentModel } from "./types";
 
@@ -19,55 +25,58 @@ export default function ScoreAdjustment({
   onSubmit,
 }: ScoreAdjustmentModel) {
   return (
-    <section className="host-v2__panel host-v2__panel--white">
-      <div className="host-v2__panel-topline">
-        <span className="host-v2__kicker">
+    <ContentPanel variant="console-white">
+      <PanelHeading variant="console">
+        <Overline variant="console">
           <Icon name="plus" className="icon--size-14" /> POINTS ADJUSTMENT
-        </span>
-      </div>
-      <div
-        className="host-v2__segmented"
-        role="group"
-        aria-label="Score target"
-      >
-        <button
+        </Overline>
+      </PanelHeading>
+      <FilterGroup variant="console" role="group" aria-label="Score target">
+        <Button
+          fullWidth={false}
+          variant="console-segment"
           type="button"
-          className={target === "player" ? "is-selected" : ""}
+          className={target === "player" ? "btn--console-selected" : ""}
           onClick={() => onTargetChange("player")}
         >
           Player
-        </button>
-        <button
+        </Button>
+        <Button
+          fullWidth={false}
+          variant="console-segment"
           type="button"
-          className={target === "team" ? "is-selected" : ""}
+          className={target === "team" ? "btn--console-selected" : ""}
           onClick={() => onTargetChange("team")}
         >
           Team
-        </button>
-      </div>
-      <div
-        className="host-v2__segmented host-v2__segmented--action"
+        </Button>
+      </FilterGroup>
+      <FilterGroup
+        variant="console-action"
         role="group"
         aria-label="Award or dock points"
       >
-        <button
+        <Button
+          fullWidth={false}
+          variant="console-segment"
           type="button"
-          className={action === "award" ? "is-selected" : ""}
+          className={action === "award" ? "btn--console-selected" : ""}
           onClick={() => onActionChange("award")}
         >
           <Icon name="plus" className="icon--size-15" /> Award
-        </button>
-        <button
+        </Button>
+        <Button
+          fullWidth={false}
+          variant="console-segment"
           type="button"
-          className={action === "dock" ? "is-selected" : ""}
+          className={action === "dock" ? "btn--console-selected" : ""}
           onClick={() => onActionChange("dock")}
         >
           <Icon name="minus" className="icon--size-15" /> Dock
-        </button>
-      </div>
+        </Button>
+      </FilterGroup>
       {target === "player" ? (
-        <label className="host-v2__field">
-          <span>Player</span>
+        <Field variant="console" label="Player">
           <select
             value={selectedPlayerId}
             onChange={(event) => onPlayerChange(event.target.value)}
@@ -79,10 +88,9 @@ export default function ScoreAdjustment({
               </option>
             ))}
           </select>
-        </label>
+        </Field>
       ) : (
-        <label className="host-v2__field">
-          <span>Team</span>
+        <Field variant="console" label="Team">
           <select
             value={selectedTeamName}
             onChange={(event) => onTeamChange(event.target.value)}
@@ -94,33 +102,32 @@ export default function ScoreAdjustment({
               </option>
             ))}
           </select>
-        </label>
+        </Field>
       )}
-      <label className="host-v2__field">
-        <span>Points</span>
+      <Field variant="console" label="Points">
         <input
           type="number"
           min={1}
           value={points}
           onChange={(event) => onPointsChange(event.target.value)}
         />
-      </label>
-      <label className="host-v2__field">
-        <span>Reason (optional)</span>
+      </Field>
+      <Field variant="console" label="Reason (optional)">
         <input
           value={reason}
           onChange={(event) => onReasonChange(event.target.value)}
           placeholder="e.g. Best costume"
         />
-      </label>
-      <button
+      </Field>
+      <Button
         type="button"
-        className="host-v2__button host-v2__button--primary"
+        fullWidth={false}
+        variant="console-primary"
         onClick={onSubmit}
       >
         {action === "award" ? "Award points" : "Dock points"}
         <Icon name="chevron-right" className="icon--size-17" />
-      </button>
-    </section>
+      </Button>
+    </ContentPanel>
   );
 }

@@ -208,3 +208,78 @@
     right: layout.$spacing-unit * 6;
   }
 }
+
+.badge {
+  &--console-status {
+    display: inline-flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 1);
+    padding: (layout.$pixel-unit * 1.25) (layout.$pixel-unit * 2);
+    border-radius: layout.$badge-radius;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-action;
+    white-space: nowrap;
+  }
+  &--console-live {
+    background: colors.$accent-soft;
+    color: colors.$ink;
+  }
+  &--console-scheduled {
+    background: colors.$hint-surface;
+    color: colors.$purple-dark;
+  }
+  &--console-points {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: (layout.$pixel-unit * 1.75) (layout.$pixel-unit * 2.25);
+    border-radius: layout.$badge-radius;
+    background: colors.$pink;
+    color: colors.$white;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heading;
+    white-space: nowrap;
+    box-shadow: 0 (layout.$pixel-unit * 0.75) 0 colors.$console-points-shadow;
+  }
+}
+
+.badge {
+  &--round-live,
+  &--round-passed,
+  &--round-next,
+  &--completion,
+  &--team-name {
+    border-radius: layout.$radius-pill;
+    padding: layout.$spacing-unit layout.$spacing-unit * 3;
+    font-size: fonts.$size-legacy-caption;
+    line-height: fonts.$line-height-legacy-caption;
+    font-weight: fonts.$weight-bold;
+  }
+  &--round-live {
+    color: colors.$black;
+    background-color: colors.$legacy-yellow;
+  }
+  &--round-passed {
+    background-color: colors.$legacy-border;
+  }
+  &--round-next {
+    background-color: colors.$input-border;
+  }
+  &--completion,
+  &--team-name {
+    font-size: fonts.$size-legacy-small;
+    line-height: fonts.$line-height-legacy-small;
+    font-weight: inherit;
+  }
+  &--completion {
+    background-color: color-mix(
+      in oklab,
+      colors.$legacy-completion-surface 60%,
+      transparent
+    );
+  }
+  &--team-name {
+    padding-block: layout.$spacing-unit * 2;
+    background-color: colors.$legacy-dark-surface;
+  }
+}

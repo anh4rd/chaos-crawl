@@ -1,3 +1,8 @@
+import Button from "../../components/ui/Button";
+import ControlRow from "../../components/ui/ControlRow";
+import Overline from "../../components/ui/Overline";
+import PanelHeading from "../../components/ui/PanelHeading";
+import ContentPanel from "../../components/ui/ContentPanel";
 import Icon from "../../components/ui/Icon";
 import type { LiveControlsModel } from "./types";
 
@@ -15,43 +20,46 @@ export default function LiveControls({
   onToggleSlideshow,
 }: LiveControlsModel) {
   return (
-    <section className="host-v2__panel host-v2__panel--tint">
-      <div className="host-v2__panel-topline">
-        <span className="host-v2__kicker">
+    <ContentPanel variant="console-tint">
+      <PanelHeading variant="console">
+        <Overline variant="console">
           <Icon name="users" className="icon--size-14" /> LIVE CONTROLS
-        </span>
-      </div>
-      <div className="host-v2__actions host-v2__actions--stack">
+        </Overline>
+      </PanelHeading>
+      <ControlRow variant="console-actions-stack">
         {votingOpen ? (
-          <button
+          <Button
             type="button"
-            className="host-v2__button host-v2__button--primary"
+            fullWidth={false}
+            variant="console-primary"
             onClick={onCloseVoting}
           >
             Close voting & show results{" "}
             <Icon name="trophy" className="icon--size-17" />
-          </button>
+          </Button>
         ) : showResults ? (
           <>
-            <button
+            <Button
               type="button"
-              className="host-v2__button host-v2__button--primary"
+              fullWidth={false}
+              variant="console-primary"
               onClick={onViewResults}
             >
               View vote results{" "}
               <Icon name="chevron-right" className="icon--size-17" />
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
-              className="host-v2__button host-v2__button--subtle"
+              fullWidth={false}
+              variant="console-subtle"
               onClick={onReturnToGame}
             >
               Return everyone to game
-            </button>
+            </Button>
           </>
         ) : (
           <>
-            <div className="host-v2__inline-selects">
+            <div className="legacy-host__vote-target">
               <label htmlFor="host-v2-vote-target">Vote for</label>
               <select
                 id="host-v2-vote-target"
@@ -66,25 +74,27 @@ export default function LiveControls({
                 <option value="team">Teams</option>
               </select>
             </div>
-            <button
+            <Button
               type="button"
-              className="host-v2__button host-v2__button--primary"
+              fullWidth={false}
+              variant="console-primary"
               disabled={!canOpenVoting}
               onClick={onOpenVoting}
             >
               {"Open voting"} <Icon name="trophy" className="icon--size-17" />
-            </button>
+            </Button>
           </>
         )}
-        <button
+        <Button
           type="button"
-          className="host-v2__button host-v2__button--subtle"
+          fullWidth={false}
+          variant="console-subtle"
           onClick={onToggleSlideshow}
         >
           {slideshowOpen ? "Close slideshow" : "Open slideshow"}
           <Icon name="chevron-right" className="icon--size-17" />
-        </button>
-      </div>
-    </section>
+        </Button>
+      </ControlRow>
+    </ContentPanel>
   );
 }

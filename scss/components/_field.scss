@@ -5,7 +5,7 @@
 @use "../variables/layout";
 @use "../variables/fonts";
 
-.field:where(:not(.field--lobby)) {
+.field:where(:not(.field--lobby, .field--console)) {
   display: flex;
   flex-direction: column;
   gap: layout.$field-gap;
@@ -103,5 +103,49 @@
   }
   &--lobby select {
     @include compact-select.compact-select;
+  }
+}
+
+.field {
+  &--console {
+    color: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+  }
+  &--console {
+    display: grid;
+    gap: (layout.$pixel-unit * 1.5);
+    margin: (layout.$pixel-unit * 3) 0;
+  }
+  &--console span {
+    color: colors.$purple;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heading;
+    letter-spacing: fonts.$tracking-console-label;
+    text-transform: uppercase;
+  }
+  &--console input {
+    width: 100%;
+    min-width: 0;
+    min-height: (layout.$pixel-unit * 10.5);
+    padding: (layout.$pixel-unit * 2.5) (layout.$pixel-unit * 3);
+    border: (layout.$pixel-unit * 0.375) solid colors.$console-control-border;
+    border-radius: (layout.$pixel-unit * 3);
+    background: colors.$white;
+    color: colors.$ink;
+    font: inherit;
+    font-size: fonts.$size-small;
+  }
+  &--console select {
+    width: 100%;
+    min-width: 0;
+    min-height: (layout.$pixel-unit * 10.5);
+    padding: (layout.$pixel-unit * 2.5) (layout.$pixel-unit * 3);
+    border: (layout.$pixel-unit * 0.375) solid colors.$console-control-border;
+    border-radius: (layout.$pixel-unit * 3);
+    background: colors.$white;
+    color: colors.$ink;
+    font: inherit;
+    font-size: fonts.$size-small;
   }
 }

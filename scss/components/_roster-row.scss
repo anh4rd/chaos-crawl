@@ -1,0 +1,31 @@
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/colors";
+
+.roster-row {
+  display: flex;
+  align-items: flex-start;
+  gap: (layout.$pixel-unit * 2.5);
+  padding-top: (layout.$pixel-unit * 3);
+  border-top: (layout.$pixel-unit * 0.25) solid colors.$outline-divider;
+  &:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+  &__controls {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    gap: (layout.$pixel-unit * 1.75);
+  }
+  &__name {
+    width: 100%;
+    padding: (layout.$pixel-unit * 0.5) 0;
+    border: 0;
+    background: transparent;
+    color: colors.$ink;
+    font: inherit;
+    font-size: fonts.$size-label;
+    font-weight: fonts.$weight-heading;
+  }
+}

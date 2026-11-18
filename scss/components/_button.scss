@@ -1441,3 +1441,223 @@
     cursor: pointer;
   }
 }
+
+.btn {
+  &--console,
+  &--console-primary,
+  &--console-subtle,
+  &--console-text,
+  &--console-square,
+  &--console-small,
+  &--console-quiet,
+  &--console-remove,
+  &--console-segment,
+  &--console-navigation {
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-transform: none;
+    box-shadow: none;
+    scale: none;
+    transform: none;
+    transition: all motion.$duration-none motion.$easing-default;
+  }
+  &--console-text {
+    display: inline-flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 0.5);
+    border: 0;
+    background: transparent;
+    color: colors.$purple;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-action;
+    cursor: pointer;
+  }
+  &--console {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: (layout.$pixel-unit * 2);
+    width: 100%;
+    min-height: (layout.$pixel-unit * 11);
+    padding: (layout.$pixel-unit * 2.75) (layout.$pixel-unit * 3.5);
+    border: 0;
+    border-radius: layout.$badge-radius;
+    font: inherit;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-action;
+    cursor: pointer;
+    transition:
+      transform motion.$duration-comic ease,
+      filter motion.$duration-comic ease;
+  }
+  &--console:active {
+    transform: scale(motion.$scale-console-active);
+  }
+  &--console:disabled {
+    cursor: not-allowed;
+    opacity: effects.$disabled-input-opacity;
+  }
+  &--console-primary {
+    background: colors.$purple;
+    color: colors.$white;
+    box-shadow: 0 (layout.$pixel-unit * 1) 0 colors.$console-action-shadow;
+  }
+  &--console-subtle {
+    background: colors.$hint-surface;
+    color: colors.$purple-dark;
+  }
+  &--console-square {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 (layout.$pixel-unit * 9.5);
+    height: (layout.$pixel-unit * 9.5);
+    border: 0;
+    border-radius: (layout.$pixel-unit * 3);
+    background: colors.$pink;
+    color: colors.$white;
+    font-weight: fonts.$weight-action;
+    cursor: pointer;
+  }
+  &--console-square:disabled {
+    opacity: effects.$disabled-input-opacity;
+    cursor: not-allowed;
+  }
+  &--console-small {
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: layout.$badge-radius;
+    padding: (layout.$pixel-unit * 2) (layout.$pixel-unit * 2.5);
+    background: colors.$accent-soft;
+    color: colors.$ink;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heading;
+    cursor: pointer;
+  }
+  &--console-small:disabled {
+    background: colors.$console-disabled;
+    color: colors.$console-disabled-copy;
+    cursor: default;
+  }
+  &--console-segment {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: (layout.$pixel-unit * 1.5);
+    min-height: (layout.$pixel-unit * 8.75);
+    border: 0;
+    border-radius: layout.$badge-radius;
+    background: transparent;
+    color: colors.$purple-dark;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-action;
+    cursor: pointer;
+  }
+  &--console-segment.btn--console-selected {
+    background: colors.$purple-dark;
+    color: colors.$white;
+  }
+  &--console-remove {
+    display: grid;
+    place-items: center;
+    flex: 0 0 (layout.$pixel-unit * 7.5);
+    width: (layout.$pixel-unit * 7.5);
+    height: (layout.$pixel-unit * 7.5);
+    border: 0;
+    border-radius: layout.$radius-compact-pill;
+    background: colors.$console-remove;
+    color: colors.$console-remove-copy;
+    cursor: pointer;
+  }
+  &--console-navigation {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: (layout.$pixel-unit * 1);
+    min-height: (layout.$pixel-unit * 11.5);
+    border: 0;
+    border-radius: (layout.$pixel-unit * 3.75);
+    background: transparent;
+    color: colors.$comic-icon-border;
+    font: inherit;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-extra-bold;
+    cursor: pointer;
+  }
+  &--console-navigation.btn--console-active {
+    background: colors.$purple-mid;
+    color: colors.$white;
+    box-shadow: inset 0 0 0 (layout.$pixel-unit * 0.25)
+      colors.$console-navigation-active-shadow;
+  }
+  &--console-quiet {
+    background: colors.$hint-surface;
+    color: colors.$purple-dark;
+  }
+}
+
+.btn {
+  &--participant-rejoin,
+  &--participant-leaderboard {
+    display: inline-flex;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font: inherit;
+    font-size: fonts.$size-small;
+    text-transform: none;
+    text-decoration: none;
+    box-shadow: none;
+    scale: none;
+    transition-property: all;
+    transition-duration: motion.$duration-none;
+    transition-timing-function: motion.$easing-default;
+  }
+  &--participant-rejoin {
+    justify-self: center;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.75;
+    padding: layout.$pixel-unit * 2;
+    color: colors.$participant-sync-copy;
+    font-weight: fonts.$weight-extra-bold;
+    cursor: pointer;
+  }
+  &--participant-leaderboard {
+    border: 0 solid;
+    margin-top: layout.$pixel-unit * 3;
+    padding: 0;
+    color: colors.$purple;
+    font-weight: fonts.$weight-heavy;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.btn {
+  &--navigation-tab {
+    white-space: nowrap;
+    border: 0 solid;
+    border-radius: layout.$spacing-unit * 3;
+    padding: layout.$spacing-unit * 2 layout.$spacing-unit * 4;
+    font-size: fonts.$size-legacy-small;
+    line-height: fonts.$line-height-legacy-small;
+    font-weight: fonts.$weight-bold;
+    background-color: colors.$legacy-stat-surface;
+    color: colors.$unavailable-upload-copy;
+    text-transform: none;
+    box-shadow: none;
+    scale: none;
+    transition-property: all;
+    transition-duration: motion.$duration-none;
+    transition-timing-function: motion.$easing-default;
+    &[aria-pressed="true"] {
+      background-color: colors.$input-border;
+      color: colors.$white;
+    }
+  }
+}

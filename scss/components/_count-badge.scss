@@ -148,3 +148,33 @@
     font: inherit;
   }
 }
+
+.count-badge {
+  &--console {
+    display: grid;
+    place-items: center;
+    min-width: (layout.$pixel-unit * 6.5);
+    height: (layout.$pixel-unit * 6.5);
+    padding: 0 (layout.$pixel-unit * 1.75);
+    border-radius: layout.$radius-compact-pill;
+    background: colors.$accent-soft;
+    color: colors.$ink;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-heading;
+  }
+  &--console-rank {
+    min-width: auto;
+    display: grid;
+    place-items: center;
+    flex: 0 0 (layout.$pixel-unit * 7);
+    height: (layout.$pixel-unit * 7);
+    border-radius: layout.$radius-compact-pill;
+    background: colors.$white;
+    color: colors.$purple-dark;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-heading;
+  }
+  &--console-rank.count-badge--first {
+    background: colors.$accent-soft;
+  }
+}

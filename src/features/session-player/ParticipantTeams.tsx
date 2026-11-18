@@ -71,7 +71,10 @@ export default function ParticipantTeams({
             disabled={busyKey !== null || !teamName.trim()}
           >
             {busyKey === "create-team" ? (
-              <Icon name="loader-circle" className="icon--size-17 cc-spin" />
+              <Icon
+                name="loader-circle"
+                className="icon--size-17 icon--spinning-session"
+              />
             ) : (
               "Create team"
             )}

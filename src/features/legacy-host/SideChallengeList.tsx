@@ -1,3 +1,9 @@
+import PanelGrid from "../../components/ui/PanelGrid";
+import Note from "../../components/ui/Note";
+import CountBadge from "../../components/ui/CountBadge";
+import Overline from "../../components/ui/Overline";
+import PanelHeading from "../../components/ui/PanelHeading";
+import ContentPanel from "../../components/ui/ContentPanel";
 import SideChallengeItem from "./SideChallengeItem";
 import type { SideChallengeItemModel } from "./types";
 
@@ -7,26 +13,28 @@ export default function SideChallengeList({
   challenges: SideChallengeItemModel[];
 }) {
   return (
-    <section className="host-v2__panel host-v2__panel--tint">
-      <div className="host-v2__section-heading">
+    <ContentPanel variant="console-tint">
+      <PanelHeading variant="console-section">
         <div>
-          <p className="host-v2__eyebrow">OPTIONAL TASKS</p>
+          <Overline variant="console-eyebrow" as="p">
+            OPTIONAL TASKS
+          </Overline>
           <h2>Side challenges</h2>
         </div>
-        <span className="host-v2__count-pill">{challenges.length}</span>
-      </div>
-      <p className="host-v2__body-copy">
+        <CountBadge variant="console">{challenges.length}</CountBadge>
+      </PanelHeading>
+      <Note variant="console-body">
         These can be completed at any point during the party.
-      </p>
+      </Note>
       {challenges.length ? (
-        <div className="host-v2__list">
+        <PanelGrid variant="console-list">
           {challenges.map((challenge) => (
             <SideChallengeItem key={challenge.id} challenge={challenge} />
           ))}
-        </div>
+        </PanelGrid>
       ) : (
-        <p className="host-v2__empty-copy">No active side challenges found.</p>
+        <Note variant="console-empty">No active side challenges found.</Note>
       )}
-    </section>
+    </ContentPanel>
   );
 }

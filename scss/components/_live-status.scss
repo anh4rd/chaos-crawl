@@ -1,0 +1,26 @@
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/colors";
+
+.live-status {
+  display: inline-flex;
+  align-items: center;
+  gap: (layout.$pixel-unit * 1.75);
+  padding: (layout.$pixel-unit * 1.75) (layout.$pixel-unit * 2.5);
+  border-radius: layout.$badge-radius;
+  background: colors.$console-live-surface;
+  color: colors.$white;
+  font-size: fonts.$size-micro;
+  font-weight: fonts.$weight-action;
+  letter-spacing: fonts.$tracking-status;
+  &--ready {
+    background: colors.$console-ready-surface;
+  }
+  &__dot {
+    width: (layout.$pixel-unit * 1.75);
+    height: (layout.$pixel-unit * 1.75);
+    border-radius: layout.$radius-compact-pill;
+    background: colors.$accent-soft;
+    box-shadow: 0 0 0 (layout.$pixel-unit * 0.75) colors.$workspace-soft-glow;
+  }
+}

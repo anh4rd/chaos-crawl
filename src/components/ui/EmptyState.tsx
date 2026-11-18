@@ -16,8 +16,12 @@ export default function EmptyState({
       title?: string;
       action?: ReactNode;
     }
+  | { variant: "console"; icon?: never; title?: never; action?: never }
   | { variant?: "session"; icon: IconName; title?: never; action?: ReactNode }
 )) {
+  if (variant === "console") {
+    return <div className="empty-state empty-state--console">{children}</div>;
+  }
   if (variant === "workspace") {
     return (
       <div className="empty-state empty-state--workspace">

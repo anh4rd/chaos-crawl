@@ -91,7 +91,10 @@ export default function MissionAssignmentForm({
         }
       >
         {busy ? (
-          <Icon name="loader-circle" className="icon--size-16 cc-spin" />
+          <Icon
+            name="loader-circle"
+            className="icon--size-16 icon--spinning-session"
+          />
         ) : (
           <Icon name="send" className="icon--size-16" />
         )}{" "}

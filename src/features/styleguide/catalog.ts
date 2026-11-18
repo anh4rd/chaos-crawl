@@ -1,5 +1,121 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
+  SessionStatusExample: {
+    usage:
+      "Local participant status, private-feed, recovery and spinner reference.",
+    dependencies:
+      "Shared presentation components and local state only; no connection, credential or backend hooks.",
+  },
+  LegacyAdminExample: {
+    usage:
+      "Backend-free eight-panel administration reference with local pending/error, name/team/score/voting/schedule/file actions.",
+    dependencies:
+      "Controlled views only; intercepts navigation and never mounts connected admin controllers.",
+  },
+  LegacyHostExample: {
+    usage:
+      "Backend-free four-tab console reference with local scheduling, scores, roster and feedback.",
+    dependencies:
+      "Controlled console views only; never mounts LegacyHostWorkspace or reads credentials.",
+  },
+  RoundMovementControls: {
+    usage:
+      "Controlled native current/next round controls shared by legacy administration and its local reference.",
+    dependencies:
+      "Supplied values and callbacks; no scheduling, query or persistence lifecycle.",
+  },
+  CompletionReviewView: {
+    usage: "Controlled legacy completion collection and review links.",
+    dependencies:
+      "Caller supplies presentation/counts and review callbacks; no route construction, reads or mutations.",
+  },
+  ParticipationView: {
+    usage: "Controlled legacy host participation and challenge presentation.",
+    dependencies:
+      "Caller supplies selected player, completion models, upload slot and actions; no storage or query ownership.",
+  },
+  VotingView: {
+    usage:
+      "Controlled legacy voting setup and phase actions with supplied target/state/callbacks.",
+    dependencies:
+      "Shared primitives preserve native controls; no SDK, score decisions or phase writes.",
+  },
+  TeamsView: {
+    usage:
+      "Controlled legacy team creation and assignment fields in the local admin reference.",
+    dependencies:
+      "Native controls and supplied collections/callbacks; trimming, locking, persistence and feedback stay in feature controllers.",
+  },
+  PlayerNameForm: {
+    usage:
+      "Controlled native player rename form with supplied draft, pending state and callbacks.",
+    dependencies:
+      "FormStack native, Input and Button retain native form contracts; no persistence.",
+  },
+  PlayersView: {
+    usage:
+      "Controlled legacy player collection with supplied name-editor slots and score/delete callbacks.",
+    dependencies:
+      "Queries, confirmations, ledger projection and operation lifetime remain in the feature controller.",
+  },
+  AdminNavigation: {
+    usage:
+      "Controlled legacy administration panel choices with supplied active value and callbacks.",
+    dependencies:
+      "Native buttons with pressed state and owned admin-navigation SCSS; ordinary keyboard Tab semantics.",
+  },
+  LegacyAdminView: {
+    usage:
+      "Controlled eight-panel legacy administration frame. Local reference uses section semantics and local state.",
+    dependencies:
+      "PageFrame content and supplied navigation/body slots; never reads backend, credentials or route parameters.",
+  },
+  UploadInput: {
+    usage:
+      "Native file-input passthrough preserving the existing hidden chooser contract. Local legacy administration opens it through a native action.",
+    dependencies:
+      "Ref/accept/change props only; caller owns validation and persistence. This is not a general file-input accessibility repair.",
+  },
+  NativeSelect: {
+    usage:
+      "Native controlled select passthrough with close/regular/wide spacing appearances. Local legacy administration demonstrates native values and callbacks.",
+    dependencies:
+      "Caller owns options, labels, values, disabled state and validation; no queries or mutations.",
+  },
+  LiveIndicator: {
+    usage:
+      "Decorative shared live dot in the local participant status reference.",
+    dependencies:
+      "Owned live-indicator SCSS and existing animation tokens; no connection state ownership.",
+  },
+  SyncStatus: {
+    usage:
+      "Controlled participant sync/error/retry line with supplied timestamps and callbacks. Shared participant status and recovery uses local state.",
+    dependencies:
+      "Native div/Button presentation and owned sync-status SCSS; no polling, backend or credential reads.",
+  },
+  RankingRow: {
+    usage: "Controlled console rank/name/score row preserving caller order.",
+    dependencies:
+      "Shared CountBadge and owned ranking-row SCSS; no sorting or queries.",
+  },
+  LiveStatus: {
+    usage: "Controlled live/break status with caller-selected state and copy.",
+    dependencies:
+      "Owned console appearance; no timer, subscription or persistence.",
+  },
+  PageIntroduction: {
+    usage:
+      "Controlled console section introduction in the local legacy host reference.",
+    dependencies:
+      "Owned typography/spacing; caller owns heading, copy and coordination.",
+  },
+  ContentCopy: {
+    usage:
+      "Controlled console heading/copy group, including compact list copy. Local legacy host console supplies its content.",
+    dependencies:
+      "Owned SCSS; native children and class props only, no backend or route state.",
+  },
   ChallengeReviewHeader: {
     usage:
       "Controlled legacy review heading accepting a challenge presentation or a supplied invalid-parameter message.",

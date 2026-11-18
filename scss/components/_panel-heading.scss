@@ -1,3 +1,4 @@
+@use "../tools/balanced-row";
 @use "../tools/panel-title";
 @use "../variables/colors";
 @use "../variables/layout";
@@ -127,5 +128,48 @@
       align-items: flex-start;
       flex-direction: column;
     }
+  }
+}
+
+.panel-heading {
+  &--console {
+    margin-bottom: 0;
+  }
+  &--console-section {
+    margin-bottom: 0;
+  }
+  &--console-card {
+    margin-bottom: 0;
+  }
+  &--console-section {
+    @include balanced-row.balanced-row;
+  }
+  &--console {
+    @include balanced-row.balanced-row;
+  }
+  &--console-card {
+    @include balanced-row.balanced-row;
+  }
+  &--console-section {
+    align-items: flex-end;
+  }
+  &--console-section h2 {
+    margin: 0;
+    color: colors.$white !important;
+    font-family: fonts.$family-console-display !important;
+    font-size: fonts.$size-art-symbol !important;
+    line-height: fonts.$line-height-console-section !important;
+    letter-spacing: fonts.$tracking-console-title !important;
+    text-shadow: (layout.$pixel-unit * 0.375) (layout.$pixel-unit * 0.375) 0
+      colors.$purple-dark !important;
+  }
+}
+
+.panel-heading {
+  &--console-card h3 {
+    margin: 0;
+    color: colors.$ink;
+    font-size: fonts.$size-label;
+    font-weight: fonts.$weight-heading;
   }
 }

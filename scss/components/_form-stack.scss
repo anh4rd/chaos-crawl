@@ -14,3 +14,15 @@
     padding-bottom: 0;
   }
 }
+
+.form-stack {
+  &--native {
+    display: block;
+    flex-direction: row;
+    gap: normal;
+    padding-bottom: 0;
+    > :where(:not(:last-child)) {
+      margin-block: 0 layout.$spacing-unit * 2;
+    }
+  }
+}

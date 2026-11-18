@@ -1,3 +1,9 @@
+import NativeSelect from "../../../components/ui/NativeSelect";
+import ContentPanel from "../../../components/ui/ContentPanel";
+import Badge from "../../../components/ui/Badge";
+import ControlRow from "../../../components/ui/ControlRow";
+import PanelGrid from "../../../components/ui/PanelGrid";
+import DisplayHeading from "../../../components/ui/DisplayHeading";
 import Card from "../../../components/ui/Card";
 import Button from "../../../components/ui/Button";
 import Input from "../../../components/ui/Input";
@@ -11,8 +17,15 @@ export default function TeamsView({
   onCreateTeam,
   onAssignTeam,
 }: {
-  players: readonly { id: string; name: string; team: string | null }[];
-  teams: readonly { id: string; name: string }[];
+  players: readonly {
+    id: string;
+    name: string;
+    team: string | null;
+  }[];
+  teams: readonly {
+    id: string;
+    name: string;
+  }[];
   newTeamName: string;
   creatingTeam: boolean;
   assigningPlayerIds: ReadonlySet<string>;
@@ -23,9 +36,9 @@ export default function TeamsView({
   return (
     <>
       <Card>
-        <h2 className="text-2xl font-bold">Create Teams</h2>
+        <DisplayHeading variant="plain">Create Teams</DisplayHeading>
 
-        <div className="mt-4 space-y-3">
+        <PanelGrid variant="feed-tight">
           <Input
             placeholder="Team name..."
             value={newTeamName}
@@ -35,41 +48,35 @@ export default function TeamsView({
           <Button type="button" disabled={creatingTeam} onClick={onCreateTeam}>
             {creatingTeam ? "Creating..." : "Create Team"}
           </Button>
-        </div>
+        </PanelGrid>
 
         {teams.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
+          <ControlRow variant="chips">
             {teams.map((team) => (
-              <span
-                key={team.id}
-                className="rounded-full bg-zinc-800 px-3 py-2 text-sm"
-              >
+              <Badge key={team.id} variant="team-name">
                 {team.name}
-              </span>
+              </Badge>
             ))}
-          </div>
+          </ControlRow>
         )}
       </Card>
 
       <Card>
-        <h2 className="text-2xl font-bold">Assign Teams</h2>
+        <DisplayHeading variant="plain">Assign Teams</DisplayHeading>
 
-        <div className="mt-4 space-y-4">
+        <PanelGrid variant="feed">
           {players.map((player) => (
-            <div
-              key={player.id}
-              className="rounded-xl border border-zinc-700 bg-black/50 p-4"
-            >
+            <ContentPanel key={player.id} as="div" variant="ledger">
               <strong>{player.name}</strong>
 
-              <select
+              <NativeSelect
                 value={player.team ?? ""}
                 aria-label={`Team for ${player.name}`}
                 disabled={assigningPlayerIds.has(player.id)}
                 onChange={(event) => {
                   void onAssignTeam(player.id, event.target.value);
                 }}
-                className="mt-3 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
+                spacing="regular"
               >
                 <option value="">Unassigned</option>
 
@@ -78,10 +85,10 @@ export default function TeamsView({
                     {team.name}
                   </option>
                 ))}
-              </select>
-            </div>
+              </NativeSelect>
+            </ContentPanel>
           ))}
-        </div>
+        </PanelGrid>
       </Card>
     </>
   );

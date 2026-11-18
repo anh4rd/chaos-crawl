@@ -1,3 +1,7 @@
+import PanelGrid from "../../../components/ui/PanelGrid";
+import NativeSelect from "../../../components/ui/NativeSelect";
+import Note from "../../../components/ui/Note";
+import DisplayHeading from "../../../components/ui/DisplayHeading";
 import type { ReactNode } from "react";
 import Card from "../../../components/ui/Card";
 export default function ParticipationView({
@@ -10,7 +14,11 @@ export default function ParticipationView({
   children,
 }: {
   gameAvailable: boolean;
-  players: readonly { id: string; name: string; team: string | null }[];
+  players: readonly {
+    id: string;
+    name: string;
+    team: string | null;
+  }[];
   playerId: string;
   onPlayer: (value: string) => void;
   feedback?: ReactNode;
@@ -24,15 +32,17 @@ export default function ParticipationView({
           {feedback}
           {upload}
           <Card>
-            <h2 className="text-xl font-bold">Play as a Player</h2>
-            <p className="mt-2 text-sm text-zinc-400">
+            <DisplayHeading variant="plain-compact">
+              Play as a Player
+            </DisplayHeading>
+            <Note variant="description">
               Choose your joined player account to take part as host.
-            </p>
-            <select
+            </Note>
+            <NativeSelect
               aria-label="Play as player"
               value={playerId}
               onChange={(event) => onPlayer(event.target.value)}
-              className="mt-4 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
+              spacing="wide"
             >
               <option value="">Select player</option>
               {players.map((candidate) => (
@@ -41,16 +51,14 @@ export default function ParticipationView({
                   {candidate.team ? ` • ${candidate.team}` : ""}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </Card>
           <Card>
-            <h2 className="text-2xl font-bold">Chaos Bingo</h2>
+            <DisplayHeading variant="plain">Chaos Bingo</DisplayHeading>
             {!playerId ? (
-              <p className="mt-4 text-yellow-400">
-                Select a player above to take part.
-              </p>
+              <Note variant="warning">Select a player above to take part.</Note>
             ) : (
-              <div className="mt-4 space-y-4">{children}</div>
+              <PanelGrid variant="feed">{children}</PanelGrid>
             )}
           </Card>
         </>

@@ -116,3 +116,53 @@
     }
   }
 }
+
+.icon-badge {
+  &--console-challenge {
+    border: 0;
+    border-style: solid;
+  }
+  &--console-item {
+    border: 0;
+    border-style: solid;
+  }
+  &--console-challenge {
+    display: grid;
+    place-items: center;
+    flex: 0 0 (layout.$pixel-unit * 12);
+    width: (layout.$pixel-unit * 12);
+    height: (layout.$pixel-unit * 12);
+    border-radius: (layout.$pixel-unit * 4);
+    background: colors.$console-art;
+    color: colors.$pink;
+  }
+  &--console-challenge-lime {
+    background: colors.$console-art-lime;
+    color: colors.$purple;
+  }
+  &--console-item {
+    display: grid;
+    place-items: center;
+    flex: 0 0 (layout.$pixel-unit * 8.5);
+    width: (layout.$pixel-unit * 8.5);
+    height: (layout.$pixel-unit * 8.5);
+    border-radius: (layout.$pixel-unit * 3);
+    background: colors.$console-item-art;
+    color: colors.$pink;
+  }
+}
+
+.icon-badge {
+  &--console-challenge > .icon--size-28 {
+    width: layout.$pixel-unit * 7;
+    height: layout.$pixel-unit * 7;
+  }
+  &--console-challenge > .icon--size-25 {
+    width: layout.$pixel-unit * 6.25;
+    height: layout.$pixel-unit * 6.25;
+  }
+  &--console-item > .icon--size-17 {
+    width: layout.$pixel-unit * 4.25;
+    height: layout.$pixel-unit * 4.25;
+  }
+}

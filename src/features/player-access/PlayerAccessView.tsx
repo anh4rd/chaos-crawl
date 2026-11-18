@@ -110,7 +110,10 @@ export default function PlayerAccessView({
           >
             {busy ? (
               <>
-                <Icon name="loader-circle" className="icon--size-19 cc-spin" />{" "}
+                <Icon
+                  name="loader-circle"
+                  className="icon--size-19 icon--spinning-session"
+                />{" "}
                 Joining…
               </>
             ) : (

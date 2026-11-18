@@ -1,3 +1,4 @@
+import LegacyAdminExample from "./LegacyAdminExample";
 import ModerationExample from "./ModerationExample";
 import IdeaCardExample from "./IdeaCardExample";
 import CatalogueExample from "./CatalogueExample";
@@ -121,6 +122,7 @@ export default function HostExamples() {
       <SavedItemsExample />
       <FilterToolbarExample />
       <PlatformGamesExample />
+      <LegacyAdminExample />
       <PlanningPrimitivesExample />
       <LobbyPrimitivesExample />
       <HostChromeExample />

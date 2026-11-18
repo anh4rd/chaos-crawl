@@ -1,0 +1,13 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.sync-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: layout.$pixel-unit * 1.75;
+  color: colors.$participant-sync-copy;
+  font-size: fonts.$size-micro;
+  padding: 0 layout.$pixel-unit * 1.25;
+}

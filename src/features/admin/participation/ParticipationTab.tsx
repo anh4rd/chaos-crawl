@@ -1,3 +1,4 @@
+import UploadInput from "../../../components/ui/UploadInput";
 import { useState } from "react";
 import { usePlayers } from "../../../game/hooks/usePlayers";
 import { useGameState } from "../../../game/hooks/useGameState";
@@ -7,7 +8,6 @@ import { useChallengeParticipation } from "../../../game/hooks/useChallengeParti
 import QueryPanel from "../QueryPanel";
 import HostChallengeCard from "./HostChallengeCard";
 import { sideChallengePlayers } from "./completionPlayers";
-
 import { useNavigate } from "react-router-dom";
 import ParticipationView from "./ParticipationView";
 export default function ParticipationTab() {
@@ -45,11 +45,9 @@ export default function ParticipationTab() {
           )
         }
         upload={
-          <input
+          <UploadInput
             ref={participation.fileInputRef}
-            type="file"
             accept="image/*,video/*"
-            className="hidden"
             onChange={participation.handleFileSelected}
           />
         }

@@ -1,3 +1,5 @@
+import SessionStatusExample from "../features/styleguide/SessionStatusExample";
+import LegacyHostExample from "../features/styleguide/LegacyHostExample";
 import { useState } from "react";
 import StyleguideShell from "../features/styleguide/StyleguideShell";
 import StyleguideIntro from "../features/styleguide/StyleguideIntro";
@@ -24,7 +26,6 @@ import { FeedbackExamples } from "../features/styleguide/FeedbackExamples";
 import HostExamples from "../features/styleguide/HostExamples";
 import { Catalog } from "../features/styleguide/Catalog";
 import { Section } from "../features/styleguide/Section";
-import "../styles/PlayerGame.css";
 import "../styles/HostPortal.css";
 import "../styles/HostTheme.css";
 export default function Styleguide() {
@@ -63,6 +64,8 @@ export default function Styleguide() {
         <SlideshowExample />
         <LegacySlideshowExample />
         <LegacyPlayerExample />
+        <LegacyHostExample />
+        <SessionStatusExample />
         <PlayerAccessExample />
         <ParticipationExamples />
       </Section>

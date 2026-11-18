@@ -1,7 +1,13 @@
+import Badge from "../../../components/ui/Badge";
+import Overline from "../../../components/ui/Overline";
+import ControlRow from "../../../components/ui/ControlRow";
+import ContentPanel from "../../../components/ui/ContentPanel";
+import PanelGrid from "../../../components/ui/PanelGrid";
+import Note from "../../../components/ui/Note";
+import DisplayHeading from "../../../components/ui/DisplayHeading";
 import Card from "../../../components/ui/Card";
 import Button from "../../../components/ui/Button";
 import type { Challenge, GameState } from "../../../types/database";
-
 export interface RoundChallengesProps {
   game: GameState;
   currentRoundChallenges: Challenge[];
@@ -9,7 +15,6 @@ export interface RoundChallengesProps {
   nextRoundChallenge: Challenge | undefined;
   revealRoundChallenge: (challenge: Challenge) => Promise<void>;
 }
-
 export default function RoundChallenges({
   game,
   currentRoundChallenges,
@@ -18,96 +23,78 @@ export default function RoundChallenges({
   revealRoundChallenge,
 }: RoundChallengesProps) {
   return (
-    <Card>
-      <h2 className="text-2xl font-bold">Round Challenges</h2>
+    <Card className="round-challenges">
+      <DisplayHeading variant="plain">Round Challenges</DisplayHeading>
 
-      <p className="mt-2 text-sm text-zinc-400">
-        Reveal challenges throughout the round.
-      </p>
+      <Note variant="description">Reveal challenges throughout the round.</Note>
 
       {currentRoundChallenges.length === 0 ? (
-        <p className="mt-4">No challenges assigned to this pub.</p>
+        <Note variant="empty">No challenges assigned to this pub.</Note>
       ) : (
-        <div className="mt-4 space-y-3">
+        <PanelGrid variant="feed-tight">
           {currentRoundChallenges.map((challenge, index) => {
             const isLive =
               String(game?.current_challenge_id) === String(challenge.id);
-
             const hasPassed =
               currentChallengeIndex >= 0 && index < currentChallengeIndex;
-
             const isNext = nextRoundChallenge?.id === challenge.id;
-
             return (
-              <div
+              <ContentPanel
                 key={challenge.id}
-                className={`
-                rounded-2xl border-2 p-4
-                ${
-                  isLive
-                    ? "border-yellow-400 bg-pink-500"
-                    : hasPassed
-                      ? "border-zinc-700 bg-zinc-900 opacity-60"
-                      : "border-pink-500 bg-black/70"
-                }
-              `}
+                as="div"
+                variant="round"
+                state={isLive ? "live" : hasPassed ? "past" : "upcoming"}
               >
-                <div className="flex items-start justify-between gap-3">
+                <ControlRow variant="spread-start">
                   <div>
-                    <p className="text-xs font-bold uppercase text-zinc-400">
+                    <Overline as="p" variant="plain-strong">
                       Challenge {index + 1}
-                    </p>
+                    </Overline>
 
-                    <h3 className="mt-1 text-xl font-bold">
+                    <DisplayHeading
+                      as="h3"
+                      variant="plain-body"
+                      className="round-challenges__title"
+                    >
                       {challenge.title}
-                    </h3>
+                    </DisplayHeading>
 
                     {challenge.description && (
-                      <p className="mt-2">{challenge.description}</p>
+                      <Note variant="body">{challenge.description}</Note>
                     )}
 
-                    <p className="mt-2 font-bold">
+                    <Note variant="emphasis">
                       +{challenge.points ?? 0} points
-                    </p>
+                    </Note>
                   </div>
 
-                  {isLive && (
-                    <span className="rounded-full bg-yellow-400 px-3 py-1 text-xs font-bold text-black">
-                      LIVE
-                    </span>
-                  )}
+                  {isLive && <Badge variant="round-live">LIVE</Badge>}
 
-                  {hasPassed && (
-                    <span className="rounded-full bg-zinc-700 px-3 py-1 text-xs font-bold">
-                      DONE
-                    </span>
-                  )}
+                  {hasPassed && <Badge variant="round-passed">DONE</Badge>}
 
                   {isNext && !isLive && (
-                    <span className="rounded-full bg-pink-500 px-3 py-1 text-xs font-bold">
-                      NEXT
-                    </span>
+                    <Badge variant="round-next">NEXT</Badge>
                   )}
-                </div>
+                </ControlRow>
 
                 {!isLive && !hasPassed && (
-                  <div className="mt-4">
+                  <ControlRow variant="slot">
                     <Button
                       type="button"
                       onClick={() => revealRoundChallenge(challenge)}
                     >
                       Reveal Now
                     </Button>
-                  </div>
+                  </ControlRow>
                 )}
-              </div>
+              </ContentPanel>
             );
           })}
-        </div>
+        </PanelGrid>
       )}
 
       {nextRoundChallenge && (
-        <div className="mt-6 border-t border-zinc-700 pt-4">
+        <div className="round-challenges__next">
           <Button
             type="button"
             onClick={() => revealRoundChallenge(nextRoundChallenge)}

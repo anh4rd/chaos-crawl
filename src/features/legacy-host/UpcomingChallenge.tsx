@@ -1,3 +1,14 @@
+import IconButton from "../../components/ui/IconButton";
+import Button from "../../components/ui/Button";
+import EmptyState from "../../components/ui/EmptyState";
+import Note from "../../components/ui/Note";
+import ContentCopy from "../../components/ui/ContentCopy";
+import IconBadge from "../../components/ui/IconBadge";
+import ControlRow from "../../components/ui/ControlRow";
+import Badge from "../../components/ui/Badge";
+import Overline from "../../components/ui/Overline";
+import PanelHeading from "../../components/ui/PanelHeading";
+import ContentPanel from "../../components/ui/ContentPanel";
 import Icon from "../../components/ui/Icon";
 import type { UpcomingChallengeModel } from "./types";
 
@@ -14,78 +25,80 @@ export default function UpcomingChallenge({
   onScheduleNext,
 }: UpcomingChallengeModel) {
   return (
-    <section className="host-v2__panel host-v2__panel--white">
-      <div className="host-v2__panel-topline">
-        <span className="host-v2__kicker">
+    <ContentPanel variant="console-white">
+      <PanelHeading variant="console">
+        <Overline variant="console">
           <Icon name="arrow-right" className="icon--size-14" /> NEXT
-        </span>
+        </Overline>
         {scheduledTime && (
-          <span className="host-v2__status host-v2__status--scheduled">
+          <Badge variant="console-scheduled">
             <Icon name="clock3" className="icon--size-13" /> {scheduledTime}
-          </span>
+          </Badge>
         )}
-      </div>
+      </PanelHeading>
       {scheduledChallenge ? (
-        <div className="host-v2__challenge-title-row">
-          <div className="host-v2__challenge-art host-v2__challenge-art--lime">
+        <ControlRow variant="console-preview">
+          <IconBadge variant="console-challenge-lime" as="div">
             <Icon name="calendar-clock" className="icon--size-25" />
-          </div>
-          <div className="host-v2__grow">
+          </IconBadge>
+          <ContentCopy variant="console">
             <h2>{scheduledChallenge.title}</h2>
             <p>{scheduledChallenge.description || "Scheduled challenge"}</p>
-            <p className="host-v2__small-note">
+            <p className="content-copy__schedule-note">
               Scheduled to reveal
               {scheduledTime ? ` at ${scheduledTime}` : " soon"}.
             </p>
-          </div>
-        </div>
+          </ContentCopy>
+        </ControlRow>
       ) : nextChallenge ? (
-        <div className="host-v2__challenge-title-row">
-          <div className="host-v2__challenge-art host-v2__challenge-art--lime">
+        <ControlRow variant="console-preview">
+          <IconBadge variant="console-challenge-lime" as="div">
             <Icon name="circle-dot" className="icon--size-25" />
-          </div>
-          <div className="host-v2__grow">
+          </IconBadge>
+          <ContentCopy variant="console">
             <h2>{nextChallenge.title}</h2>
             <p>
               {nextChallenge.description ||
                 "No extra instructions for this challenge."}
             </p>
-            <span className="host-v2__points-inline">
+            <Note variant="console-points" as="span">
               +{nextChallenge.points} points
-            </span>
-          </div>
-        </div>
+            </Note>
+          </ContentCopy>
+        </ControlRow>
       ) : (
-        <div className="host-v2__empty">
+        <EmptyState variant="console">
           <h2>All rounds revealed</h2>
           <p>You've reached the end of the main challenge list.</p>
-        </div>
+        </EmptyState>
       )}
-      <div className="host-v2__actions">
+      <ControlRow variant="console-actions">
         {nextChallenge && (
-          <button
+          <Button
             type="button"
-            className="host-v2__button host-v2__button--primary"
+            fullWidth={false}
+            variant="console-primary"
             disabled={busy}
             onClick={onRevealNext}
           >
             {revealingNext ? "Revealing…" : "Reveal next challenge"}
             <Icon name="chevron-right" className="icon--size-17" />
-          </button>
+          </Button>
         )}
         {scheduledChallenge && (
-          <button
+          <Button
             type="button"
-            className="host-v2__button host-v2__button--subtle"
+            fullWidth={false}
+            variant="console-subtle"
             disabled={busy}
             onClick={onCancelSchedule}
           >
             <Icon name="x" className="icon--size-16" /> Cancel schedule
-          </button>
+          </Button>
         )}
-      </div>
+      </ControlRow>
       {nextChallenge && !scheduledChallenge && (
-        <div className="host-v2__schedule-row">
+        <ControlRow variant="console-schedule">
           <label htmlFor="host-v2-schedule">Auto-reveal in</label>
           <input
             id="host-v2-schedule"
@@ -97,17 +110,18 @@ export default function UpcomingChallenge({
             onChange={(event) => onScheduleMinutesChange(event.target.value)}
           />
           <span>min</span>
-          <button
+          <IconButton
             type="button"
-            className="host-v2__icon-button"
+
+            variant="console-square"
             disabled={busy}
-            aria-label="Schedule next challenge"
+            label="Schedule next challenge"
             onClick={onScheduleNext}
-          >
-            <Icon name="calendar-clock" className="icon--size-17" />
-          </button>
-        </div>
+            icon="calendar-clock"
+            iconClassName="icon--size-17"
+          />
+        </ControlRow>
       )}
-    </section>
+    </ContentPanel>
   );
 }

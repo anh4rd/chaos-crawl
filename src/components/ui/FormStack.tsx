@@ -3,7 +3,7 @@ export default function FormStack({
   variant,
   className = "",
   ...props
-}: ComponentPropsWithoutRef<"form"> & { variant?: "contribution" }) {
+}: ComponentPropsWithoutRef<"form"> & { variant?: "contribution" | "native" }) {
   return (
     <form
       {...props}

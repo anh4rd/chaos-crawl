@@ -1,7 +1,10 @@
+import ControlRow from "../../../components/ui/ControlRow";
+import NativeSelect from "../../../components/ui/NativeSelect";
+import FormLabel from "../../../components/ui/FormLabel";
+import DisplayHeading from "../../../components/ui/DisplayHeading";
 import Card from "../../../components/ui/Card";
 import Button from "../../../components/ui/Button";
 import type { Challenge, GameState, Pub } from "../../../types/database";
-
 export interface LiveGameSelectionProps {
   game: GameState;
   selectedPub: string;
@@ -15,7 +18,6 @@ export interface LiveGameSelectionProps {
   goLive: () => Promise<void>;
   navigate: (path: string) => void;
 }
-
 export default function LiveGameSelection({
   game,
   selectedPub,
@@ -36,26 +38,22 @@ export default function LiveGameSelection({
     challenges.find((challenge) => challenge.title === game.current_challenge);
   return (
     <Card>
-      <h2 className="text-xl font-bold">Change Live Game</h2>
+      <DisplayHeading variant="plain-compact">Change Live Game</DisplayHeading>
 
-      <label className="mt-4 block text-sm">Pub</label>
+      <FormLabel variant="plain-spaced">Pub</FormLabel>
 
-      <select
+      <NativeSelect
         value={selectedPub}
         onChange={(event) => {
           const pubName = event.target.value;
-
           setSelectedPub(pubName);
-
           const pub = pubs.find((item) => item.name === pubName);
-
           const first = challenges.find(
             (challenge) => String(challenge.pub_id) === String(pub?.id),
           );
-
           setSelectedChallenge(first?.title ?? "");
         }}
-        className="mt-2 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
+        spacing="close"
       >
         <option value="">Select pub</option>
 
@@ -64,14 +62,14 @@ export default function LiveGameSelection({
             {pub.name}
           </option>
         ))}
-      </select>
+      </NativeSelect>
 
-      <label className="mt-4 block text-sm">Challenge</label>
+      <FormLabel variant="plain-spaced">Challenge</FormLabel>
 
-      <select
+      <NativeSelect
         value={selectedChallenge}
         onChange={(event) => setSelectedChallenge(event.target.value)}
-        className="mt-2 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
+        spacing="close"
       >
         <option value="">Select challenge</option>
 
@@ -80,9 +78,9 @@ export default function LiveGameSelection({
             {challenge.title}
           </option>
         ))}
-      </select>
+      </NativeSelect>
 
-      <div className="mt-6">
+      <ControlRow variant="slot-loose">
         <Button type="button" onClick={goLive}>
           Go Live
         </Button>
@@ -91,16 +89,14 @@ export default function LiveGameSelection({
             type="button"
             onClick={() =>
               navigate(
-                `/challenge-review?type=main&id=${encodeURIComponent(
-                  String(activeChallenge.id),
-                )}&title=${encodeURIComponent(activeChallenge.title)}`,
+                `/challenge-review?type=main&id=${encodeURIComponent(String(activeChallenge.id))}&title=${encodeURIComponent(activeChallenge.title)}`,
               )
             }
           >
             Review & Award Points
           </Button>
         )}
-      </div>
+      </ControlRow>
     </Card>
   );
 }

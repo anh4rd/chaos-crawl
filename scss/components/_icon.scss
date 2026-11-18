@@ -114,3 +114,9 @@
     transform: rotate(motion.$rotation-full);
   }
 }
+
+.icon {
+  &--spinning-session {
+    animation: icon-spin motion.$duration-session-spinner linear infinite;
+  }
+}

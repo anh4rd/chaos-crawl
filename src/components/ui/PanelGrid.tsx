@@ -5,7 +5,19 @@ export default function PanelGrid({
   variant,
   ...props
 }: HTMLAttributes<HTMLDivElement> & {
-  variant?: "collection" | "ideas" | "stack" | "stats";
+  variant?:
+    | "private-feed"
+    | "collection"
+    | "ideas"
+    | "stack"
+    | "stats"
+    | "console-list"
+    | "console-ranking"
+    | "console-roster"
+    | "feed"
+    | "feed-tight"
+    | "feed-page"
+    | "feed-feedback";
 }) {
   return (
     <div

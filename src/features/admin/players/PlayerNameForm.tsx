@@ -1,3 +1,5 @@
+import FormLabel from "../../../components/ui/FormLabel";
+import FormStack from "../../../components/ui/FormStack";
 import type { FormEvent } from "react";
 import Input from "../../../components/ui/Input";
 import Button from "../../../components/ui/Button";
@@ -21,10 +23,10 @@ export default function PlayerNameForm({
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   return (
-    <form onSubmit={onSubmit} className="space-y-2">
-      <label htmlFor={inputId} className="block text-sm">
+    <FormStack onSubmit={onSubmit} variant="native">
+      <FormLabel htmlFor={inputId} variant="plain">
         Player name
-      </label>
+      </FormLabel>
       <Input
         id={inputId}
         aria-label={`Name for ${name}`}
@@ -36,6 +38,6 @@ export default function PlayerNameForm({
       <Button type="submit" disabled={saving || draft === saved}>
         {saving ? "Saving name..." : "Save Name"}
       </Button>
-    </form>
+    </FormStack>
   );
 }

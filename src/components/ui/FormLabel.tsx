@@ -18,7 +18,11 @@ export default function FormLabel({
     | "award-points"
     | "access"
     | "contribution"
-    | "filter";
+    | "plain"
+    | "plain-spaced"
+    | "plain-strong"
+    | "filter"
+    | "console-team";
 }) {
   return (
     <label

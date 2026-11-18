@@ -1,0 +1,12 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+.live-indicator {
+  display: inline-block;
+  flex: 0 0 layout.$pixel-unit * 2;
+  height: layout.$pixel-unit * 2;
+  width: layout.$pixel-unit * 2;
+  border-radius: layout.$radius-circle;
+  background: colors.$live-indicator;
+  box-shadow: 0 0 0 layout.$pixel-unit * 0.75 colors.$live-indicator-glow;
+}

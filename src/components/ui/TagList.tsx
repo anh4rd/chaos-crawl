@@ -4,7 +4,7 @@ export default function TagList({
   variant,
   className = "",
   ...props
-}: ComponentPropsWithoutRef<"div"> & { variant?: "idea" }) {
+}: ComponentPropsWithoutRef<"div"> & { variant?: "idea" | "console" }) {
   return (
     <div
       {...props}

@@ -22,6 +22,19 @@ async function tab(page: Page, name: string) {
     page,
     page.getByRole("button", { name, exact: true }),
   );
+  const headings: Record<string, string> = {
+    "🔴 Live": "Round Challenges",
+    "🌙 Tonight": "Schedule a Reveal",
+    "🎯 Challenges": "Play as a Player",
+    "✅ Review": "Challenge Review",
+    "📺 Screens": "Host Screens",
+    "🗳️ Voting": "Voting",
+    "👥 Players": "Players",
+    "🏁 Teams": "Assign Teams",
+  };
+  await expect(
+    page.getByRole("heading", { name: headings[name], exact: true }),
+  ).toBeVisible();
 }
 
 function acceptNext(page: Page, expected: string) {
@@ -376,7 +389,10 @@ test("legacy query failures retain a working retry path before showing first-loa
   const { backend } = await installAdmin(page);
   backend.failures.add("players");
   await openAdmin(page);
-  await tab(page, "👥 Players");
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "👥 Players", exact: true }),
+  );
   await expect(page.getByRole("alert")).toHaveText("Fixture connection failed");
   await expect(page.getByRole("textbox", { name: "Name for Pat" })).toHaveCount(
     0,
@@ -391,4 +407,114 @@ test("legacy query failures retain a working retry path before showing first-loa
   ).toBeVisible();
   await expect(page.getByText("Score: 10", { exact: true })).toBeVisible();
   await expect(page.getByRole("alert")).toHaveCount(0);
+});
+
+test("local legacy administration exercises native forms, chooser, recovery and intercepted navigation", async ({
+  page,
+}) => {
+  const requests: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("supabase.co")) requests.push(request.url());
+  });
+  await page.goto("#/styleguide");
+  const reference = page.getByRole("region", {
+    name: "Local legacy administration reference",
+  });
+  await expect(reference).toBeVisible();
+  await reference
+    .getByRole("button", { name: "👥 Players", exact: true })
+    .press("Enter");
+  await reference
+    .getByRole("button", { name: "+5", exact: true })
+    .press("Enter");
+  await expect(reference.getByText("Score: 15", { exact: true })).toBeVisible();
+  const name = reference.getByRole("textbox", { name: "Name for Robin" });
+  await name.fill("  Robyn  ");
+  await name.press("Enter");
+  await expect(
+    reference.getByRole("textbox", { name: "Name for Robyn" }),
+  ).toHaveValue("Robyn");
+  await reference
+    .getByRole("checkbox", { name: "Preview pending operation" })
+    .check();
+  await expect(
+    reference.getByRole("button", { name: "+5", exact: true }),
+  ).toBeDisabled();
+  await reference
+    .getByRole("checkbox", { name: "Preview pending operation" })
+    .uncheck();
+  await reference
+    .getByRole("checkbox", { name: "Preview query error" })
+    .check();
+  await expect(reference.getByRole("alert")).toHaveText("Preview query failed");
+  await reference.getByRole("button", { name: "Try again" }).press("Enter");
+  await expect(reference.getByRole("alert")).toHaveCount(0);
+  await reference
+    .getByRole("button", { name: "🏁 Teams", exact: true })
+    .press("Enter");
+  await reference.getByPlaceholder("Team name...").fill("  Bears  ");
+  await reference
+    .getByRole("button", { name: "Create Team", exact: true })
+    .press("Enter");
+  await reference
+    .getByRole("combobox", { name: "Team for Robyn" })
+    .selectOption("Bears");
+  await expect(
+    reference.getByRole("combobox", { name: "Team for Robyn" }),
+  ).toHaveValue("Bears");
+  await reference
+    .getByRole("button", { name: "🎯 Challenges", exact: true })
+    .press("Enter");
+  await reference
+    .getByRole("combobox", { name: "Play as player" })
+    .selectOption("sample-player");
+  const chooser = page.waitForEvent("filechooser");
+  await reference
+    .getByRole("button", {
+      name: "📸 Upload Photo / Video",
+      exact: true,
+    })
+    .press("Enter");
+  await (
+    await chooser
+  ).setFiles({
+    name: "preview-evidence.png",
+    mimeType: "image/png",
+    buffer: Buffer.from("local preview"),
+  });
+  await expect(reference.getByRole("status")).toHaveText(
+    "preview-evidence.png",
+  );
+  await reference
+    .getByRole("button", { name: "✓ Mark Done", exact: true })
+    .press("Enter");
+  await expect(
+    reference.getByText("✓ Completed", { exact: true }),
+  ).toBeVisible();
+  await reference
+    .getByRole("button", { name: "✅ Review", exact: true })
+    .press("Enter");
+  await expect(
+    reference.getByText("📸 Media attached", { exact: true }),
+  ).toBeVisible();
+  await reference
+    .getByRole("button", { name: "🗳️ Voting", exact: true })
+    .press("Enter");
+  await reference
+    .getByRole("button", { name: "Open Voting", exact: true })
+    .press("Enter");
+  await expect(
+    reference.getByRole("button", { name: "Vote Now", exact: false }),
+  ).toBeVisible();
+  await reference
+    .getByRole("button", { name: "📺 Screens", exact: true })
+    .press("Enter");
+  await reference
+    .getByRole("button", { name: "Leaderboard", exact: true })
+    .press("Enter");
+  await expect(reference.getByRole("status")).toHaveText(
+    "Preview navigation: /leaderboard",
+  );
+  await expect(page).toHaveURL(/#\/styleguide$/);
+  expect(requests).toEqual([]);
 });

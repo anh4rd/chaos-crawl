@@ -1,3 +1,11 @@
+import Badge from "../../components/ui/Badge";
+import TagList from "../../components/ui/TagList";
+import Button from "../../components/ui/Button";
+import ControlRow from "../../components/ui/ControlRow";
+import Note from "../../components/ui/Note";
+import Overline from "../../components/ui/Overline";
+import PanelHeading from "../../components/ui/PanelHeading";
+import ContentPanel from "../../components/ui/ContentPanel";
 import Icon from "../../components/ui/Icon";
 import type { TeamPanelModel } from "./types";
 
@@ -12,43 +20,48 @@ export default function TeamPanel({
   onCreate,
 }: TeamPanelModel) {
   return (
-    <section className="host-v2__panel host-v2__panel--white">
-      <div className="host-v2__panel-topline">
-        <span className="host-v2__kicker">
+    <ContentPanel variant="console-white">
+      <PanelHeading variant="console">
+        <Overline variant="console">
           <Icon name="users" className="icon--size-14" /> TEAMS
-        </span>
-        <span className="host-v2__muted">{teamCount} teams</span>
-      </div>
-      <div className="host-v2__add-row">
+        </Overline>
+        <Note variant="console-muted" as="span">
+          {teamCount} teams
+        </Note>
+      </PanelHeading>
+      <ControlRow variant="console-add">
         <input
           aria-label="New team name"
           placeholder="New team name"
           value={draft}
           onChange={(event) => onDraftChange(event.target.value)}
         />
-        <button
+        <Button
           type="button"
-          className="host-v2__icon-button"
+          fullWidth={false}
+          variant="console-square"
           aria-label="Create team"
           disabled={!canCreate}
           onClick={onCreate}
         >
           {creating ? "…" : <Icon name="plus" className="icon--size-18" />}
-        </button>
-      </div>
+        </Button>
+      </ControlRow>
       {teamsLoading ? (
-        <p className="host-v2__muted">Loading teams…</p>
+        <Note variant="console-muted">Loading teams…</Note>
       ) : names.length ? (
-        <div className="host-v2__team-chips">
+        <TagList variant="console">
           {names.map((name) => (
-            <span key={name}>{name}</span>
+            <Badge variant="console-team" key={name}>
+              {name}
+            </Badge>
           ))}
-        </div>
+        </TagList>
       ) : (
-        <p className="host-v2__empty-copy">
+        <Note variant="console-empty">
           Create a team or assign players to a team below.
-        </p>
+        </Note>
       )}
-    </section>
+    </ContentPanel>
   );
 }

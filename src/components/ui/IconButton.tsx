@@ -9,6 +9,8 @@ interface Props extends Omit<
   label: string;
   variant?:
     | "panel-close"
+    | "console-remove"
+    | "console-square"
     | "slideshow-fullscreen"
     | "danger"
     | "entity-remove"

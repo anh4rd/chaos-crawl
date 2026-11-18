@@ -1,0 +1,19 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.native-select {
+  width: 100%;
+  border: layout.$pixel-unit * 0.25 solid colors.$legacy-border;
+  border-radius: layout.$spacing-unit * 3;
+  background-color: colors.$legacy-stat-surface;
+  padding: layout.$spacing-unit * 3;
+  color: colors.$white;
+  &--close {
+    margin-top: layout.$spacing-unit * 2;
+  }
+  &--regular {
+    margin-top: layout.$spacing-unit * 3;
+  }
+  &--wide {
+    margin-top: layout.$spacing-unit * 4;
+  }
+}

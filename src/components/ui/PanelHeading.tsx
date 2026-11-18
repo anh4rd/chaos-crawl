@@ -11,7 +11,10 @@ export default function PanelHeading({
     | "reveal"
     | "moderation"
     | "contribution"
-    | "overview";
+    | "overview"
+    | "console"
+    | "console-section"
+    | "console-card";
   dismissible?: boolean;
 }) {
   return (

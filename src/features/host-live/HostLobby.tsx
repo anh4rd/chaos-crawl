@@ -231,7 +231,10 @@ export default function HostLobby({
             onClick={() => void startGame()}
           >
             {busy ? (
-              <Icon name="loader-circle" className="icon--size-17 cc-spin" />
+              <Icon
+                name="loader-circle"
+                className="icon--size-17 icon--spinning-session"
+              />
             ) : (
               <Icon name="play" className="icon--size-17" />
             )}{" "}

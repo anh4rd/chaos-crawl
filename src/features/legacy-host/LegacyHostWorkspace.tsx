@@ -1,3 +1,4 @@
+import PageFrame from "../../components/ui/PageFrame";
 import { useLegacyTeams } from "./useLegacyTeams";
 import { useLegacyRoster } from "./useLegacyRoster";
 import { useLegacyGameControls } from "./useLegacyGameControls";
@@ -31,7 +32,6 @@ import { usePubs } from "../../game/hooks/usePubs";
 import { useScoreEvents } from "../../game/hooks/useScoreEvents";
 import { useSideChallenges } from "../../game/hooks/useSideChallenges";
 import { buildLeaderboards } from "../../lib/leaderboard";
-import "../../styles/HostPlanning.css";
 
 export default function LegacyHostWorkspace() {
   const navigate = useNavigate();
@@ -156,9 +156,9 @@ export default function LegacyHostWorkspace() {
 
   if (!game) {
     return (
-      <main className="host-v2">
-        <div className="host-v2__loading">Loading host controls…</div>
-      </main>
+      <PageFrame variant="bare" className="legacy-host">
+        <div className="legacy-host__loading">Loading host controls…</div>
+      </PageFrame>
     );
   }
 

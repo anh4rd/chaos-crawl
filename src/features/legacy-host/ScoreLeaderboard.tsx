@@ -1,3 +1,11 @@
+import RankingRow from "../../components/ui/RankingRow";
+import Button from "../../components/ui/Button";
+import PanelGrid from "../../components/ui/PanelGrid";
+import FilterGroup from "../../components/ui/FilterGroup";
+import Note from "../../components/ui/Note";
+import Overline from "../../components/ui/Overline";
+import PanelHeading from "../../components/ui/PanelHeading";
+import ContentPanel from "../../components/ui/ContentPanel";
 import Icon from "../../components/ui/Icon";
 import type { ScoreLeaderboardModel } from "./types";
 
@@ -8,56 +16,51 @@ export default function ScoreLeaderboard({
   onTargetChange,
 }: ScoreLeaderboardModel) {
   return (
-    <section className="host-v2__panel host-v2__panel--white">
-      <div className="host-v2__panel-topline">
-        <span className="host-v2__kicker">
+    <ContentPanel variant="console-white">
+      <PanelHeading variant="console">
+        <Overline variant="console">
           <Icon name="trophy" className="icon--size-14" /> LEADERBOARD
-        </span>
-        <span className="host-v2__muted">
+        </Overline>
+        <Note variant="console-muted" as="span">
           {loading ? "Updating…" : "Live scores"}
-        </span>
-      </div>
-      <div
-        className="host-v2__segmented"
-        role="group"
-        aria-label="Leaderboard view"
-      >
-        <button
+        </Note>
+      </PanelHeading>
+      <FilterGroup variant="console" role="group" aria-label="Leaderboard view">
+        <Button
+          fullWidth={false}
+          variant="console-segment"
           type="button"
-          className={target === "player" ? "is-selected" : ""}
+          className={target === "player" ? "btn--console-selected" : ""}
           onClick={() => onTargetChange("player")}
         >
           Player scores
-        </button>
-        <button
+        </Button>
+        <Button
+          fullWidth={false}
+          variant="console-segment"
           type="button"
-          className={target === "team" ? "is-selected" : ""}
+          className={target === "team" ? "btn--console-selected" : ""}
           onClick={() => onTargetChange("team")}
         >
           Team scores
-        </button>
-      </div>
+        </Button>
+      </FilterGroup>
       {entries.length ? (
-        <div className="host-v2__leaderboard">
+        <PanelGrid variant="console-ranking">
           {entries.map((entry, index) => (
-            <div className="host-v2__leader-row" key={entry.id}>
-              <span
-                className={`host-v2__rank ${index === 0 ? "is-first" : ""}`}
-              >
-                {index + 1}
-              </span>
-              <span className="host-v2__leader-name">{entry.name}</span>
-              <strong>
-                {entry.score} <small>pts</small>
-              </strong>
-            </div>
+            <RankingRow
+              key={entry.id}
+              rank={index + 1}
+              name={entry.name}
+              score={entry.score}
+            />
           ))}
-        </div>
+        </PanelGrid>
       ) : (
-        <p className="host-v2__empty-copy">
+        <Note variant="console-empty">
           Scores will appear here when points are awarded.
-        </p>
+        </Note>
       )}
-    </section>
+    </ContentPanel>
   );
 }

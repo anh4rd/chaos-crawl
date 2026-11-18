@@ -18,9 +18,14 @@ export default function Overline({
     | "workspace"
     | "banner"
     | "moderation"
-    | "inverse";
+    | "inverse"
+    | "console"
+    | "console-eyebrow"
+    | "plain"
+    | "plain-strong"
+    | "plain-accent";
   withIcon?: boolean;
-  as?: "span" | "div" | "strong";
+  as?: "span" | "div" | "strong" | "p";
 }) {
   return (
     <Container

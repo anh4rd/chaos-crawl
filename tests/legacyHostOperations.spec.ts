@@ -154,7 +154,7 @@ test("legacy roster creation, assignment, blur rename and confirmed removal pres
   await expect(
     page.getByRole("textbox", { name: "New team name", exact: true }),
   ).toHaveValue("");
-  await expect(page.locator(".host-v2__team-chips")).toContainText("Owls");
+  await expect(page.locator(".tag-list--console")).toContainText("Owls");
   await page
     .getByRole("textbox", { name: "New player name", exact: true })
     .fill("  Kai  ");

@@ -6,9 +6,11 @@ export default function ContentPanel({
   stacked = false,
   overlay = false,
   compact = false,
+  state,
   ...props
 }: HTMLAttributes<HTMLElement> & {
   variant?:
+    | "private-feed"
     | "section"
     | "library"
     | "selection"
@@ -29,7 +31,15 @@ export default function ContentPanel({
     | "table"
     | "notice"
     | "record"
+    | "console-white"
+    | "console-tint"
+    | "console-card"
+    | "ledger"
+    | "scheduled"
+    | "ranking"
+    | "round"
     | "challenge";
+  state?: "live" | "past" | "upcoming" | "complete";
   stacked?: boolean;
   overlay?: boolean;
   compact?: boolean;
@@ -38,7 +48,7 @@ export default function ContentPanel({
   return (
     <Container
       {...props}
-      className={`content-panel content-panel--${variant}${overlay ? " content-panel--overlay" : ""}${stacked ? " content-panel--stacked" : ""}${compact ? " content-panel--compact" : ""} ${className}`.trim()}
+      className={`content-panel${variant === "console-white" || variant === "console-tint" ? " content-panel--console" : ""} content-panel--${variant}${state ? ` content-panel--${state}` : ""}${overlay ? " content-panel--overlay" : ""}${stacked ? " content-panel--stacked" : ""}${compact ? " content-panel--compact" : ""} ${className}`.trim()}
     />
   );
 }

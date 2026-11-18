@@ -15,12 +15,15 @@ export default function CountBadge({
     | "choice"
     | "filter"
     | "tab"
-    | "moderation";
+    | "moderation"
+    | "console"
+    | "console-rank"
+    | "console-rank-first";
 }) {
   return (
     <Container
       {...props}
-      className={`count-badge${variant ? ` count-badge--${variant}` : ""} ${className}`.trim()}
+      className={`count-badge${variant === "console-rank-first" ? " count-badge--console-rank count-badge--first" : ""}${variant ? ` count-badge--${variant}` : ""} ${className}`.trim()}
     />
   );
 }
