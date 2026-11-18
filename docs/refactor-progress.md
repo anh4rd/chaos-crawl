@@ -4664,3 +4664,32 @@ favourites availability/collection-only retry; lifetime-aware loaders; single
 telemetry ownership; native identity fallback; optional-time display/regressions.
 This25-file slice exceeds800lines; large loader indentation is mechanical, while
 error/identity/concurrency decisions deserve scrutiny. No styling/payload redesign.
+
+## Explicit command contracts and clipboard lifetime
+
+RewardMethod, RewardTargetKind and PlannedTaskInfo are shared type declarations
+under src/types, with no compatibility barrel/re-export and no persistence import
+from host-live. Declaration ASTs match and13type consumers emit identical JS.
+Seven host update APIs now take explicit target IDs and values. Twenty-one actual
+before/after command executions (success, database error, thrown transport) have
+byte-identical ordered SDK traces and results; distinct IDs catch swapped filters.
+Owner ID stays outside plan update values, and every original filter remains.
+
+Removed only three unused stage props and their coordinator bindings. Shared
+useClipboard owns request identity and optional feedback-reset timer; controller
+copy/fallback strings and native markup remain. Old clipboard browser regressions
+prove overlapping timers cleared newer feedback and obsolete completions created
+a timer after unmount. Eight hook regressions and26affected browser cases pass.
+All18pairs preserve complete DOM/computed styles/geometry. Fourteen stage pairs,
+two host pairs and mobile participant are pixel-exact; the two original desktop
+border pixels are retained as evidence, and identical-code controlled repetition
+is pixel-exact. All302SCSS files remain byte-identical.
+
+Root final738units/types/lint/build pass. The contract slice also passes123focused
+units and24browser cases. Review map: shared erased type ownership; named target
+APIs and mechanical callers; distinct-ID/error trace regressions; three unused
+props; clipboard lifecycle/controller adapters; actual native keyboard/race tests.
+Combined changes exceed800lines; inspect identity/filter choices and asynchronous
+feedback conditions separately from mechanically proven imports/props. Evidence:
+/tmp/host-command-contracts-handoff.md, /tmp/host-command-runtime-trace-proof.json,
+/tmp/clipboard-stage-handoff.md and /tmp/clipboard-final-runtime-proof.json.

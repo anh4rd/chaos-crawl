@@ -71,19 +71,19 @@ it("preserves saved root metadata, unrelated task values/order and unknown task 
   });
   const props = options();
   await save(props);
-  expect(commands.saveBreakChallenge).toHaveBeenCalledWith(
-    {
+  expect(commands.saveBreakChallenge).toHaveBeenCalledWith({
+    values: {
       title: "New title",
       description: "Enter with style.",
       duration_minutes: 5,
       points: 0,
       allow_photo_upload: false,
     },
-    "challenge",
-    "session",
-  );
-  expect(commands.saveHostPlanTasks).toHaveBeenCalledWith(
-    {
+    challengeId: "challenge",
+    sessionId: "session",
+  });
+  expect(commands.saveHostPlanTasks).toHaveBeenCalledWith({
+    values: {
       plan_data: {
         metadata: plan.metadata,
         selectedTasks: [
@@ -100,9 +100,9 @@ it("preserves saved root metadata, unrelated task values/order and unknown task 
         ],
       },
     },
-    "plan",
-    "host",
-  );
+    hostGameId: "plan",
+    hostId: "host",
+  });
   expect(commands.saveBreakChallenge.mock.invocationCallOrder[0]).toBeLessThan(
     commands.readHostPlan.mock.invocationCallOrder[0] ?? 0,
   );

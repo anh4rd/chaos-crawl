@@ -1,4 +1,5 @@
-import type { PlannedTaskInfo } from "../features/host-live/types";
+import type { PlannedTaskInfo } from "../types/hostSession";
+
 import { runApi, type ApiResult } from "./apiResult";
 import { supabase } from "./sessionSupabase";
 
@@ -58,17 +59,21 @@ export function readOwnedHostPlan(
   );
 }
 
-export function saveBreakChallenge(
+export function saveBreakChallenge({
+  values,
+  challengeId,
+  sessionId,
+}: {
   values: {
     title: string;
     description: string;
     duration_minutes: number;
     points: number;
     allow_photo_upload: boolean;
-  },
-  challengeId: string,
-  sessionId: string,
-): Promise<ApiResult<unknown>> {
+  };
+  challengeId: string;
+  sessionId: string;
+}): Promise<ApiResult<unknown>> {
   return runApi<unknown>(() =>
     supabase
       .from("cc_game_session_challenges")
@@ -90,7 +95,11 @@ export function readHostPlan(
   );
 }
 
-export function saveHostPlanTasks(
+export function saveHostPlanTasks({
+  values,
+  hostGameId,
+  hostId,
+}: {
   values: {
     plan_data: {
       selectedTasks: (
@@ -107,10 +116,10 @@ export function saveHostPlanTasks(
           }
       )[];
     };
-  },
-  hostGameId: string,
-  hostId: string,
-): Promise<ApiResult<unknown>> {
+  };
+  hostGameId: string;
+  hostId: string;
+}): Promise<ApiResult<unknown>> {
   return runApi<unknown>(() =>
     supabase
       .from("host_games")

@@ -1,3 +1,4 @@
+import type { RewardMethod } from "../../types/hostSession";
 import Badge from "../../components/ui/Badge";
 import RoundNumber from "../../components/session/RoundNumber";
 import RoundSelector from "../../components/session/RoundSelector";
@@ -10,7 +11,6 @@ import Icon from "../../components/ui/Icon";
 import type {
   GameSession,
   SessionRewardRound as HostRewardRoundData,
-  RewardMethod,
   SessionChallenge,
 } from "./types";
 

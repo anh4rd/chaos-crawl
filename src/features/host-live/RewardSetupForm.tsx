@@ -1,10 +1,11 @@
+import type { RewardMethod, RewardTargetKind } from "../../types/hostSession";
 import FormLabel from "../../components/ui/FormLabel";
 import ControlRow from "../../components/ui/ControlRow";
 import type { FormEvent } from "react";
 import Button from "../../components/ui/Button";
 import Note from "../../components/ui/Note";
 import Icon from "../../components/ui/Icon";
-import type { SessionChallenge, RewardMethod, RewardTargetKind } from "./types";
+import type { SessionChallenge } from "./types";
 
 interface Props {
   busy: boolean;

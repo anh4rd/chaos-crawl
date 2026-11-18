@@ -1,8 +1,9 @@
+import type { PlannedTaskInfo } from "../../types/hostSession";
 import type { Dispatch, SetStateAction } from "react";
 import { useState, type FormEvent } from "react";
 import * as hostSessionCommands from "../../lib/hostSessionCommands";
 import { patchLiveHostPlanTask } from "./liveHostPlanData";
-import type { GameSession, PlannedTaskInfo, SessionChallenge } from "./types";
+import type { GameSession, SessionChallenge } from "./types";
 import type { SetHostBusy } from "./useHostOperation";
 
 interface Options {
@@ -60,17 +61,17 @@ export function useHostChallengeEditor({
       .map((item) => item.trim())
       .filter(Boolean);
     const { error: challengeError } =
-      await hostSessionCommands.saveBreakChallenge(
-        {
+      await hostSessionCommands.saveBreakChallenge({
+        values: {
           title: editChallengeTitle.trim(),
           description: editChallengeDescription.trim(),
           duration_minutes: Math.max(1, Number(editChallengeDuration) || 1),
           points: Math.max(0, Number(editChallengePoints) || 0),
           allow_photo_upload: editChallengeEvidence,
         },
-        editingBreakChallenge.id,
-        session.id,
-      );
+        challengeId: editingBreakChallenge.id,
+        sessionId: session.id,
+      });
     if (challengeError) {
       setBusy(false);
       setError(`Couldn't update this challenge: ${challengeError.message}`);
@@ -94,11 +95,11 @@ export function useHostChallengeEditor({
           "Challenge updated for this game. Its saved plan equipment could not be updated.";
       } else {
         const { error: planError } =
-          await hostSessionCommands.saveHostPlanTasks(
-            { plan_data: update.planData },
-            session.host_game_id,
-            session.host_id,
-          );
+          await hostSessionCommands.saveHostPlanTasks({
+            values: { plan_data: update.planData },
+            hostGameId: session.host_game_id,
+            hostId: session.host_id,
+          });
         if (planError)
           saveNotice =
             "Challenge updated for this game. Its saved plan equipment could not be updated.";

@@ -1,3 +1,4 @@
+import type { RewardMethod, RewardTargetKind } from "../../types/hostSession";
 import Dialog from "../../components/ui/Dialog";
 import RoundSummary from "../../components/ui/RoundSummary";
 import IconBadge from "../../components/ui/IconBadge";
@@ -19,8 +20,6 @@ import Icon from "../../components/ui/Icon";
 import type {
   SessionRewardRound as HostRewardRoundData,
   GameSession,
-  RewardMethod,
-  RewardTargetKind,
   SessionChallenge,
   SessionPlayer,
   SessionRewardAward,
@@ -71,8 +70,6 @@ interface HostRewardRoundProps {
   selectedRewardWinnerIds: string[];
   toggleRewardWinner: (id: string) => void;
   activeRewardAwards: SessionRewardAward[];
-  playerById: Map<string, SessionPlayer>;
-  teamById: Map<string, SessionTeam>;
   players: SessionPlayer[];
   returnFromRewardRound: () => Promise<void>;
 }

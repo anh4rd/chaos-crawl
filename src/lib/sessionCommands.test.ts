@@ -39,7 +39,11 @@ beforeEach(() => {
 });
 
 it("scopes team assignment to both the player and session", async () => {
-  await assignSessionTeam({ team_id: "team" }, "player", "session");
+  await assignSessionTeam({
+    values: { team_id: "team" },
+    playerId: "player",
+    sessionId: "session",
+  });
   expect(mocks.from).toHaveBeenCalledWith("cc_game_session_players");
   expect(mocks.query.update).toHaveBeenCalledWith({ team_id: "team" });
   expect(mocks.query.eq.mock.calls).toEqual([
@@ -109,7 +113,13 @@ it("normalizes database, storage and thrown transport failures", async () => {
     error: { message: "Assignment denied", code: "42501" },
   });
   expect(
-    (await assignSessionTeam({ team_id: null }, "player", "session")).error,
+    (
+      await assignSessionTeam({
+        values: { team_id: null },
+        playerId: "player",
+        sessionId: "session",
+      })
+    ).error,
   ).toEqual({ message: "Assignment denied", code: "42501" });
   mocks.upload.mockRejectedValue(new Error("Storage unavailable"));
   expect(

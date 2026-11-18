@@ -1,3 +1,4 @@
+import type { RewardMethod, RewardTargetKind } from "../../types/hostSession";
 import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useState, type FormEvent } from "react";
 import * as hostRewardCommands from "../../lib/hostRewardCommands";
@@ -5,8 +6,6 @@ import * as sessionParticipantCommands from "../../lib/sessionParticipantCommand
 import type {
   GameSession,
   SessionRewardRound as HostRewardRoundData,
-  RewardMethod,
-  RewardTargetKind,
   SessionChallenge,
   SessionPlayer,
   SessionRewardAward,

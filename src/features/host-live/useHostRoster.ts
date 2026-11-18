@@ -99,11 +99,11 @@ export function useHostRoster({
     if (!setBusy(true)) return;
     setError("");
     setNotice("");
-    const { error: renameError } = await hostRosterCommands.renameSessionTeam(
-      { name },
-      team.id,
-      session.id,
-    );
+    const { error: renameError } = await hostRosterCommands.renameSessionTeam({
+      values: { name },
+      teamId: team.id,
+      sessionId: session.id,
+    });
     setBusy(false);
     if (renameError) {
       setError(renameError.message);
@@ -155,16 +155,16 @@ export function useHostRoster({
       string,
       string
     >;
-    const { error: saveError } = await hostRosterCommands.saveTeamPhoto(
-      {
+    const { error: saveError } = await hostRosterCommands.saveTeamPhoto({
+      values: {
         plan_data: {
           ...planData,
           teamPhotoUrls: { ...previousPhotos, [team.id]: url },
         },
       },
-      session.host_game_id,
-      session.host_id,
-    );
+      hostGameId: session.host_game_id,
+      hostId: session.host_id,
+    });
     setBusy(false);
     if (saveError) {
       setError(saveError.message);
@@ -190,11 +190,11 @@ export function useHostRoster({
     if (!setBusy(true)) return;
     setError("");
     setNotice("");
-    const { error: assignError } = await hostRosterCommands.assignSessionTeam(
-      { team_id: teamId || null },
-      player.id,
-      session.id,
-    );
+    const { error: assignError } = await hostRosterCommands.assignSessionTeam({
+      values: { team_id: teamId || null },
+      playerId: player.id,
+      sessionId: session.id,
+    });
     setBusy(false);
     if (assignError) {
       setError(assignError.message);

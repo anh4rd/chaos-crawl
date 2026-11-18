@@ -1,3 +1,4 @@
+import { useClipboard } from "../../components/ui/useClipboard";
 import { useNavigationFocus } from "../../components/ui/useNavigationFocus";
 import Button from "../../components/ui/Button";
 import { useHostTour } from "./useHostTour";
@@ -137,7 +138,6 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     selectedFinalEvidenceIndex,
     selectedFinalEvidence,
     selectedFinalChallengeVotes,
-    finalTopVoteCount,
     finalWinningEvidenceIds,
     nextPendingFinalChallenge,
     nextReviewedFinalChallenge,
@@ -178,14 +178,14 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     session,
   });
 
+  const { copy: copyJoinCode } = useClipboard({
+    text: session?.join_code ?? "",
+  });
   async function copyCode() {
     if (!session) return;
-    try {
-      await navigator.clipboard.writeText(session.join_code);
-      setNotice("Join code copied.");
-    } catch {
-      setNotice(`Join code: ${session.join_code}`);
-    }
+    const result = await copyJoinCode();
+    if (result === "copied") setNotice("Join code copied.");
+    if (result === "failed") setNotice(`Join code: ${session.join_code}`);
   }
 
   function evidenceUrl(path: string) {
@@ -893,7 +893,6 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
               playerById={playerById}
               evidenceUrl={evidenceUrl}
               castHostFinalVote={castHostFinalVote}
-              finalTopVoteCount={finalTopVoteCount}
               finalWinningEvidenceIds={finalWinningEvidenceIds}
               rankedPlayers={rankedPlayers}
             />
@@ -1083,8 +1082,6 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                 selectedRewardWinnerIds={selectedRewardWinnerIds}
                 toggleRewardWinner={toggleRewardWinner}
                 activeRewardAwards={activeRewardAwards}
-                playerById={playerById}
-                teamById={teamById}
                 players={players}
                 returnFromRewardRound={returnFromRewardRound}
               />

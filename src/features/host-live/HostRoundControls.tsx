@@ -1,3 +1,4 @@
+import type { RewardMethod } from "../../types/hostSession";
 import IconButton from "../../components/ui/IconButton";
 import Button from "../../components/ui/Button";
 import ControlRow from "../../components/ui/ControlRow";
@@ -9,7 +10,6 @@ import Icon from "../../components/ui/Icon";
 import type {
   GameSession,
   SessionRewardRound as HostRewardRoundData,
-  RewardMethod,
   SessionChallenge,
 } from "./types";
 

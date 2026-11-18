@@ -1,8 +1,8 @@
 import type {
   RewardMethod,
   RewardTargetKind,
-  SessionRewardRound,
-} from "../../src/features/host-live/types";
+} from "../../src/types/hostSession";
+import type { SessionRewardRound } from "../../src/features/host-live/types";
 import type { installSessionBackend } from "./sessionBackend";
 
 type Backend = Awaited<ReturnType<typeof installSessionBackend>>;

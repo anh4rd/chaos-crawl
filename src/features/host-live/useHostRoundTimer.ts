@@ -1,12 +1,8 @@
+import type { PlannedTaskInfo } from "../../types/hostSession";
 import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import * as hostSessionCommands from "../../lib/hostSessionCommands";
-import type {
-  GameScheduleItem,
-  GameSession,
-  PlannedTaskInfo,
-  SessionChallenge,
-} from "./types";
+import type { GameScheduleItem, GameSession, SessionChallenge } from "./types";
 import type { SetHostBusy } from "./useHostOperation";
 import {
   readRoundClockSnapshot,

@@ -1,3 +1,4 @@
+import { useClipboard } from "../../components/ui/useClipboard";
 import { isSecretVotingOpen } from "./votingState";
 import Button from "../../components/ui/Button";
 import ButtonLink from "../../components/ui/ButtonLink";
@@ -81,7 +82,10 @@ export default function SessionParticipant({
     lastUpdated,
     loadView,
   } = useSessionPlayerData(code, token, activePage);
-  const [copiedCode, setCopiedCode] = useState(false);
+  const { copied: copiedCode, copy: copyCode } = useClipboard({
+    text: code,
+    resetAfterMs: 1800,
+  });
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [tourOpen, setTourOpen] = useState(false);
   const { sharedTimer, sharedTimerError, timerReceivedAt, timerNow } =
@@ -156,14 +160,11 @@ export default function SessionParticipant({
   }
 
   async function copyGameCode() {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopiedCode(true);
-      window.setTimeout(() => setCopiedCode(false), 1800);
-    } catch {
+    if ((await copyCode()) === "failed") {
       setError("Copy isn't available in this browser. Game code: " + code);
     }
   }
+
   const { teamName, setTeamName, chooseTeam, createTeam } = useParticipantTeams(
     { token, code, setBusyKey, setError, loadView },
   );

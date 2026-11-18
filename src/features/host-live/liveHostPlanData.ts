@@ -1,4 +1,5 @@
-import type { GameScheduleItem, PlannedTaskInfo } from "./types";
+import type { PlannedTaskInfo } from "../../types/hostSession";
+import type { GameScheduleItem } from "./types";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);

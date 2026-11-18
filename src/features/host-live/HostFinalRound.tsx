@@ -48,7 +48,6 @@ interface HostFinalRoundProps {
   playerById: Map<string, SessionPlayer>;
   evidenceUrl: (path: string) => string;
   castHostFinalVote: (evidenceId: string) => Promise<void>;
-  finalTopVoteCount: number;
   finalWinningEvidenceIds: Set<string>;
   rankedPlayers: SessionPlayer[];
 }

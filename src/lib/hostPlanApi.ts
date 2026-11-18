@@ -60,14 +60,21 @@ export function createHostPlan(payload: PlanWrite) {
     supabase.from("host_games").insert(payload).select("id").single(),
   );
 }
-export function updateHostPlan(id: string, payload: PlanWrite) {
-  const { host_id, ...values } = payload;
+export function updateHostPlan({
+  hostGameId,
+  hostId,
+  values,
+}: {
+  hostGameId: string;
+  hostId: string;
+  values: Omit<PlanWrite, "host_id">;
+}) {
   return runApi<unknown>(() =>
     supabase
       .from("host_games")
       .update(values)
-      .eq("id", id)
-      .eq("host_id", host_id),
+      .eq("id", hostGameId)
+      .eq("host_id", hostId),
   );
 }
 export function uploadPlanCover(path: string, file: File) {

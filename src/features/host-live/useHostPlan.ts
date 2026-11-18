@@ -1,3 +1,4 @@
+import type { PlannedTaskInfo } from "../../types/hostSession";
 import {
   useCallback,
   useEffect,
@@ -7,7 +8,7 @@ import {
 } from "react";
 import { supabase } from "../../lib/sessionSupabase";
 import { projectLiveHostPlan } from "./liveHostPlanData";
-import type { GameSession, PlannedTaskInfo } from "./types";
+import type { GameSession } from "./types";
 
 interface Options {
   session: GameSession | null;

@@ -147,3 +147,22 @@ it("prevents duplicate favourite inserts while the first one is pending", async 
   });
   expect(result.current.favourites).toHaveLength(1);
 });
+
+it("updates the explicit plan and owner targets without placing host_id in update values", async () => {
+  mocks.update.mockResolvedValue({ data: null, error: null });
+  const { result } = renderHook(() =>
+    usePlanSave({ form, id: "saved-plan-11", navigate, setError, setNotice }),
+  );
+  await act(async () => {
+    await result.current.save("draft");
+  });
+  expect(mocks.update).toHaveBeenCalledWith({
+    hostGameId: "saved-plan-11",
+    hostId: "host-one",
+    values: expect.objectContaining({ name: "Saved plan", status: "draft" }),
+  });
+  expect(mocks.update.mock.calls[0]?.[0]?.values).not.toHaveProperty("host_id");
+  expect(mocks.create).not.toHaveBeenCalled();
+  expect(navigate).not.toHaveBeenCalled();
+  expect(setNotice).toHaveBeenLastCalledWith("Draft saved.");
+});

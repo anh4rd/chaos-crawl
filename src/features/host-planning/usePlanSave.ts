@@ -50,7 +50,12 @@ export function usePlanSave({
       let savedId = id;
       let saveError: ApiError | null = null;
       if (id) {
-        const { error } = await updateHostPlan(id, payload);
+        const { host_id: hostId, ...values } = payload;
+        const { error } = await updateHostPlan({
+          hostGameId: id,
+          hostId,
+          values,
+        });
         saveError = error;
       } else {
         const { data, error } = await createHostPlan(payload);

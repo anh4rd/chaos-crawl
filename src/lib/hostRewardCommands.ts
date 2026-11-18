@@ -1,7 +1,5 @@
-import type {
-  RewardMethod,
-  RewardTargetKind,
-} from "../features/host-live/types";
+import type { RewardMethod, RewardTargetKind } from "../types/hostSession";
+
 import { runApi, type ApiResult } from "./apiResult";
 import { supabase } from "./sessionSupabase";
 

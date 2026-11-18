@@ -135,11 +135,11 @@ export function useHostParticipation({
       const { data: refreshedSession } =
         await hostRosterCommands.readHostPlayerIdentity(session.id);
       if (refreshedSession?.host_player_id) {
-        await hostRosterCommands.updateHostAvatar(
-          { avatar_url: avatarUrl },
-          refreshedSession.host_player_id,
-          session.id,
-        );
+        await hostRosterCommands.updateHostAvatar({
+          values: { avatar_url: avatarUrl },
+          playerId: refreshedSession.host_player_id,
+          sessionId: session.id,
+        });
         await load();
       }
     }

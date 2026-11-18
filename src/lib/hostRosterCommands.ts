@@ -41,11 +41,15 @@ export function readHostPlayerIdentity(
   );
 }
 
-export function updateHostAvatar(
-  values: { avatar_url: string },
-  playerId: string,
-  sessionId: string,
-): Promise<ApiResult<unknown>> {
+export function updateHostAvatar({
+  values,
+  playerId,
+  sessionId,
+}: {
+  values: { avatar_url: string };
+  playerId: string;
+  sessionId: string;
+}): Promise<ApiResult<unknown>> {
   return runApi<unknown>(() =>
     supabase
       .from("cc_game_session_players")
@@ -82,11 +86,15 @@ export function insertSessionTeam(values: {
   );
 }
 
-export function renameSessionTeam(
-  values: { name: string },
-  teamId: string,
-  sessionId: string,
-): Promise<ApiResult<unknown>> {
+export function renameSessionTeam({
+  values,
+  teamId,
+  sessionId,
+}: {
+  values: { name: string };
+  teamId: string;
+  sessionId: string;
+}): Promise<ApiResult<unknown>> {
   return runApi<unknown>(() =>
     supabase
       .from("cc_game_session_teams")
@@ -106,11 +114,15 @@ export function uploadTeamImage(
   );
 }
 
-export function saveTeamPhoto(
-  values: { plan_data: { teamPhotoUrls: { [x: string]: string } } },
-  hostGameId: string,
-  hostId: string,
-): Promise<ApiResult<unknown>> {
+export function saveTeamPhoto({
+  values,
+  hostGameId,
+  hostId,
+}: {
+  values: { plan_data: { teamPhotoUrls: { [x: string]: string } } };
+  hostGameId: string;
+  hostId: string;
+}): Promise<ApiResult<unknown>> {
   return runApi<unknown>(() =>
     supabase
       .from("host_games")
@@ -120,11 +132,15 @@ export function saveTeamPhoto(
   );
 }
 
-export function assignSessionTeam(
-  values: { team_id: string | null },
-  playerId: string,
-  sessionId: string,
-): Promise<ApiResult<unknown>> {
+export function assignSessionTeam({
+  values,
+  playerId,
+  sessionId,
+}: {
+  values: { team_id: string | null };
+  playerId: string;
+  sessionId: string;
+}): Promise<ApiResult<unknown>> {
   return runApi<unknown>(() =>
     supabase
       .from("cc_game_session_players")
