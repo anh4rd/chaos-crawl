@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import Icon from "../components/ui/Icon";
+import SlideshowScreen from "../components/slideshow/SlideshowScreen";
+import SlideshowMessage from "../components/slideshow/SlideshowMessage";
+import SlideshowEvidence from "../components/slideshow/SlideshowEvidence";
+import SlideshowCaption from "../components/slideshow/SlideshowCaption";
 import { supabase } from "../lib/sessionSupabase";
 import "../styles/PlayerGame.css";
 
@@ -116,109 +120,72 @@ export default function SessionSecretSlideshow() {
 
   if (error && !view) {
     return (
-      <main className="cc-final-tv">
+      <SlideshowScreen>
         <p className="cc-final-tv-error" role="alert">
           {error}
         </p>
-      </main>
+      </SlideshowScreen>
     );
   }
   if (!view) {
     return (
-      <main className="cc-final-tv">
-        <div className="cc-final-tv-waiting">
+      <SlideshowScreen>
+        <SlideshowMessage>
           <Icon name="loader-circle" className="icon--size-28 cc-spin" />
           <span>Connecting to the secret mission slideshow…</span>
-        </div>
-      </main>
+        </SlideshowMessage>
+      </SlideshowScreen>
     );
   }
   if (!view.open || !view.mission) {
     return (
-      <main className="cc-final-tv">
-        <div className="cc-final-tv-waiting">
+      <SlideshowScreen>
+        <SlideshowMessage>
           <span className="cc-final-tv-kicker">SECRET MISSION</span>
           <h1>Slideshow is waiting</h1>
           <p>The host will open a mission review.</p>
-        </div>
-      </main>
+        </SlideshowMessage>
+      </SlideshowScreen>
     );
   }
   if (!currentItem) {
     return (
-      <main className="cc-final-tv" aria-live="polite">
-        <div className="cc-final-tv-waiting">
+      <SlideshowScreen
+        live
+        onFullscreen={() => void enterFullscreen()}
+        error={error}
+      >
+        <SlideshowMessage>
           <span className="cc-final-tv-kicker">
             SECRET MISSION · {view.mission.player_name}
           </span>
           <h1>{view.mission.title}</h1>
           <p>{view.mission.description}</p>
           <strong>No photo or video submitted</strong>
-        </div>
-        <button
-          className="cc-final-tv-fullscreen"
-          type="button"
-          onClick={() => void enterFullscreen()}
-          aria-label="Enter fullscreen"
-        >
-          <Icon name="expand" className="icon--size-18" />
-        </button>
-        {error && (
-          <p className="cc-final-tv-live-error" role="status">
-            {error}
-          </p>
-        )}
-      </main>
+        </SlideshowMessage>
+      </SlideshowScreen>
     );
   }
 
   return (
-    <main className="cc-final-tv" aria-live="polite">
-      {currentItem.media_type === "video" ? (
-        <video
-          key={currentItem.id}
-          className="cc-final-tv-media"
-          src={mediaUrl(currentItem.storage_path)}
-          autoPlay
-          muted
-          playsInline
-          onEnded={() => setCurrentIndex((index) => (index + 1) % items.length)}
-          onError={() =>
-            setMediaError("This video couldn't play on the TV screen.")
-          }
-        />
-      ) : (
-        <img
-          className="cc-final-tv-media"
-          src={mediaUrl(currentItem.storage_path)}
-          alt={`Evidence for ${view.mission.title}`}
-          onError={() =>
-            setMediaError("This photo couldn't load on the TV screen.")
-          }
-        />
-      )}
-      <div className="cc-final-tv-caption">
-        <span className="cc-final-tv-kicker">
-          SECRET MISSION · {view.mission.title}
-        </span>
-        <h1>{view.mission.player_name}</h1>
-      </div>
-      <span className="cc-final-tv-counter">
-        {currentIndex + 1} / {items.length}
-      </span>
-      <button
-        className="cc-final-tv-fullscreen"
-        type="button"
-        onClick={() => void enterFullscreen()}
-        aria-label="Enter fullscreen"
-      >
-        <Icon name="expand" className="icon--size-18" />
-      </button>
-      {(error || mediaError) && (
-        <p className="cc-final-tv-live-error" role="status">
-          {error || mediaError}
-        </p>
-      )}
-    </main>
+    <SlideshowScreen
+      live
+      counter={{ index: currentIndex, total: items.length }}
+      onFullscreen={() => void enterFullscreen()}
+      error={error || mediaError}
+    >
+      <SlideshowEvidence
+        id={currentItem.id}
+        mediaType={currentItem.media_type}
+        src={mediaUrl(currentItem.storage_path)}
+        alt={`Evidence for ${view.mission.title}`}
+        onEnded={() => setCurrentIndex((index) => (index + 1) % items.length)}
+        onError={setMediaError}
+      />
+      <SlideshowCaption
+        kicker={<>SECRET MISSION · {view.mission.title}</>}
+        title={view.mission.player_name}
+      />
+    </SlideshowScreen>
   );
 }

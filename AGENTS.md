@@ -212,6 +212,31 @@ permissions, database records, persistence or route imports. Workspace retains
 publication/identity filtering, dates, fallback copy and action binding. The local
 catalogue reference mounts only controlled views and state, including pending,
 loading, error and moderation examples; connected controllers never run there.
+Catalogue favourite commands lock per type/id and moderation review/delete share
+one lock per submission. Distinct items remain usable concurrently; releasing one
+must not unlock another, and moderation retains its lock through refresh. Use the
+current favourite snapshot when handling retained callbacks. Thrown command/auth
+errors release only their current lock and remain retryable. These frontend locks
+do not prove deployed uniqueness or backend idempotence.
+
+Final/secret TV routes compose components/slideshow/SlideshowScreen, Message,
+Evidence and Caption. These shared views receive resolved media URLs, IDs, copy
+and callbacks only; no backend, routing, timing or selection lives in them. The
+frame supports main/div semantics and optional counter/fullscreen/feedback; local
+Shared TV slideshow uses div, local state and a simulated fullscreen callback.
+Retain native video identity/autoplay/muted/playsInline and ended/error callbacks.
+Current cc-final-tv styles are an explicit legacy exception pending the separate
+SCSS slice. Query/timer extraction and session-ID invalidation remain separately
+tested follow-ups, not fixes claimed by this presentation move.
+
+SuperAdmin adapts to features/super-admin/PlatformGames. Separate list and inspector
+hooks own reads; PlatformGamesView/GameTable/GameInspector accept controlled data
+and callbacks. Typed superAdminQueries preserve original RPC names/arguments and
+SDK error/rejection behavior in the neutral extraction. types/superAdmin.ts holds
+inferred consumed shapes, not deployed schema types. Keep connected hooks out of
+local examples. Existing sa-* styles and recorded lifecycle/label defects await
+separate tested behavior and shared-primitives/SCSS slices.
+
 Catalogue tabs compose the shared horizontal TabList and linked TabPanel primitives.
 Left/Right wrap; Home/End focus and activate native tab buttons through their
 supplied callbacks. The caller supplies selected state, roving tabIndex and unique
@@ -382,7 +407,7 @@ HostRewardRound composes RewardSetupForm and RewardAwardControls. These controll
 feature views retain native form types, bounds, option labels and player/team
 selection callbacks. useHostRewards still owns start/complete/cancel/release
 commands, confirmation, action locks, feedback and reloads. Preserve edited award
-points, selected winner ordering and separate player/team payload fields. Their
+points, selected winner ordering and separate player/team payload fields. Manual confirmation must use the same normalized edited points as its command; voting uses configured points and no manual override. Their
 owned reward-setup/reward-review SCSS keeps arrangement separate from shared
 fields, instructions, summaries and candidate rows.
 

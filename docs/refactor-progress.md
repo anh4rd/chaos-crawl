@@ -3574,11 +3574,148 @@ Next: synchronous per-item favourite/moderation guards while preserving independ
 item concurrency, followed by remaining host/admin and V2 slideshow layers. Final
 full-suite verification and desloppify remain pending.
 
+## Phase 5z — reward confirmation matches edited award points
+
+Manual reward confirmation now shows the same normalized edited points value sent
+to the existing completion command. Previously editing 20 configured points to
+37 submitted 37 while confirming 20. The calculation remains bounded to 0–10000,
+with the existing non-numeric fallback. Voting continues to confirm configured
+points and submits null for the manual override. Winner order, separate player/
+team payloads, cancellation, locking and reload behavior are unchanged.
+
+Four new regression cases failed before the correction. Eight focused reward-hook
+tests now pass, covering edited values, lower/upper bounds, non-numeric fallback,
+voting and cancellation. All **16 mocked desktop/mobile reward-control browser
+cases** pass; manual player/team awards for both methods verify the actual native
+confirmation text on cancellation and acceptance against the existing 37-point
+command payload. Evidence: `/tmp/reward-confirm-*`. This is an intentional copy
+correction, separate from structural and styling migration.
+
+Next: integrate the independently verified catalogue concurrency and slideshow/
+admin layers, then continue remaining V2/legacy and final full-suite/desloppify work.
+
+## Phase 6a — catalogue per-item command locks
+
+Catalogue favourites now lock synchronously per type/id, and moderation review and
+delete share a lock per submission. Independent items remain usable concurrently;
+completion releases only its own indicator, including while a moderation refresh
+is pending. A current favourite snapshot keeps retained callbacks from issuing a
+second save after the first completed. Guarded catch/finally allows retries after
+identity/transport exceptions without stale feedback or unlocks after unmount.
+Persistence modules, payloads, review status filters and server contracts are
+unchanged. This does not prove deployed uniqueness or backend idempotence.
+
+Nine deferred regressions failed before the change. Thirteen new operation tests
+and fourteen existing lifecycle cases pass; all **56 mocked desktop/mobile
+catalogue/saved-item browser cases** pass. The new keyboard journeys prove
+independent overlapping native save-button states and one POST despite repeated
+activation of an enabled route footer while its first save is pending. No styling
+or presentation extraction is mixed into this behavior slice. Evidence:
+`/tmp/catalogue-concurrency-*`.
+
+Separate read audit reproduced rejected initial identity leaving loading active,
+a completed save being overwritten by an older initial GET, and stale community
+identity/admin presentation after auth recovery fails. Those remain queued for
+focused read-lifecycle regressions and reconciliation; they are not covered by
+this command-lock completion claim.
+
+## Phase 6b — platform admin layers and regression baseline
+
+SuperAdmin is now a thin adapter to PlatformGames. Separate list and inspector
+hooks retain the original SDK/error sequencing; controlled PlatformGamesView,
+GameTable and GameInspector receive records/state/callbacks. Typed query adapters
+retain the existing list/detail RPC names and arguments. Consumed frontend shapes
+live in types/superAdmin.ts; they are inferred contracts, not verified deployed
+schema or authorization types. Original sa-* styling, native controls, fallback
+copy, incoming order and complete-list totals are retained.
+
+Six new pre-extraction route tests and **eight mocked desktop/mobile browser
+journeys** pass. All **16 before/after list/filter/empty/access/detail/loading/error
+comparisons are exact**, including full native DOM/attributes/text/control values,
+focus, geometry, every standard computed property, SDK traces and screenshots.
+There are no DOM normalizations or pixel tolerances. Evidence:
+`/tmp/admin-baseline-unit.log`, `/tmp/admin-{before,after}-browser.log` and
+`/tmp/admin-parity-*`.
+
+This extraction exceeds the approximate 800-line review budget. Review map:
+
+| Slice                  | Mechanical changes / scrutiny                                                                                            | Evidence                                               |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| Regression baseline    | New route and native keyboard journeys; scrutinize list/detail RPCs, filtering, totals and fallback expectations         | Six units, eight browser cases before and after        |
+| Route and presentation | Move original markup into controlled views; no styling or behavior fixes                                                 | Sixteen exact DOM/style/geometry/SDK/PNG pairs         |
+| Hooks and typed reads  | Separate list/inspector concerns without silently fixing old races; scrutinize inferred types and SDK rejection contract | Strict build, full unit suite and unchanged RPC traces |
+
+Known defects remain explicitly queued: obsolete list/detail outcomes; closing an
+inspector during loading; rejected transports; feedback outside an already-open
+inert modal; toolbar labels and the empty action header. The next behavior slice
+must add regressions before fixing these. Legacy admin styling/shared-primitives
+migration follows separately.
+
+## Phase 6c — shared final/secret TV presentation
+
+Both V2 TV routes now compose SlideshowScreen, SlideshowMessage,
+SlideshowEvidence and SlideshowCaption. They accept resolved URLs, presentation
+values and callbacks; no shared component reads backend, storage or route state.
+The common frame retains optional counter/fullscreen/feedback composition, native
+image/video attributes, caption order and current cc-final-tv styling. Queries,
+selection, timing, media/fullscreen feedback and cleanup remain in the route for
+this neutral extraction; **6,417 controller bytes are identical** to baseline.
+
+The Shared TV slideshow local reference exercises evidence selection, waiting/
+empty states, feedback and a simulated fullscreen action without backend access
+or requesting a fullscreen device. It uses div semantics inside the styleguide.
+All four component contracts are documented in the catalog.
+
+Twelve pre-extraction route regressions pass, covering public RPC payloads,
+evidence bucket, waiting/empty states, polling/selection, out-of-order reads,
+image cadence/video completion, error handling and unmount. All **ten mocked
+desktop/mobile browser cases** pass, including active native media, exact initial
+payloads and one additional polling cadence, fullscreen failure, missing mission
+and local keyboard behavior. Tests preserve StrictMode's duplicate initial effects
+and explicitly control time after route bootstrap, rather than changing the app
+to match a mistaken single-read expectation.
+
+All **34 before/after desktop/mobile state pairs** preserve exact native HTML,
+standard computed properties, geometry, focus and public RPC traces. Loader
+animations are paused at time zero on both sides; the original nondeterministic
+attempt remains recorded separately. The served baseline uses SHA-verified
+unmodified route sources. **33/34 screenshots are pixel-exact**. In the remaining
+1280px final-video pair, native playback advanced after DOM sampling and before
+one screenshot, producing an image/counter transition. That PNG does not prove
+video-frame parity; exact video markup/style comparisons and the explicit native
+ended/cadence regressions are separate evidence. No tolerance hides the difference.
+Evidence: `/tmp/slideshow-layer-proof-deterministic`,
+`/tmp/slideshow-layer-controller-proof.json` and
+`/tmp/slideshow-layer-persistent-final-browser.log`.
+
+The combined parallel tranche exceeds the approximate 800-line review budget.
+Review reward confirmation and catalogue concurrency as intentional behavior
+slices; review admin and TV presentation as mechanical extractions with focused
+controller/type scrutiny. The admin map is above; TV review map:
+
+| Slice                      | Mechanical changes / scrutiny                                                                                     | Evidence                                                                                                       |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Shared frame/media/caption | Preserve native markup/order/media identity and supplied callbacks; scrutinize video key and optional frame slots | Thirty-four exact DOM/style/geometry/RPC pairs; 33 exact PNG pairs with one recorded temporal-video limitation |
+| Route composition          | Replace duplicate presentation, retain query/timer behavior                                                       | 6,417 byte-identical controller bytes, twelve route regressions, ten browser cases                             |
+| Local contract             | Local-state example and accurate catalog/default-test registration                                                | Keyboard/error/fullscreen-simulation journey with zero backend traffic                                         |
+
+Across phases 5z/6a/6b/6c, **409 unit tests and 90 affected desktop/mobile cases**
+pass; lint/format, upload-disabled strict build, Playwright type checks and git
+whitespace checks pass. The default browser configuration now registers **422
+cases in 21 files**, including new catalogue-concurrency, admin and slideshow
+specs. Registration is not a claim that the complete current suite was run; the
+final full mocked suite remains required.
+
+Next: separate catalogue read reconciliation/recovery, admin list/inspector
+lifetime/feedback and slideshow session-ID/controller layers. The shared host auth
+boundary also needs user-ID remount and stale initial recovery regressions. Legacy
+styling, remaining V2/legacy layers and final desloppify remain outstanding.
+
 ## Queued phases for the full refactor
 
-Next: catalogue action-concurrency guards. Catalogue cards, shell, filters, review/history and contribution bodies now
+Next: catalogue read recovery/reconciliation, admin lifecycle/feedback and slideshow identity/controller layers. Catalogue cards, shell, filters, review/history and contribution bodies now
 compose shared primitives with owned SCSS; their thin route, controllers and
-controlled views are verified. Follow with separately tested action-concurrency guards. Keep styling and intentional behavior fixes in
+controlled views are verified. Continue separately tested lifecycle fixes and owned styling. Keep styling and intentional behavior fixes in
 separate verified slices. Continue remaining host utilities/admin and V2 player/
 slideshow presentation, then legacy workflows and obsolete CSS/Tailwind retirement
 once their final consumers migrate. Preserve the shared host/player session base,
@@ -3588,8 +3725,8 @@ PlayerDemo already has local regressions and controller/view separation. Its
 shared-layout conversion awaits the user's explicit visual choice; preserve the
 old view and seven tour targets meanwhile. The three contrast changes likewise
 await their existing design-input request. Continue independent migration without
-inferring approval from goal continuation. Finish the recorded reward confirmation
-copy and accessibility/lifecycle findings in separate tested behavior slices.
+inferring approval from goal continuation. Continue the recorded accessibility/lifecycle findings in separate tested behavior
+slices; the reward confirmation mismatch is resolved in phase 5z.
 
 Finally run all required checks and the complete mocked desktop/mobile browser
 suite, then the requested desloppify audit and address findings within the full

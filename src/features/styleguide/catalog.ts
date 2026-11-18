@@ -1,5 +1,53 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
+  SlideshowScreen: {
+    usage:
+      "Shared TV visual base accepting main/div, live, optional counter={index,total}, onFullscreen, error and children. Shared TV slideshow demonstrates local actions without requesting fullscreen or mounting a connected route.",
+    dependencies:
+      "Semantic Icon and retained cc-final-tv styling in PlayerGame.css pending its separate SCSS migration. Caller owns every query, timer, media selection and fullscreen request.",
+  },
+  SlideshowMessage: {
+    usage:
+      "Shared waiting/empty TV body accepting caller-composed copy and children. Demonstrated in Shared TV slideshow without backend access.",
+    dependencies:
+      "Retained cc-final-tv-waiting styling. Does not choose session phase or visibility.",
+  },
+  SlideshowEvidence: {
+    usage:
+      "Native image/video evidence with resolved src, id, mediaType, alt and ended/error callbacks. Shared TV slideshow demonstrates a local image; final and secret routes retain media selection/timing.",
+    dependencies:
+      "Retained TV media styling; native autoplay/muted/playsInline video. Never queries storage or reads route parameters.",
+  },
+  SlideshowCaption: {
+    usage:
+      "Shared TV caption receiving kicker ReactNode and title. Shared TV slideshow demonstrates caller-selected copy.",
+    dependencies:
+      "Retained caption/kicker styling. No data formatting, query or publishing decisions.",
+  },
+  PlatformGames: {
+    usage:
+      "Connected platform-games coordinator mounted by SuperAdmin. Owns local filters and composes separate list and inspector hooks inside HostWorkspace; never mount in local examples.",
+    dependencies:
+      "Typed superAdminQueries frontend-inferred contracts and existing HostPortal/HostPlanning styling. Backend authorization remains server-owned.",
+  },
+  PlatformGamesView: {
+    usage:
+      "Controlled platform list and inspector composition. Receives complete/filtered records, feedback/loading/access state and callbacks; no backend, auth or route parameters.",
+    dependencies:
+      "Shared Button/Icon, feature GameTable and GameInspector, and retained sa-* styling. Existing totals use complete records rather than filtered rows.",
+  },
+  GameTable: {
+    usage:
+      "Controlled platform-game table preserving supplied order, fallback host/venue copy and inspect callbacks. Never queries or chooses authorization.",
+    dependencies:
+      "Frontend-inferred PlatformGame records, shared Button and retained sa-* styling. Existing empty action-header accessibility concern remains queued separately.",
+  },
+  GameInspector: {
+    usage:
+      "Controlled native inspector dialog with supplied detail/loading state and close callback. Displays incoming sessions and player/team score copy without sorting or persistence.",
+    dependencies:
+      "Shared Dialog/Icon and frontend-inferred PlatformGameDetail. Connected inspector lifecycle stays in useGameInspector; do not mount that hook in local references.",
+  },
   MetadataList: {
     usage:
       "Native metadata group. Compose MetadataItem children; callers retain label formatting and selection. See Shared idea card and Local catalogue.",

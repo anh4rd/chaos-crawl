@@ -26,6 +26,9 @@ export default defineConfig({
     "**/playerDemo.spec.ts",
     "**/hostSaved.spec.ts",
     "**/hostExplore.spec.ts",
+    "**/hostExploreConcurrency.spec.ts",
+    "**/superAdmin.spec.ts",
+    "**/sessionSlideshow.spec.ts",
   ],
 
   fullyParallel: false,
