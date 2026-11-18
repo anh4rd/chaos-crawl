@@ -3973,9 +3973,19 @@ build, browser type checks and a forced strict TypeScript rebuild. The later
 PageFrame heading-cascade correction passes its final build/forced types/lint and
 20 browser comparisons. New integration documentation is formatted separately.
 
+The platform filter keyboard-focus follow-up is also complete. Two production
+browser regressions failed on the old zero-outline fields; the two local cases
+already had the styleguide-only fallback ring. The shared filter variant now uses
+the existing focus-ring fragment for native keyboard focus, without a global
+selector or control geometry change. All 26 platform browser cases and 23 scoped
+units pass. Eight comparisons isolate changes to four outline longhands: default
+PNGs remain exact and focused states show the intended ring. Pointer text focus
+follows browser :focus-visible semantics; disabled local fields remain skipped.
+Evidence: `/tmp/admin-focus-comparison.log` and `/tmp/admin-focus-comparisons.json`.
+
 ## Remaining finish milestones
 
-1. **Close V2/platform presentation:** finish platform keyboard focus and remaining
+1. **Close V2/platform presentation:** finish remaining platform frame/table/inspector
    shared/owned styles; finish player-specific styling and recorded accessibility
    defects. Shared host/player session architecture is already delivered.
 2. **Finish legacy host:** thin the remaining Admin coordinator, complete Live and

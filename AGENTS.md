@@ -252,8 +252,9 @@ and legacy host-v2 styles during extraction; other legacy tabs remain separate.
 Platform search/status controls have visible native labels and scoped table
 headers. Preserve the original16px text at weight 400 control type; default FormLabel typography
 is not equivalent. ControlRow filters and FormLabel filter now own toolbar/control styling while
-retaining native geometry/type. Keyboard focus treatment remains a separate
-behavior follow-up. No color or field redesign is authorized by adding labels.
+retaining native geometry/type. Filter input/select keyboard focus now uses the existing focus-ring fragment.
+Preserve native :focus-visible semantics and disabled-control behavior; do not
+apply this through a new global selector. No color or field redesign is authorized by adding labels.
 
 PageFrame supplies the shared native main/div boundary for legacy join, gameplay
 and leaderboard. Stack/compact/loading variants own layout through the existing rem spacing and

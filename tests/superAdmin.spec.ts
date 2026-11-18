@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { activateByKeyboard, tabTo } from "./support/keyboard";
 import { installSessionBackend } from "./support/sessionBackend";
 
@@ -571,3 +571,107 @@ test("shared filter toolbar uses local native controls without backend reads", a
   expect(backend.requests).toHaveLength(0);
   backend.verify();
 });
+
+for (const local of [false, true]) {
+  test(`filter controls expose visible keyboard focus${local ? " in the local reference" : ""}`, async ({
+    page,
+  }, testInfo) => {
+    const backend = await installSessionBackend(page, { host: true });
+    await page.goto(local ? "#/styleguide" : "#/host/super-admin");
+    const scope = local
+      ? page
+          .locator(".component-example")
+          .filter({
+            has: page.getByRole("heading", {
+              name: "Shared filter toolbar",
+              exact: true,
+            }),
+          })
+      : page.locator("main");
+    const search = scope.getByRole("textbox", {
+      name: "Search games",
+      exact: true,
+    });
+    const status = scope.getByRole("combobox", { name: "Status", exact: true });
+    await expect(search).toBeVisible();
+    await expect(status).toBeVisible();
+    const size = (control: Locator) =>
+      control.evaluate((element) => {
+        const bounds = element.getBoundingClientRect();
+        return { width: bounds.width, height: bounds.height };
+      });
+    await page.evaluate(() => document.fonts.ready);
+    const initialSearch = await size(search);
+    const initialStatus = await size(status);
+    async function ring(control: Locator, keyboard: boolean) {
+      const state = await control.evaluate((element) => {
+        const style = getComputedStyle(element);
+        return {
+          visible: element.matches(":focus-visible"),
+          style: style.outlineStyle,
+          width: Number.parseFloat(style.outlineWidth),
+          color: style.outlineColor,
+        };
+      });
+      if (keyboard) expect(state.visible).toBe(true);
+      expect.soft(state.style).toBe(state.visible ? "solid" : "none");
+      if (state.visible) {
+        expect.soft(state.width).toBeGreaterThan(0);
+        expect.soft(state.color).not.toBe("rgba(0, 0, 0, 0)");
+      } else expect.soft(state.width).toBe(0);
+    }
+    await tabTo(page, search);
+    await expect(search).toBeFocused();
+    await expect(search).toBeInViewport();
+    await ring(search, true);
+    await page.screenshot({
+      path: testInfo.outputPath("search-keyboard-focus.png"),
+      animations: "disabled",
+    });
+    await page.keyboard.press("Tab");
+    await expect(status).toBeFocused();
+    await expect(status).toBeInViewport();
+    await ring(status, true);
+    await page.screenshot({
+      path: testInfo.outputPath("status-keyboard-focus.png"),
+      animations: "disabled",
+    });
+    await search.click();
+    await expect(search).toBeFocused();
+    await ring(search, false);
+    await status.click();
+    await expect(status).toBeFocused();
+    await ring(status, false);
+    await page.keyboard.press("Escape");
+    expect(await size(search)).toEqual(initialSearch);
+    expect(await size(status)).toEqual(initialStatus);
+    if (local) {
+      const disable = scope.getByRole("checkbox", {
+        name: "Disable filters",
+        exact: true,
+      });
+      await tabTo(page, disable);
+      await page.keyboard.press("Space");
+      await expect(search).toBeDisabled();
+      await expect(status).toBeDisabled();
+      await ring(search, false);
+      await ring(status, false);
+      await page.keyboard.press("Shift+Tab");
+      expect(
+        await search.evaluate((element) => element === document.activeElement),
+      ).toBe(false);
+      expect(
+        await status.evaluate((element) => element === document.activeElement),
+      ).toBe(false);
+      await tabTo(page, disable);
+      await page.keyboard.press("Space");
+      await expect(search).toBeEnabled();
+      await expect(status).toBeEnabled();
+      await page.keyboard.press("Shift+Tab");
+      await expect(status).toBeFocused();
+      await ring(status, true);
+      expect(backend.requests).toHaveLength(0);
+    }
+    backend.verify();
+  });
+}

@@ -1,3 +1,4 @@
+@use "../tools/focus-ring";
 @use "../variables/effects";
 @use "../variables/colors";
 @use "../variables/fonts";
@@ -216,6 +217,9 @@
       padding: layout.$pixel-unit * 2.75;
       color: colors.$filter-control-ink;
       outline: 0;
+      &:focus-visible {
+        @include focus-ring.focus-ring;
+      }
     }
     select {
       width: auto;
