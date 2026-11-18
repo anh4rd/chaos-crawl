@@ -158,9 +158,15 @@ Commands check the captured lifetime after auth and persistence awaits; issued
 requests may finish, but obsolete outcomes cannot update UI or start reloads.
 Query feedback cannot overwrite failed action feedback; a new action clears both
 channels as before. These guards cover mount/refresh lifetime, not a new auth
-subscription or cancellation/rollback contract. Route-local coordination and
-markup remain migration exceptions until their focused controller/view slice;
-do not expand them.
+subscription or cancellation/rollback contract. useExploreFavourites owns saved
+reads/mutations; useExploreCommunity owns identity/admin recovery and community
+reads/reloads; useExploreContribution owns the controlled draft and create/edit
+commands; useExploreModeration owns review/delete confirmation and commands.
+Each keeps its own mount lifetime and receives scoped feedback callbacks; the
+route coordinates query/action precedence and navigation. Do not combine these
+external concerns into one large hook or duplicate their reads in view panels.
+Connected controllers never run in local styleguide demos. Route markup remains
+a migration exception until its controlled-view slice; do not expand it.
 
 Supabase auth is shared by the legacy and session clients. Legacy player IDs and V2 session-player credentials use different storage keys and are not interchangeable. Preserve RPC payloads, storage paths, query ordering, score semantics, subscription cleanup, timer behavior, error handling, and route/query parameters. Client storage is not an authorization boundary; policies and atomic awards require server enforcement.
 

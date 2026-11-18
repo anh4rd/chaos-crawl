@@ -1,9 +1,7 @@
-import type { CommunitySubmission, HostFavourite } from "../types/hostExplore";
 import type {
   CatalogTab,
   CatalogTask,
   LocationIdea,
-  RouteIdea,
   TaskKind,
 } from "../features/host-explore/types";
 import {
@@ -19,38 +17,15 @@ import {
   filterLocations,
   filterRoutes,
 } from "../features/host-explore/catalogueModel";
-import {
-  createChallengeDraft,
-  draftFromSubmission,
-  challengePayload,
-} from "../features/host-explore/challengeDraft";
+import { useExploreFavourites } from "../features/host-explore/useExploreFavourites";
+import { useExploreCommunity } from "../features/host-explore/useExploreCommunity";
+import { useExploreContribution } from "../features/host-explore/useExploreContribution";
+import { useExploreModeration } from "../features/host-explore/useExploreModeration";
 import Button from "../components/ui/Button";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type FormEvent,
-} from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import HostWorkspace from "../features/host-workspace/HostWorkspace";
 import Icon from "../components/ui/Icon";
-import { readHostIdentity } from "../lib/hostAuth";
-import { readPlatformAdmin } from "../lib/hostHubQueries";
-import { removeHostFavourite } from "../lib/hostSavedCommands";
-import {
-  readExploreFavourites,
-  readCommunitySubmissions,
-} from "../lib/hostExploreQueries";
-import {
-  saveExploreFavourite,
-  createCommunityChallenge,
-  updateApprovedCommunityChallenge,
-  deleteApprovedCommunityChallenge,
-  reviewPendingCommunitySubmission,
-} from "../lib/hostExploreCommands";
-import { favouriteData } from "../features/host-explore/favouriteData";
 import "../styles/HostPortal.css";
 import "../styles/HostPlanning.css";
 import "../styles/HostTheme.css";
@@ -60,103 +35,44 @@ export default function HostExplore() {
   const [tab, setTab] = useState<CatalogTab>("tasks");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
-  const [favourites, setFavourites] = useState<HostFavourite[]>([]);
-  const [loadingFavourites, setLoadingFavourites] = useState(true);
-  const [busyFavourite, setBusyFavourite] = useState<string | null>(null);
   const [queryError, setQueryError] = useState("");
   const [actionError, setActionError] = useState("");
   const [expandedRoutes, setExpandedRoutes] = useState<string[]>([]);
-  const [submissions, setSubmissions] = useState<CommunitySubmission[]>([]);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [isPlatformAdmin, setIsPlatformAdmin] = useState(false);
-  const [showCreateChallenge, setShowCreateChallenge] = useState(false);
-  const [editingSubmission, setEditingSubmission] =
-    useState<CommunitySubmission | null>(null);
-  const [submittingChallenge, setSubmittingChallenge] = useState(false);
-  const [reviewingId, setReviewingId] = useState<string | null>(null);
-  const [challengeDraft, setChallengeDraft] = useState(createChallengeDraft);
-  const mounted = useRef(false);
-  const lifetime = useRef(0);
-  const favouriteRead = useRef(0);
-  const communityRead = useRef(0);
+  const clearFeedback = useCallback(() => {
+    setActionError("");
+    setQueryError("");
+  }, []);
+  const { loadingFavourites, busyFavourite, isSaved, toggleFavourite } =
+    useExploreFavourites({
+      onQueryError: setQueryError,
+      onActionStart: clearFeedback,
+      onActionError: setActionError,
+    });
+  const { submissions, currentUserId, isPlatformAdmin, loadSubmissions } =
+    useExploreCommunity(setQueryError);
+  const {
+    showCreateChallenge,
+    setShowCreateChallenge,
+    editingSubmission,
+    setEditingSubmission,
+    submittingChallenge,
+    challengeDraft,
+    setChallengeDraft,
+    submitChallenge,
+    editCommunityChallenge,
+  } = useExploreContribution({
+    onActionStart: clearFeedback,
+    onActionError: setActionError,
+    loadSubmissions,
+  });
+  const { reviewingId, deleteCommunityChallenge, reviewSubmission } =
+    useExploreModeration({
+      isPlatformAdmin,
+      onActionStart: clearFeedback,
+      onActionError: setActionError,
+      loadSubmissions,
+    });
   const error = actionError || queryError;
-
-  useEffect(() => {
-    mounted.current = true;
-    lifetime.current += 1;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
-
-  const loadFavourites = useCallback(async () => {
-    if (!mounted.current) return;
-    const request = ++favouriteRead.current;
-    const generation = lifetime.current;
-    const current = () =>
-      mounted.current &&
-      lifetime.current === generation &&
-      favouriteRead.current === request;
-    setLoadingFavourites(true);
-    const { data: userData, error: userError } = await readHostIdentity();
-    if (!current()) return;
-    if (userError || !userData.user) {
-      setQueryError("Your session has expired. Please log in again.");
-      setLoadingFavourites(false);
-      return;
-    }
-    const { data, error: queryError } = await readExploreFavourites(
-      userData.user.id,
-    );
-    if (!current()) return;
-    setLoadingFavourites(false);
-    if (queryError) {
-      setQueryError(
-        "Couldn't load your saved items. Check that the host planning migration has been run.",
-      );
-      return;
-    }
-    setFavourites(data ?? []);
-  }, []);
-
-  useEffect(() => {
-    void loadFavourites();
-  }, [loadFavourites]);
-
-  const loadSubmissions = useCallback(async () => {
-    if (!mounted.current) return;
-    const request = ++communityRead.current;
-    const generation = lifetime.current;
-    const current = () =>
-      mounted.current &&
-      lifetime.current === generation &&
-      communityRead.current === request;
-    const [{ data: userData }, { data: adminData, error: adminError }] =
-      await Promise.all([readHostIdentity(), readPlatformAdmin()]);
-    if (!current()) return;
-    if (adminError) {
-      console.warn(
-        "Platform-admin check unavailable; community review controls remain hidden.",
-        adminError,
-      );
-    }
-    setIsPlatformAdmin(Boolean(adminData));
-    if (!userData.user) return;
-    setCurrentUserId(userData.user.id);
-    const { data, error: queryError } = await readCommunitySubmissions();
-    if (!current()) return;
-    if (queryError) {
-      setQueryError(
-        "Community submissions need the catalogue moderation migration. Run 20261112_community_catalog_and_host_view_as.sql in Supabase.",
-      );
-      return;
-    }
-    setSubmissions(data ?? []);
-  }, []);
-
-  useEffect(() => {
-    void loadSubmissions();
-  }, [loadSubmissions]);
 
   const communityTasks = useMemo(
     () => communityTasksFromSubmissions(submissions),
@@ -175,70 +91,6 @@ export default function HostExplore() {
     () => filterRoutes(routes, search, category),
     [search, category],
   );
-
-  function isSaved(type: HostFavourite["item_type"], id: string) {
-    return favourites.some(
-      (item) => item.item_type === type && item.item_id === id,
-    );
-  }
-
-  async function toggleFavourite(
-    type: HostFavourite["item_type"],
-    id: string,
-    data: CatalogTask | LocationIdea | RouteIdea,
-  ) {
-    const generation = lifetime.current;
-    const current = () => mounted.current && lifetime.current === generation;
-    if (!current()) return;
-    const key = `${type}:${id}`;
-    setBusyFavourite(key);
-    setActionError("");
-    setQueryError("");
-    const existing = favourites.find(
-      (item) => item.item_type === type && item.item_id === id,
-    );
-    if (existing) {
-      const { error: deleteError } = await removeHostFavourite({
-        id: existing.id,
-      });
-      if (!current()) return;
-      setBusyFavourite(null);
-      if (deleteError) {
-        setActionError(deleteError.message);
-        return;
-      }
-      setFavourites((current) =>
-        current.filter((item) => item.id !== existing.id),
-      );
-      return;
-    }
-
-    const { data: userData, error: userError } = await readHostIdentity();
-    if (!current()) return;
-    if (userError || !userData.user) {
-      setBusyFavourite(null);
-      setActionError("Your host session has expired. Please log in again.");
-      return;
-    }
-
-    const { data: saved, error: saveError } = await saveExploreFavourite({
-      hostId: userData.user.id,
-      itemType: type,
-      itemId: id,
-      itemData: favouriteData(data),
-    });
-    if (!current()) return;
-    setBusyFavourite(null);
-    if (saveError) {
-      setActionError(
-        type === "route"
-          ? "Route favourites need the latest host catalogue migration. Run 20261023_host_catalog_routes.sql in Supabase, then try again."
-          : saveError.message,
-      );
-      return;
-    }
-    if (saved) setFavourites((current) => [...current, saved]);
-  }
 
   function addTaskToPlan(task: CatalogTask, kind: "main" | "side") {
     if (task.id.startsWith("community-")) {
@@ -262,111 +114,6 @@ export default function HostExplore() {
         ? current.filter((item) => item !== id)
         : [...current, id],
     );
-  }
-
-  async function submitChallenge(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const generation = lifetime.current;
-    const current = () => mounted.current && lifetime.current === generation;
-    if (!current()) return;
-    setSubmittingChallenge(true);
-    setActionError("");
-    setQueryError("");
-    const { data: userData, error: userError } = await readHostIdentity();
-    if (!current()) return;
-    if (userError || !userData.user) {
-      setActionError("Your session has expired. Please log in again.");
-      setSubmittingChallenge(false);
-      return;
-    }
-    const payload = challengePayload(challengeDraft);
-    const { error: insertError } = editingSubmission
-      ? await updateApprovedCommunityChallenge({
-          id: editingSubmission.id,
-          title: challengeDraft.title.trim(),
-          description: challengeDraft.description.trim(),
-          payload,
-        })
-      : await createCommunityChallenge({
-          title: challengeDraft.title.trim(),
-          description: challengeDraft.description.trim(),
-          payload,
-          submittedBy: userData.user.id,
-        });
-    if (!current()) return;
-    setSubmittingChallenge(false);
-    if (insertError) {
-      setActionError(insertError.message);
-      return;
-    }
-    setChallengeDraft(createChallengeDraft());
-    setEditingSubmission(null);
-    setShowCreateChallenge(false);
-    await loadSubmissions();
-  }
-
-  function editCommunityChallenge(submission: CommunitySubmission) {
-    setEditingSubmission(submission);
-    setChallengeDraft(draftFromSubmission(submission));
-    setShowCreateChallenge(true);
-  }
-
-  async function deleteCommunityChallenge(submission: CommunitySubmission) {
-    const generation = lifetime.current;
-    const current = () => mounted.current && lifetime.current === generation;
-    if (!current()) return;
-    if (
-      !isPlatformAdmin ||
-      !window.confirm(
-        `Delete “${submission.title}” from the shared challenge library?`,
-      )
-    )
-      return;
-    setReviewingId(submission.id);
-    setActionError("");
-    setQueryError("");
-    const { error: deleteError } = await deleteApprovedCommunityChallenge({
-      id: submission.id,
-    });
-    if (!current()) return;
-    setReviewingId(null);
-    if (deleteError) {
-      setActionError(deleteError.message);
-      return;
-    }
-    await loadSubmissions();
-  }
-
-  async function reviewSubmission(
-    submission: CommunitySubmission,
-    status: "approved" | "rejected",
-  ) {
-    const generation = lifetime.current;
-    const current = () => mounted.current && lifetime.current === generation;
-    if (!current()) return;
-    setReviewingId(submission.id);
-    setActionError("");
-    setQueryError("");
-    const { data: userData, error: userError } = await readHostIdentity();
-    if (!current()) return;
-    if (userError || !userData.user || !isPlatformAdmin) {
-      setActionError("Only a platform administrator can review submissions.");
-      setReviewingId(null);
-      return;
-    }
-    const { error: updateError } = await reviewPendingCommunitySubmission({
-      id: submission.id,
-      status,
-      reviewedBy: userData.user.id,
-      reviewedAt: new Date().toISOString(),
-    });
-    if (!current()) return;
-    setReviewingId(null);
-    if (updateError) {
-      setActionError(updateError.message);
-      return;
-    }
-    await loadSubmissions();
   }
 
   const pendingSubmissions = submissions.filter(

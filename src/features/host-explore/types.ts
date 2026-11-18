@@ -49,3 +49,8 @@ export interface ChallengeDraft {
   tags: string[];
   setup: CatalogTask["setup"];
 }
+
+export interface ExploreActionFeedback {
+  onActionStart: () => void;
+  onActionError: (message: string) => void;
+}

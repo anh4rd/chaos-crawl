@@ -3010,10 +3010,60 @@ Proceed with behavior-neutral favourites, community-read, contribution and
 moderation controller extraction against this guarded baseline, then controlled
 views. Keep pending action-concurrency and modal/tab accessibility work separate.
 
+## Phase 5q — focused HostExplore controllers
+
+The guarded coordinator now composes four focused feature hooks:
+useExploreFavourites owns saved reads/mutations and their busy state;
+useExploreCommunity owns community reads/reloads and recovered identity/admin
+state; useExploreContribution owns the controlled draft, modal state and
+create/edit commands; useExploreModeration owns review/delete confirmation,
+commands and busy state. Each retains its own mount lifetime. The route owns
+local filters, expansions, feedback precedence and navigation, supplying stable
+feedback callbacks to the controllers. No persistence module is imported directly
+by the route. The remaining large markup is explicitly queued for decomposition;
+this checkpoint does not claim the page is fully migrated.
+
+This is a behavior-neutral extraction from the separately committed lifetime
+fixes. No new controller factory, context, state library, polling or visual design
+was introduced. Connected hooks are not mounted by local styleguide previews.
+
+Verification with source/documentation frozen during browser jobs:
+
+- All **366 unit/component tests**, lint/formatting, strict production build and
+  Playwright type checks pass. The prior eight lifetime/feedback regressions and
+  save-exception retry regression remain unchanged and passing.
+- All **18 desktop/mobile catalogue journeys** pass after extraction. **Twenty
+  before/after comparisons** retain exact SDK methods, URLs, Accept headers and
+  bodies; initial independent GETs are compared as a multiset, while subsequent
+  commands/reloads retain strict ordering. Both versions keep only active mount
+  reads after the preceding lifecycle fix.
+- Those twenty states have exact raw DOM/attributes, geometry, every standard
+  computed property and viewport PNGs at 1280/393px, with no masks or class
+  normalization. All **221 stylesheet files** and used persistence/auth modules
+  remain byte-identical.
+- Mechanical checks match all six moved command/selection functions after only
+  scoped feedback callback substitution, both read callback bodies, all eleven
+  moved state initializers and each scoped lifetime effect. The query callbacks'
+  sole new dependency is the route's stable query-error setter. Route JSX, its
+  existing PlusIcon, projections, feedback precedence and navigation functions
+  remain byte-identical.
+- No live writes, migrations, deployment or dependencies. Verification builds
+  disabled Sentry uploads; full-goal final tests and desloppify remain queued.
+
+| Review slice       | Scrutiny                                                                        | Evidence                                                          |
+| ------------------ | ------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Domain controllers | Focused state/read/write ownership, preserving lifetime guards and reloads      | Function/state/effect comparison; unchanged lifecycle regressions |
+| Route wiring       | Stable feedback callbacks, original precedence and native interaction callbacks | All unit gates, eighteen browser cases and twenty SDK trace pairs |
+| Presentation       | No markup/styling migration in this extraction                                  | Byte-identical JSX/styles and twenty exact DOM/style/PNG pairs    |
+
+Next: controlled catalogue cards, forms and sections, a thin route/feature
+coordinator and local backend-free examples. Then migrate owned/shared styling;
+keep pending concurrency and modal/tab accessibility fixes in their own slices.
+
 ## Queued phases for the full refactor
 
-Next: focused HostExplore controllers and controlled views. Catalogue models,
-typed persistence and their regression baseline are verified. Keep styling and intentional behavior fixes in
+Next: controlled HostExplore views and a thin route/feature coordinator. Catalogue
+models, typed persistence, focused controllers and their regressions are verified. Keep styling and intentional behavior fixes in
 separate verified slices. Continue remaining host utilities/admin and V2 player/
 slideshow presentation, then legacy workflows and obsolete CSS/Tailwind retirement
 once their final consumers migrate. Preserve the shared host/player session base,
