@@ -17,6 +17,7 @@ import type {
   SideChallenge,
 } from "../types/database";
 import { updateGameState } from "../lib/gameApi";
+import { awardScore } from "../lib/scoreApi";
 import type { ApiResult } from "../lib/apiResult";
 
 const mocks = vi.hoisted(() => {
@@ -107,6 +108,7 @@ vi.mock("react-router-dom", async (original) => ({
   useNavigate: () => mocks.navigate,
 }));
 vi.mock("../lib/gameApi", () => ({ updateGameState: vi.fn() }));
+vi.mock("../lib/scoreApi", () => ({ awardScore: vi.fn() }));
 vi.mock("../lib/supabase", () => ({
   supabase: {
     from: mocks.from,
@@ -125,6 +127,9 @@ beforeEach(() => {
   mocks.completions = null;
   mocks.navigate.mockReset();
   vi.mocked(updateGameState)
+    .mockReset()
+    .mockResolvedValue({ data: null, error: null });
+  vi.mocked(awardScore)
     .mockReset()
     .mockResolvedValue({ data: null, error: null });
   mocks.reload.mockReset();
@@ -398,4 +403,195 @@ it("empty legacy challenge collections retain the side-task empty message", () =
   expect(screen.getByText("No active side challenges found.")).toBeTruthy();
   expect(screen.queryByText("ROUND 1")).toBeNull();
   expect(screen.queryByRole("button", { name: "Review" })).toBeNull();
+});
+
+function openScores() {
+  openAdmin();
+  fireEvent.click(screen.getByRole("button", { name: "Scores" }));
+}
+
+it("score adjustments validate finite positive amounts and explicit player/team selection before issuing an award", () => {
+  const alert = vi.spyOn(window, "alert").mockImplementation(() => {});
+  openScores();
+  fireEvent.click(screen.getByRole("button", { name: "Award points" }));
+  expect(alert).toHaveBeenLastCalledWith("Choose a player first.");
+  for (const value of ["0", "-2", ""]) {
+    fireEvent.change(screen.getByLabelText("Points"), { target: { value } });
+    fireEvent.click(screen.getByRole("button", { name: "Award points" }));
+    expect(alert).toHaveBeenLastCalledWith(
+      "Enter a points amount greater than zero.",
+    );
+  }
+  fireEvent.change(screen.getByLabelText("Points"), { target: { value: "5" } });
+  fireEvent.click(
+    within(screen.getByRole("group", { name: "Score target" })).getByRole(
+      "button",
+      { name: "Team" },
+    ),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Award points" }));
+  expect(alert).toHaveBeenLastCalledWith("Choose a team first.");
+  expect(awardScore).not.toHaveBeenCalled();
+  expect(updateGameState).not.toHaveBeenCalled();
+});
+
+it("a player award preserves the manual ledger payload and clears only the successful reason", async () => {
+  vi.spyOn(Date, "now").mockReturnValue(123456789);
+  vi.spyOn(Math, "random").mockReturnValue(0.125);
+  openScores();
+  fireEvent.change(screen.getByRole("combobox", { name: "Player" }), {
+    target: { value: "p1" },
+  });
+  fireEvent.change(screen.getByLabelText("Points"), { target: { value: "7" } });
+  fireEvent.change(screen.getByLabelText("Reason (optional)"), {
+    target: { value: "  Best costume  " },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Award points" }));
+  await waitFor(() =>
+    expect(awardScore).toHaveBeenCalledExactlyOnceWith({
+      playerId: "p1",
+      teamName: null,
+      challengeType: "manual",
+      challengeId: `manual-123456789-${(0.125).toString(36).slice(2, 7)}`,
+      challengeTitle: "Best costume",
+      points: 7,
+      reason: "Best costume",
+    }),
+  );
+  await waitFor(() =>
+    expect(
+      screen.getByLabelText("Reason (optional)").getAttribute("value"),
+    ).toBe(""),
+  );
+  expect(screen.getByLabelText("Points").getAttribute("value")).toBe("7");
+  expect(
+    screen
+      .getByRole("combobox", { name: "Player" })
+      .querySelector("option:checked")
+      ?.getAttribute("value"),
+  ).toBe("p1");
+});
+
+it("team deductions retain negative manual points and the original default reason", async () => {
+  openScores();
+  fireEvent.click(
+    within(screen.getByRole("group", { name: "Score target" })).getByRole(
+      "button",
+      { name: "Team" },
+    ),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Dock" }));
+  fireEvent.change(screen.getByRole("combobox", { name: "Team" }), {
+    target: { value: "Ducks" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Dock points" }));
+  await waitFor(() =>
+    expect(awardScore).toHaveBeenCalledExactlyOnceWith({
+      playerId: null,
+      teamName: "Ducks",
+      challengeType: "manual",
+      challengeId: expect.stringMatching(/^manual-\d+-[a-z0-9]+$/),
+      challengeTitle: "Host points deduction",
+      points: -5,
+      reason: "Host points deduction",
+    }),
+  );
+});
+
+it("a failed score award retains editable drafts and allows the same explicit retry", async () => {
+  const alert = vi.spyOn(window, "alert").mockImplementation(() => {});
+  vi.mocked(awardScore).mockResolvedValueOnce({
+    data: null,
+    error: { message: "Score connection failed" },
+  });
+  openScores();
+  fireEvent.change(screen.getByRole("combobox", { name: "Player" }), {
+    target: { value: "p1" },
+  });
+  fireEvent.change(screen.getByLabelText("Reason (optional)"), {
+    target: { value: "Keep this reason" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Award points" }));
+  await waitFor(() =>
+    expect(alert).toHaveBeenCalledWith(
+      "Could not update score: Score connection failed",
+    ),
+  );
+  expect(screen.getByLabelText("Reason (optional)").getAttribute("value")).toBe(
+    "Keep this reason",
+  );
+  expect(
+    screen
+      .getByRole("button", { name: "Award points" })
+      .hasAttribute("disabled"),
+  ).toBe(false);
+  fireEvent.click(screen.getByRole("button", { name: "Award points" }));
+  await waitFor(() => expect(awardScore).toHaveBeenCalledTimes(2));
+  await waitFor(() =>
+    expect(
+      screen.getByLabelText("Reason (optional)").getAttribute("value"),
+    ).toBe(""),
+  );
+});
+
+it("score target, action, selected team, drafts and leaderboard view survive leaving the tab", () => {
+  openScores();
+  fireEvent.click(
+    within(screen.getByRole("group", { name: "Score target" })).getByRole(
+      "button",
+      { name: "Team" },
+    ),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Dock" }));
+  fireEvent.change(screen.getByRole("combobox", { name: "Team" }), {
+    target: { value: "Ducks" },
+  });
+  fireEvent.change(screen.getByLabelText("Points"), { target: { value: "9" } });
+  fireEvent.change(screen.getByLabelText("Reason (optional)"), {
+    target: { value: "Keep across tabs" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Team scores" }));
+  fireEvent.click(screen.getByRole("button", { name: "Live" }));
+  fireEvent.click(screen.getByRole("button", { name: "Scores" }));
+  expect(screen.getByRole("button", { name: "Dock points" })).toBeTruthy();
+  expect(
+    screen
+      .getByRole("combobox", { name: "Team" })
+      .querySelector("option:checked")
+      ?.getAttribute("value"),
+  ).toBe("Ducks");
+  expect(screen.getByLabelText("Points").getAttribute("value")).toBe("9");
+  expect(screen.getByLabelText("Reason (optional)").getAttribute("value")).toBe(
+    "Keep across tabs",
+  );
+  expect(
+    screen
+      .getByRole("button", { name: "Team scores" })
+      .classList.contains("is-selected"),
+  ).toBe(true);
+  expect(awardScore).not.toHaveBeenCalled();
+});
+
+it("score display controls preserve slideshow and return-to-game reset commands", async () => {
+  configureChallenges();
+  openScores();
+  fireEvent.click(screen.getByRole("button", { name: "Open slideshow" }));
+  await waitFor(() =>
+    expect(updateGameState).toHaveBeenNthCalledWith(1, {
+      slideshow_open: true,
+      voting_open: false,
+      show_vote_results: false,
+    }),
+  );
+  fireEvent.click(
+    screen.getByRole("button", { name: "Return everyone to game" }),
+  );
+  await waitFor(() =>
+    expect(updateGameState).toHaveBeenNthCalledWith(2, {
+      voting_open: false,
+      show_vote_results: false,
+      slideshow_open: false,
+    }),
+  );
+  expect(awardScore).not.toHaveBeenCalled();
 });

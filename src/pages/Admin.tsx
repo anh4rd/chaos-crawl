@@ -1,7 +1,10 @@
 import ChallengeCatalogue from "../features/legacy-host/ChallengeCatalogue";
+import ScoreOverview from "../features/legacy-host/ScoreOverview";
 import type {
   ChallengeRoundModel,
   SideChallengeItemModel,
+  ScoreTarget,
+  ScoreAction,
 } from "../features/legacy-host/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -23,8 +26,6 @@ import { supabase } from "../lib/supabase";
 import "../styles/HostPlanning.css";
 
 type HostTab = "live" | "challenges" | "scores" | "players";
-type ScoreTarget = "player" | "team";
-type ScoreAction = "award" | "dock";
 
 interface Team {
   id: string | number;
@@ -523,6 +524,9 @@ export default function AdminV2() {
         }))
       : [];
 
+  const scoreEntries =
+    scoreLeaderboardTarget === "player" ? playerLeaderboard : teamLeaderboard;
+
   return (
     <main className="host-v2">
       <div className="host-v2__app">
@@ -814,208 +818,42 @@ export default function AdminV2() {
           )}
 
           {activeTab === "scores" && (
-            <>
-              <div className="host-v2__page-intro">
-                <p className="host-v2__eyebrow">COMPETITION</p>
-                <h2>Scores & results</h2>
-                <p>
-                  Award points, dock points and keep track of the leaderboard.
-                </p>
-              </div>
-              <section className="host-v2__panel host-v2__panel--white">
-                <div className="host-v2__panel-topline">
-                  <span className="host-v2__kicker">
-                    <Icon name="plus" className="icon--size-14" /> POINTS
-                    ADJUSTMENT
-                  </span>
-                </div>
-                <div
-                  className="host-v2__segmented"
-                  role="group"
-                  aria-label="Score target"
-                >
-                  <button
-                    type="button"
-                    className={scoreTarget === "player" ? "is-selected" : ""}
-                    onClick={() => setScoreTarget("player")}
-                  >
-                    Player
-                  </button>
-                  <button
-                    type="button"
-                    className={scoreTarget === "team" ? "is-selected" : ""}
-                    onClick={() => setScoreTarget("team")}
-                  >
-                    Team
-                  </button>
-                </div>
-                <div
-                  className="host-v2__segmented host-v2__segmented--action"
-                  role="group"
-                  aria-label="Award or dock points"
-                >
-                  <button
-                    type="button"
-                    className={scoreAction === "award" ? "is-selected" : ""}
-                    onClick={() => setScoreAction("award")}
-                  >
-                    <Icon name="plus" className="icon--size-15" /> Award
-                  </button>
-                  <button
-                    type="button"
-                    className={scoreAction === "dock" ? "is-selected" : ""}
-                    onClick={() => setScoreAction("dock")}
-                  >
-                    <Icon name="minus" className="icon--size-15" /> Dock
-                  </button>
-                </div>
-                {scoreTarget === "player" ? (
-                  <label className="host-v2__field">
-                    <span>Player</span>
-                    <select
-                      value={selectedPlayerId}
-                      onChange={(event) =>
-                        setSelectedPlayerId(event.target.value)
-                      }
-                    >
-                      <option value="">Select a player</option>
-                      {players.map((player) => (
-                        <option key={player.id} value={player.id}>
-                          {player.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                ) : (
-                  <label className="host-v2__field">
-                    <span>Team</span>
-                    <select
-                      value={selectedTeamName}
-                      onChange={(event) =>
-                        setSelectedTeamName(event.target.value)
-                      }
-                    >
-                      <option value="">Select a team</option>
-                      {teamNames.map((name) => (
-                        <option key={name} value={name}>
-                          {name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                )}
-                <label className="host-v2__field">
-                  <span>Points</span>
-                  <input
-                    type="number"
-                    min={1}
-                    value={pointsDraft}
-                    onChange={(event) => setPointsDraft(event.target.value)}
-                  />
-                </label>
-                <label className="host-v2__field">
-                  <span>Reason (optional)</span>
-                  <input
-                    value={scoreReason}
-                    onChange={(event) => setScoreReason(event.target.value)}
-                    placeholder="e.g. Best costume"
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="host-v2__button host-v2__button--primary"
-                  onClick={() => void handleAwardOrDock()}
-                >
-                  {scoreAction === "award" ? "Award points" : "Dock points"}
-                  <Icon name="chevron-right" className="icon--size-17" />
-                </button>
-              </section>
-              <section className="host-v2__panel host-v2__panel--white">
-                <div className="host-v2__panel-topline">
-                  <span className="host-v2__kicker">
-                    <Icon name="trophy" className="icon--size-14" /> LEADERBOARD
-                  </span>
-                  <span className="host-v2__muted">
-                    {scoresLoading ? "Updating…" : "Live scores"}
-                  </span>
-                </div>
-                <div
-                  className="host-v2__segmented"
-                  role="group"
-                  aria-label="Leaderboard view"
-                >
-                  <button
-                    type="button"
-                    className={
-                      scoreLeaderboardTarget === "player" ? "is-selected" : ""
-                    }
-                    onClick={() => setScoreLeaderboardTarget("player")}
-                  >
-                    Player scores
-                  </button>
-                  <button
-                    type="button"
-                    className={
-                      scoreLeaderboardTarget === "team" ? "is-selected" : ""
-                    }
-                    onClick={() => setScoreLeaderboardTarget("team")}
-                  >
-                    Team scores
-                  </button>
-                </div>
-                {(scoreLeaderboardTarget === "player"
-                  ? playerLeaderboard
-                  : teamLeaderboard
-                ).length ? (
-                  <div className="host-v2__leaderboard">
-                    {(scoreLeaderboardTarget === "player"
-                      ? playerLeaderboard
-                      : teamLeaderboard
-                    ).map((entry, index) => (
-                      <div className="host-v2__leader-row" key={entry.id}>
-                        <span
-                          className={`host-v2__rank ${index === 0 ? "is-first" : ""}`}
-                        >
-                          {index + 1}
-                        </span>
-                        <span className="host-v2__leader-name">
-                          {entry.name}
-                        </span>
-                        <strong>
-                          {entry.score} <small>pts</small>
-                        </strong>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="host-v2__empty-copy">
-                    Scores will appear here when points are awarded.
-                  </p>
-                )}
-              </section>
-              <section className="host-v2__panel host-v2__panel--tint">
-                <div className="host-v2__panel-topline">
-                  <span className="host-v2__kicker">DISPLAY CONTROLS</span>
-                </div>
-                <button
-                  type="button"
-                  className="host-v2__button host-v2__button--primary"
-                  onClick={() => void setSlideshow(true)}
-                >
-                  Open slideshow{" "}
-                  <Icon name="chevron-right" className="icon--size-17" />
-                </button>
-                {game.show_vote_results && (
-                  <button
-                    type="button"
-                    className="host-v2__button host-v2__button--subtle"
-                    onClick={() => void returnEveryoneToGame()}
-                  >
-                    Return everyone to game
-                  </button>
-                )}
-              </section>
-            </>
+            <ScoreOverview
+              adjustment={{
+                target: scoreTarget,
+                action: scoreAction,
+                players: players.map(({ id, name }) => ({ id, name })),
+                teams: teamNames,
+                selectedPlayerId,
+                selectedTeamName,
+                points: pointsDraft,
+                reason: scoreReason,
+                onTargetChange: setScoreTarget,
+                onActionChange: setScoreAction,
+                onPlayerChange: setSelectedPlayerId,
+                onTeamChange: setSelectedTeamName,
+                onPointsChange: setPointsDraft,
+                onReasonChange: setScoreReason,
+                onSubmit: () => {
+                  void handleAwardOrDock();
+                },
+              }}
+              leaderboard={{
+                target: scoreLeaderboardTarget,
+                loading: scoresLoading,
+                entries: scoreEntries,
+                onTargetChange: setScoreLeaderboardTarget,
+              }}
+              display={{
+                showVoteResults: game.show_vote_results,
+                onOpenSlideshow: () => {
+                  void setSlideshow(true);
+                },
+                onReturnToGame: () => {
+                  void returnEveryoneToGame();
+                },
+              }}
+            />
           )}
 
           {activeTab === "players" && (
