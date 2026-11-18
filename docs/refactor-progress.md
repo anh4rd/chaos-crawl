@@ -4308,3 +4308,12 @@ Completed historical phase JSON was losslessly archived to keep verification
 space available:2210files,5634.8MiB→401.2MiB,5233.6MiB reclaimed. Every decompressed
 SHA was verified before unlink and recorded in the restoration journal. Active
 snapshots and current proof files were excluded.
+
+Browser startup is now bounded by the configured120s process timeout: supported
+webServer.wait.stdout waits for Vite's Local readiness line instead of performing
+an unbounded HTTP availability probe before launch. strictPort, baseURL and
+live-test isolation remain. Installed runner source proves the old probe lacked
+a socket deadline; no proxy or network-policy change is needed. A temporary
+config over unchanged source started Vite in about300ms and passed the mocked
+join journey in3.3s. Evidence: /tmp/finishing-neutral-startup-diagnosis.md and
+/tmp/finishing-startup-smoke.log. Existing running snapshots were not modified.

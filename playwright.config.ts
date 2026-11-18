@@ -62,7 +62,7 @@ export default defineConfig({
     },
     command: `npm run dev -- --host 127.0.0.1 --port ${port} --strictPort`,
 
-    url: baseURL,
+    wait: { stdout: /Local:/ },
 
     reuseExistingServer: false,
 
