@@ -90,3 +90,19 @@
     letter-spacing: fonts.$tracking-overline;
   }
 }
+
+.overline {
+  &--slideshow,
+  &--slideshow-waiting {
+    color: colors.$accent-soft;
+    font-size: fonts.$size-slideshow-label;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-overline;
+    text-transform: uppercase;
+  }
+  &--slideshow-waiting {
+    margin: 0;
+    font-size: fonts.$size-slideshow-message-copy;
+    line-height: 1.5;
+  }
+}

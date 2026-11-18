@@ -1,4 +1,5 @@
 export type ButtonVariant =
+  | "slideshow-fullscreen"
   | "idea-save"
   | "idea-saved"
   | "idea-close"

@@ -225,8 +225,9 @@ and callbacks only; no backend, routing, timing or selection lives in them. The
 frame supports main/div semantics and optional counter/fullscreen/feedback; local
 Shared TV slideshow uses div, local state and a simulated fullscreen callback.
 Retain native video identity/autoplay/muted/playsInline and ended/error callbacks.
-Current cc-final-tv styles are an explicit legacy exception pending the separate
-SCSS slice. Session-ID route adapters now key focused FinalSlideshow/SecretSlideshow feature
+TV styling now belongs to slideshow-screen/evidence/caption/message BEM partials.
+Compose the shared slideshow counter/fullscreen/overline/note variants; native
+waiting/caption type and fullscreen interaction states must retain parity. Session-ID route adapters now key focused FinalSlideshow/SecretSlideshow feature
 coordinators. Named typed reads use runApi and the existing evidence URL resolver;
 inferred models do not prove deployed schema. Polling, atomic view/host selection,
 media cadence/error and fullscreen lifetimes stay in separate ordinary hooks.
@@ -250,12 +251,14 @@ and legacy host-v2 styles during extraction; other legacy tabs remain separate.
 
 Platform search/status controls have visible native labels and scoped table
 headers. Preserve the original16px text at weight 400 control type; default FormLabel typography
-is not equivalent. Shared-toolbar/owned-style and keyboard focus treatment are
-separate follow-ups. No color or field redesign is authorized by adding labels.
+is not equivalent. ControlRow filters and FormLabel filter now own toolbar/control styling while
+retaining native geometry/type. Keyboard focus treatment remains a separate
+behavior follow-up. No color or field redesign is authorized by adding labels.
 
 PageFrame supplies the shared native main/div boundary for legacy join, gameplay
-and leaderboard. Existing caller utility layout remains an extraction exception
-until its separate owned-SCSS slice. Local Shared legacy page frame uses div and
+and leaderboard. Stack/compact/loading variants own layout through the existing rem spacing and
+content-width tokens; bare is unstyled. Preserve the effective global heading
+margin cascade when composing direct headings. Local Shared legacy page frame uses div and
 static children; never mount connected routes in a primitive reference.
 
 Catalogue reads settle current loading on rejected identity/read operations and

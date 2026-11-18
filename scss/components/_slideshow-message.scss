@@ -1,0 +1,17 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.slideshow-message {
+  display: grid;
+  justify-items: center;
+  gap: layout.$pixel-unit * 3.5;
+  max-width: layout.$pixel-unit * 155;
+  padding: layout.$pixel-unit * 8;
+  text-align: center;
+  h1 {
+    margin: 0;
+    color: colors.$white;
+    font-size: fonts.$size-slideshow-message-heading;
+  }
+}

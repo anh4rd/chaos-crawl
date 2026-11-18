@@ -77,7 +77,9 @@ test("platform games preserve RPC contracts, full totals, incoming order and loc
   await expect(page.locator(".sa-table tbody tr")).toHaveCount(1);
   await expect(page.locator(".sa-stats strong")).toHaveText(["3", "12", "2"]);
   await search.fill("");
-  await page.locator(".sa-toolbar select").selectOption("completed");
+  await page
+    .getByRole("combobox", { name: "Status", exact: true })
+    .selectOption("completed");
   await expect(page.locator(".sa-table tbody tr td:first-child")).toHaveText([
     "Finished party",
   ]);
@@ -470,8 +472,8 @@ test("platform filters have visible native labels and named table columns", asyn
   const status = page.getByRole("combobox", { name: "Status", exact: true });
   await expect(search).toBeVisible();
   await expect(status).toBeVisible();
-  const searchLabel = page.locator(".sa-toolbar label").filter({ has: search });
-  const statusLabel = page.locator(".sa-toolbar label").filter({ has: status });
+  const searchLabel = page.locator("label").filter({ has: search });
+  const statusLabel = page.locator("label").filter({ has: status });
   await expect(searchLabel).toContainText("Search games");
   await expect(statusLabel).toContainText("Status");
   await expect(page.getByRole("columnheader")).toHaveText([
@@ -521,5 +523,51 @@ test("platform filters have visible native labels and named table columns", asyn
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
+  backend.verify();
+});
+
+test("shared filter toolbar uses local native controls without backend reads", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  await page.goto("#/styleguide");
+  const example = page.locator(".component-example").filter({
+    has: page.getByRole("heading", {
+      name: "Shared filter toolbar",
+      exact: true,
+    }),
+  });
+  const search = example.getByRole("textbox", {
+    name: "Search games",
+    exact: true,
+  });
+  const status = example.getByRole("combobox", { name: "Status", exact: true });
+  await tabTo(page, search);
+  await page.keyboard.type("garden");
+  await expect(example.locator("output")).toHaveText("1 result");
+  await page.keyboard.press("ControlOrMeta+A");
+  await page.keyboard.press("Backspace");
+  await expect(example.locator("output")).toHaveText("3 results");
+  await page.keyboard.press("Tab");
+  await expect(status).toBeFocused();
+  await page.keyboard.press("End");
+  await page.keyboard.press("Enter");
+  await expect(status).toHaveValue("completed");
+  await expect(example.locator("output")).toHaveText("1 result");
+  await expect(example.getByRole("listitem")).toHaveText(["Finished party"]);
+  const disabled = example.getByRole("checkbox", {
+    name: "Disable filters",
+    exact: true,
+  });
+  await tabTo(page, disabled);
+  await page.keyboard.press("Space");
+  await expect(search).toBeDisabled();
+  await expect(status).toBeDisabled();
+  await expect(disabled).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(search).toBeEnabled();
+  await expect(status).toBeEnabled();
+  await expect(status).toHaveValue("completed");
+  expect(backend.requests).toHaveLength(0);
   backend.verify();
 });

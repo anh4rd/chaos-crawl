@@ -2,6 +2,7 @@ import ModerationExample from "./ModerationExample";
 import IdeaCardExample from "./IdeaCardExample";
 import CatalogueExample from "./CatalogueExample";
 import SavedItemsExample from "./SavedItemsExample";
+import FilterToolbarExample from "./FilterToolbarExample";
 import StagePlanExample from "./StagePlanExample";
 import OverlayPanelExample from "./OverlayPanelExample";
 import RewardPrimitivesExample from "./RewardPrimitivesExample";
@@ -117,6 +118,7 @@ export default function HostExamples() {
       </Example>
       <WorkspaceExamples />
       <SavedItemsExample />
+      <FilterToolbarExample />
       <PlanningPrimitivesExample />
       <LobbyPrimitivesExample />
       <HostChromeExample />

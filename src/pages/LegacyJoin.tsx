@@ -52,7 +52,7 @@ export default function Join() {
   }
 
   return (
-    <PageFrame className="mx-auto min-h-screen max-w-md space-y-6 p-6">
+    <PageFrame>
       <header>
         <img
           src={`${import.meta.env.BASE_URL}Title.png`}

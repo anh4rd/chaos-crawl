@@ -73,3 +73,29 @@
     font-size: fonts.$size-caption;
   }
 }
+
+.note {
+  &--slideshow-copy {
+    margin: 0;
+    color: colors.$slideshow-message-copy;
+    font-size: fonts.$size-slideshow-message-copy;
+    line-height: 1.5;
+  }
+  &--slideshow-error {
+    margin: 0;
+    color: colors.$slideshow-error-copy;
+    font-size: inherit;
+  }
+  &--slideshow-feedback {
+    position: absolute;
+    top: layout.$pixel-unit * 19.5;
+    right: layout.$pixel-unit * 5;
+    max-width: layout.$slideshow-feedback-width;
+    margin: 0;
+    padding: layout.$pixel-unit * 2 layout.$pixel-unit * 3;
+    border-radius: layout.$pixel-unit * 2.5;
+    background: colors.$slideshow-error-surface;
+    color: colors.$slideshow-error-copy;
+    font-size: fonts.$size-small;
+  }
+}

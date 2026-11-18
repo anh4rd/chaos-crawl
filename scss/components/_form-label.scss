@@ -194,3 +194,37 @@
     }
   }
 }
+
+.form-label {
+  &--filter {
+    display: flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 2;
+    flex: 1;
+    background: colors.$white;
+    border: layout.$pixel-unit * 0.25 solid colors.$filter-control-border;
+    border-radius: layout.$pixel-unit * 3;
+    padding: 0 layout.$pixel-unit * 2.5;
+    color: inherit;
+    font: inherit;
+    input,
+    select {
+      min-width: 0;
+      width: 100%;
+      border: 0;
+      background: transparent;
+      padding: layout.$pixel-unit * 2.75;
+      color: colors.$filter-control-ink;
+      outline: 0;
+    }
+    select {
+      width: auto;
+      border: layout.$pixel-unit * 0.25 solid colors.$filter-control-border;
+      border-radius: layout.$pixel-unit * 3;
+      background: colors.$white;
+      @media (max-width: layout.$control-stack-breakpoint) {
+        width: 100%;
+      }
+    }
+  }
+}

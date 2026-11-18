@@ -1,3 +1,5 @@
+import Note from "../../components/ui/Note";
+import Overline from "../../components/ui/Overline";
 import Icon from "../../components/ui/Icon";
 import SlideshowScreen from "../../components/slideshow/SlideshowScreen";
 import SlideshowMessage from "../../components/slideshow/SlideshowMessage";
@@ -36,9 +38,9 @@ export default function SecretSlideshow({ sessionId }: { sessionId: string }) {
   if (error && !view) {
     return (
       <SlideshowScreen>
-        <p className="cc-final-tv-error" role="alert">
+        <Note variant="slideshow-error" role="alert">
           {error}
-        </p>
+        </Note>
       </SlideshowScreen>
     );
   }
@@ -47,7 +49,9 @@ export default function SecretSlideshow({ sessionId }: { sessionId: string }) {
       <SlideshowScreen>
         <SlideshowMessage>
           <Icon name="loader-circle" className="icon--size-28 cc-spin" />
-          <span>Connecting to the secret mission slideshow…</span>
+          <Note as="span" variant="slideshow-copy">
+            Connecting to the secret mission slideshow…
+          </Note>
         </SlideshowMessage>
       </SlideshowScreen>
     );
@@ -56,9 +60,11 @@ export default function SecretSlideshow({ sessionId }: { sessionId: string }) {
     return (
       <SlideshowScreen>
         <SlideshowMessage>
-          <span className="cc-final-tv-kicker">SECRET MISSION</span>
+          <Overline variant="slideshow-waiting">SECRET MISSION</Overline>
           <h1>Slideshow is waiting</h1>
-          <p>The host will open a mission review.</p>
+          <Note variant="slideshow-copy">
+            The host will open a mission review.
+          </Note>
         </SlideshowMessage>
       </SlideshowScreen>
     );
@@ -71,11 +77,11 @@ export default function SecretSlideshow({ sessionId }: { sessionId: string }) {
         error={error}
       >
         <SlideshowMessage>
-          <span className="cc-final-tv-kicker">
+          <Overline variant="slideshow-waiting">
             SECRET MISSION · {view.mission.player_name}
-          </span>
+          </Overline>
           <h1>{view.mission.title}</h1>
-          <p>{view.mission.description}</p>
+          <Note variant="slideshow-copy">{view.mission.description}</Note>
           <strong>No photo or video submitted</strong>
         </SlideshowMessage>
       </SlideshowScreen>

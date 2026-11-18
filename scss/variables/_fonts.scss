@@ -111,3 +111,8 @@ $size-banner-title: clamp(24px, 3.5vw, 36px);
 
 $weight-hint: 650;
 $family-native-heading: list.nth($family-type-sample, 1);
+
+$size-slideshow-caption: clamp($size-art-symbol, 5vw, 58px);
+$size-slideshow-label: clamp($size-small, 1.7vw, $size-heading);
+$size-slideshow-message-heading: clamp($size-art-symbol, 5vw, 54px);
+$size-slideshow-message-copy: clamp($size-body, 2vw, $size-heading);

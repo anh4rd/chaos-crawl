@@ -112,3 +112,22 @@
     vertical-align: middle;
   }
 }
+
+.count-badge {
+  &--slideshow {
+    position: absolute;
+    display: block;
+    top: layout.$pixel-unit * 6;
+    left: layout.$pixel-unit * 6;
+    min-width: auto;
+    height: auto;
+    place-items: normal;
+    padding: layout.$pixel-unit * 2.25 layout.$pixel-unit * 3.25;
+    border: layout.$pixel-unit * 0.25 solid colors.$slideshow-counter-border;
+    border-radius: layout.$badge-radius;
+    background: colors.$slideshow-control-surface;
+    color: colors.$white;
+    font-size: fonts.$size-body;
+    font-weight: fonts.$weight-action;
+  }
+}

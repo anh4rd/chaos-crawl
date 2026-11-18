@@ -8,6 +8,7 @@ interface Props extends Omit<
   icon: IconName;
   label: string;
   variant?:
+    | "slideshow-fullscreen"
     | "danger"
     | "entity-remove"
     | "control-replay"

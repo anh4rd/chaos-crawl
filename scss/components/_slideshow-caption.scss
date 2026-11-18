@@ -1,0 +1,20 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/shadows";
+
+.slideshow-caption {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: layout.$slideshow-caption-padding;
+  background: colors.$slideshow-caption-background;
+  h1 {
+    margin: layout.$pixel-unit * 2 0 0;
+    color: colors.$white;
+    font-size: fonts.$size-slideshow-caption;
+    font-weight: fonts.$weight-heavy;
+    text-shadow: shadows.$slideshow-caption;
+  }
+}

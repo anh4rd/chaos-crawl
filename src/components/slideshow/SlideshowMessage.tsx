@@ -5,5 +5,5 @@ export default function SlideshowMessage({
 }: {
   children: ReactNode;
 }) {
-  return <div className="cc-final-tv-waiting">{children}</div>;
+  return <div className="slideshow-message">{children}</div>;
 }

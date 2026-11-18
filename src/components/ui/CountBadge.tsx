@@ -5,6 +5,7 @@ export default function CountBadge({
   ...props
 }: HTMLAttributes<HTMLSpanElement> & {
   variant?:
+    | "slideshow"
     | "session"
     | "round-index"
     | "round-index-current"

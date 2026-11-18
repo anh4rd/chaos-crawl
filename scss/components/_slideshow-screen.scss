@@ -1,0 +1,13 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+.slideshow-screen {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: layout.$slideshow-height;
+  overflow: hidden;
+  background: colors.$slideshow-surface;
+  color: colors.$white;
+}

@@ -146,3 +146,7 @@ $banner-padding: clamp(22px, 4vw, 34px);
 $collection-wide-breakpoint: 1140px;
 
 $contribution-panel-max-height: min(90vh, 900px);
+
+$slideshow-height: 100vh;
+$slideshow-caption-padding: clamp($pixel-unit * 5, 4vw, $pixel-unit * 12);
+$slideshow-feedback-width: min($pixel-unit * 125, 80vw);

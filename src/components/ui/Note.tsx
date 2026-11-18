@@ -9,13 +9,16 @@ export default function Note({
 }: HTMLAttributes<HTMLElement> & {
   compact?: boolean;
   variant?:
+    | "slideshow-copy"
+    | "slideshow-error"
+    | "slideshow-feedback"
     | "lobby"
     | "control"
     | "session"
     | "access-intro"
     | "access-help"
     | "collection-loading";
-  as?: "p" | "output" | "small" | "div";
+  as?: "p" | "output" | "small" | "div" | "span";
 }) {
   return (
     <Element

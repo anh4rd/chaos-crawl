@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
-import Icon from "../ui/Icon";
+import IconButton from "../ui/IconButton";
+import CountBadge from "../ui/CountBadge";
+import Note from "../ui/Note";
 
 export default function SlideshowScreen({
   as: Element = "main",
@@ -17,27 +19,29 @@ export default function SlideshowScreen({
   children: ReactNode;
 }) {
   return (
-    <Element className="cc-final-tv" aria-live={live ? "polite" : undefined}>
+    <Element
+      className="slideshow-screen"
+      aria-live={live ? "polite" : undefined}
+    >
       {children}
       {counter && (
-        <span className="cc-final-tv-counter">
+        <CountBadge variant="slideshow">
           {counter.index + 1} / {counter.total}
-        </span>
+        </CountBadge>
       )}
       {onFullscreen && (
-        <button
-          className="cc-final-tv-fullscreen"
+        <IconButton
+          variant="slideshow-fullscreen"
           type="button"
           onClick={onFullscreen}
-          aria-label="Enter fullscreen"
-        >
-          <Icon name="expand" className="icon--size-18" />
-        </button>
+          label="Enter fullscreen"
+          icon="expand"
+        />
       )}
       {error && (
-        <p className="cc-final-tv-live-error" role="status">
+        <Note variant="slideshow-feedback" role="status">
           {error}
-        </p>
+        </Note>
       )}
     </Element>
   );

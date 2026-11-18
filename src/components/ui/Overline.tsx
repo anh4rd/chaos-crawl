@@ -9,6 +9,8 @@ export default function Overline({
 }: ComponentPropsWithoutRef<"span"> & {
   tone?: "primary" | "pink";
   variant?:
+    | "slideshow"
+    | "slideshow-waiting"
     | "session"
     | "review"
     | "choice"

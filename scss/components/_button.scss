@@ -1374,3 +1374,28 @@
     }
   }
 }
+
+.btn {
+  &--slideshow-fullscreen {
+    position: absolute;
+    top: layout.$pixel-unit * 5;
+    right: layout.$pixel-unit * 5;
+    display: grid;
+    place-items: center;
+    width: layout.$control-height;
+    height: layout.$control-height;
+    padding: 0;
+    border: layout.$pixel-unit * 0.25 solid colors.$slideshow-control-border;
+    border-radius: layout.$radius-circle;
+    background: colors.$slideshow-control-surface;
+    color: colors.$white;
+    font: inherit;
+    text-transform: none;
+    box-shadow: none;
+    scale: none;
+    cursor: pointer;
+    transition-property: all;
+    transition-duration: motion.$duration-none;
+    transition-timing-function: motion.$easing-default;
+  }
+}

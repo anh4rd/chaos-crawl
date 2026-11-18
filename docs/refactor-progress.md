@@ -3929,6 +3929,70 @@ TypeScript rebuild. Snapshot source/config remains frozen during browser jobs;
 live independent work continues. Final full-suite verification/desloppify and
 remaining legacy/V2 styling are still required.
 
+## Consolidated milestone — owned presentation styles and legacy Scores
+
+Completed the verified TV, platform-filter and legacy-page styling work together,
+plus the legacy Scores presentation boundary. This closes these subsystems rather
+than opening another per-primitive phase.
+
+| Subsystem        | Result                                                                                                                                                 | Verification                                                                                                                                                                                       |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| V2 TV styling    | Four owned BEM partials; shared counter/fullscreen/overline/note variants; 15 legacy selector arms retired                                             | 56 exact native/style/geometry/PNG pairs, including native hover/focus/active, local/default references; 22 browser cases; 36 focused units                                                        |
+| Platform filters | ControlRow filters and FormLabel filter own the existing toolbar/control wells; seven legacy arms retired; local disabled/filtering example            | 14 exact DOM/style/geometry/SDK/PNG pairs at desktop/mobile and 599/600/601px; 22 browser cases; 23 scoped units                                                                                   |
+| Legacy PageFrame | Stack/compact/loading layout uses existing rem spacing/content-width tokens; caller layout utilities removed; bare supports unstyled local composition | 20 exact DOM/control/focus/geometry/standard-style pairs, including loading/error; 19 PNGs exact, one player-board pair differs by seven pixels (max channel delta15); no pixel tolerance hides it |
+| Legacy Scores    | Four controlled score views; Admin retains ledger, validation, sign/trim/ID rules, state and commands                                                  | 13 units, 16 browser cases and 20 pixel-exact full DOM/style/SDK/alert pairs; 13 action functions, 51 prior declarations and teams subscription unchanged                                          |
+
+TV proof retains all 1,412 prior expanded SCSS groups, five shared runtime emits,
+and 308 prior Button class outputs. Its 22 supplemental pairs preserve native
+fullscreen interaction states and existing UI references, with no local backend
+traffic. Remaining PlayerGame.css is byte-identical outside the retired TV section.
+Platform proof retains all 1,553 prior expanded SCSS projections, 158 untouched
+legacy arms and 52 existing ControlRow/FormLabel bindings. Its controller/query
+contracts are unchanged. Root's independent PageFrame import and the two promoted
+filter colors are explicitly recorded shared-file deltas in the TV live proof.
+
+The first PageFrame conversion exposed the unlayered global h1 margin winning over
+old utility spacing. The owned rule now preserves that heading cascade; it does
+not silently replace it with the spacing scale. The first failed comparison is
+retained. Existing Game/participation/page-integration units pass; the six legacy
+join/game/leaderboard browser journeys passed around the preceding extraction.
+This styling step additionally exercises all three layout variants, query loading,
+errors and expanded score history. Font/width/spacing values remain rem-based.
+
+Scores review load is 1,019 lines across nine files, above the review nudge. Review
+regression/fixture contracts, mechanical four-view moves and coordinator adapters
+separately. Three pre-existing group-role warnings moved unchanged and remain a
+separate accessibility task. Existing base fixtures and HostPlanning.css are
+unchanged by this extraction. The TV styling slice itself is 378 review lines;
+combined milestone review must include all source and regression changes.
+
+Evidence: `/tmp/slideshow-scss-*`, `/tmp/admin-toolbar-*`,
+`/tmp/page-frame-owned-*` and `/tmp/legacy-scores-*`. The coherent integrated
+checkpoint passes 476 unit tests, complete lint/format, upload-disabled production
+build, browser type checks and a forced strict TypeScript rebuild. The later
+PageFrame heading-cascade correction passes its final build/forced types/lint and
+20 browser comparisons. New integration documentation is formatted separately.
+
+## Remaining finish milestones
+
+1. **Close V2/platform presentation:** finish platform keyboard focus and remaining
+   shared/owned styles; finish player-specific styling and recorded accessibility
+   defects. Shared host/player session architecture is already delivered.
+2. **Finish legacy host:** thin the remaining Admin coordinator, complete Live and
+   Players views, move persistence/teams reads to focused typed boundaries, then
+   migrate owned styles and separately tested action/lifecycle defects.
+3. **Finish legacy players and TV:** gameplay/status/challenges, voting/results,
+   review, leaderboard and legacy slideshow must lose remaining utility styling
+   and route-local persistence. Keep legacy routes/storage/scoring contracts.
+4. **Retire and audit:** remove obsolete legacy CSS and final Tailwind consumers,
+   update migration exceptions, run the complete mocked suite plus required gates,
+   then the requested desloppify audit and address findings before final verification.
+
+PlayerDemo appearance and the three contrast decisions still await the existing
+user input; they do not block independent migration. No new features or optional
+cosmetic redesign belong in these finish milestones. Work is grouped by completed
+subsystem, with independently reviewable behavior/styling slices inside it.
+
 ## Queued phases for the full refactor
 
 Next: TV owned styles, platform accessibility/shared styles and legacy host layering. Catalogue cards, shell, filters, review/history and contribution bodies now

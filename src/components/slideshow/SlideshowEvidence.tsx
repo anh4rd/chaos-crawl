@@ -17,7 +17,7 @@ export default function SlideshowEvidence({
     return (
       <video
         key={id}
-        className="cc-final-tv-media"
+        className="slideshow-evidence"
         src={src}
         autoPlay
         muted
@@ -29,7 +29,7 @@ export default function SlideshowEvidence({
   }
   return (
     <img
-      className="cc-final-tv-media"
+      className="slideshow-evidence"
       src={src}
       alt={alt}
       onError={() => onError("This photo couldn't load on the TV screen.")}

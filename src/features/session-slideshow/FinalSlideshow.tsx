@@ -1,3 +1,5 @@
+import Note from "../../components/ui/Note";
+import Overline from "../../components/ui/Overline";
 import Icon from "../../components/ui/Icon";
 import SlideshowScreen from "../../components/slideshow/SlideshowScreen";
 import SlideshowMessage from "../../components/slideshow/SlideshowMessage";
@@ -36,9 +38,9 @@ export default function FinalSlideshow({ sessionId }: { sessionId: string }) {
   if (error && !view) {
     return (
       <SlideshowScreen>
-        <p className="cc-final-tv-error" role="alert">
+        <Note variant="slideshow-error" role="alert">
           {error}
-        </p>
+        </Note>
       </SlideshowScreen>
     );
   }
@@ -48,7 +50,9 @@ export default function FinalSlideshow({ sessionId }: { sessionId: string }) {
       <SlideshowScreen>
         <SlideshowMessage>
           <Icon name="loader-circle" className="icon--size-28 cc-spin" />
-          <span>Connecting to the final slideshow…</span>
+          <Note as="span" variant="slideshow-copy">
+            Connecting to the final slideshow…
+          </Note>
         </SlideshowMessage>
       </SlideshowScreen>
     );
@@ -58,9 +62,11 @@ export default function FinalSlideshow({ sessionId }: { sessionId: string }) {
     return (
       <SlideshowScreen>
         <SlideshowMessage>
-          <span className="cc-final-tv-kicker">FINAL ROUND</span>
+          <Overline variant="slideshow-waiting">FINAL ROUND</Overline>
           <h1>Slideshow is waiting</h1>
-          <p>The host will open the final round and choose a side challenge.</p>
+          <Note variant="slideshow-copy">
+            The host will open the final round and choose a side challenge.
+          </Note>
         </SlideshowMessage>
       </SlideshowScreen>
     );
@@ -70,12 +76,12 @@ export default function FinalSlideshow({ sessionId }: { sessionId: string }) {
     return (
       <SlideshowScreen>
         <SlideshowMessage>
-          <span className="cc-final-tv-kicker">FINAL ROUND</span>
+          <Overline variant="slideshow-waiting">FINAL ROUND</Overline>
           <h1>Waiting for submissions</h1>
-          <p>
+          <Note variant="slideshow-copy">
             Submitted photos and videos for the selected side challenge will
             appear here.
-          </p>
+          </Note>
         </SlideshowMessage>
       </SlideshowScreen>
     );

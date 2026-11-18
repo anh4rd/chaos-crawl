@@ -83,3 +83,16 @@
     }
   }
 }
+
+.control-row {
+  &--filters {
+    gap: layout.$pixel-unit * 2.5;
+    justify-content: space-between;
+    margin-bottom: layout.$pixel-unit * 3.5;
+    flex-wrap: nowrap;
+    align-items: normal;
+    @media (max-width: layout.$control-stack-breakpoint) {
+      flex-direction: column;
+    }
+  }
+}

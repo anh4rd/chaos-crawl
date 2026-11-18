@@ -1,0 +1,32 @@
+@use "../variables/layout";
+
+@mixin stack-spacing($space) {
+  // Unlayered legacy heading margins outrank utility spacing.
+  > :where(:not(:last-child, h1)) {
+    margin-block-start: 0;
+    margin-block-end: $space;
+  }
+}
+
+.page-frame {
+  &--stack,
+  &--compact,
+  &--loading {
+    padding: layout.$spacing-unit * 6;
+  }
+
+  &--stack,
+  &--compact {
+    margin-inline: auto;
+    min-height: 100vh;
+    max-width: layout.$content-width;
+  }
+
+  &--stack {
+    @include stack-spacing(layout.$spacing-unit * 6);
+  }
+
+  &--compact {
+    @include stack-spacing(layout.$spacing-unit * 4);
+  }
+}

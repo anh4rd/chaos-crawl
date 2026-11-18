@@ -17,7 +17,8 @@ export default function FormLabel({
     | "reward"
     | "award-points"
     | "access"
-    | "contribution";
+    | "contribution"
+    | "filter";
 }) {
   return (
     <label

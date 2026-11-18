@@ -864,38 +864,6 @@
   padding: 16px;
   box-shadow: 0 5px 0 #24136f;
 }
-.sa-toolbar {
-  display: flex;
-  gap: 10px;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-.sa-toolbar label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-  background: #fff;
-  border: 1px solid #c8baff;
-  border-radius: 12px;
-  padding: 0 10px;
-}
-.sa-toolbar input,
-.sa-toolbar select {
-  min-width: 0;
-  width: 100%;
-  border: 0;
-  background: transparent;
-  padding: 11px;
-  color: #211044;
-  outline: 0;
-}
-.sa-toolbar select {
-  width: auto;
-  border: 1px solid #c8baff;
-  border-radius: 12px;
-  background: #fff;
-}
 .sa-table-wrap {
   overflow: auto;
 }
@@ -1022,12 +990,6 @@
   }
   .sa-stats {
     grid-template-columns: 1fr 1fr;
-  }
-  .sa-toolbar {
-    flex-direction: column;
-  }
-  .sa-toolbar select {
-    width: 100%;
   }
 }
 /* ===== END SuperAdmin.css ===== */

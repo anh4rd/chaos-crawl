@@ -5,6 +5,7 @@ import SlideshowEvidence from "../../components/slideshow/SlideshowEvidence";
 import SlideshowCaption from "../../components/slideshow/SlideshowCaption";
 import Button from "../../components/ui/Button";
 import Note from "../../components/ui/Note";
+import Overline from "../../components/ui/Overline";
 import { Example } from "./Example";
 
 export default function SlideshowExample() {
@@ -95,15 +96,15 @@ export default function SlideshowExample() {
           </>
         ) : (
           <SlideshowMessage>
-            <span className="cc-final-tv-kicker">SECRET MISSION</span>
+            <Overline variant="slideshow-waiting">SECRET MISSION</Overline>
             <h1>
               {mode === "waiting" ? "Slideshow is waiting" : "Secret toast"}
             </h1>
-            <p>
+            <Note variant="slideshow-copy">
               {mode === "waiting"
                 ? "The host will open a mission review."
                 : "Give a toast without being noticed."}
-            </p>
+            </Note>
             {mode === "empty" && <strong>No photo or video submitted</strong>}
           </SlideshowMessage>
         )}

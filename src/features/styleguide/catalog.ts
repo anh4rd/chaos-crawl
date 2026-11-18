@@ -16,25 +16,25 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     usage:
       "Shared TV visual base accepting main/div, live, optional counter={index,total}, onFullscreen, error and children. Shared TV slideshow demonstrates local actions without requesting fullscreen or mounting a connected route.",
     dependencies:
-      "Semantic Icon and retained cc-final-tv styling in PlayerGame.css pending its separate SCSS migration. Caller owns every query, timer, media selection and fullscreen request.",
+      "Owned slideshow-screen BEM styling and shared CountBadge/IconButton/Note variants. Caller owns every query, timer, media selection and fullscreen request.",
   },
   SlideshowMessage: {
     usage:
       "Shared waiting/empty TV body accepting caller-composed copy and children. Demonstrated in Shared TV slideshow without backend access.",
     dependencies:
-      "Retained cc-final-tv-waiting styling. Does not choose session phase or visibility.",
+      "Owned slideshow-message BEM styling. Does not choose session phase or visibility.",
   },
   SlideshowEvidence: {
     usage:
       "Native image/video evidence with resolved src, id, mediaType, alt and ended/error callbacks. Shared TV slideshow demonstrates a local image; final and secret routes retain media selection/timing.",
     dependencies:
-      "Retained TV media styling; native autoplay/muted/playsInline video. Never queries storage or reads route parameters.",
+      "Owned slideshow-evidence BEM styling; native autoplay/muted/playsInline video. Never queries storage or reads route parameters.",
   },
   SlideshowCaption: {
     usage:
       "Shared TV caption receiving kicker ReactNode and title. Shared TV slideshow demonstrates caller-selected copy.",
     dependencies:
-      "Retained caption/kicker styling. No data formatting, query or publishing decisions.",
+      "Owned slideshow-caption and shared Overline slideshow styling. No data formatting, query or publishing decisions.",
   },
   PlatformGames: {
     usage:
@@ -59,6 +59,30 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
       "Controlled native inspector dialog with supplied detail/loading, feedback and retry/close callbacks. Displays incoming sessions and player/team score copy without sorting or persistence.",
     dependencies:
       "Shared Dialog/Icon and frontend-inferred PlatformGameDetail. Connected inspector lifecycle stays in useGameInspector; errors and retry remain inside the modal, and pending reads can be dismissed. Do not mount that hook in local references.",
+  },
+  ScoreOverview: {
+    usage:
+      "Controlled legacy-host score composition. Admin owns ledger projection, selection, validation, commands and feedback.",
+    dependencies:
+      "Feature-private score presentation models; controlled adjustment, native leaderboard and display controls. No backend or route imports.",
+  },
+  ScoreAdjustment: {
+    usage:
+      "Controlled legacy player/team award or dock fields and actions; callbacks preserve caller-owned rules.",
+    dependencies:
+      "Native controls and legacy styling; no sign/default/trim/ID decisions or persistence.",
+  },
+  ScoreLeaderboard: {
+    usage:
+      "Caller-ordered legacy score rows retaining native div/span/strong markup.",
+    dependencies:
+      "Feature-private entry models; no ledger computation, sorting or queries.",
+  },
+  ScoreDisplayControls: {
+    usage:
+      "Controlled legacy leaderboard/results reset actions with supplied callbacks and busy state.",
+    dependencies:
+      "Existing native controls; coordinator owns commands and confirmations.",
   },
   ChallengeCatalogue: {
     usage:
@@ -93,7 +117,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     usage:
       "Shared native main/div frame for legacy join, gameplay and leaderboard. Native attributes and caller classes pass through; Shared legacy page frame uses div to avoid a nested main and never mounts connected routes.",
     dependencies:
-      "Page-frame BEM identity. Existing caller utility layout is retained during extraction; owned styling conversion is the next separate slice. No routing, data, storage or coordination.",
+      "Page-frame BEM identity. Stack/compact/loading variants own legacy page width, viewport minimum, rem padding and child spacing; bare preserves unstyled local composition. No routing, data, storage or coordination.",
   },
   MetadataList: {
     usage:
@@ -738,7 +762,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   ControlRow: {
     usage:
-      "Moderation retains review/admin actions and their 650px grid reflow; see Shared review and history. Heading-actions supplies result-count/create arrangement in Local catalogue. Idea-actions retains the two-column catalogue action grid; see Local catalogue. Reward variant keeps right-aligned comic actions and a single-column mobile layout. Wrapping row of controls accepting native div props; timer and break variants provide compact clock/action wells. Examples appear in button and session previews.",
+      "Filters retains native platform filter arrangement and its 600px stacking, demonstrated by Shared filter toolbar. Moderation retains review/admin actions and their 650px grid reflow; see Shared review and history. Heading-actions supplies result-count/create arrangement in Local catalogue. Idea-actions retains the two-column catalogue action grid; see Local catalogue. Reward variant keeps right-aligned comic actions and a single-column mobile layout. Wrapping row of controls accepting native div props; timer and break variants provide compact clock/action wells. Examples appear in button and session previews.",
     dependencies: "SCSS .control-row. Compose controls through children.",
   },
   TimerReadout: {
@@ -835,7 +859,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   FormLabel: {
     usage:
-      "Contribution retains nested native catalogue controls, labels and focus states; see Local catalogue. Access variants retain native join markup in the local join/rejoin example. Reward and award-points variants retain native nested labels, number bounds and disabled controls; demonstrated in local Reward primitives. Review variant preserves direct label text and a native picker; shown in Shared review and presentation controls. Session and session-checkbox variants retain native nested controls and labels; Shared mission form controls demonstrates them. Composable native label preserving direct label text and control markup. spaced adds editor separation; checkbox preserves the existing checkbox layout. Native label attributes pass through, and small children retain editor hint styling; unlike Field, it adds no label span.",
+      "Filter preserves native search/status wells and inherited typography; Shared filter toolbar uses local state and disabled controls. Contribution retains nested native catalogue controls, labels and focus states; see Local catalogue. Access variants retain native join markup in the local join/rejoin example. Reward and award-points variants retain native nested labels, number bounds and disabled controls; demonstrated in local Reward primitives. Review variant preserves direct label text and a native picker; shown in Shared review and presentation controls. Session and session-checkbox variants retain native nested controls and labels; Shared mission form controls demonstrates them. Composable native label preserving direct label text and control markup. spaced adds editor separation; checkbox preserves the existing checkbox layout. Native label attributes pass through, and small children retain editor hint styling; unlike Field, it adds no label span.",
     dependencies:
       "SCSS .form-label. Controls and accessible label text belong to its caller. Demonstrated with FormGrid dialog in the local host dialog.",
   },

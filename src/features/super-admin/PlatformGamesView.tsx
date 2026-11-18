@@ -1,3 +1,5 @@
+import FormLabel from "../../components/ui/FormLabel";
+import ControlRow from "../../components/ui/ControlRow";
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import Button from "../../components/ui/Button";
@@ -90,8 +92,8 @@ export default function PlatformGamesView({
         </article>
       </div>
       <section className="sa-panel">
-        <div className="sa-toolbar">
-          <label>
+        <ControlRow variant="filters">
+          <FormLabel variant="filter">
             <span>Search games</span>
             <Icon name="search" className="icon--size-17" />
             <input
@@ -99,8 +101,8 @@ export default function PlatformGamesView({
               onChange={(e) => onQueryChange(e.target.value)}
               placeholder="Search game or host email"
             />
-          </label>
-          <label>
+          </FormLabel>
+          <FormLabel variant="filter">
             <span>Status</span>
             <select
               value={status}
@@ -112,8 +114,8 @@ export default function PlatformGamesView({
               <option value="live">Live</option>
               <option value="completed">Completed</option>
             </select>
-          </label>
-        </div>
+          </FormLabel>
+        </ControlRow>
         {loading ? (
           <p className="sa-muted">Loading platform games…</p>
         ) : filtered.length ? (

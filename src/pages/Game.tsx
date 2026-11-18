@@ -80,7 +80,7 @@ export default function Game() {
     return <DataError error={failedQuery.error} retry={failedQuery.reload} />;
   if (!game || queries.some((query) => query.loading)) {
     return (
-      <PageFrame className="p-6">
+      <PageFrame variant="loading">
         <p>Loading game...</p>
       </PageFrame>
     );
@@ -88,7 +88,7 @@ export default function Game() {
 
   if (!currentPlayer)
     return (
-      <PageFrame className="mx-auto min-h-screen max-w-md space-y-4 p-6">
+      <PageFrame variant="compact">
         <h1 className="text-2xl font-bold">Join the game to take part</h1>
         <p>
           Your player session was not found. Join again to save challenge
@@ -113,7 +113,7 @@ export default function Game() {
     challenges.find((challenge) => challenge.title === game.current_challenge);
 
   return (
-    <PageFrame className="mx-auto min-h-screen max-w-md space-y-6 p-6">
+    <PageFrame>
       <header>
         <img
           src={`${import.meta.env.BASE_URL}Title.png`}

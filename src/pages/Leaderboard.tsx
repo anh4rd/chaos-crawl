@@ -44,7 +44,7 @@ export default function Leaderboard() {
     return <DataError error={failed.error} retry={failed.reload} />;
 
   return (
-    <PageFrame className="mx-auto min-h-screen max-w-md space-y-6 p-6">
+    <PageFrame>
       <Card>
         <h1 className="text-4xl font-bold">Leaderboard</h1>
 

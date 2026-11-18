@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Overline from "../ui/Overline";
 
 export default function SlideshowCaption({
   kicker,
@@ -8,8 +9,8 @@ export default function SlideshowCaption({
   title: string;
 }) {
   return (
-    <div className="cc-final-tv-caption">
-      <span className="cc-final-tv-kicker">{kicker}</span>
+    <div className="slideshow-caption">
+      <Overline variant="slideshow">{kicker}</Overline>
       <h1>{title}</h1>
     </div>
   );
