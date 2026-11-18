@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { CommunitySubmission } from "../../types/hostExplore";
+import { apiError } from "../../lib/apiResult";
 import { readHostIdentity } from "../../lib/hostAuth";
 import { readPlatformAdmin } from "../../lib/hostHubQueries";
 import { readCommunitySubmissions } from "../../lib/hostExploreQueries";
@@ -26,27 +27,47 @@ export function useExploreCommunity(onQueryError: (message: string) => void) {
       mounted.current &&
       lifetime.current === generation &&
       communityRead.current === request;
-    const [{ data: userData }, { data: adminData, error: adminError }] =
-      await Promise.all([readHostIdentity(), readPlatformAdmin()]);
-    if (!current()) return;
-    if (adminError) {
-      console.warn(
-        "Platform-admin check unavailable; community review controls remain hidden.",
-        adminError,
+    try {
+      const [
+        { data: userData, error: userError },
+        { data: adminData, error: adminError },
+      ] = await Promise.all([readHostIdentity(), readPlatformAdmin()]);
+      if (!current()) return;
+      if (adminError) {
+        console.warn(
+          "Platform-admin check unavailable; community review controls remain hidden.",
+          adminError,
+        );
+      }
+      if (userError || !userData.user) {
+        setCurrentUserId(null);
+        setIsPlatformAdmin(false);
+        setSubmissions((items) =>
+          items.filter((item) => item.status === "approved"),
+        );
+        onQueryError("Your session has expired. Please log in again.");
+        return;
+      }
+      setIsPlatformAdmin(Boolean(adminData));
+      setCurrentUserId(userData.user.id);
+      const { data, error: queryError } = await readCommunitySubmissions();
+      if (!current()) return;
+      if (queryError) {
+        onQueryError(
+          "Community submissions need the catalogue moderation migration. Run 20261112_community_catalog_and_host_view_as.sql in Supabase.",
+        );
+        return;
+      }
+      setSubmissions(data ?? []);
+    } catch (error) {
+      if (!current()) return;
+      setCurrentUserId(null);
+      setIsPlatformAdmin(false);
+      setSubmissions((items) =>
+        items.filter((item) => item.status === "approved"),
       );
+      onQueryError(apiError(error).message);
     }
-    setIsPlatformAdmin(Boolean(adminData));
-    if (!userData.user) return;
-    setCurrentUserId(userData.user.id);
-    const { data, error: queryError } = await readCommunitySubmissions();
-    if (!current()) return;
-    if (queryError) {
-      onQueryError(
-        "Community submissions need the catalogue moderation migration. Run 20261112_community_catalog_and_host_view_as.sql in Supabase.",
-      );
-      return;
-    }
-    setSubmissions(data ?? []);
   }, [onQueryError]);
 
   useEffect(() => {

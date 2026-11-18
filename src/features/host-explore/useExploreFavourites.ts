@@ -41,6 +41,7 @@ export function useExploreFavourites({
     };
   }, []);
   const favouriteRead = useRef(0);
+  const changedFavourites = useRef(new Set<string>());
   const loadFavourites = useCallback(async () => {
     if (!mounted.current) return;
     const request = ++favouriteRead.current;
@@ -49,26 +50,38 @@ export function useExploreFavourites({
       mounted.current &&
       lifetime.current === generation &&
       favouriteRead.current === request;
+    changedFavourites.current.clear();
     setLoadingFavourites(true);
-    const { data: userData, error: userError } = await readHostIdentity();
-    if (!current()) return;
-    if (userError || !userData.user) {
-      onQueryError("Your session has expired. Please log in again.");
-      setLoadingFavourites(false);
-      return;
-    }
-    const { data, error: queryError } = await readExploreFavourites(
-      userData.user.id,
-    );
-    if (!current()) return;
-    setLoadingFavourites(false);
-    if (queryError) {
-      onQueryError(
-        "Couldn't load your saved items. Check that the host planning migration has been run.",
+    try {
+      const { data: userData, error: userError } = await readHostIdentity();
+      if (!current()) return;
+      if (userError || !userData.user) {
+        onQueryError("Your session has expired. Please log in again.");
+        return;
+      }
+      const { data, error: queryError } = await readExploreFavourites(
+        userData.user.id,
       );
-      return;
+      if (!current()) return;
+      if (queryError) {
+        onQueryError(
+          "Couldn't load your saved items. Check that the host planning migration has been run.",
+        );
+        return;
+      }
+      const incoming = (data ?? []).filter(
+        (item) =>
+          !changedFavourites.current.has(`${item.item_type}:${item.item_id}`),
+      );
+      const changed = currentFavourites.current.filter((item) =>
+        changedFavourites.current.has(`${item.item_type}:${item.item_id}`),
+      );
+      replaceFavourites([...incoming, ...changed]);
+    } catch (error) {
+      if (current()) onQueryError(apiError(error).message);
+    } finally {
+      if (current()) setLoadingFavourites(false);
     }
-    replaceFavourites(data ?? []);
   }, [onQueryError, replaceFavourites]);
 
   useEffect(() => {
@@ -105,6 +118,7 @@ export function useExploreFavourites({
           onActionError(deleteError.message);
           return;
         }
+        changedFavourites.current.add(key);
         replaceFavourites(
           currentFavourites.current.filter((item) => item.id !== existing.id),
         );
@@ -133,7 +147,10 @@ export function useExploreFavourites({
         );
         return;
       }
-      if (saved) replaceFavourites([...currentFavourites.current, saved]);
+      if (saved) {
+        changedFavourites.current.add(key);
+        replaceFavourites([...currentFavourites.current, saved]);
+      }
     } catch (error) {
       if (current()) onActionError(apiError(error).message);
     } finally {
