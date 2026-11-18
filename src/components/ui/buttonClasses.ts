@@ -1,4 +1,12 @@
 export type ButtonVariant =
+  | "idea-save"
+  | "idea-saved"
+  | "idea-close"
+  | "idea-use"
+  | "idea-use-secondary"
+  | "idea-add"
+  | "idea-add-secondary"
+  | "outline-toggle"
   | "filter"
   | "access"
   | "access-back"
@@ -95,6 +103,20 @@ export function buttonClasses({
     : variant === "round-finish"
       ? " btn--round-finish"
       : "";
+  if (variant === "idea-use" || variant === "idea-add")
+    appearance = "comic-primary";
+  if (variant === "idea-use-secondary" || variant === "idea-add-secondary")
+    appearance = "comic-secondary";
+  const ideaActionClass =
+    variant === "idea-use" || variant === "idea-use-secondary"
+      ? " btn--idea-use"
+      : variant === "idea-add" || variant === "idea-add-secondary"
+        ? " btn--idea-add"
+        : "";
+  const ideaSaveClass =
+    variant === "idea-saved" || variant === "idea-close"
+      ? " btn--idea-save"
+      : "";
   const chipBase = variant === "round-chip-current" ? " btn--round-chip" : "";
   const comicTone =
     appearance?.startsWith("comic-") && !appearance.startsWith("comic-icon");
@@ -102,5 +124,5 @@ export function buttonClasses({
   const controlBase = variant?.startsWith("control-") ? " btn--control" : "";
   const flowBase = variant === "flow-action" ? " btn--flow" : "";
   const dialogBase = variant === "dialog-primary" ? " btn--dialog" : "";
-  return `btn${reviewClass}${sessionClass}${variant === "session-send" ? " btn--session-send" : ""}${roundClass}${chipBase}${dialogBase}${controlBase}${flowBase}${comicTone ? " btn--comic" : ""}${appearance === "comic-icon-danger" ? " btn--comic-icon" : ""}${appearance ? ` btn--${appearance}` : ""}${fullWidth ? " btn--block" : ""}${comic && fullWidth ? " btn--comic-block" : ""} ${className}`.trim();
+  return `btn${ideaActionClass}${ideaSaveClass}${reviewClass}${sessionClass}${variant === "session-send" ? " btn--session-send" : ""}${roundClass}${chipBase}${dialogBase}${controlBase}${flowBase}${comicTone ? " btn--comic" : ""}${appearance === "comic-icon-danger" ? " btn--comic-icon" : ""}${appearance ? ` btn--${appearance}` : ""}${fullWidth ? " btn--block" : ""}${comic && fullWidth ? " btn--comic-block" : ""} ${className}`.trim();
 }

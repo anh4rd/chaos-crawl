@@ -47,3 +47,14 @@
     }
   }
 }
+
+.control-row {
+  &--idea-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: layout.$pixel-unit * 2;
+    margin-top: layout.$pixel-unit * 1.5;
+    align-items: normal;
+    flex-wrap: nowrap;
+  }
+}

@@ -172,3 +172,14 @@
     background: colors.$idea-route-surface;
   }
 }
+
+.badge {
+  &.badge--tag {
+    padding: layout.$pixel-unit * 1.25 layout.$pixel-unit * 1.75;
+    border-radius: layout.$pixel-unit * 1.75;
+    color: colors.$idea-tag-ink;
+    background: colors.$idea-tag-surface;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-extra-bold;
+  }
+}

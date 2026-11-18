@@ -22,6 +22,7 @@ export default function Badge({
     | "stage"
     | "stage-break"
     | "reveal"
+    | "tag"
     | "entity"
     | "idea"
     | "idea-main"

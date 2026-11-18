@@ -15,3 +15,9 @@
     font-weight: fonts.$weight-extra-bold;
   }
 }
+
+.tag-list {
+  &--idea {
+    margin-bottom: layout.$pixel-unit * 3;
+  }
+}

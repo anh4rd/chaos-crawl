@@ -7,7 +7,14 @@ interface Props extends Omit<
 > {
   icon: IconName;
   label: string;
-  variant?: "danger" | "entity-remove" | "control-replay" | "dialog-dismiss";
+  variant?:
+    | "danger"
+    | "entity-remove"
+    | "control-replay"
+    | "dialog-dismiss"
+    | "idea-save"
+    | "idea-saved"
+    | "idea-close";
   iconClassName?: string;
 }
 export default function IconButton({

@@ -858,3 +858,61 @@ test("local catalogue uses controlled views for saves, moderation and forms with
   expect(backend.requests).toEqual([]);
   backend.verify();
 });
+
+test("shared idea primitives preserve local save, disclosure, outline and pending keyboard paths", async ({
+  page,
+}) => {
+  const { backend } = await installExploreBackend(page);
+  await page.goto("#/styleguide");
+  const shared = page.locator(".component-example").filter({
+    has: page.getByRole("heading", { name: "Shared idea card", exact: true }),
+  });
+  await activateByKeyboard(
+    page,
+    shared.getByRole("button", { name: "Save local idea", exact: true }),
+  );
+  await expect(
+    shared.getByRole("button", { name: "Unsave local idea", exact: true }),
+  ).toHaveAttribute("title", "Saved");
+  const checks = shared
+    .locator("summary")
+    .filter({ hasText: "Local practical checks" });
+  await activateByKeyboard(page, checks);
+  await expect(
+    shared.getByText("Choose a safe local place.", { exact: true }),
+  ).toBeVisible();
+  await activateByKeyboard(
+    page,
+    shared.getByRole("button", { name: "Preview local outline", exact: true }),
+  );
+  await expect(
+    shared.getByRole("button", { name: "Hide local outline", exact: true }),
+  ).toHaveAttribute("aria-expanded", "true");
+  await expect(
+    shared.getByText("Meet the team", { exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(shared.getByText("Meet the team", { exact: true })).toHaveCount(
+    0,
+  );
+  await tabTo(
+    page,
+    shared.getByRole("checkbox", {
+      name: "Simulate local idea pending",
+      exact: true,
+    }),
+  );
+  await page.keyboard.press("Space");
+  await expect(
+    shared.getByRole("button", { name: "Unsave local idea", exact: true }),
+  ).toBeDisabled();
+  await activateByKeyboard(
+    page,
+    shared.getByRole("button", { name: "Close local preview", exact: true }),
+  );
+  await expect(shared.getByRole("status")).toHaveText(
+    "Preview close requested.",
+  );
+  expect(backend.requests).toEqual([]);
+  backend.verify();
+});

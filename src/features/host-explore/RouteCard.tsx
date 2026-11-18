@@ -1,3 +1,8 @@
+import StepOutline from "../../components/ui/StepOutline";
+import IconButton from "../../components/ui/IconButton";
+import MetadataList from "../../components/ui/MetadataList";
+import MetadataItem from "../../components/ui/MetadataItem";
+import TagList from "../../components/ui/TagList";
 import Badge from "../../components/ui/Badge";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
@@ -20,74 +25,57 @@ export default function RouteCard({
       header={
         <>
           <Badge variant="idea-route">{route.style}</Badge>
-          <button
+          <IconButton
             type="button"
-            className={`host-explore-save${saved ? " is-saved" : ""}`}
+            variant={saved ? "idea-saved" : "idea-save"}
+            icon={saved ? "bookmark-check" : "heart"}
             disabled={busy}
             onClick={() => onToggleSaved()}
-            aria-label={saved ? `Unsave ${route.title}` : `Save ${route.title}`}
+            label={saved ? `Unsave ${route.title}` : `Save ${route.title}`}
             title={saved ? "Saved" : "Save for later"}
-          >
-            {saved ? (
-              <Icon name="bookmark-check" className="icon--size-18" />
-            ) : (
-              <Icon name="heart" className="icon--size-18" />
-            )}
-          </button>
+          />
         </>
       }
     >
       <h3>{route.title}</h3>
       <p>{route.description}</p>
-      <div className="host-explore-metadata">
-        <span>
-          <Icon name="clock3" className="icon--size-14" />
-          {route.duration}
-        </span>
-        <span>
-          <Icon name="wallet" className="icon--size-14" />
-          {route.budget} budget
-        </span>
-        <span>
-          <Icon name="map-pin" className="icon--size-14" />
+      <MetadataList>
+        <MetadataItem icon="clock3">{route.duration}</MetadataItem>
+        <MetadataItem icon="wallet">{route.budget} budget</MetadataItem>
+        <MetadataItem icon="map-pin">
           {route.stops.length} stops / stages
-        </span>
-      </div>
-      <div className="host-explore-tags">
+        </MetadataItem>
+      </MetadataList>
+      <TagList variant="idea">
         {route.tags.map((tag) => (
-          <span key={tag}>{tag}</span>
+          <Badge variant="tag" key={tag}>
+            {tag}
+          </Badge>
         ))}
-      </div>
-      <button
+      </TagList>
+      <Button
         type="button"
-        className="host-explore-route-toggle"
+        variant="outline-toggle"
+        fullWidth={false}
         aria-expanded={expanded}
         onClick={() => onToggleExpanded()}
       >
         {expanded ? "Hide route outline" : "Preview route"}{" "}
         <Icon name="arrow-right" className="icon--size-15" />
-      </button>
+      </Button>
       {expanded && (
-        <div className="host-explore-route-outline">
-          <ol>
-            {route.stops.map((stop, index) => (
-              <li key={stop}>
-                <span>{index + 1}</span>
-                <div>
-                  <strong>{stop}</strong>
-                  <small>Choose a suitable local place for this stage.</small>
-                </div>
-              </li>
-            ))}
-          </ol>
-          <p>{route.note}</p>
-        </div>
+        <StepOutline
+          steps={route.stops.map((stop) => ({
+            title: stop,
+            detail: "Choose a suitable local place for this stage.",
+          }))}
+          note={route.note}
+        />
       )}
       <Button
         type="button"
-        variant="comic-secondary"
+        variant="idea-use-secondary"
         fullWidth={false}
-        className="host-explore-use"
         onClick={() => onToggleSaved()}
       >
         {saved ? (

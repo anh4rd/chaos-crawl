@@ -8,7 +8,7 @@ export default function Disclosure({
   ...props
 }: ComponentPropsWithoutRef<"details"> & {
   summary: ReactNode;
-  variant?: "session";
+  variant?: "session" | "idea";
 }) {
   return (
     <details

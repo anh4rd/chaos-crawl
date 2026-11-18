@@ -1,3 +1,8 @@
+import Disclosure from "../../components/ui/Disclosure";
+import IconButton from "../../components/ui/IconButton";
+import MetadataList from "../../components/ui/MetadataList";
+import MetadataItem from "../../components/ui/MetadataItem";
+import TagList from "../../components/ui/TagList";
 import Badge from "../../components/ui/Badge";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
@@ -21,55 +26,44 @@ export default function LocationCard({
           <Badge variant="idea-location">
             {location.oneVenue ? "Single venue" : "Outdoor idea"}
           </Badge>
-          <button
+          <IconButton
             type="button"
-            className={`host-explore-save${saved ? " is-saved" : ""}`}
+            variant={saved ? "idea-saved" : "idea-save"}
+            icon={saved ? "bookmark-check" : "heart"}
             disabled={busy}
             onClick={() => onToggleSaved()}
-            aria-label={
+            label={
               saved ? `Unsave ${location.title}` : `Save ${location.title}`
             }
             title={saved ? "Saved" : "Save for later"}
-          >
-            {saved ? (
-              <Icon name="bookmark-check" className="icon--size-18" />
-            ) : (
-              <Icon name="heart" className="icon--size-18" />
-            )}
-          </button>
+          />
         </>
       }
     >
       <h3>{location.title}</h3>
       <p>{location.description}</p>
-      <div className="host-explore-metadata">
-        <span>
-          <Icon name="wallet" className="icon--size-14" />
-          {location.cost} cost
-        </span>
-        <span>
-          <Icon name="users" className="icon--size-14" />
-          {location.bestFor[0]}
-        </span>
-      </div>
-      <div className="host-explore-tags">
+      <MetadataList>
+        <MetadataItem icon="wallet">{location.cost} cost</MetadataItem>
+        <MetadataItem icon="users">{location.bestFor[0]}</MetadataItem>
+      </MetadataList>
+      <TagList variant="idea">
         {location.bestFor.slice(0, 4).map((tag) => (
-          <span key={tag}>{tag}</span>
+          <Badge variant="tag" key={tag}>
+            {tag}
+          </Badge>
         ))}
-      </div>
-      <details className="host-explore-details">
-        <summary>Practical checks</summary>
+      </TagList>
+      <Disclosure variant="idea" summary="Practical checks">
         <ul>
           {location.considerations.map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
-      </details>
+      </Disclosure>
       <Button
         type="button"
-        variant="comic-primary"
+        variant="idea-use"
         fullWidth={false}
-        className="host-explore-use"
         onClick={() => onUse()}
       >
         Use this venue idea{" "}

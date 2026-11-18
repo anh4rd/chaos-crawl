@@ -1,7 +1,11 @@
+import IconButton from "../../components/ui/IconButton";
+import MetadataList from "../../components/ui/MetadataList";
+import MetadataItem from "../../components/ui/MetadataItem";
+import TagList from "../../components/ui/TagList";
 import Badge from "../../components/ui/Badge";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
-import Icon from "../../components/ui/Icon";
+import ControlRow from "../../components/ui/ControlRow";
 import PlusMark from "./PlusMark";
 
 import type { TaskCardModel } from "./viewTypes";
@@ -28,57 +32,43 @@ export default function TaskCard({
       header={
         <>
           <Badge variant={`idea-${task.kind}`}>{kindLabel}</Badge>
-          <button
+          <IconButton
             type="button"
-            className={`host-explore-save${saved ? " is-saved" : ""}`}
+            variant={saved ? "idea-saved" : "idea-save"}
+            icon={saved ? "bookmark-check" : "heart"}
             disabled={busy}
             onClick={() => onToggleSaved()}
-            aria-label={saved ? `Unsave ${task.title}` : `Save ${task.title}`}
+            label={saved ? `Unsave ${task.title}` : `Save ${task.title}`}
             title={saved ? "Saved" : "Save for later"}
-          >
-            {saved ? (
-              <Icon name="bookmark-check" className="icon--size-18" />
-            ) : (
-              <Icon name="heart" className="icon--size-18" />
-            )}
-          </button>
+          />
         </>
       }
     >
       <h3>{task.title}</h3>
       <p>{task.description}</p>
-      <div className="host-explore-metadata">
+      <MetadataList>
         {task.prepMinutes || task.performanceMinutes ? (
           <>
-            <span>
-              <Icon name="clock3" className="icon--size-14" />
+            <MetadataItem icon="clock3">
               Prep {task.prepMinutes ?? 0} min
-            </span>
-            <span>
-              <Icon name="clock3" className="icon--size-14" />
+            </MetadataItem>
+            <MetadataItem icon="clock3">
               Performance {task.performanceMinutes ?? 0} min
-            </span>
+            </MetadataItem>
           </>
         ) : (
-          <span>
-            <Icon name="clock3" className="icon--size-14" />
-            {task.minutes} min
-          </span>
+          <MetadataItem icon="clock3">{task.minutes} min</MetadataItem>
         )}
-        <span>
-          <Icon name="sparkles" className="icon--size-14" />
-          {task.points} points
-        </span>
-        <span>
-          <Icon name="wallet" className="icon--size-14" />
-          {setupLabel}
-        </span>
-      </div>
-      <div className="host-explore-tags">
+        <MetadataItem icon="sparkles">{task.points} points</MetadataItem>
+        <MetadataItem icon="wallet">{setupLabel}</MetadataItem>
+      </MetadataList>
+      <TagList variant="idea">
         {task.tags.slice(0, 4).map((tag) => (
-          <span key={tag}>{tag}</span>
+          <Badge variant="tag" key={tag}>
+            {tag}
+          </Badge>
         ))}
-      </div>
+      </TagList>
       {adminActions && (
         <div className="host-community-review-actions host-explore-admin-actions">
           <Button
@@ -100,10 +90,10 @@ export default function TaskCard({
           </Button>
         </div>
       )}
-      <div className="host-explore-use-options">
+      <ControlRow variant="idea-actions">
         <Button
           type="button"
-          variant="comic-primary"
+          variant="idea-add"
           fullWidth={false}
           onClick={() => onAdd("main")}
         >
@@ -111,13 +101,13 @@ export default function TaskCard({
         </Button>
         <Button
           type="button"
-          variant="comic-secondary"
+          variant="idea-add-secondary"
           fullWidth={false}
           onClick={() => onAdd("side")}
         >
           <PlusMark /> Add as side
         </Button>
-      </div>
+      </ControlRow>
     </Card>
   );
 }

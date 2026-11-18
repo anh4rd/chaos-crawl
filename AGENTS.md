@@ -123,8 +123,13 @@ migration work meanwhile.
 
 Card variant="idea" composes ContentPanel's entity surface and owns its header
 slot, layout, typography and hover frame in the card SCSS block. TaskCard,
-LocationCard and RouteCard reuse it with controlled header/content slots; keep
-save controls and details in their respective pending styling slices. Category
+LocationCard and RouteCard reuse it with controlled header/content slots.
+IconButton idea-save/saved/close and Button idea-use/add/outline-toggle variants
+retain native labels, titles, form types and existing pending behavior. MetadataList
+and MetadataItem compose supplied copy/icons; TagList idea and Badge tag own chips.
+Disclosure idea retains native practical checks; StepOutline displays caller-ordered
+steps and note without route or backend access. Keep their local Shared idea card
+and catalogue examples updated. Category
 badges compose Badge idea variants with caller-supplied labels; their shared
 SCSS preserves the existing tones and sizing without choosing domain categories.
 The local Shared idea card and catalogue references exercise the same component

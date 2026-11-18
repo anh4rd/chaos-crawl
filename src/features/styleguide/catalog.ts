@@ -1,5 +1,29 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
+  MetadataList: {
+    usage:
+      "Native metadata group. Compose MetadataItem children; callers retain label formatting and selection. See Shared idea card and Local catalogue.",
+    dependencies:
+      "Owned metadata-list SCSS; no routes, queries or domain calculations.",
+  },
+  MetadataItem: {
+    usage:
+      "Native span with a semantic icon and caller-composed value. Shared idea card demonstrates time and points.",
+    dependencies:
+      "Icon and owned metadata-item SCSS; no formatting or persistence.",
+  },
+  TagList: {
+    usage:
+      "Native wrapping tag group accepting div props. Idea adds card spacing; compose Badge tag for catalogue chips. See Shared idea card.",
+    dependencies:
+      "Owned tag-list SCSS; existing planning tag spans retain their default styles.",
+  },
+  StepOutline: {
+    usage:
+      "Ordered title/detail steps with a caller-supplied note. Numbering follows incoming order; Shared idea card and Local catalogue use local steps.",
+    dependencies:
+      "Owned step-outline SCSS. No routes, maps, storage or navigation choices.",
+  },
   CatalogueWorkspace: {
     usage:
       "Connected Explore coordinator mounted by HostExplore. Composes focused controllers and adapts filtered domain data into controlled presentation values/callbacks.",
@@ -22,19 +46,19 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     usage:
       "Task idea with supplied saved/busy values, optional admin actions and main/side callbacks. The caller decides availability and resolves community records.",
     dependencies:
-      "TaskCardModel, shared Card idea, Badge idea, Button/Icon and the retained PlusMark. See Local catalogue; no SDK access or navigation.",
+      "TaskCardModel, shared Card idea, Badge idea/tag, MetadataList/MetadataItem, TagList, Button/IconButton/Icon and the retained PlusMark. See Local catalogue; no SDK access or navigation.",
   },
   LocationCard: {
     usage:
       "Location idea with native practical-check disclosure and supplied save/use callbacks. Local catalogue demonstrates its controlled values.",
     dependencies:
-      "LocationCardModel, shared Card idea, Badge idea and Button/Icon; caller owns persistence and planning navigation.",
+      "LocationCardModel, shared Card idea, Badge idea/tag, MetadataList/MetadataItem, TagList, Disclosure idea and Button/IconButton/Icon; caller owns persistence and planning navigation.",
   },
   RouteCard: {
     usage:
       "Route template with caller-owned expansion and save state. Preserves existing icon-button busy and footer-action contracts; Local catalogue demonstrates both.",
     dependencies:
-      "RouteCardModel, shared Card idea, Badge idea and Button/Icon. No route selection, live maps or queries.",
+      "RouteCardModel, shared Card idea, Badge idea/tag, MetadataList/MetadataItem, TagList, StepOutline and Button/IconButton/Icon. No route selection, live maps or queries.",
   },
   CommunityReviewQueue: {
     usage:
@@ -198,7 +222,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Disclosure: {
     usage:
-      "Native details/summary composition accepting native details props and a summary slot. Session variant appears in Shared mission form controls.",
+      "Idea retains practical-check lists in Shared idea card and Local catalogue. Native details/summary composition accepting native details props and a summary slot. Session variant appears in Shared mission form controls.",
     dependencies:
       "Owned disclosure SCSS; native keyboard/open behavior, no external state or backend.",
   },
@@ -484,7 +508,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   IconButton: {
     usage:
-      "Entity-remove retains the saved-card border explicitly; see Local saved items. Semantic icon action with a required accessible label; optional danger, control-replay or dialog-dismiss variant. Demonstrated locally in Host patterns.",
+      "Idea-save, idea-saved and idea-close retain catalogue native labels, titles and pending states, demonstrated in Shared idea card and Local catalogue. Entity-remove retains the saved-card border explicitly; see Local saved items. Semantic icon action with a required accessible label; optional danger, control-replay or dialog-dismiss variant. Demonstrated locally in Host patterns.",
     dependencies:
       "Button comic/control variants, Icon and SCSS .btn; native button attributes pass through.",
   },
@@ -578,7 +602,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   ControlRow: {
     usage:
-      "Reward variant keeps right-aligned comic actions and a single-column mobile layout. Wrapping row of controls accepting native div props; timer and break variants provide compact clock/action wells. Examples appear in button and session previews.",
+      "Idea-actions retains the two-column catalogue action grid; see Local catalogue. Reward variant keeps right-aligned comic actions and a single-column mobile layout. Wrapping row of controls accepting native div props; timer and break variants provide compact clock/action wells. Examples appear in button and session previews.",
     dependencies: "SCSS .control-row. Compose controls through children.",
   },
   TimerReadout: {
@@ -605,7 +629,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Button: {
     usage:
-      'Native button with poster, text, comic, setup, session-tour, timer/flow, dialog, round/chip, session-edit/send and review appearances. Session-action, session-secondary and session-ghost own the pink live-session appearances; reward, submission and mission examples demonstrate their enabled/disabled states without a backend. Round controls preserve their distinct shadows and hover behavior. Overlay-dismiss retains its native text close mark and focus/disabled behavior. fullWidth defaults to true. Set type="Filter supplies controlled aria-pressed collection buttons; see Local saved items. Access variants retain native join markup in the local join/rejoin example. The private-mission local reference demonstrates its reveal variant. button" outside form submission. team-create preserves participant creation controls and disabled states in the local team reference.',
+      'Native button with poster, text, comic, setup, session, timer/flow, dialog, round/chip, review and access appearances. Idea-use/add variants retain catalogue actions; outline-toggle preserves the controlled expansion icon. Shared idea card and Local catalogue demonstrate them without a backend. Filter supplies controlled collection buttons; see Local saved items. fullWidth defaults to true. Set type="button" outside form submission; keep explicit disabled state and native attributes. Other local references demonstrate their corresponding variants.',
     dependencies:
       "Owned SCSS .btn and ordinary native button attributes. Feature controllers own actions; local examples use only supplied callbacks/state.",
   },
@@ -957,7 +981,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Badge: {
     usage:
-      "Idea variants supply category labels in Shared idea card and Local catalogue; callers choose the tone and text. Entity supplies the saved-item points tag; see Local saved items. The private-mission local reference demonstrates its reveal variant. Stage/stage-break variants supply the preview label pill, demonstrated in the local stage/plan reference. Eyebrow, sticker, metadata, outline and subtle badge variants. Vote badges display published names and choices in the local review body example. Optional semantic icon; children supply the label and className can position the badge. Dialog variant supplies the existing editor kicker and appears in Host modal behavior.",
+      "Tag supplies catalogue chips inside TagList idea in Shared idea card. Idea variants supply category labels in Shared idea card and Local catalogue; callers choose the tone and text. Entity supplies the saved-item points tag; see Local saved items. The private-mission local reference demonstrates its reveal variant. Stage/stage-break variants supply the preview label pill, demonstrated in the local stage/plan reference. Eyebrow, sticker, metadata, outline and subtle badge variants. Vote badges display published names and choices in the local review body example. Optional semantic icon; children supply the label and className can position the badge. Dialog variant supplies the existing editor kicker and appears in Host modal behavior.",
     dependencies:
       "Project SCSS .badge. Poster examples show invitation variants; the introduction and catalog demonstrate outline and subtle.",
   },

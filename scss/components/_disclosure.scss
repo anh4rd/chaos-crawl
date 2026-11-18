@@ -17,3 +17,25 @@
     }
   }
 }
+
+.disclosure {
+  &--idea {
+    margin: 0 0 layout.$pixel-unit * 2;
+    color: colors.$host-muted;
+    font-size: fonts.$size-micro;
+    summary {
+      cursor: pointer;
+      color: colors.$purple;
+      font-size: fonts.$size-micro;
+      font-weight: fonts.$weight-action;
+    }
+    ul {
+      padding-left: layout.$pixel-unit * 4.5;
+      margin: layout.$pixel-unit * 2 0 layout.$pixel-unit;
+      line-height: 1.45;
+    }
+    li {
+      margin-bottom: layout.$pixel-unit * 1.25;
+    }
+  }
+}

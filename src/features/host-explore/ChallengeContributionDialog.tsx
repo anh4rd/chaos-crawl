@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import Icon from "../../components/ui/Icon";
+import IconButton from "../../components/ui/IconButton";
 
 export default function ChallengeContributionDialog({
   editing,
@@ -40,14 +40,13 @@ export default function ChallengeContributionDialog({
                 : "Share an original idea. It will be checked before appearing in Explore for other hosts."}
             </p>
           </div>
-          <button
+          <IconButton
             type="button"
-            className="host-explore-save"
+            variant="idea-close"
+            icon="x"
             onClick={onClose}
-            aria-label="Close"
-          >
-            <Icon name="x" className="icon--size-18" />
-          </button>
+            label="Close"
+          />
         </div>
         {children}
       </section>

@@ -3230,10 +3230,90 @@ forms/actions and current pending behavior. Follow with the catalogue shell and
 editor styles, then separate modal/tab accessibility and concurrency fixes. The
 remaining full-refactor queue and final desloppify gate remain active.
 
+## Phase 5u — shared catalogue controls and card details
+
+The three controlled catalogue cards now compose shared IconButton save/saved
+controls, MetadataList/MetadataItem, TagList/Badge tag, and explicit Button action
+variants. Location practical checks reuse native Disclosure idea. Route expansion
+composes a controlled outline-toggle Button and presentation-only StepOutline;
+the feature still supplies step order, detail copy, note and callbacks. The
+contribution dialog close action reuses IconButton idea-close. Native elements,
+labels, titles, form types, bounds and existing pending behavior are retained.
+
+Owned SCSS replaces the corresponding legacy card-content rules. Seven existing
+colors and the existing circular radius were promoted unchanged to tokens. Task
+add actions retain 11px text; venue/route footer actions and outline toggles retain
+their effective inherited host typography. The previous host-wide font reset
+makes several old single-class font declarations ineffective; the comparison
+caught that distinction before completion. Existing Button variants retain exact
+class output, and planning's default tag-list styles remain unchanged.
+
+The backend-free Shared idea card reference demonstrates the new primitives,
+save/unsave, pending, native disclosure, controlled outline and close callbacks.
+Its new keyboard journey exercises those paths using Enter and native checkbox
+Space activation. Catalogue notes and agent guidance describe their ownership.
+No dependency, controller, persistence contract or accessibility behavior changed.
+The decorative PlusMark and card admin-action arrangement remain for later work.
+
+Verification:
+
+- Lint/format, upload-disabled strict production build and Playwright type checks
+  passed; **366 unit tests** and **38 affected mocked desktop/mobile browser
+  cases** passed. Ordinary tests use no live backend.
+- **Fifty production comparisons** preserve native tags, text, attribute/value
+  maps, controls, focus, geometry and all standard computed properties. Serialized
+  DOM canonicalizes attribute order and applies explicit class-renaming maps;
+  previously unclassed metadata/outline/tag elements gain owned block classes.
+  No wrappers or text are ignored. SDK traces preserve initial independent GET
+  multisets and strict subsequent command/query ordering.
+- Coverage includes task/venue/route cards, native open practical checks,
+  expanded outlines, save errors/pending states, contribution create/edit errors,
+  moderation, hover, keyboard focus and reduced motion. **48 of 50 PNG pairs are
+  pixel-exact**. Desktop approval differs by the recorded 13 edge pixels (maximum
+  channel delta 27); desktop save focus differs by 15 pixels (maximum channel
+  delta 46). These differences remain recorded without masks or an asserted
+  explanation; DOM, geometry and computed properties match in both scenes.
+- Six additional desktop/mobile comparisons preserve existing poster badges,
+  saved items and planning reference markup, geometry and computed properties,
+  with zero backend requests. All **244 previous Button variant/fullWidth/class
+  combinations** produce exact class output. All **nine Explore controller,
+  model, catalogue and persistence modules** audited are byte-identical.
+- **Twenty-seven legacy selector arms** retired: 26 from HostPlanning and one
+  from HostTheme. The remaining **284 arms** retain exact declarations,
+  conditions and order; the other three audited legacy stylesheets are
+  byte-identical. All **1,402 prior expanded SCSS projections** retain declaration
+  order/values. The final circle-token promotion additionally preserves the whole
+  expanded stylesheet byte-for-byte. Evidence lives under `/tmp/phase5u-*`.
+
+The focused close-hover comparison uses an additional 1800px-tall viewport: at
+1280×900, the existing sticky header covers the center of the contribution close control
+after scrolling it into view. Direct hit testing confirms the same rectangle and
+header interception in baseline/current code. The checked 393×900 control remains
+unblocked. Keyboard-focus comparisons retain the standard 900px height. This
+known desktop defect belongs in the forthcoming native-dialog accessibility
+slice, alongside focus containment/restoration; taller-view hover coverage does
+not prove the standard-height pointer path works.
+
+This exceeds the approximate 800-line review budget. Review the following slices
+separately; the final commit preserves their atomic composition:
+
+| Review slice                     | Mechanical changes / scrutiny                                                                                                                           | Evidence                                                                                                                       |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Shared primitives                | Native metadata, tags, disclosure and ordered outline; scrutinize slot/data boundaries and explicit Button variant wiring                               | Local keyboard regression; 244 unchanged prior Button outputs; existing-reference comparisons                                  |
+| Controlled card/dialog callers   | Replace repeated native presentation with shared views; scrutinize retained labels, pending/footer behavior, callbacks and caller-supplied outline copy | Fifty native DOM/control/style/SDK comparisons; 38 affected journeys; controllers/services unchanged                           |
+| Owned SCSS and legacy retirement | Promote existing values and combine effective host styles; scrutinize specificity and inherited typography                                              | 27 retired arms, 284 retained arms and 1,402 retained SCSS projections; desktop/mobile computed styles and recorded PNG deltas |
+| Local reference and notes        | State-only demonstrations, keyboard pending/disclosure/outline paths and accurate component ownership                                                   | Zero-backend local journeys; lint/build/type gates; standard-height obstruction explicitly recorded                            |
+
+Next: catalogue shell, filters, moderation/history and editor styling. Follow with
+the separate native-dialog/tab accessibility and duplicate-action concurrency
+slices, including the verified desktop close obstruction. Continue the remaining
+V2/legacy queue below; full-suite verification and final desloppify remain pending.
+
 ## Queued phases for the full refactor
 
-Next: owned/shared HostExplore styling. Its thin route, focused controllers and
-controlled views are verified. Follow with the separate modal/tab accessibility
+Next: catalogue shell/filter, moderation/history and editor styling. Shared card
+frames, badges, controls and details now have owned SCSS; the thin route, focused
+controllers and controlled views are verified. Follow with the separate modal/tab accessibility
 and action-concurrency slices. Keep styling and intentional behavior fixes in
 separate verified slices. Continue remaining host utilities/admin and V2 player/
 slideshow presentation, then legacy workflows and obsolete CSS/Tailwind retirement
