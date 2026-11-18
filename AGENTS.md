@@ -124,7 +124,9 @@ migration work meanwhile.
 Card variant="idea" composes ContentPanel's entity surface and owns its header
 slot, layout, typography and hover frame in the card SCSS block. TaskCard,
 LocationCard and RouteCard reuse it with controlled header/content slots; keep
-badges, save controls and details in their respective pending styling slices.
+save controls and details in their respective pending styling slices. Category
+badges compose Badge idea variants with caller-supplied labels; their shared
+SCSS preserves the existing tones and sizing without choosing domain categories.
 The local Shared idea card and catalogue references exercise the same component
 without connected controllers. Do not restore the retired catalogue card-frame
 selectors or duplicate their surface declarations.

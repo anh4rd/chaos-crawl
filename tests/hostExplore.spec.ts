@@ -845,6 +845,16 @@ test("local catalogue uses controlled views for saves, moderation and forms with
     shared.getByRole("button", { name: "Choose locally", exact: true }),
   );
   await expect(shared.getByRole("status")).toHaveText("Idea chosen locally.");
+  await expect(
+    shared.getByText("Side challenge", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    shared.getByText("Secret mission", { exact: true }),
+  ).toBeVisible();
+  await expect(shared.getByText("Outdoor idea", { exact: true })).toBeVisible();
+  await expect(
+    shared.getByText("Walking route", { exact: true }),
+  ).toBeVisible();
   expect(backend.requests).toEqual([]);
   backend.verify();
 });

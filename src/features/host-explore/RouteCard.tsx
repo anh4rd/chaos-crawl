@@ -1,3 +1,4 @@
+import Badge from "../../components/ui/Badge";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
@@ -18,9 +19,7 @@ export default function RouteCard({
       variant="idea"
       header={
         <>
-          <span className="host-explore-type host-explore-type--route">
-            {route.style}
-          </span>
+          <Badge variant="idea-route">{route.style}</Badge>
           <button
             type="button"
             className={`host-explore-save${saved ? " is-saved" : ""}`}

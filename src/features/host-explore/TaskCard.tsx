@@ -1,3 +1,4 @@
+import Badge from "../../components/ui/Badge";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
@@ -26,9 +27,7 @@ export default function TaskCard({
       variant="idea"
       header={
         <>
-          <span className={`host-explore-type host-explore-type--${task.kind}`}>
-            {kindLabel}
-          </span>
+          <Badge variant={`idea-${task.kind}`}>{kindLabel}</Badge>
           <button
             type="button"
             className={`host-explore-save${saved ? " is-saved" : ""}`}

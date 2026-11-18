@@ -3187,6 +3187,49 @@ remaining catalogue shell/editor styling. Modal/tab accessibility and duplicate
 route-save concurrency remain separate behavior slices. The full-refactor queue
 below remains active; final whole-suite verification and desloppify are pending.
 
+## Phase 5t — shared catalogue category badges
+
+Task, location and route headers now compose Badge's idea variants with the same
+native span, caller-supplied label and category tone. The shared badge block owns
+pill geometry, typography and tones; six legacy category selectors were retired.
+Four existing palette values were promoted unchanged to tokens, and the other
+colors/scales reuse existing tokens. Card views still own their category labels;
+Badge does not choose domain values or access a backend.
+
+The Shared idea card reference demonstrates the base and all five category
+variants with local data. Its keyboard journey also checks the visible category
+labels; catalogue notes and agent guidance reflect their shared ownership.
+Existing save controls, metadata, tags and details remain the next migration
+slice. No persistence, native interaction behavior or dependency changed.
+
+Verification:
+
+- Lint/format, strict upload-disabled production build and Playwright type checks
+  passed; all **366 unit tests** and **36 affected desktop/mobile catalogue and
+  saved-item browser cases** passed.
+- **Thirty production baseline comparisons** preserve native outerHTML, control
+  state, focus, geometry, all standard computed styles and SDK traces, normalizing
+  only category class renames. Independent initial reads are a multiset; later
+  operations preserve strict sequence. Scenes include location cards, collapsed
+  and expanded route outlines, saves, errors, contribution editing/creation and
+  moderation. **29 PNG pairs are pixel-exact**; desktop approval retains the
+  recorded 13 edge-pixel difference (maximum channel delta 27), without masks.
+- Six additional desktop/mobile comparisons preserve existing poster badges,
+  local saved items and planning reference markup/geometry/all computed styles,
+  with zero backend traffic. The reference runner's historical log label still
+  says default Card; the actual selected example is Poster surfaces, badges and
+  typography, alongside saved items and planning panels.
+- All **1,396 previous expanded SCSS projections** retain exact declarations and
+  order. After six category selector removals, **311 legacy selector arms** retain
+  exact declarations, conditions and order. HostTheme and the other three audited
+  legacy stylesheets are unchanged. Evidence lives under `/tmp/phase5t-*`.
+
+Next: share save/close controls and migrate remaining card metadata, tags,
+disclosures and route-outline presentation into owned SCSS, preserving native
+forms/actions and current pending behavior. Follow with the catalogue shell and
+editor styles, then separate modal/tab accessibility and concurrency fixes. The
+remaining full-refactor queue and final desloppify gate remain active.
+
 ## Queued phases for the full refactor
 
 Next: owned/shared HostExplore styling. Its thin route, focused controllers and

@@ -1,3 +1,4 @@
+import Badge from "../../components/ui/Badge";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
@@ -17,9 +18,9 @@ export default function LocationCard({
       variant="idea"
       header={
         <>
-          <span className="host-explore-type host-explore-type--location">
+          <Badge variant="idea-location">
             {location.oneVenue ? "Single venue" : "Outdoor idea"}
-          </span>
+          </Badge>
           <button
             type="button"
             className={`host-explore-save${saved ? " is-saved" : ""}`}

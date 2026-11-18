@@ -137,3 +137,38 @@
     text-transform: capitalize;
   }
 }
+
+.badge {
+  &--idea {
+    display: inline-flex;
+    align-items: center;
+    max-width: calc(100% - #{layout.$pixel-unit * 9.75});
+    min-height: layout.$pixel-unit * 6.25;
+    padding: layout.$pixel-unit * 1.25 layout.$pixel-unit * 2;
+    border-radius: layout.$badge-radius;
+    color: colors.$assignment-icon-ink;
+    background: colors.$surface-soft;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-heavy;
+    text-transform: uppercase;
+    letter-spacing: fonts.$tracking-stage-label;
+  }
+  &--idea-main {
+    background: colors.$choice-lavender;
+  }
+  &--idea-side {
+    color: colors.$idea-side-ink;
+    background: colors.$assignment-icon-surface;
+  }
+  &--idea-secret {
+    color: colors.$white;
+    background: colors.$purple-dark;
+  }
+  &--idea-location {
+    color: colors.$idea-location-ink;
+    background: colors.$idea-location-surface;
+  }
+  &--idea-route {
+    background: colors.$idea-route-surface;
+  }
+}

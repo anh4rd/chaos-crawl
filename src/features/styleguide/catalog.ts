@@ -22,19 +22,19 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     usage:
       "Task idea with supplied saved/busy values, optional admin actions and main/side callbacks. The caller decides availability and resolves community records.",
     dependencies:
-      "TaskCardModel, shared Card idea, Button/Icon and the retained PlusMark. See Local catalogue; no SDK access or navigation.",
+      "TaskCardModel, shared Card idea, Badge idea, Button/Icon and the retained PlusMark. See Local catalogue; no SDK access or navigation.",
   },
   LocationCard: {
     usage:
       "Location idea with native practical-check disclosure and supplied save/use callbacks. Local catalogue demonstrates its controlled values.",
     dependencies:
-      "LocationCardModel, shared Card idea and Button/Icon; caller owns persistence and planning navigation.",
+      "LocationCardModel, shared Card idea, Badge idea and Button/Icon; caller owns persistence and planning navigation.",
   },
   RouteCard: {
     usage:
       "Route template with caller-owned expansion and save state. Preserves existing icon-button busy and footer-action contracts; Local catalogue demonstrates both.",
     dependencies:
-      "RouteCardModel, shared Card idea and Button/Icon. No route selection, live maps or queries.",
+      "RouteCardModel, shared Card idea, Badge idea and Button/Icon. No route selection, live maps or queries.",
   },
   CommunityReviewQueue: {
     usage:
@@ -957,7 +957,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Badge: {
     usage:
-      "Entity supplies the saved-item points tag; see Local saved items. The private-mission local reference demonstrates its reveal variant. Stage/stage-break variants supply the preview label pill, demonstrated in the local stage/plan reference. Eyebrow, sticker, metadata, outline and subtle badge variants. Vote badges display published names and choices in the local review body example. Optional semantic icon; children supply the label and className can position the badge. Dialog variant supplies the existing editor kicker and appears in Host modal behavior.",
+      "Idea variants supply category labels in Shared idea card and Local catalogue; callers choose the tone and text. Entity supplies the saved-item points tag; see Local saved items. The private-mission local reference demonstrates its reveal variant. Stage/stage-break variants supply the preview label pill, demonstrated in the local stage/plan reference. Eyebrow, sticker, metadata, outline and subtle badge variants. Vote badges display published names and choices in the local review body example. Optional semantic icon; children supply the label and className can position the badge. Dialog variant supplies the existing editor kicker and appears in Host modal behavior.",
     dependencies:
       "Project SCSS .badge. Poster examples show invitation variants; the introduction and catalog demonstrate outline and subtle.",
   },
