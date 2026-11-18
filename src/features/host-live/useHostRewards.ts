@@ -283,10 +283,14 @@ export function useHostRewards({
       setError("Select at least one winner first.");
       return;
     }
+    const manualPoints = Math.max(
+      0,
+      Math.min(10000, Number(rewardFinalPoints) || 0),
+    );
     const confirmText =
       activeRewardRound.reward_method === "voting"
         ? `Close voting and award ${activeRewardRound.points} points to the top vote-getter${activeRewardVotes.length ? "(s)" : ""}? Tied top votes will all win.`
-        : `Award ${activeRewardRound.points} points to ${selectedRewardWinnerIds.length} selected winner${selectedRewardWinnerIds.length === 1 ? "" : "s"}?`;
+        : `Award ${manualPoints} points to ${selectedRewardWinnerIds.length} selected winner${selectedRewardWinnerIds.length === 1 ? "" : "s"}?`;
     if (!window.confirm(confirmText)) return;
     if (!setBusy(true)) return;
     setError("");
@@ -303,9 +307,7 @@ export function useHostRewards({
             ? selectedRewardWinnerIds
             : [],
         p_points:
-          activeRewardRound.reward_method === "voting"
-            ? null
-            : Math.max(0, Math.min(10000, Number(rewardFinalPoints) || 0)),
+          activeRewardRound.reward_method === "voting" ? null : manualPoints,
       });
     setBusy(false);
     if (awardError) {

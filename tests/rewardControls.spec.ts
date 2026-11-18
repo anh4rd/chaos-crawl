@@ -111,14 +111,21 @@ for (const method of ["host_awards", "audience_cheers"] as const) {
           exact: true,
         })
         .fill("37");
-      page.once("dialog", (dialog) => void dialog.dismiss());
+      const confirmations: string[] = [];
+      page.once("dialog", (dialog) => {
+        confirmations.push(dialog.message());
+        void dialog.dismiss();
+      });
       await activateByKeyboard(page, confirm);
       expect(
         backend.requests.filter(
           (r) => r.name === "cc_host_complete_session_reward_round",
         ),
       ).toHaveLength(0);
-      page.once("dialog", (dialog) => void dialog.accept());
+      page.once("dialog", (dialog) => {
+        confirmations.push(dialog.message());
+        void dialog.accept();
+      });
       await page.keyboard.press("Enter");
       await expect
         .poll(
@@ -128,6 +135,8 @@ for (const method of ["host_awards", "audience_cheers"] as const) {
             ).length,
         )
         .toBe(1);
+      const confirmation = `Award 37 points to ${target === "team" ? "1 selected winner" : "2 selected winners"}?`;
+      expect(confirmations).toEqual([confirmation, confirmation]);
       expect(
         backend.requests.find(
           (r) => r.name === "cc_host_complete_session_reward_round",
