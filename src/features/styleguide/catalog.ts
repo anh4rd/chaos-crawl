@@ -94,6 +94,12 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     dependencies:
       "Native div/Button presentation and owned sync-status SCSS; no polling, backend or credential reads.",
   },
+  FeedbackNotice: {
+    usage:
+      "Controlled native div feedback surface with error/success tone. Supply children and explicit announcement semantics such as role=alert or role=status when appropriate. Local host workspace furniture (HostFoundationExample) toggles both tones using local state; Local host account tabs supplies local submit feedback.",
+    dependencies:
+      "Owned feedback-notice SCSS and native div attributes. No default ARIA role, timers, dismissal, backend calls or feedback state ownership.",
+  },
   RankingRow: {
     usage: "Controlled console rank/name/score row preserving caller order.",
     dependencies:
@@ -112,7 +118,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   ContentCopy: {
     usage:
-      "Controlled console heading/copy group, including compact list copy. Local legacy host console supplies its content.",
+      "Directory groups supplied host name and metadata in Local host workspace furniture (HostFoundationExample). Controlled console heading/copy group, including compact list copy. Local legacy host console supplies its content.",
     dependencies:
       "Owned SCSS; native children and class props only, no backend or route state.",
   },
@@ -321,7 +327,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   PageFrame: {
     usage:
-      "Shared native main/div frame for legacy join, gameplay and leaderboard. Native attributes and caller classes pass through; Shared legacy page frame uses div to avoid a nested main and never mounts connected routes. Content supplies width/minimum-height/padding without child spacing for legacy result loading.",
+      "Suspense supplies the centered main landmark used by App while a lazy route loads; it owns no loading state, routing or backend access. Shared native main/div frame for legacy join, gameplay and leaderboard. Native attributes and caller classes pass through; Shared legacy page frame uses div to avoid a nested main and never mounts connected routes. Content supplies width/minimum-height/padding without child spacing for legacy result loading.",
     dependencies:
       "Page-frame BEM identity. Stack/compact/loading variants own legacy page width, viewport minimum, rem padding and child spacing; bare preserves unstyled local composition. No routing, data, storage or coordination.",
   },
@@ -362,7 +368,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   TabList: {
     usage:
-      "Native horizontal tab list. Compose controlled button tabs with roving tabIndex and linked TabPanel IDs. Left/Right wrap and Home/End focus and activate through supplied click callbacks; Local catalogue demonstrates keyboard operation.",
+      "Workspace retains the Host Hub tab appearance; Local host workspace furniture (HostFoundationExample) demonstrates selected-only tab stops, stable IDs and its named existing-section panel with local state. Native horizontal tab list. Compose controlled button tabs with roving tabIndex and linked TabPanel IDs. Left/Right wrap and Home/End focus and activate through supplied click callbacks; Local catalogue demonstrates keyboard operation.",
     dependencies:
       "Owned tab-list SCSS; caller owns selection and callbacks. No router, storage or queries.",
   },
@@ -564,7 +570,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   PanelGrid: {
     usage:
-      "Stats preserves three columns, changing to two at 600px; Local platform admin supplies the tiles. Stack groups caller-ordered review/history rows; see Shared review and history. Ideas retains the three/two/one-column catalogue layout at 1140px/560px; Local catalogue demonstrates it. Collection supplies equal columns, stacking at 850px; see Local saved items. Two-panel layout with a wider first column, stacking at 900px. The local host frame example composes controls and context without connected controllers.",
+      "Games retains Host Hub auto-fill cards and mobile stacking; directory groups supplied HostDirectory rows. Local host workspace furniture (HostFoundationExample) exercises both with local records and empty/preview toggles. Stats preserves three columns, changing to two at 600px; Local platform admin supplies the tiles. Stack groups caller-ordered review/history rows; see Shared review and history. Ideas retains the three/two/one-column catalogue layout at 1140px/560px; Local catalogue demonstrates it. Collection supplies equal columns, stacking at 850px; see Local saved items. Two-panel layout with a wider first column, stacking at 900px. The local host frame example composes controls and context without connected controllers.",
     dependencies:
       "Native div attributes, supplied children and owned panel-grid SCSS. No queries, state or commands.",
   },
@@ -699,19 +705,19 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   ContentPanel: {
     usage:
-      "Table, notice and record retain platform data surfaces and native div/article composition in Local platform admin; they supply appearance without access policy or modal behavior. Moderation/history/moderation-item variants retain catalogue review frames in Shared review and history. Entity supports native article cards; workspace-error retains the plain div feedback surface. Both appear in Local saved items. Access variants retain native join markup in the local join/rejoin example. The overlay modifier supplies the shared centered/scrolled reward frame; compose Dialog separately for modal behavior. See Shared reward overlay frame. Section, library, selection, form, workspace, lobby, controls and session panel surfaces. Review-controls is a native div-compatible management well demonstrated locally; review-result supplies its published results surface. Session panels support stacked and compact spacing and appear in Shared session panels and invitation. Pass native props, a variant and optional as=div or as=main for its containing element; examples appear in Planning panels and fields. Choice variant supplies the participant choice surface in the local team reference.",
+      "Workspace-preview preserves the native read-only preview banner and caller-composed return action in Local host workspace furniture (HostFoundationExample). Table, notice and record retain platform data surfaces and native div/article composition in Local platform admin; they supply appearance without access policy or modal behavior. Moderation/history/moderation-item variants retain catalogue review frames in Shared review and history. Entity supports native article cards; workspace-error retains the plain div feedback surface. Both appear in Local saved items. Access variants retain native join markup in the local join/rejoin example. The overlay modifier supplies the shared centered/scrolled reward frame; compose Dialog separately for modal behavior. See Shared reward overlay frame. Section, library, selection, form, workspace, lobby, controls and session panel surfaces. Review-controls is a native div-compatible management well demonstrated locally; review-result supplies its published results surface. Session panels support stacked and compact spacing and appear in Shared session panels and invitation. Pass native props, a variant and optional as=div or as=main for its containing element; examples appear in Planning panels and fields. Choice variant supplies the participant choice surface in the local team reference.",
     dependencies:
       "SCSS .content-panel; composes caller content without backend access.",
   },
   PanelHeading: {
     usage:
-      "Overview retains the native platform header and 600px reflow in Local platform admin. Moderation and contribution variants retain catalogue section/editor arrangement; see Shared review and history and Local catalogue. The private-mission local reference demonstrates its reveal variant. dismissible reserves room for an absolutely positioned close action, as demonstrated in Shared reward overlay frame. Title/description and action arrangement inside a panel. Accepts native div props; demonstrated with CountBadge. Session variant retains the live panel heading and mobile arrangement. Choice variant retains the participant heading layout and existing color pending the separate contrast fix; see local team references.",
+      "Workspace supplies the Host Hub section heading/action arrangement in Local host workspace furniture (HostFoundationExample). Overview retains the native platform header and 600px reflow in Local platform admin. Moderation and contribution variants retain catalogue section/editor arrangement; see Shared review and history and Local catalogue. The private-mission local reference demonstrates its reveal variant. dismissible reserves room for an absolutely positioned close action, as demonstrated in Shared reward overlay frame. Title/description and action arrangement inside a panel. Accepts native div props; demonstrated with CountBadge. Session variant retains the live panel heading and mobile arrangement. Choice variant retains the participant heading layout and existing color pending the separate contrast fix; see local team references.",
     dependencies:
       "SCSS .panel-heading and the shared panel-title typography fragment.",
   },
   CountBadge: {
     usage:
-      "Moderation supplies the native review-queue counter; see Shared review and history. Tab supplies the native collection counter in Local catalogue. Filter supplies the inline collection count; see Local saved items. Round-index and round-index-current variants retain the detailed option number well; demonstrated in the shared round plan. Compact numeric/content badge accepting native span props. Shown in the planning panel example; session variant appears in Shared session panels and invitation. Choice variant supplies the participant capacity pill in the local team reference. Playback accepts native div and the legacy counter, including caller-composed Badge playback paused marker.",
+      "Workspace supplies the controlled saved-plan count inside workspace tabs in Local host workspace furniture (HostFoundationExample). Moderation supplies the native review-queue counter; see Shared review and history. Tab supplies the native collection counter in Local catalogue. Filter supplies the inline collection count; see Local saved items. Round-index and round-index-current variants retain the detailed option number well; demonstrated in the shared round plan. Compact numeric/content badge accepting native span props. Shown in the planning panel example; session variant appears in Shared session panels and invitation. Choice variant supplies the participant capacity pill in the local team reference. Playback accepts native div and the legacy counter, including caller-composed Badge playback paused marker.",
     dependencies: "SCSS .count-badge; caller supplies the count.",
   },
   FormGrid: {
@@ -899,7 +905,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Avatar: {
     usage:
-      "Name initial or optional image, with account, roster, compact and member variants. AccountChip and lobby rows share this primitive; the lobby surface example shows both image and fallback. Choice variant supplies the existing 37px initial marker in shared team choices.",
+      "Directory supplies the HostDirectory name initial/image surface in Local host workspace furniture (HostFoundationExample); callers supply fallback names and image URLs. Name initial or optional image, with account, roster, compact and member variants. AccountChip and lobby rows share this primitive; the lobby surface example shows both image and fallback. Choice variant supplies the existing 37px initial marker in shared team choices.",
     dependencies:
       "SCSS .avatar and the host palette; no storage or user queries.",
   },
@@ -958,12 +964,12 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Overline: {
     usage:
-      "Inverse retains caller-composed platform/inspector kicker copy and optional semantic icon in Local platform admin. Moderation retains the catalogue kicker in Local catalogue and Shared review and history. Banner retains the uppercase lime label in Local catalogue. Workspace supplies the saved-item uppercase label; see Local saved items. The private-mission local reference demonstrates its reveal variant. Small uppercase-style label typography. Review variant supports native strong/span titles in Shared review and presentation controls. Accepts span/div/strong markup, primary/pink tones and an icon arrangement. Session variant appears in Shared session panels and invitation. Examples appear in the styleguide introduction, top bar and foundation panels. Choice variant supplies the participant eyebrow in the local team reference.",
+      "Directory supplies the HostDirectory kicker in Local host workspace furniture (HostFoundationExample); workspace also supplies the local host account label. Inverse retains caller-composed platform/inspector kicker copy and optional semantic icon in Local platform admin. Moderation retains the catalogue kicker in Local catalogue and Shared review and history. Banner retains the uppercase lime label in Local catalogue. Workspace supplies the saved-item uppercase label; see Local saved items. The private-mission local reference demonstrates its reveal variant. Small uppercase-style label typography. Review variant supports native strong/span titles in Shared review and presentation controls. Accepts span/div/strong markup, primary/pink tones and an icon arrangement. Session variant appears in Shared session panels and invitation. Examples appear in the styleguide introduction, top bar and foundation panels. Choice variant supplies the participant eyebrow in the local team reference.",
     dependencies: "SCSS .overline. Text casing belongs to the caller.",
   },
   Note: {
     usage:
-      "Inverse and record retain supplied platform copy and native session metadata spans in Local platform admin; they choose no records or statuses. Collection-loading supports a native div with catalogue loading copy, shown in Local catalogue. Access variants retain native join markup in the local join/rejoin example. Session variant provides panel copy with optional native small markup, demonstrated in Shared session panels and invitation. Control variant provides host timer messages. Lobby variant provides compact supporting copy and appears in Lobby surfaces and identity. Muted paragraph accepting shared HTML attributes. compact uses caption typography for dense descriptions; as=output supplies native status semantics, as shown in the local HostShell preview. Loading/waiting/notice/unavailable variants preserve legacy slideshow feedback in the local playback reference.",
+      "Workspace-muted and workspace-meta retain supporting copy and host-directory metadata; Local host account tabs and Local host workspace furniture (HostFoundationExample) use local data only. Inverse and record retain supplied platform copy and native session metadata spans in Local platform admin; they choose no records or statuses. Collection-loading supports a native div with catalogue loading copy, shown in Local catalogue. Access variants retain native join markup in the local join/rejoin example. Session variant provides panel copy with optional native small markup, demonstrated in Shared session panels and invitation. Control variant provides host timer messages. Lobby variant provides compact supporting copy and appears in Lobby surfaces and identity. Muted paragraph accepting shared HTML attributes. compact uses caption typography for dense descriptions; as=output supplies native status semantics, as shown in the local HostShell preview. Loading/waiting/notice/unavailable variants preserve legacy slideshow feedback in the local playback reference.",
     dependencies:
       "SCSS .note. Content and status semantics belong to the caller.",
   },
@@ -991,12 +997,12 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   EmptyState: {
     usage:
-      "Workspace optionally composes an icon, title, paragraph and action, as shown by Local catalogue search emptiness; existing plain workspace children remain unchanged. Workspace accepts explicit children to preserve native loading/empty markup; see Local saved items. Centered semantic icon, message and optional action. Session variant retains the compact inline message and is demonstrated in Shared assignment rows and empty state. Search for an absent component to see the catalog example.",
+      "Workspace-panel accepts caller-composed native children for Host Hub loading/empty surfaces; Local host workspace furniture (HostFoundationExample) toggles its empty state locally. Workspace optionally composes an icon, title, paragraph and action, as shown by Local catalogue search emptiness; existing plain workspace children remain unchanged. Workspace accepts explicit children to preserve native loading/empty markup; see Local saved items. Centered semantic icon, message and optional action. Session variant retains the compact inline message and is demonstrated in Shared assignment rows and empty state. Search for an absent component to see the catalog example.",
     dependencies: "SCSS .empty-state and Icon; actions belong to the caller.",
   },
   Button: {
     usage:
-      'Table-action, back-link and panel-close preserve native platform action/link/close appearance without adding business behavior; see Local platform admin. Moderation and editor variants retain comic controls; tag-option preserves controlled choices. See Shared review and history and Local catalogue. Collection-tab and category retain controlled tab/filter states in Local catalogue. Native button with poster, text, comic, setup, session, timer/flow, dialog, round/chip, review and access appearances. Idea-use/add variants retain catalogue actions; outline-toggle preserves the controlled expansion icon. Shared idea card and Local catalogue demonstrate them without a backend. Filter supplies controlled collection buttons; see Local saved items. fullWidth defaults to true. Set type="button" outside form submission; keep explicit disabled state and native attributes. Other local references demonstrate their corresponding variants.',
+      'Workspace-tab and workspace-link retain Host Hub tabs and quiet inline actions. Callers supply btn--workspace-selected for selection and own role, IDs, roving tabIndex and callbacks; Local host workspace furniture (HostFoundationExample) uses state only. Table-action, back-link and panel-close preserve native platform action/link/close appearance without adding business behavior; see Local platform admin. Moderation and editor variants retain comic controls; tag-option preserves controlled choices. See Shared review and history and Local catalogue. Collection-tab and category retain controlled tab/filter states in Local catalogue. Native button with poster, text, comic, setup, session, timer/flow, dialog, round/chip, review and access appearances. Idea-use/add variants retain catalogue actions; outline-toggle preserves the controlled expansion icon. Shared idea card and Local catalogue demonstrate them without a backend. Filter supplies controlled collection buttons; see Local saved items. fullWidth defaults to true. Set type="button" outside form submission; keep explicit disabled state and native attributes. Other local references demonstrate their corresponding variants.',
     dependencies:
       "Owned SCSS .btn and ordinary native button attributes. Feature controllers own actions; local examples use only supplied callbacks/state.",
   },
@@ -1024,7 +1030,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     usage:
       "Presentation-only host layout with title, subtitle, sidebar, contextPanel and children. Supply displayName, homeHref, onSignOut and onCreate; showCreate controls the create action. contentAs=div avoids a nested main when embedding the shell, as in the local Host patterns example.",
     dependencies:
-      "Router and SCSS .host-shell. Sidebar, heading and control styles remain transitional. Optional onNavigate intercepts links for controlled previews; omitting it preserves router navigation. Authentication belongs to HostWorkspace; this component never reads Supabase.",
+      "Router and owned host-shell, host-header, host-navigation and mobile-navigation SCSS; shared WorkspaceSidebar, PageHeading and controls own their blocks. Optional onNavigate intercepts links for controlled previews; omitting it preserves router navigation. Authentication belongs to HostWorkspace; this component never reads Supabase.",
   },
   SessionPlayerProfile: {
     usage:

@@ -111,18 +111,19 @@ prefix. Setup and cleanup failures fail the test. No live journeys are run by
 `npm run test:e2e`, and no live backend is needed for local unit or default browser
 regressions.
 
-## Agent guidance and styling migration
+## Agent guidance and styling
 
 [AGENTS.md](AGENTS.md) is the source of coding rules for this repository. Keep
 strict TypeScript and preserve the current routes, Supabase contracts and visual
 identity. [Refactor progress](docs/refactor-progress.md) records completed slices,
 verification evidence, and remaining work.
 
-New and migrated styles use project-owned SCSS in `scss/`, global BEM classes,
-and shared design tokens. `src/main.tsx` imports `scss/style.scss` once after the
-legacy globals. Existing CSS and Tailwind remain during the staged migration;
-keep their import order and do not expand their usage. The shared Button, Card,
-Input, DataError, Field, Toggle, Icon and Dialog now have SCSS blocks.
+Application styling uses project-owned SCSS in `scss/`, global BEM classes,
+and shared design tokens. `src/main.tsx` imports `scss/style.scss` exactly once;
+that entry loads the owned native reset/base rules, component blocks, route shells
+and utilities in order. There are no legacy stylesheet imports or Tailwind build
+dependencies. Shared controls, layouts, icons and dialogs own their SCSS blocks;
+preserve the existing reset and cascade when changing them.
 
 `npm run lint` runs Oxlint, Stylelint and formatting checks. Run `npm run lint:js`
 or `npm run lint:scss` for an individual linter. `npm run review:load` reports the
@@ -153,8 +154,11 @@ automatically; previews reuse the production components and styles.
 - `src/game/hooks` owns live reads and challenge participation. Read hooks expose
   `{ data, loading, error, reload }`, cancel superseded requests, and refresh from
   the database when Realtime changes arrive.
-- `src/lib` owns persistence commands and pure score/vote projections. Commands
-  return `{ data, error }`, including transport and configuration failures.
+- `src/lib` owns persistence commands and pure score/vote projections. Boundaries
+  using `runApi` return `{ data, error }`, including transport and configuration
+  failures. `hostAuth` and `legacyAdminCommands` preserve their SDK result/error
+  contracts; `gameSessions` returns a launch value or throws. Callers retain the
+  corresponding error handling.
 
 Score displays and host manual adjustments use the `score_events` ledger.
 Personal events count for the player and their current team; direct team events

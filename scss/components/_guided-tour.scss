@@ -10,6 +10,8 @@
   gap: layout.$pixel-unit * 2.25;
 }
 
+// GuidedTour supplies measured target/scrim rectangles and clamped card positions inline.
+// The design inputs read by that positioning code are token-derived below.
 .guided-tour {
   --tour-gap: #{layout.$tour-gap};
   --tour-edge: #{layout.$tour-edge};

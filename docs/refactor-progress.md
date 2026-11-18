@@ -4445,3 +4445,30 @@ Evidence: /tmp/host-keyboard-integration-handoff.md and
 Review native form/panel semantics, focus order, preview routing and local demo
 isolation. Twelve source/test/catalog paths change; this behavior slice follows
 the neutral furniture commit and does not include native reset/package removal.
+
+## Native reset ownership and Tailwind retirement
+
+The application now imports only scss/style.scss. Its owned, licensed native reset
+preserves the previous theme/base layers and canonical layer order; seven theme
+default declarations and49base rule projections are mechanically equivalent.
+All66 same-source before/after states match raw DOM/native attributes/text,
+focus, geometry, every standard computed property, SDK traces and every PNG pixel
+at393/800/1280. Equivalent pseudo-element spelling and duplicate identical compiled
+declarations are the only compilation normalization. Evidence:
+/tmp/preflight-parity-summary.json and /tmp/preflight-compiled-proof.log.
+The final Directorysubtree comparison additionally matches all three widths and
+full-page screenshots exactly: /tmp/host-directory-final-comparison.json.
+
+Both Tailwind packages and the Vite plugin are removed after the zero-consumer
+runtime audit. Offline npm removal used ignore-scripts, removed14packages and
+reported zero audit vulnerabilities; npm ls confirms neither package installed.
+No dependencies were added. Current575units, forced app/browser types, full lint
+and upload-disabled production build pass. AGENTS/README/catalog now describe
+owned styles, accurate command boundaries and backend-free examples; silent
+geometry comments compile byte-identically. Final all-journey browser verification
+will follow the fresh repository-wide cleanup audit and confirmed repairs.
+
+Review map: preserved native reset/license and theme defaults; stylesheet/plugin
+entry retirement; package/lock removal; current guidance/catalogue contracts;
+comment-only runtime geometry notes. Scrutinize reset/cascade ownership and final
+package changes; the66state comparison mechanically proves current appearance.

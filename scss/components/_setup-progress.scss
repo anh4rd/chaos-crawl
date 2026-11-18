@@ -3,6 +3,7 @@
 @use "../variables/fonts";
 @use "../variables/motion";
 
+// ChecklistProgress supplies completion-derived track width inline; dimensions and appearance stay in SCSS.
 .setup-progress {
   &__count {
     color: colors.$purple-dark;

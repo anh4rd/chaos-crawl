@@ -12,7 +12,7 @@ The production base is `/chaos-crawl/`; routing uses `HashRouter`. V2 uses `/joi
 
 1. **Strict TypeScript.** Keep TS/TSX, existing compiler checks, and explicit domain contracts. Do not introduce `any`, broad assertions, or non-null assertions to silence a problem. The existing dynamic V2 Supabase boundary in `src/lib/sessionSupabase.ts` is a documented migration exception, not a pattern to spread. Database contracts inferred from queries are not verified deployed schema types.
 2. **English inline strings.** No translation framework or string catalogue.
-3. **SCSS and global BEM classes.** New and migrated styling belongs in `scss/`. No CSS modules, CSS-in-JS, styled components, or new Tailwind usage. Static design values never go in JSX `style`. Runtime geometry and data-driven CSS custom properties are allowed for measured positioning, progress, and calculated animation values; document the boundary in the consuming style.
+3. **SCSS and global BEM classes.** Styling belongs in `scss/`, imported once through `scss/style.scss`. No CSS modules, CSS-in-JS, styled components, or Tailwind. Static design values never go in JSX `style`. Runtime geometry and data-driven CSS custom properties are allowed for measured positioning, progress, and calculated animation values; document the boundary in the consuming style.
 4. **Design values come from tokens.** Reuse an existing token, derive from it, or promote an existing design value without changing its appearance. New colors or intentional design changes require user input. Structural values such as `0`, `auto`, `100%`, and unitless ratios do not need tokens.
 5. **Ask before adding dependencies.** Sass and Stylelint tooling are authorized for this migration. No new runtime dependency is authorized by this document. Prefer native controls; if an interaction needs a library, propose the specific dependency before installing it. Do not add state-management libraries.
 6. **Accessibility is required.** Enforced accessibility rules are errors. Never suppress them to bypass a defect. Use native controls, visible labels, correct ARIA, keyboard operation, and visible focus. Walk the entire interaction keyboard-only before claiming a fallback works. Accessibility behavior changes belong in separate, explicitly tested slices from structural refactors.
@@ -101,8 +101,8 @@ FormLabel/InputIcon access and Button access/back/switch own its presentation.
 GameCodeInput owns its BEM cells/control; the route shell owns arrangement. Keep
 native tags, IDs, types and announcement semantics intact. The local example
 includes pending and error toggles without connecting. Do not restore retired
-join selectors in PlayerGame.css; the legacy import still serves the shared
-spinner until its remaining consumers migrate. Pending joins use a synchronous
+join selectors in PlayerGame.css. Shared spinner styling belongs to the Icon
+SCSS block. Pending joins use a synchronous
 lock and a mounted code/mode
 generation: stale success/error cannot store credentials, redirect or publish
 feedback, including when the target changes away and back. The server request
@@ -151,7 +151,7 @@ Overline workspace, Badge entity, EmptyState workspace and IconButton
 entity-remove own its presentation in SCSS. SavedItemCard owns arrangement/copy
 only. Preserve the 850px collection breakpoint and mobile icon dimensions.
 Do not restore retired saved-item selectors or tie button appearance to a route
-class; keep retained host CSS only for its remaining consumers.
+class. Host surfaces and component styling belong to their owned SCSS partials.
 
 Catalogue moderation/history compose ContentPanel moderation/history/item,
 PanelHeading moderation, Overline/CountBadge moderation, Badge moderation-type,
@@ -238,16 +238,16 @@ those connected hooks.
 
 SuperAdmin adapts to features/super-admin/PlatformGames. Separate list and inspector
 hooks own reads; PlatformGamesView/GameTable/GameInspector accept controlled data
-and callbacks. Typed superAdminQueries preserve original RPC names/arguments and
-original SDK behavior in the neutral extraction; the subsequent lifecycle slice adds runApi transport recovery. types/superAdmin.ts holds
-inferred consumed shapes, not deployed schema types. Keep connected hooks out of
-local examples. Existing sa-* styles and recorded lifecycle/label defects await
-separate tested behavior and shared-primitives/SCSS slices.
+and callbacks. Typed superAdminQueries use runApi with the original RPC names and
+arguments. types/superAdmin.ts holds inferred consumed shapes, not deployed schema
+types. Keep connected hooks out of local examples. Shared DataTable, filter controls,
+panels and the native inspector Dialog own their presentation in SCSS; do not
+restore the retired sa-* selectors.
 
 Legacy /admin Challenges composes controlled feature-private views under
 features/legacy-host. Admin owns round/status/count projections, persistence,
 subscriptions and review URL creation. Preserve incoming order, command payloads
-and legacy host-v2 styles during extraction; other legacy tabs remain separate.
+and owned legacy-host SCSS; other legacy tabs retain their separate controllers.
 
 Platform search/status controls have visible native labels and scoped table
 headers. Preserve the original16px text at weight 400 control type; default FormLabel typography
@@ -280,8 +280,9 @@ responses cannot reopen or overwrite another inspection. Queries use runApi with
 unchanged RPC payloads. Keep list/detail feedback separate, with inspector errors
 and retry inside the native modal. List refresh cannot erase a failed detail read;
 explicit inspection/retry/dismissal clears feedback. Do not add duplicate admin
-auth wiring; HostGuard supplies the account remount boundary. Labels and owned
-SCSS remain separately tested follow-ups.
+auth wiring; HostGuard supplies the account remount boundary. Search/status
+controls retain visible native labels, table headers retain explicit scope, and
+shared primitives own their SCSS. Local platform examples use state only.
 
 Catalogue tabs compose the shared horizontal TabList and linked TabPanel primitives.
 Left/Right wrap; Home/End focus and activate native tab buttons through their
@@ -308,7 +309,7 @@ catalogue presentation rules or the legacy contribution backdrop.
 
 Supabase auth is shared by the legacy and session clients. Legacy player IDs and V2 session-player credentials use different storage keys and are not interchangeable. Preserve RPC payloads, storage paths, query ordering, score semantics, subscription cleanup, timer behavior, error handling, and route/query parameters. Client storage is not an authorization boundary; policies and atomic awards require server enforcement.
 
-`HostLogin` composes `features/host-access/HostAccess`. Its focused hook owns credentials, initial session recovery, command feedback and redirects through the typed SDK functions in `lib/hostAuth.ts`. `HostAccessForm` receives controlled values and callbacks; shared `BrandLink` and `InputIcon` remain presentation-only. The host header and login use the same host wordmark variant.
+`HostLogin` composes `features/host-access/HostAccess`. Its focused hook owns credentials, initial session recovery, command feedback and redirects through the typed SDK functions in `lib/hostAuth.ts`. `HostAccessForm` receives controlled values and callbacks; shared `BrandLink` and `InputIcon` remain presentation-only. The host header and login use the same host wordmark variant. Account tabs use stable IDs, roving tab stops and the shared arrow/Home/End handler; a labelled panel wraps the native form. The local host account reference supplies state and callbacks only, never authentication or credential storage.
 
 Host routes compose `features/host-workspace/HostWorkspace`, whose identity hook reads the current user and supplies sign-out/create navigation callbacks. `components/host/HostShell` is presentation-only and composes its header/navigation, account chip, content and optional sidebar/context slots. It accepts explicit identity and callbacks; use `contentAs="div"` when embedding it inside another main landmark. Its styleguide preview uses local identity/actions, including the read-only state, and never mounts the connected workspace.
 
@@ -327,7 +328,7 @@ contracts; presentation-only GameCard, GameContext, GameOverview, SetupProgress
 and HostDirectory accept data and callbacks. The shared checklist/context/artwork
 components are also used by HostPlanSetup. Keep feature checklist rules and
 navigation out of those shared components. Local Host patterns demonstrate their
-primitives without mounting the connected dashboard.
+primitives without mounting the connected dashboard. Overview and Your games use the shared arrow/Home/End tab handler with selected-only tab stops and stable IDs linked to the existing games section. Preserve preview query parameters and native panel focus; the local workspace reference follows the same keyboard contract.
 
 `HostPlanSetup` adapts plan/import parameters to `features/host-planning/PlanEditor`.
 Hydration, favourites, cover upload, saving, challenge editing and scheduling have
@@ -541,7 +542,7 @@ Use a small project-owned framework, not the other project's `scss/core`:
 - `scss/global/` — reset/base element styles.
 - `scss/components/` — one generic BEM block per partial, direct declarations.
 - `scss/routes/` — page grids, arrangement, and responsive shell behavior only.
-- `scss/style.scss` — application entry, imported once by `src/main.tsx` after transitional legacy globals.
+- `scss/style.scss` — the sole application stylesheet import in `src/main.tsx`; loads owned global reset/base styles, component blocks, route shells and utilities in order.
 
 Each directory registers partials in `_index.scss`; imports use relative `@use`. Nest elements/modifiers as `&__element` and `&--modifier`. Keep media queries, including reduced-motion queries, inside the block they affect. One declaration per line; nesting depth at most six. Prefer low-specificity selectors.
 
@@ -553,7 +554,7 @@ The theme is Chaos Crawl's existing purple/pink/lime comic style with Quicksand 
 
 ## Migration and reviewability
 
-The target rules apply immediately to new and migrated code. Unmigrated `src/styles/*.css`, existing Tailwind classes, direct Lucide imports/sizes, multi-component files, and route-local Supabase work are temporary exceptions. Do not expand those patterns. Remove exceptions by subsystem after parity checks, not by mass suppression. Keep Tailwind until its final consumer is migrated; preserve cascade/import order during coexistence. Track progress and evidence in `docs/refactor-progress.md`.
+The maintained application uses owned SCSS and native reset rules through one stylesheet import; do not restore legacy route stylesheets or Tailwind dependencies. Semantic icons come through the shared Icon module, and pages compose feature controllers rather than becoming persistence boundaries. Retained exceptions are explicit: the dynamic V2 Supabase type bridge, PlayerDemo's pending composition choice, and documented existing glyph/contrast decisions. These do not authorize new type assertions, duplicate layouts or unapproved design changes. Track progress and verification evidence in `docs/refactor-progress.md`.
 
 Work in independently reviewable slices: guidance/regressions → styling foundation → shared UI pilot → host planning → host live → session players → remaining V2 → legacy. Separate extraction, styling conversion, and accessibility behavior fixes. Remove dead modules and update imports/catalog entries in the same slice.
 

@@ -160,3 +160,13 @@ $line-height-legacy-total: 2.25rem;
 $tracking-legacy-kicker: 0.2em;
 
 $size-legacy-page-heading: clamp(2rem, 8vw, 3rem);
+
+$family-native-sans:
+  ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+  "Segoe UI Symbol", "Noto Color Emoji";
+$family-native-mono:
+  ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+  "Courier New", monospace;
+$size-native-small: 80%;
+$size-native-script: 75%;
+$size-native-code: 1em;
