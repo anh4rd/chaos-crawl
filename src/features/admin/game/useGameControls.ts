@@ -6,6 +6,7 @@ import { useChallenges } from "../../../game/hooks/useChallenges";
 import type { Challenge } from "../../../types/database";
 import { deriveRoundControls } from "./roundControls";
 import * as commands from "./gameCommands";
+import { openVoting, closeVoting } from "../voting/votingControls";
 
 export function useGameControls() {
   const gameQuery = useGameState();
@@ -50,6 +51,8 @@ export function useGameControls() {
   }
   return {
     game,
+    openVoting,
+    closeVoting,
     pubs,
     challenges,
     selectedPub,

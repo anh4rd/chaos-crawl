@@ -4199,3 +4199,31 @@ the browser-served index copy is formatting HostPlanning.css; no declarations
 or source behavior changed. The completed staged delta is approximately 6,700
 review lines across 100 files; use the slice map above rather than reviewing it
 as one undifferentiated change. Unfinished peer changes remain in the worktree.
+
+## Legacy administration presentation boundary
+
+The /admin-legacy route now adapts to a feature workspace, controlled eight-tab
+frame/navigation and controlled player/team/voting/participation/review views.
+Name editing and score operations have focused controllers. Existing read hooks
+and command callbacks retain their query/payload/order/error contracts; Tonight
+and challenge cards receive callbacks instead of importing persistence/navigation.
+The typed team-create boundary deliberately preserves SDK result/error identity
+and transport rejection for the original controller catch. No runApi recovery,
+new validation, styling or accessibility changes are mixed into this extraction.
+
+All 67 scoped units and 14 mocked desktop/mobile journeys pass. All 28 captured
+states match native DOM without any normalization, every computed property,
+focus/geometry and pixels exactly. Reads preserve full query/body/count sets;
+journeys assert write ordering. Sources: `/tmp/chaos-legacy-admin-baseline-v3` and
+`/tmp/chaos-legacy-admin-extracted`; scope/evidence/known retained label and
+lifetime concerns: `/tmp/legacy-admin-next-review.md` and
+`/tmp/legacy-admin-extraction-comparison.json`. Styling follows separately.
+
+The proposed legacy-admin structural tree additionally passes all 531 integrated
+unit tests, forced strict types, full lint and upload-disabled build. Exact source
+copy: `/tmp/chaos-legacy-admin-neutral-index`. Review load for this slice is 1,630
+lines across 29 files (+1,165/-465), above the nudge: review controlled native
+markup moves (28-state exact proof), focused controller extraction, exact team
+SDK boundary (payload/error scrutiny) and browser fixtures/contracts separately.
+The working-tree review command also includes unfinished host/player/status and
+admin styles; it is not evidence that those slices are complete.

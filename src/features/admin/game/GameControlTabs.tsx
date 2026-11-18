@@ -66,6 +66,8 @@ export default function GameControlTabs({
           {activeTab === "tonight" && (
             <TonightControls
               game={game}
+              openVoting={controls.openVoting}
+              closeVoting={controls.closeVoting}
               nextRoundChallenge={controls.nextRoundChallenge}
               revealRoundChallenge={controls.revealRoundChallenge}
               nextPub={controls.nextPub}

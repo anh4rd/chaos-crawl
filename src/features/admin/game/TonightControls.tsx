@@ -2,10 +2,11 @@ import Card from "../../../components/ui/Card";
 import Button from "../../../components/ui/Button";
 import type { Challenge, GameState, Pub } from "../../../types/database";
 import Input from "../../../components/ui/Input";
-import { openVoting, closeVoting } from "../voting/votingControls";
 
 export interface TonightControlsProps {
   game: GameState;
+  openVoting: () => Promise<void>;
+  closeVoting: () => Promise<void>;
   nextRoundChallenge: Challenge | undefined;
   revealRoundChallenge: (challenge: Challenge) => Promise<void>;
   nextPub: Pub | undefined;
@@ -22,6 +23,8 @@ export interface TonightControlsProps {
 
 export default function TonightControls({
   game,
+  openVoting,
+  closeVoting,
   nextRoundChallenge,
   revealRoundChallenge,
   nextPub,

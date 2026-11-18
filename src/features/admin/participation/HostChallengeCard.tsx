@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import Button from "../../../components/ui/Button";
 import ChallengeActions, {
   type ChallengeParticipation,
@@ -9,12 +8,13 @@ export default function HostChallengeCard({
   challenge,
   completedBy,
   participation,
+  onReview,
 }: {
   challenge: SideChallenge;
   completedBy: Player[];
   participation: ChallengeParticipation;
+  onReview: () => void;
 }) {
-  const navigate = useNavigate();
   const completed = participation.hasCompleted("side", challenge.id);
   return (
     <section
@@ -47,14 +47,7 @@ export default function HostChallengeCard({
             participation={participation}
           />
           <div className="mt-2">
-            <Button
-              type="button"
-              onClick={() =>
-                navigate(
-                  `/challenge-review?type=side&id=${encodeURIComponent(String(challenge.id))}&title=${encodeURIComponent(challenge.title)}`,
-                )
-              }
-            >
+            <Button type="button" onClick={onReview}>
               Review & Award Points
             </Button>
           </div>

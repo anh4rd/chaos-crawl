@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { supabase } from "../../../lib/supabase";
+import { createLegacyAdminTeam } from "../../../lib/legacyAdminCommands";
 import { changeTeam } from "../../../lib/playerApi";
 
 export function useTeamManagement({
@@ -22,7 +22,7 @@ export function useTeamManagement({
     creating.current = true;
     setCreatingTeam(true);
     try {
-      const { error } = await supabase.from("teams").insert({ name });
+      const { error } = await createLegacyAdminTeam(name);
       if (error) {
         alert(`Could not create team: ${error.message}`);
         return;
