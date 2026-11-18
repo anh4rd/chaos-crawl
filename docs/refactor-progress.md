@@ -4509,3 +4509,21 @@ migration. No tests were added solely for deleted code. The isolated slice passe
 full lint/build and four mocked desktop/mobile dashboard listing/failed-launch
 journeys. Evidence: /tmp/dead-launcher-reference-proof.txt and
 /tmp/dead-launcher-{lint,build,browser}.log. Its source diff is one375-line deletion.
+
+## Evidence format normalization
+
+Evidence preparation uses one canonical extension/MIME map, ordered MIME matching
+and explicit media-type decisions. Removed the redundant combined whitelist and
+deep conditional chain. All29376 before/after filename/MIME/size combinations are
+exact, including mobile empty MIME, conflicting formats, uppercase inputs and
+size boundaries. Upload/storage/registration code remains byte-identical. Direct
+registration coverage now includes assignment-linked evidence and exact participant
+credentials/assignment ID; format regressions retain3gpp2-before3gpp precedence.
+
+The isolated slice passes593units, strict app/browser types, full lint/build and
+four desktop/mobile inline-upload/evidence-review journeys. Evidence:
+/tmp/evidence-format-parity.json, /tmp/evidence-command-tail-proof.json and
+/tmp/evidence-format-{allunit,types,pwtypes,lint,build,browser}.log. Review map:
+canonical supported formats; ordered fallback decisions; exact assignment payload
+coverage. Source delta is two files,+135/-181=316review-relevant lines; no UI or
+storage path/RPC changes are included.

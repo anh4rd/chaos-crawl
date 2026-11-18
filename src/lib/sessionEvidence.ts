@@ -1,6 +1,84 @@
 import { runApi, type ApiResult } from "./apiResult";
 import { supabase } from "./sessionSupabase";
 
+const fallbackMimeByExtension: Record<string, string> = {
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  gif: "image/gif",
+  webp: "image/webp",
+  avif: "image/avif",
+  heic: "image/heic",
+  heif: "image/heif",
+  bmp: "image/bmp",
+  tif: "image/tiff",
+  tiff: "image/tiff",
+  mp4: "video/mp4",
+  mov: "video/quicktime",
+  qt: "video/quicktime",
+  webm: "video/webm",
+  ogg: "video/ogg",
+  ogv: "video/ogg",
+  "3gp": "video/3gpp",
+  "3g2": "video/3gpp2",
+  m4v: "video/x-m4v",
+  mpeg: "video/mpeg",
+  mpg: "video/mpeg",
+  mp2: "video/mpeg",
+  avi: "video/x-msvideo",
+  mkv: "video/x-matroska",
+  wmv: "video/x-ms-wmv",
+  flv: "video/x-flv",
+  ts: "video/mp2t",
+  mts: "video/mp2t",
+  m2ts: "video/mp2t",
+  asf: "video/x-ms-asf",
+};
+
+const imageExtensions = new Set(
+  Object.keys(fallbackMimeByExtension).filter((extension) =>
+    fallbackMimeByExtension[extension].startsWith("image/"),
+  ),
+);
+const videoExtensions = new Set(
+  Object.keys(fallbackMimeByExtension).filter((extension) =>
+    fallbackMimeByExtension[extension].startsWith("video/"),
+  ),
+);
+const allowedStorageMimeTypes = new Set(Object.values(fallbackMimeByExtension));
+const mimeExtensions: readonly (readonly [string, string])[] = [
+  ["quicktime", "mov"],
+  ["matroska", "mkv"],
+  ["msvideo", "avi"],
+  ["ms-wmv", "wmv"],
+  ["x-flv", "flv"],
+  ["mp2t", "ts"],
+  ["webm", "webm"],
+  ["ogg", "ogv"],
+  ["3gpp2", "3g2"],
+  ["3gpp", "3gp"],
+  ["m4v", "m4v"],
+  ["mpeg", "mpeg"],
+  ["mp4", "mp4"],
+  ["asf", "asf"],
+  ["png", "png"],
+  ["gif", "gif"],
+  ["webp", "webp"],
+  ["avif", "avif"],
+  ["heic", "heic"],
+  ["heif", "heif"],
+  ["bmp", "bmp"],
+  ["tiff", "tiff"],
+];
+
+function evidenceMediaType(mime: string, extension: string) {
+  if (mime.startsWith("video/")) return "video";
+  if (mime.startsWith("image/")) return "image";
+  if (videoExtensions.has(extension)) return "video";
+  if (imageExtensions.has(extension)) return "image";
+  return null;
+}
+
 export function prepareSessionEvidence(
   file: Pick<File, "name" | "size" | "type">,
 ): ApiResult<{
@@ -8,56 +86,12 @@ export function prepareSessionEvidence(
   extension: string;
   contentType: string;
 }> {
-  // Some browsers (notably on mobile) leave File.type blank for HEIC/MOV and other media.
-  // Infer the type from the extension as a fallback so valid photos/videos are not rejected.
+  // Mobile browsers can leave File.type blank for HEIC/MOV; the filename is the fallback.
   const extFromName = file.name.includes(".")
     ? (file.name.split(".").pop()?.toLowerCase() ?? "")
     : "";
-  const imageExtensions = new Set([
-    "jpg",
-    "jpeg",
-    "png",
-    "gif",
-    "webp",
-    "avif",
-    "heic",
-    "heif",
-    "bmp",
-    "tif",
-    "tiff",
-  ]);
-  const videoExtensions = new Set([
-    "mp4",
-    "mov",
-    "qt",
-    "webm",
-    "ogg",
-    "ogv",
-    "3gp",
-    "3g2",
-    "m4v",
-    "mpeg",
-    "mpg",
-    "mp2",
-    "avi",
-    "mkv",
-    "wmv",
-    "flv",
-    "ts",
-    "mts",
-    "m2ts",
-    "asf",
-  ]);
   const mime = (file.type || "").toLowerCase();
-  const mediaType = mime.startsWith("video/")
-    ? "video"
-    : mime.startsWith("image/")
-      ? "image"
-      : videoExtensions.has(extFromName)
-        ? "video"
-        : imageExtensions.has(extFromName)
-          ? "image"
-          : null;
+  const mediaType = evidenceMediaType(mime, extFromName);
   if (!mediaType) {
     return {
       data: null,
@@ -84,142 +118,22 @@ export function prepareSessionEvidence(
     };
   }
 
-  const allowedExtensions = new Set([
-    "jpg",
-    "jpeg",
-    "png",
-    "gif",
-    "webp",
-    "avif",
-    "heic",
-    "heif",
-    "bmp",
-    "tif",
-    "tiff",
-    "mp4",
-    "mov",
-    "qt",
-    "webm",
-    "ogg",
-    "ogv",
-    "3gp",
-    "3g2",
-    "m4v",
-    "mpeg",
-    "mpg",
-    "mp2",
-    "avi",
-    "mkv",
-    "wmv",
-    "flv",
-    "ts",
-    "mts",
-    "m2ts",
-    "asf",
-  ]);
-  const mimeExtension = mime.includes("quicktime")
-    ? "mov"
-    : mime.includes("matroska")
-      ? "mkv"
-      : mime.includes("msvideo")
-        ? "avi"
-        : mime.includes("ms-wmv")
-          ? "wmv"
-          : mime.includes("x-flv")
-            ? "flv"
-            : mime.includes("mp2t")
-              ? "ts"
-              : mime.includes("webm")
-                ? "webm"
-                : mime.includes("ogg")
-                  ? "ogv"
-                  : mime.includes("3gpp2")
-                    ? "3g2"
-                    : mime.includes("3gpp")
-                      ? "3gp"
-                      : mime.includes("m4v")
-                        ? "m4v"
-                        : mime.includes("mpeg")
-                          ? "mpeg"
-                          : mime.includes("mp4")
-                            ? "mp4"
-                            : mime.includes("x-ms-asf") || mime.includes("asf")
-                              ? "asf"
-                              : mime.includes("png")
-                                ? "png"
-                                : mime.includes("gif")
-                                  ? "gif"
-                                  : mime.includes("webp")
-                                    ? "webp"
-                                    : mime.includes("avif")
-                                      ? "avif"
-                                      : mime.includes("heic")
-                                        ? "heic"
-                                        : mime.includes("heif")
-                                          ? "heif"
-                                          : mime.includes("bmp")
-                                            ? "bmp"
-                                            : mime.includes("tiff")
-                                              ? "tiff"
-                                              : mediaType === "video"
-                                                ? "mp4"
-                                                : "jpg";
+  const defaultExtension = mediaType === "video" ? "mp4" : "jpg";
+  const mimeExtension =
+    mimeExtensions.find(([fragment]) => mime.includes(fragment))?.[1] ??
+    defaultExtension;
   const extIsCompatible =
     mediaType === "video"
       ? videoExtensions.has(extFromName)
       : imageExtensions.has(extFromName);
-  const ext =
-    extIsCompatible && allowedExtensions.has(extFromName)
-      ? extFromName
-      : mimeExtension;
-  const fallbackMimeByExtension: Record<string, string> = {
-    jpg: "image/jpeg",
-    jpeg: "image/jpeg",
-    png: "image/png",
-    gif: "image/gif",
-    webp: "image/webp",
-    avif: "image/avif",
-    heic: "image/heic",
-    heif: "image/heif",
-    bmp: "image/bmp",
-    tif: "image/tiff",
-    tiff: "image/tiff",
-    mp4: "video/mp4",
-    mov: "video/quicktime",
-    qt: "video/quicktime",
-    webm: "video/webm",
-    ogg: "video/ogg",
-    ogv: "video/ogg",
-    "3gp": "video/3gpp",
-    "3g2": "video/3gpp2",
-    m4v: "video/x-m4v",
-    mpeg: "video/mpeg",
-    mpg: "video/mpeg",
-    mp2: "video/mpeg",
-    avi: "video/x-msvideo",
-    mkv: "video/x-matroska",
-    wmv: "video/x-ms-wmv",
-    flv: "video/x-flv",
-    ts: "video/mp2t",
-    mts: "video/mp2t",
-    m2ts: "video/mp2t",
-    asf: "video/x-ms-asf",
-  };
-  const allowedStorageMimeTypes = new Set(
-    Object.values(fallbackMimeByExtension),
-  );
-  const uploadContentType =
-    allowedStorageMimeTypes.has(mime) &&
-    ((mediaType === "video" && mime.startsWith("video/")) ||
-      (mediaType === "image" && mime.startsWith("image/")))
-      ? file.type
-      : (fallbackMimeByExtension[ext] ??
-        (mediaType === "video" ? "video/mp4" : "image/jpeg"));
-
-  return {
-    data: { mediaType, extension: ext, contentType: uploadContentType },
-    error: null,
-  };
+  const extension = extIsCompatible ? extFromName : mimeExtension;
+  const recognizedMime =
+    allowedStorageMimeTypes.has(mime) && mime.startsWith(`${mediaType}/`);
+  const defaultMime = mediaType === "video" ? "video/mp4" : "image/jpeg";
+  const contentType = recognizedMime
+    ? file.type
+    : (fallbackMimeByExtension[extension] ?? defaultMime);
+  return { data: { mediaType, extension, contentType }, error: null };
 }
 
 export async function uploadSessionEvidence({
