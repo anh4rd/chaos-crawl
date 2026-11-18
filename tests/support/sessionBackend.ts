@@ -347,6 +347,37 @@ export async function installSessionBackend(
       await respond(null);
       return;
     }
+    if (name === "cc_player_submit_secret_mission") {
+      const stored = responses.cc_get_player_secret_missions;
+      const missions: unknown[] = Array.isArray(stored) ? stored : [];
+      const mission = missions.find(
+        (item) =>
+          typeof item === "object" &&
+          item !== null &&
+          !Array.isArray(item) &&
+          "assignment_id" in item &&
+          item.assignment_id === body?.p_assignment_id,
+      );
+      if (
+        !mission ||
+        body?.p_join_code !== sessionCode ||
+        !["test-player-token", "host-player-token"].includes(
+          body?.p_player_token,
+        ) ||
+        Object.keys(body ?? {})
+          .sort()
+          .join(",") !== "p_assignment_id,p_join_code,p_player_token"
+      ) {
+        await respond(
+          { message: "Invalid secret mission submission fixture payload" },
+          400,
+        );
+        return;
+      }
+      Object.assign(mission, { status: "submitted", submitted_at: timestamp });
+      await respond(null);
+      return;
+    }
     if (
       [
         "cc_player_cast_session_reward_vote",

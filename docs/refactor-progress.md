@@ -4594,3 +4594,21 @@ run is in progress. Evidence: /tmp/live-credentials-*.log and
 /tmp/live-host-phase3-handoff.md. Source delta before this note is8files,
 +374/-57=431review-relevant lines. Review participation outcomes and phase-specific
 navigation separately from the exact payload/error assertions.
+
+## Assignment-specific submission regressions
+
+Added controller and mocked native keyboard coverage for assignment-linked image
+and video uploads, required-evidence isolation, pending-write locking, refusal
+while final review is active, failed submit and successful retry. Exact join code,
+player token, challenge/assignment IDs, generated storage path and registration
+payload are asserted. The backend fixture now validates and implements the existing
+secret-submit RPC; its earlier unsupported-handler failure was a fixture gap,
+not proof of a production defect. Production submission code is unchanged.
+
+All eight new desktop/mobile submission cases pass inside the74-case participation
+run; relevant controller tests and the738-unit final runtime pass. Direct library
+assignment registration coverage shipped separately in348949d. Three test/fixture
+files add510raw lines; review the independent assignment/credential assertions and
+fixture state update, not a new backend contract. No live writes or schema claims.
+Evidence: /tmp/live-host-phase3-handoff.md and
+/tmp/live-host-phase3-after-browser.log.
