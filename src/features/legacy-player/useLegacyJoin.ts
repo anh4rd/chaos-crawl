@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createPlayer } from "../../lib/playerApi";
 import { apiError } from "../../lib/apiResult";
 import { setPlayerId } from "../../lib/playerSession";
@@ -9,6 +9,14 @@ export function useLegacyJoin(onJoined: () => void) {
   const [error, setError] = useState<string | null>(null);
   const pending = useRef(false);
   const createdPlayerId = useRef<string | null>(null);
+  const active = useRef(false);
+
+  useEffect(() => {
+    active.current = true;
+    return () => {
+      active.current = false;
+    };
+  }, []);
 
   async function handleJoin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -24,6 +32,7 @@ export function useLegacyJoin(onJoined: () => void) {
     try {
       if (!createdPlayerId.current) {
         const result = await createPlayer(cleanName, null);
+        if (!active.current) return;
         if (result.error) throw result.error;
         if (!result.data)
           throw new Error(
@@ -38,10 +47,10 @@ export function useLegacyJoin(onJoined: () => void) {
       setPlayerId(playerId);
       onJoined();
     } catch (cause) {
-      setError(apiError(cause).message);
+      if (active.current) setError(apiError(cause).message);
     } finally {
       pending.current = false;
-      setJoining(false);
+      if (active.current) setJoining(false);
     }
   }
 

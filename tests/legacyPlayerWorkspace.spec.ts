@@ -212,3 +212,71 @@ test("local legacy player views join and vote without connected controllers", as
   await expect(page).toHaveURL(/#\/styleguide$/);
   expect(backendRequests).toBe(0);
 });
+
+test("leaving a pending legacy join ignores its later identity and navigation", async ({
+  page,
+}) => {
+  const { backend } = await installLegacyWorkspace(page);
+  await page.addInitScript(() =>
+    localStorage.removeItem("chaos-crawl-player-id"),
+  );
+  let release: () => void = () => {
+    throw new Error("Join gate not initialized");
+  };
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let responseSent: () => void = () => {
+    throw new Error("Response gate not initialized");
+  };
+  const sent = new Promise<void>((resolve) => {
+    responseSent = resolve;
+  });
+  await page.route(
+    (url) => url.pathname === "/rest/v1/players",
+    async (route) => {
+      if (route.request().method() !== "POST") {
+        await route.fallback();
+        return;
+      }
+      await gate;
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: "abandoned-player",
+          name: "Nora",
+          team: null,
+          score: 0,
+        }),
+      });
+      responseSent();
+    },
+  );
+  await page.goto("#/legacy/join");
+  await page
+    .getByRole("textbox", { name: "Your name", exact: true })
+    .fill("Nora");
+  const pendingRequest = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      new URL(request.url()).pathname === "/rest/v1/players",
+  );
+  await page.getByRole("button", { name: "Join Game", exact: true }).click();
+  await pendingRequest;
+  await expect(
+    page.getByRole("button", { name: "Joining...", exact: true }),
+  ).toBeDisabled();
+  await page.goto("#/leaderboard");
+  await expect(
+    page.getByRole("heading", { name: "Leaderboard", exact: true }),
+  ).toBeVisible();
+  release();
+  await sent;
+  await page.waitForLoadState("networkidle");
+  await expect(page).toHaveURL(/#\/leaderboard$/);
+  expect(
+    await page.evaluate(() => localStorage.getItem("chaos-crawl-player-id")),
+  ).toBeNull();
+  backend.verify();
+});

@@ -4122,3 +4122,22 @@ Review map: regression fixtures/contracts; mechanical controlled markup/models
 subscription scrutiny); explicit lock/lifetime/error changes (guard/finally
 scrutiny and red-before tests). Owned SCSS migration follows separately; this
 architecture slice does not claim the legacy host styling is complete.
+
+## Legacy join obsolete-response repair
+
+A pending legacy join no longer writes a credential, navigates or displays
+feedback after leaving its controller. This prevents an older creation response
+from replacing the identity saved by a newer join. Existing synchronous submit
+exclusion and retrying the same created player after storage failure are retained.
+This explicit behavior slice follows the verified neutral extraction.
+
+Two unit regressions failed before the repair; the storage/repeated-submit
+preservation case already passed. All 28 scoped units now pass. Both new browser
+regressions failed before by redirecting from Leaderboard to Game; all 16 workspace
+browser cases pass after the repair. Forced app types, browser types and the
+upload-disabled build pass. Lint source gates pass; a generated snapshot-only
+proof JSON initially needed its trailing newline formatted before the final gate.
+Evidence: `/tmp/legacy-join-lifetime-*`; browser source
+`/tmp/chaos-legacy-player-lifetime-after`. The checks copy documents its sole
+test-type correction (unsupported Testing Library option removed); app/browser
+sources are identical. No player payloads, storage keys or backend contracts change.

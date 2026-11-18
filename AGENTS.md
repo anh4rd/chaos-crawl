@@ -512,6 +512,26 @@ command payloads and server-side score/award enforcement.
 
 Local SQL migrations are not automatically applied. Legacy database contracts are inferred, and V2 RPCs have incomplete local schema coverage. Do not change backend contracts or claim live correctness based on mocked tests. Keep ordinary tests isolated from real database, auth, storage, Realtime, and Sentry endpoints.
 
+### Legacy presentation and controllers
+
+`Admin` adapts to `features/legacy-host/LegacyHostWorkspace`. Its controlled Live,
+Players, challenge and score views receive values and callbacks. Focused game,
+roster, score and team controllers call typed `legacyHostQueries` and
+`legacyHostCommands`; those inferred contracts do not verify a deployed schema.
+Preserve per-player concurrency, synchronous operation exclusion, latest team
+read ownership and subscription-error feedback. Obsolete results cannot navigate,
+reload or clear a newer operation. Styling migration preserves the existing
+HostV2 cascade until its final consumers move.
+
+`LegacyJoin` adapts navigation to `LegacyJoinExperience` and `useLegacyJoin`;
+`LegacyJoinView` is controlled. `BallotView`, `VoteResultsView`,
+`SubmissionCardView` and `BingoChallengeCard` never query, store credentials or
+construct routes. Their connected adapters retain publication guards and score
+commands. Open legacy voting takes precedence over a stale published-results
+flag, including the first render before redirect. Legacy rejoin uses
+`/legacy/join` and preserves unrelated V2 credentials. Local player examples use
+div frames and local state; never mount the connected controllers there.
+
 ## SCSS architecture
 
 Use a small project-owned framework, not the other project's `scss/core`:
