@@ -3476,13 +3476,73 @@ recorded desktop close obstruction and stale dialog completion risks. Continue
 remaining V2/legacy work below; full-suite verification and final desloppify remain
 pending.
 
+## Phase 5x — native contribution dialog and submission lifetime
+
+The contribution editor now composes the shared native Dialog. Its visible heading
+and description label the modal; background controls are inert, Tab/Shift+Tab stay
+inside, Escape/backdrop/Close/Cancel share one callback, and closing restores the
+opener. This intentionally fixes the desktop Create close obstruction: the native
+top layer covers the host header. Existing overlay values were promoted unchanged;
+the final legacy contribution backdrop rule was retired. PlusMark remains queued
+for semantic-icon migration.
+
+SessionFeedback renders inside the modal, where failure copy and dismissal remain
+reachable. Ordinary page feedback is hidden while it is open. The feature retains
+query/action separation, command payloads, validation, tag limits and the existing
+editable-fields/enabled-cancellation pending contract.
+
+The contribution controller now synchronously locks submission and tracks each
+dialog generation. Closing before identity resolves prevents an unissued write;
+a completed old write cannot reset/close a fresh dialog, publish stale feedback,
+unlock its pending action or reload its data. Issued writes can still finish on the
+server; there is no rollback claim. Editing dismissal clears its identity/draft;
+unsent create drafts survive cancellation. Thrown identity failures release the
+current lock and allow retry.
+
+The shared native focus hook now recovers after a focused control is disabled or
+removed, without disturbing focus already inside. A targeted visibility regression
+caught that preventScroll left recovered Close focus above the scrolled viewport;
+recovery now scrolls that enabled control into view. This intentional accessibility
+change is separate from the preceding presentation extraction.
+
+Verification:
+
+- Five new lifetime regression cases failed against the committed implementation
+  before the controller change; both initial modal journeys failed on desktop and
+  mobile before native modality. The added pending-focus visibility assertion
+  failed on both sizes before its correction. Evidence: `/tmp/phase5x-before-*`
+  and `/tmp/phase5x-visibility-before-*`.
+- Lint/format, upload-disabled strict production build, Playwright type checks
+  and git whitespace checks pass.
+- **372 unit tests** pass, including six new contribution lifecycle/retry cases.
+  **120 affected mocked desktop/mobile browser cases** pass across catalogue,
+  saved items, host editors, private missions, rewards and guided tours. New modal
+  journeys exercise native modality, full keyboard paths, initial/wrapped/recovered
+  focus, viewport visibility, close hit testing, opener restoration, errors,
+  backdrop edit cleanup and obsolete pending-write completion.
+- Eight before/after create/edit comparisons at 393/1280px and 900/1800px heights
+  preserve inner tags/text/control values, geometry, focus and attributes, apart
+  from moving role/heading linkage to the native dialog and its new description
+  ID. Standard computed properties match except Chromium's native-dialog inherited
+  user-select text; Tailwind custom-property defaults also differ at the native
+  modal boundary. Full screenshots intentionally differ in layering/scrim. Four
+  supplementary unobscured frame crops differ by 140–996 pixels (maximum channel
+  deltas 2–30); no pixel-exact or whole-page behavior-neutral claim is made.
+  Desktop Create close center changes from obstructed to reachable. Raw snapshots,
+  screenshots and comparisons live under `/tmp/phase5x-frame-*`.
+- The backend-free local catalogue uses the same native modal and feedback slot.
+  Shared reference notes are updated. HostExplore's 32 browser cases are now
+  included in the default Playwright configuration, rather than only scoped runs.
+
+Next: catalogue tab keyboard semantics and explicit results linkage; then
+synchronous favourite/moderation action guards. Continue the remaining V2/legacy
+migration and final full-suite/desloppify work below.
+
 ## Queued phases for the full refactor
 
-Next: separate catalogue native-dialog/tab accessibility and action-concurrency
-slices. Catalogue cards, shell, filters, review/history and contribution bodies now
+Next: separate catalogue tab accessibility and action-concurrency slices. Catalogue cards, shell, filters, review/history and contribution bodies now
 compose shared primitives with owned SCSS; their thin route, controllers and
-controlled views are verified. Follow with the separate modal/tab accessibility
-and action-concurrency slices. Keep styling and intentional behavior fixes in
+controlled views are verified. Follow with separately tested tab accessibility and action-concurrency slices. Keep styling and intentional behavior fixes in
 separate verified slices. Continue remaining host utilities/admin and V2 player/
 slideshow presentation, then legacy workflows and obsolete CSS/Tailwind retirement
 once their final consumers migrate. Preserve the shared host/player session base,

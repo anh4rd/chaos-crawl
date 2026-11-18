@@ -1,3 +1,4 @@
+import SessionFeedback from "../../components/session/SessionFeedback";
 import { useState } from "react";
 import CatalogueView from "../host-explore/CatalogueView";
 import ChallengeContributionDialog from "../host-explore/ChallengeContributionDialog";
@@ -118,7 +119,14 @@ export default function CatalogueExample() {
     <ChallengeContributionDialog
       editing={editing}
       onClose={close}
-      onBackdropDismiss={() => setOpen(false)}
+      feedback={
+        error ? (
+          <SessionFeedback
+            message="Local catalogue error"
+            onDismiss={() => setError(false)}
+          />
+        ) : undefined
+      }
     >
       <ChallengeContributionForm
         draft={draft}
@@ -223,7 +231,7 @@ export default function CatalogueExample() {
           ]}
           itemCount={itemCount}
           loadingFavourites={loading}
-          error={error ? "Local catalogue error" : ""}
+          error={error && !open ? "Local catalogue error" : ""}
           onCreate={() => {
             setEditing(false);
             setOpen(true);

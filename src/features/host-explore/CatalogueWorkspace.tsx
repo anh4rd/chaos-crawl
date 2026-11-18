@@ -1,3 +1,4 @@
+import SessionFeedback from "../../components/session/SessionFeedback";
 import type { CatalogTab, CatalogTask, LocationIdea } from "./types";
 import { tasks, locations, routes } from "./catalogue";
 import {
@@ -43,9 +44,9 @@ export default function CatalogueWorkspace() {
     useExploreCommunity(setQueryError);
   const {
     showCreateChallenge,
-    setShowCreateChallenge,
+    openCreateChallenge,
+    closeContribution,
     editingSubmission,
-    setEditingSubmission,
     submittingChallenge,
     challengeDraft,
     setChallengeDraft,
@@ -199,15 +200,15 @@ export default function CatalogueWorkspace() {
     submittedDate: new Date(submission.created_at).toLocaleDateString(),
     reviewNote: submission.review_note,
   }));
-  function closeContribution() {
-    setShowCreateChallenge(false);
-    setEditingSubmission(null);
-  }
   const dialog = showCreateChallenge ? (
     <ChallengeContributionDialog
       editing={Boolean(editingSubmission)}
       onClose={closeContribution}
-      onBackdropDismiss={() => setShowCreateChallenge(false)}
+      feedback={
+        error ? (
+          <SessionFeedback message={error} onDismiss={clearFeedback} />
+        ) : undefined
+      }
     >
       <ChallengeContributionForm
         draft={challengeDraft}
@@ -262,8 +263,8 @@ export default function CatalogueWorkspace() {
         historyItems={historyItems}
         itemCount={itemCount}
         loadingFavourites={loadingFavourites}
-        error={error}
-        onCreate={() => setShowCreateChallenge(true)}
+        error={showCreateChallenge ? "" : error}
+        onCreate={openCreateChallenge}
         onClearFilters={() => {
           setSearch("");
           setCategory("all");

@@ -1,4 +1,4 @@
-import { useLayoutEffect, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useModalDialog } from "./useModalDialog";
 
 export default function Dialog({
@@ -19,16 +19,10 @@ export default function Dialog({
   labelledBy?: string;
   describedBy?: string;
   role?: "dialog" | "alertdialog";
-  variant?: "host" | "reveal";
+  variant?: "host" | "reveal" | "contribution";
   dismissDisabled?: boolean;
 }) {
   const ref = useModalDialog();
-  useLayoutEffect(() => {
-    const dialog = ref.current;
-    // Disabling the focused save control can otherwise hand focus to the inert page.
-    if (dismissDisabled && dialog && !dialog.contains(document.activeElement))
-      dialog.focus({ preventScroll: true });
-  }, [dismissDisabled, ref]);
 
   return (
     <dialog

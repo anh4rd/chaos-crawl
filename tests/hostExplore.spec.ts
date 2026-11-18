@@ -22,7 +22,7 @@ async function openExplore(page: Page) {
 }
 
 // Native tab buttons currently retain ordinary Tab navigation; arrow-key behavior
-// and the existing modal focus lifecycle need separate accessibility slices.
+// remains a separate accessibility slice.
 test("catalogue reads preserve contracts, approved visibility and local search/category/tab behavior", async ({
   page,
 }) => {
@@ -957,5 +957,241 @@ test("local shared review and history preserve keyboard actions, statuses and pe
     example.getByText("The caller owns this review note.", { exact: true }),
   ).toBeVisible();
   expect(backend.requests).toEqual([]);
+  backend.verify();
+});
+
+test("contribution modal contains focus, restores its opener and exposes a reachable close action", async ({
+  page,
+}) => {
+  const { backend } = await installExploreBackend(page);
+  await openExplore(page);
+  const opener = page.getByRole("button", {
+    name: "Create challenge",
+    exact: true,
+  });
+  await activateByKeyboard(page, opener);
+  const dialog = page.getByRole("dialog", {
+    name: "Create a challenge",
+    exact: true,
+  });
+  await expect(dialog).toHaveJSProperty("tagName", "DIALOG");
+  expect(await dialog.evaluate((element) => element.matches(":modal"))).toBe(
+    true,
+  );
+  const close = dialog.getByRole("button", { name: "Close", exact: true });
+  await expect(close).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(
+    dialog.getByRole("button", { name: "Submit for review", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(close).toBeFocused();
+  expect(
+    await close.evaluate((button) => {
+      const r = button.getBoundingClientRect();
+      return button.contains(
+        document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2),
+      );
+    }),
+  ).toBe(true);
+  await close.click();
+  await expect(dialog).toHaveCount(0);
+  await expect(opener).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(close).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(opener).toBeFocused();
+  backend.verify();
+});
+
+test("contribution modal shows and dismisses failed submission feedback inside the modal", async ({
+  page,
+}) => {
+  const { backend } = await installExploreBackend(page);
+  await openExplore(page);
+  await page.route(
+    (url) => url.pathname === "/rest/v1/cc_catalog_submissions",
+    async (route) => {
+      if (route.request().method() !== "POST") {
+        await route.fallback();
+        return;
+      }
+      await route.fulfill({
+        status: 400,
+        contentType: "application/json",
+        body: JSON.stringify({ message: "Contribution unavailable" }),
+      });
+    },
+  );
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Create challenge", exact: true }),
+  );
+  const dialog = page.getByRole("dialog", {
+    name: "Create a challenge",
+    exact: true,
+  });
+  await tabTo(page, dialog.getByLabel("Challenge title", { exact: true }));
+  await page.keyboard.type("Local retry");
+  await page.keyboard.press("Tab");
+  await page.keyboard.type("Retryable rules.");
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Submit for review", exact: true }),
+  );
+  await expect(dialog.getByRole("alert")).toHaveText(
+    "Contribution unavailable",
+  );
+  await page
+    .locator(".host-navigation a")
+    .first()
+    .evaluate((link) => link.focus());
+  expect(
+    await dialog.evaluate((element) =>
+      element.contains(document.activeElement),
+    ),
+  ).toBe(true);
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Dismiss error", exact: true }),
+    "backward",
+  );
+  await expect(dialog.getByRole("alert")).toHaveCount(0);
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Cancel", exact: true }),
+  );
+  backend.verify();
+});
+
+test("contribution modal cancellation keeps a fresh draft safe from an old pending write", async ({
+  page,
+}) => {
+  const { backend, requests } = await installExploreBackend(page);
+  await openExplore(page);
+  let release = () => {};
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route(
+    (url) => url.pathname === "/rest/v1/cc_catalog_submissions",
+    async (route) => {
+      if (route.request().method() !== "POST") {
+        await route.fallback();
+        return;
+      }
+      await gate;
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: "null",
+      });
+    },
+  );
+  const opener = page.getByRole("button", {
+    name: "Create challenge",
+    exact: true,
+  });
+  await activateByKeyboard(page, opener);
+  const dialog = page.getByRole("dialog", {
+    name: "Create a challenge",
+    exact: true,
+  });
+  await dialog
+    .getByLabel("Challenge title", { exact: true })
+    .fill("Old pending draft");
+  await dialog
+    .getByLabel("How does it work?", { exact: true })
+    .fill("Old rules.");
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Submit for review", exact: true }),
+  );
+  await expect(
+    dialog.getByRole("button", { name: "Submitting…", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    dialog.getByLabel("Challenge title", { exact: true }),
+  ).toBeEnabled();
+  const close = dialog.getByRole("button", { name: "Close", exact: true });
+  await expect(close).toBeFocused();
+  await expect(close).toBeInViewport();
+  expect(
+    await dialog.evaluate((element) =>
+      element.contains(document.activeElement),
+    ),
+  ).toBe(true);
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Cancel", exact: true }),
+  );
+  await expect(dialog).toHaveCount(0);
+  await expect(opener).toBeFocused();
+  await page.keyboard.press("Enter");
+  await dialog
+    .getByLabel("Challenge title", { exact: true })
+    .fill("Fresh draft");
+  const response = page.waitForResponse(
+    (r) =>
+      r.request().method() === "POST" &&
+      r.url().includes("cc_catalog_submissions"),
+  );
+  release();
+  await response;
+  await page.waitForLoadState("networkidle");
+  await expect(
+    dialog.getByLabel("Challenge title", { exact: true }),
+  ).toHaveValue("Fresh draft");
+  await expect(
+    dialog.getByRole("button", { name: "Submit for review", exact: true }),
+  ).toBeEnabled();
+  expect(
+    requests.filter(
+      (r) =>
+        r.method === "GET" && r.url.pathname.endsWith("cc_catalog_submissions"),
+    ),
+  ).toHaveLength(1);
+  await page.keyboard.press("Escape");
+  backend.verify();
+});
+
+test("contribution modal backdrop dismissal clears edit identity before a new create", async ({
+  page,
+}) => {
+  const { backend, requests } = await installExploreBackend(page, true);
+  await openExplore(page);
+  await page
+    .getByRole("textbox", { name: "Search tasks", exact: true })
+    .fill("paper tower");
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Edit challenge", exact: true }),
+  );
+  const edit = page.getByRole("dialog", {
+    name: "Edit challenge",
+    exact: true,
+  });
+  await expect(edit.getByLabel("Challenge title", { exact: true })).toHaveValue(
+    "Community paper tower",
+  );
+  await page.mouse.click(4, 4);
+  await expect(edit).toHaveCount(0);
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Create challenge", exact: true }),
+  );
+  const create = page.getByRole("dialog", {
+    name: "Create a challenge",
+    exact: true,
+  });
+  await expect(
+    create.getByLabel("Challenge title", { exact: true }),
+  ).toHaveValue("");
+  await expect(
+    create.getByRole("combobox", { name: "Challenge type", exact: true }),
+  ).toHaveValue("main");
+  await page.keyboard.press("Escape");
+  expect(requests.every((r) => r.method === "GET")).toBe(true);
   backend.verify();
 });

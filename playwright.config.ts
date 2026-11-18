@@ -25,6 +25,7 @@ export default defineConfig({
     "**/join.spec.ts",
     "**/playerDemo.spec.ts",
     "**/hostSaved.spec.ts",
+    "**/hostExplore.spec.ts",
   ],
 
   fullyParallel: false,

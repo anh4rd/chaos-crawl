@@ -56,3 +56,22 @@
     backdrop-filter: blur(layout.$control-border-width);
   }
 }
+
+.dialog {
+  &--contribution {
+    position: fixed;
+    z-index: layers.$reward-overlay;
+    padding: layout.$pixel-unit * 4.5;
+    color: inherit;
+    background: rgba(
+      colors.$contribution-overlay-ink,
+      effects.$contribution-overlay-opacity
+    );
+    overflow: auto;
+    &[open] {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}

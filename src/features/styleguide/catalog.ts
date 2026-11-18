@@ -115,9 +115,9 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   ChallengeContributionDialog: {
     usage:
-      "Controlled legacy contribution frame with supplied editing flag, close/backdrop callbacks and form slot. Local catalogue opens local content only.",
+      "Controlled native contribution dialog with supplied editing flag, unified close callback, feedback and form slots. Local catalogue opens local content only.",
     dependencies:
-      "Shared Icon and retained native div/section markup. Native Dialog/focus/dismissal migration remains a separately tested accessibility slice; preserve current callbacks meanwhile.",
+      "Shared Dialog contribution, DialogPanel/PanelHeading contribution and IconButton. Native modal focus, Escape/backdrop dismissal and opener recovery; feature owns drafts, pending writes and feedback. Fields and cancellation remain available while submit disables.",
   },
   ChallengeContributionForm: {
     usage:

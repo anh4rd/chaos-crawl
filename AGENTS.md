@@ -212,12 +212,21 @@ permissions, database records, persistence or route imports. Workspace retains
 publication/identity filtering, dates, fallback copy and action binding. The local
 catalogue reference mounts only controlled views and state, including pending,
 loading, error and moderation examples; connected controllers never run there.
-ChallengeContributionDialog retains its legacy outer backdrop/dismissal behavior
-pending the separate native-dialog accessibility slice; its body uses shared
-contribution frame, heading and form primitives. PlusMark is a retained decorative
-text glyph for parity, not a new shared icon pattern. Only the legacy outer contribution backdrop and decorative PlusMark remain
-from catalogue styling; do not restore retired catalogue presentation rules. Keep native types, bounds, labels and the current editable-while-pending
-form contract during subsequent styling moves.
+ChallengeContributionDialog composes the shared native Dialog contribution variant
+and controlled frame/form slots. Escape, backdrop, Cancel and Close use one feature
+callback: editing dismissal clears the edit identity/draft; unsent create drafts
+remain available on reopen. useExploreContribution uses a synchronous submit lock
+and dialog generation so closing before identity recovery prevents a write, and
+obsolete issued-write outcomes cannot close/reset a new dialog, publish feedback,
+release its lock or trigger a reload. An issued server write is not rolled back.
+Only submit disables while busy; fields and dismissal remain available. Render
+SessionFeedback inside the modal, with dismissal clearing both query/action
+feedback. Page feedback is hidden while the dialog is open. The shared native
+focus lifecycle recovers to an enabled control after disabled/removed focus and
+reveals it by scrolling; preserve focus when it remains inside. Local catalogue
+uses the same native dialog with local state only. PlusMark remains a decorative
+text glyph for parity, not a new shared icon pattern. Do not restore retired
+catalogue presentation rules or the legacy contribution backdrop.
 
 Supabase auth is shared by the legacy and session clients. Legacy player IDs and V2 session-player credentials use different storage keys and are not interchangeable. Preserve RPC payloads, storage paths, query ordering, score semantics, subscription cleanup, timer behavior, error handling, and route/query parameters. Client storage is not an authorization boundary; policies and atomic awards require server enforcement.
 
