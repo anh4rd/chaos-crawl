@@ -61,12 +61,19 @@ test("platform games preserve RPC contracts, full totals, incoming order and loc
   backend.responses.cc_super_admin_list_games = games;
   await page.goto("#/host/super-admin");
   await expect(page.getByText("Garden chaos", { exact: true })).toBeVisible();
-  await expect(page.locator(".sa-table tbody tr td:first-child")).toHaveText([
-    "Garden chaos",
-    "Night crawl",
-    "Finished party",
-  ]);
-  await expect(page.locator(".sa-stats strong")).toHaveText(["3", "12", "2"]);
+  await expect(
+    page.getByRole("table").locator("tbody tr td:first-child"),
+  ).toHaveText(["Garden chaos", "Night crawl", "Finished party"]);
+  await expect(
+    page
+      .getByRole("article")
+      .filter({
+        has: page.getByText(
+          /^(Total games|Players across sessions|Live games)$/,
+        ),
+      })
+      .locator("strong"),
+  ).toHaveText(["3", "12", "2"]);
   const request = backend.requests.find(
     (entry) => entry.name === "cc_super_admin_list_games",
   );
@@ -74,15 +81,24 @@ test("platform games preserve RPC contracts, full totals, incoming order and loc
   expect(request?.body).toEqual({});
   const search = page.getByPlaceholder("Search game or host email");
   await search.fill("ANNA@");
-  await expect(page.locator(".sa-table tbody tr")).toHaveCount(1);
-  await expect(page.locator(".sa-stats strong")).toHaveText(["3", "12", "2"]);
+  await expect(page.getByRole("table").locator("tbody tr")).toHaveCount(1);
+  await expect(
+    page
+      .getByRole("article")
+      .filter({
+        has: page.getByText(
+          /^(Total games|Players across sessions|Live games)$/,
+        ),
+      })
+      .locator("strong"),
+  ).toHaveText(["3", "12", "2"]);
   await search.fill("");
   await page
     .getByRole("combobox", { name: "Status", exact: true })
     .selectOption("completed");
-  await expect(page.locator(".sa-table tbody tr td:first-child")).toHaveText([
-    "Finished party",
-  ]);
+  await expect(
+    page.getByRole("table").locator("tbody tr td:first-child"),
+  ).toHaveText(["Finished party"]);
   await search.fill("missing");
   await expect(
     page.getByText("No games match this search.", { exact: true }),
@@ -123,7 +139,7 @@ test("platform access denial clears after a successful refresh", async ({
     page.getByRole("button", { name: "Refresh", exact: true }),
   );
   await expect(
-    page.locator(".sa-table").getByText("Regression party", { exact: true }),
+    page.getByRole("table").getByText("Regression party", { exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Not authorised", { exact: true })).toHaveCount(
     0,
@@ -205,7 +221,7 @@ test("game inspector failure retains its list and retries the same id inside the
   await expect(dialog.getByRole("alert")).toHaveText(
     "Fixture connection failed",
   );
-  await expect(page.locator(".sa-table")).toBeVisible();
+  await expect(page.getByRole("table")).toBeVisible();
   backend.failures.delete("cc_super_admin_game_detail");
   await activateByKeyboard(
     page,
@@ -348,7 +364,9 @@ test("inspector failure feedback stays modal, dismisses by keyboard and retries 
   await expect(dialog.getByRole("alert")).toHaveText(
     "Fixture connection failed",
   );
-  await expect(page.locator(".host-alert")).toHaveCount(0);
+  await expect(
+    page.getByText("Fixture connection failed", { exact: true }),
+  ).toHaveCount(1);
   await page
     .getByRole("link", { name: "Back to Host Hub" })
     .evaluate((element) => element.focus());
@@ -431,9 +449,9 @@ test("obsolete list denial cannot replace a fresh refresh or its selected filter
       page,
       page.getByRole("button", { name: "Refresh", exact: true }),
     );
-    await expect(page.locator(".sa-table tbody tr td:first-child")).toHaveText([
-      "Night crawl",
-    ]);
+    await expect(
+      page.getByRole("table").locator("tbody tr td:first-child"),
+    ).toHaveText(["Night crawl"]);
     const obsolete = page.waitForResponse(
       (response) =>
         response.url().endsWith("/rpc/cc_super_admin_list_games") &&
@@ -442,14 +460,16 @@ test("obsolete list denial cannot replace a fresh refresh or its selected filter
     release();
     await obsolete;
     await page.waitForLoadState("networkidle");
-    await expect(page.locator(".sa-table tbody tr td:first-child")).toHaveText([
-      "Night crawl",
-    ]);
+    await expect(
+      page.getByRole("table").locator("tbody tr td:first-child"),
+    ).toHaveText(["Night crawl"]);
     await expect(search).toHaveValue("Night");
     await expect(page.getByText("Not authorised", { exact: true })).toHaveCount(
       0,
     );
-    await expect(page.locator(".sa-denied")).toHaveCount(0);
+    await expect(
+      page.getByText(/isn't provisioned as a Super Admin/),
+    ).toHaveCount(0);
     expect(initialReads).toBeGreaterThanOrEqual(1);
     expect(refreshReads).toBe(1);
     backend.verify();
@@ -494,9 +514,9 @@ test("platform filters have visible native labels and named table columns", asyn
   ).toBe(true);
   await tabTo(page, search);
   await page.keyboard.type("ANNA@");
-  await expect(page.locator(".sa-table tbody tr td:first-child")).toHaveText([
-    "Garden chaos",
-  ]);
+  await expect(
+    page.getByRole("table").locator("tbody tr td:first-child"),
+  ).toHaveText(["Garden chaos"]);
   await page.keyboard.press("ControlOrMeta+A");
   await page.keyboard.press("Backspace");
   await page.keyboard.press("Tab");
@@ -504,9 +524,9 @@ test("platform filters have visible native labels and named table columns", asyn
   await page.keyboard.press("End");
   await page.keyboard.press("Enter");
   await expect(status).toHaveValue("completed");
-  await expect(page.locator(".sa-table tbody tr td:first-child")).toHaveText([
-    "Finished party",
-  ]);
+  await expect(
+    page.getByRole("table").locator("tbody tr td:first-child"),
+  ).toHaveText(["Finished party"]);
   await page.keyboard.press("Home");
   await page.keyboard.press("Enter");
   await expect(status).toHaveValue("all");
@@ -579,14 +599,12 @@ for (const local of [false, true]) {
     const backend = await installSessionBackend(page, { host: true });
     await page.goto(local ? "#/styleguide" : "#/host/super-admin");
     const scope = local
-      ? page
-          .locator(".component-example")
-          .filter({
-            has: page.getByRole("heading", {
-              name: "Shared filter toolbar",
-              exact: true,
-            }),
-          })
+      ? page.locator(".component-example").filter({
+          has: page.getByRole("heading", {
+            name: "Shared filter toolbar",
+            exact: true,
+          }),
+        })
       : page.locator("main");
     const search = scope.getByRole("textbox", {
       name: "Search games",
@@ -675,3 +693,115 @@ for (const local of [false, true]) {
     backend.verify();
   });
 }
+
+test("local platform presentation exercises frames, notices and inspector states without backend access", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  await page.goto("#/styleguide");
+  const example = page.locator(".component-example").filter({
+    has: page.getByRole("heading", {
+      name: "Local platform admin",
+      exact: true,
+    }),
+  });
+  await expect(
+    example.getByRole("columnheader", { name: "Actions", exact: true }),
+  ).toBeVisible();
+  await activateByKeyboard(
+    page,
+    example.getByRole("button", { name: "Refresh", exact: true }),
+  );
+  await expect(example.locator("output")).toHaveText("Local list refreshed.");
+  await activateByKeyboard(
+    page,
+    example.getByRole("link", { name: "Back to Host Hub" }),
+  );
+  await expect(example.locator("output")).toHaveText("Back selected locally.");
+  await expect(page).toHaveURL(/#\/styleguide$/);
+  const error = example.getByRole("checkbox", {
+    name: "Show page error",
+    exact: true,
+  });
+  await tabTo(page, error, "backward");
+  await page.keyboard.press("Space");
+  await expect(
+    example.getByText("Local platform list error", { exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press("Space");
+  const denied = example.getByRole("checkbox", {
+    name: "Show access denial",
+    exact: true,
+  });
+  await tabTo(page, denied, "backward");
+  await page.keyboard.press("Space");
+  await expect(
+    example.getByText(/isn't provisioned as a Super Admin/),
+  ).toBeVisible();
+  await page.keyboard.press("Space");
+  const loading = example.getByRole("checkbox", {
+    name: "Show list loading",
+    exact: true,
+  });
+  await tabTo(page, loading, "backward");
+  await page.keyboard.press("Space");
+  await expect(
+    example.getByText("Loading platform games…", { exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press("Space");
+  const inspect = example
+    .getByRole("row")
+    .filter({ has: page.getByText("Garden chaos", { exact: true }) })
+    .getByRole("button", { name: "Inspect", exact: true });
+  await activateByKeyboard(page, inspect);
+  const dialog = example.getByRole("dialog", {
+    name: "Game inspector",
+    exact: true,
+  });
+  await expect(
+    dialog.getByText("Friday session", { exact: true }),
+  ).toBeVisible();
+  await expect(dialog.getByText("Alex · Lime", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("0 pts", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("-2 pts", { exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(inspect).toBeFocused();
+  const fail = example.getByRole("checkbox", {
+    name: "Fail inspection",
+    exact: true,
+  });
+  await tabTo(page, fail, "backward");
+  await page.keyboard.press("Space");
+  await activateByKeyboard(page, inspect);
+  await expect(dialog.getByRole("alert")).toHaveText("Local inspector failure");
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Dismiss error", exact: true }),
+  );
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Retry inspection", exact: true }),
+  );
+  await expect(
+    dialog.getByRole("heading", { name: "Garden chaos", exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  const pending = example.getByRole("checkbox", {
+    name: "Keep inspection pending",
+    exact: true,
+  });
+  await tabTo(page, pending, "backward");
+  await page.keyboard.press("Space");
+  await activateByKeyboard(page, inspect);
+  await expect(
+    dialog.getByText("Loading game details…", { exact: true }),
+  ).toBeVisible();
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Close game inspector", exact: true }),
+  );
+  await expect(dialog).toHaveCount(0);
+  await expect(inspect).toBeFocused();
+  expect(backend.requests).toHaveLength(0);
+  backend.verify();
+});

@@ -46,3 +46,15 @@
     gap: layout.$pixel-unit * 2.25;
   }
 }
+
+.panel-grid {
+  &--stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: layout.$pixel-unit * 3;
+    margin-bottom: layout.$pixel-unit * 4.5;
+    align-items: normal;
+    @media (max-width: layout.$control-stack-breakpoint) {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+}

@@ -1,7 +1,6 @@
 import type { GuidedTourStep } from "../../components/tour/GuidedTour";
 import PlayerDemoView from "./PlayerDemoView";
 import { usePlayerDemo } from "./usePlayerDemo";
-import "../../styles/PlayerGame.css";
 
 const steps: GuidedTourStep[] = [
   {

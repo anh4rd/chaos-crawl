@@ -18,24 +18,24 @@ export default function PlayerDemoView({
   steps,
 }: PlayerDemoModel & { steps: GuidedTourStep[] }) {
   return (
-    <main className="player-demo cc-session-player-app">
-      <header className="cc-player-game-header">
-        <div className="cc-player-system-bar">
+    <main className="player-demo">
+      <header className="player-demo__header">
+        <div className="device-status">
           <span>Chaos</span>
           <span aria-hidden="true">▮▮▮ ◉ ▰</span>
         </div>
-        <section className="cc-player-profile" data-tour="demo-profile">
-          <div className="cc-player-avatar-large">A</div>
-          <div className="cc-player-profile-copy">
+        <section className="profile-summary" data-tour="demo-profile">
+          <div className="profile-summary__avatar">A</div>
+          <div className="profile-summary__copy">
             <h1>Anna</h1>
             <p>The Greatest Greatest</p>
           </div>
-          <div className="cc-player-score">
-            <span className="cc-player-score-points">
+          <div className="score-summary">
+            <span className="score-summary__points">
               <Icon name="star" className="icon--size-18" fill="currentColor" />
               <strong>25</strong>
             </span>
-            <span className="cc-player-score-rank">
+            <span className="score-summary__rank">
               <Icon
                 name="trophy"
                 className="icon--size-17"
@@ -46,16 +46,16 @@ export default function PlayerDemoView({
           </div>
         </section>
       </header>
-      <div className="cc-player-game-content">
-        <section className="cc-player-game-titlebar">
-          <div className="cc-player-game-icon" aria-hidden="true">
+      <div className="player-demo__content">
+        <section className="game-identity">
+          <div className="game-identity__art" aria-hidden="true">
             🎉
           </div>
-          <div className="cc-player-game-name">
+          <div className="game-identity__name">
             <strong>Iona's FCKN BDAY</strong>
             <small>GAME</small>
           </div>
-          <div className="cc-player-game-code">
+          <div className="game-identity__code">
             <span>
               <small>GAME CODE</small>
               <strong>732471</strong>
@@ -69,26 +69,26 @@ export default function PlayerDemoView({
           Interactive sample — nothing here changes a real game
         </DemoNotice>
         <nav
-          className="cc-player-page-nav"
+          className="game-dock"
           data-tour="demo-navigation"
           aria-label="Demo game pages"
         >
           <button
-            className={`cc-player-page-tab${page === "game" ? " is-active" : ""}`}
+            className={`game-dock__tab${page === "game" ? " game-dock__tab--active" : ""}`}
             onClick={() => onSelectPage("game")}
           >
             <Icon name="gamepad2" className="icon--size-17" />
             <span>Game</span>
           </button>
           <button
-            className={`cc-player-page-tab${page === "side-challenges" ? " is-active" : ""}`}
+            className={`game-dock__tab${page === "side-challenges" ? " game-dock__tab--active" : ""}`}
             onClick={() => onSelectPage("side-challenges")}
           >
             <Icon name="clipboard-list" className="icon--size-17" />
             <span>Challenges</span>
           </button>
           <button
-            className={`cc-player-page-tab${page === "leaderboard" ? " is-active" : ""}`}
+            className={`game-dock__tab${page === "leaderboard" ? " game-dock__tab--active" : ""}`}
             onClick={() => onSelectPage("leaderboard")}
           >
             <Icon name="trophy" className="icon--size-17" />
@@ -97,23 +97,20 @@ export default function PlayerDemoView({
         </nav>
         {page === "game" && (
           <>
-            <section className="cc-player-live-label">
-              <span className="cc-player-live-dot" /> ROUND 1 <span>OF 12</span>
+            <section className="round-status">
+              <span className="round-status__dot" /> ROUND 1 <span>OF 12</span>
             </section>
-            <section
-              className="cc-player-challenge-card"
-              data-tour="demo-challenge"
-            >
-              <div className="cc-player-challenge-top">
-                <span className="cc-player-challenge-kind">MAIN CHALLENGE</span>
-                <span className="cc-player-round-chip">ROUND 2 / 12</span>
+            <section className="challenge-card" data-tour="demo-challenge">
+              <div className="challenge-card__top">
+                <span className="challenge-card__kind">MAIN CHALLENGE</span>
+                <span className="challenge-card__round">ROUND 2 / 12</span>
               </div>
-              <div className="cc-player-challenge-heading">
+              <div className="challenge-card__heading">
                 <div>
                   <h2>Obtain the best thing</h2>
-                  <span className="cc-player-challenge-award">+25 POINTS</span>
+                  <span className="challenge-card__award">+25 POINTS</span>
                 </div>
-                <span className="cc-player-challenge-art" aria-hidden="true">
+                <span className="challenge-card__art" aria-hidden="true">
                   {challengeIcon("Obtain the best thing")}
                 </span>
               </div>
@@ -121,18 +118,20 @@ export default function PlayerDemoView({
                 Buy/beg/borrow/steal and bring your thing with you to the next
                 destination.
               </p>
-              <div className="cc-player-challenge-meta">
-                <span className="cc-player-time-chip">
+              <div className="challenge-card__meta">
+                <span className="challenge-card__time">
                   <span>TIME</span>
                   <strong>
                     <Icon name="clock3" className="icon--size-15" />
                     11:03
                   </strong>
                 </span>
-                <span className="cc-player-evidence-tag">COMPETE IN TEAMS</span>
+                <span className="challenge-card__evidence">
+                  COMPETE IN TEAMS
+                </span>
               </div>
-              <div className="cc-player-evidence-block" data-tour="demo-upload">
-                <label className="cc-player-upload-button">
+              <div className="evidence-picker" data-tour="demo-upload">
+                <label className="evidence-picker__control">
                   <Icon name="upload" className="icon--size-16" /> Upload
                   Evidence
                   <input
@@ -141,17 +140,17 @@ export default function PlayerDemoView({
                     onChange={onSampleAction}
                   />
                 </label>
-                <span className="cc-player-evidence-count">
+                <span className="evidence-picker__count">
                   {sampleUpload ? "1/6 files" : "0/6 files"}
                 </span>
                 {sampleUpload && (
-                  <p className="cc-player-evidence-required">
+                  <p className="evidence-picker__notice">
                     Sample upload selected — demo only.
                   </p>
                 )}
               </div>
               <button
-                className="cc-player-primary-button"
+                className="challenge-action"
                 type="button"
                 onClick={onSampleAction}
               >
@@ -160,32 +159,30 @@ export default function PlayerDemoView({
                 complete
               </button>
             </section>
-            <section className="cc-player-state-card">
-              <span className="cc-player-eyebrow">YOUR SECRET MISSION</span>
+            <section className="mission-card">
+              <span className="section-kicker">YOUR SECRET MISSION</span>
               <h2>Make your team laugh</h2>
               <p>
                 Get every teammate to laugh without touching them or using your
                 phone. Only you can see this mission.
               </p>
-              <span className="cc-player-small-status">
-                Private · 10 points
-              </span>
+              <span className="mission-card__status">Private · 10 points</span>
             </section>
           </>
         )}
         {page === "leaderboard" && (
           <section
-            className="cc-player-leaderboard-page"
+            className="player-demo__standings"
             data-tour="demo-leaderboard"
           >
-            <div className="cc-player-page-heading">
+            <div className="section-intro">
               <div>
-                <span className="cc-player-eyebrow">THE RACE IS ON</span>
+                <span className="section-kicker">THE RACE IS ON</span>
                 <h2>Leaderboard</h2>
                 <p>Scores update as the host approves challenges.</p>
               </div>
             </div>
-            <div className="cc-player-leaderboard-list">
+            <div className="standings">
               {[
                 ["Alex", 120],
                 ["Jamie", 110],
@@ -194,21 +191,21 @@ export default function PlayerDemoView({
                 ["Morgan", 70],
               ].map(([name, score], i) => (
                 <article
-                  className={`cc-player-rank-row${i === 0 ? " is-you" : ""}`}
+                  className={`standings-row${i === 0 ? " standings-row--selected" : ""}`}
                   key={name}
                 >
-                  <div className="cc-player-rank-number">{i + 1}</div>
-                  <div className="cc-player-rank-avatar">
+                  <div className="standings-row__number">{i + 1}</div>
+                  <div className="standings-row__avatar">
                     {String(name).slice(0, 1)}
                   </div>
-                  <div className="cc-player-rank-copy">
+                  <div className="standings-row__copy">
                     <strong>
                       {name}
                       {i === 0 ? " · YOU" : ""}
                     </strong>
                     <span>{i < 3 ? "The Pineapples" : "Solo player"}</span>
                   </div>
-                  <div className="cc-player-rank-score">
+                  <div className="standings-row__score">
                     <strong>{score}</strong>
                     <span>PTS</span>
                   </div>
@@ -218,24 +215,24 @@ export default function PlayerDemoView({
           </section>
         )}
         {page === "side-challenges" && (
-          <section className="cc-player-side-page" data-tour="demo-side">
-            <div className="cc-player-page-heading">
+          <section className="player-demo__side" data-tour="demo-side">
+            <div className="section-intro">
               <div>
-                <span className="cc-player-eyebrow">EXTRA CHAOS</span>
+                <span className="section-kicker">EXTRA CHAOS</span>
                 <h2>Side challenges</h2>
                 <p>Complete these alongside the main round for extra points.</p>
               </div>
-              <span className="cc-player-count-chip">2</span>
+              <span className="count-pill">2</span>
             </div>
             <button
               type="button"
-              className="cc-player-vote-entry-link"
+              className="vote-entry"
               onClick={() => onSelectPage("final")}
             >
               <Icon name="heart" className="icon--size-16" /> Open the final
               vote
             </button>
-            <div className="cc-player-side-list">
+            <div className="challenge-list">
               {[
                 {
                   title: "Best team entrance",
@@ -246,26 +243,21 @@ export default function PlayerDemoView({
                   desc: "Get every teammate to laugh without touching them or using your phone.",
                 },
               ].map((item) => (
-                <article className="cc-player-side-card" key={item.title}>
-                  <div className="cc-player-side-card-copy">
-                    <div className="cc-player-side-card-top">
-                      <span
-                        className="cc-player-side-card-art"
-                        aria-hidden="true"
-                      >
+                <article className="side-challenge" key={item.title}>
+                  <div className="side-challenge__copy">
+                    <div className="side-challenge__heading">
+                      <span className="side-challenge__art" aria-hidden="true">
                         {challengeIcon(item.title, item.desc)}
                       </span>
                       <div>
                         <h3>{item.title}</h3>
-                        <span className="cc-player-points">
-                          Winner: +15 pts
-                        </span>
+                        <span className="points-chip">Winner: +15 pts</span>
                       </div>
                     </div>
                     <p>{item.desc}</p>
                   </div>
                   <button
-                    className="cc-player-small-button"
+                    className="item-action"
                     type="button"
                     onClick={onSampleAction}
                   >
@@ -277,27 +269,27 @@ export default function PlayerDemoView({
           </section>
         )}
         {page === "final" && (
-          <section className="cc-player-final-page" data-tour="demo-final">
-            <div className="cc-player-page-heading">
+          <section className="player-demo__final" data-tour="demo-final">
+            <div className="section-intro">
               <div>
-                <span className="cc-player-eyebrow">THE FINAL ROUND</span>
+                <span className="section-kicker">THE FINAL ROUND</span>
                 <h2>Fan favourite</h2>
                 <p>Vote for your favourite photo or video.</p>
               </div>
             </div>
-            <div className="cc-player-final-vote-status">
+            <div className="vote-guidance">
               Voting is open — choose one favourite. You can change your vote
               until voting closes.
             </div>
-            <article className="cc-player-final-card">
-              <div className="cc-player-final-media">
-                <div className="cc-demo-pineapple-art">🍍</div>
+            <article className="entry-card">
+              <div className="entry-card__media">
+                <div className="entry-card__art">🍍</div>
               </div>
-              <div className="cc-player-final-copy">
+              <div className="entry-card__copy">
                 <strong>Jamie</strong>
                 <p>Best team entrance</p>
                 <button
-                  className="cc-player-small-button"
+                  className="item-action"
                   type="button"
                   onClick={onSampleAction}
                 >

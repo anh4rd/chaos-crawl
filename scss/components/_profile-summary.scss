@@ -1,0 +1,86 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.profile-summary {
+  display: flex;
+  align-items: center;
+  color: colors.$white;
+  &__avatar {
+    display: grid;
+    place-items: center;
+    flex: 0 0 #{layout.$pixel-unit * 12.5};
+    border: #{layout.$pixel-unit * 0.5} solid colors.$white;
+    border-radius: 50%;
+    font-size: fonts.$size-subheading;
+    font-weight: fonts.$weight-heavy;
+  }
+  &__copy {
+    flex: 1;
+    min-width: 0;
+  }
+  &__copy .section-kicker {
+    color: colors.$accent-soft;
+  }
+  &__copy h1 {
+    margin: #{layout.$pixel-unit * 0.5} 0;
+    font-family: fonts.$family-preview-name;
+    line-height: 1.1;
+    font-weight: fonts.$weight-action;
+  }
+  &__copy p {
+    margin: 0;
+    color: colors.$score-row-border;
+  }
+  @media (max-width: #{layout.$pixel-unit * 120}) {
+    padding: #{layout.$pixel-unit * 3};
+    gap: #{layout.$pixel-unit * 2.25};
+  }
+  @media (max-width: #{layout.$pixel-unit * 120}) {
+    &__avatar {
+      width: #{layout.$pixel-unit * 10.75};
+      height: #{layout.$pixel-unit * 10.75};
+      flex-basis: #{layout.$pixel-unit * 10.75};
+    }
+  }
+  @media (max-width: #{layout.$pixel-unit * 120}) {
+    &__copy h1 {
+      font-size: fonts.$size-ribbon;
+    }
+  }
+  gap: #{layout.$pixel-unit * 2};
+  padding: #{layout.$pixel-unit * 2} #{layout.$pixel-unit * 0.5}
+    #{layout.$pixel-unit * 3};
+  border-radius: 0;
+  border-bottom: #{layout.$pixel-unit * 0.25} solid rgba(colors.$white, 0.2);
+  background: transparent;
+  &__avatar {
+    flex-basis: #{layout.$pixel-unit * 10.5};
+    width: #{layout.$pixel-unit * 10.5};
+    height: #{layout.$pixel-unit * 10.5};
+    background: colors.$preview-art-highlight;
+    color: colors.$preview-card-ink;
+  }
+  &__copy .section-kicker {
+    display: none;
+  }
+  &__copy h1 {
+    font-size: fonts.$size-intro;
+  }
+  &__copy p {
+    font-size: fonts.$size-caption;
+  }
+  &__avatar {
+    overflow: hidden;
+  }
+  &__avatar img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: cover;
+  }
+  &__copy h1 {
+    color: colors.$white;
+  }
+}

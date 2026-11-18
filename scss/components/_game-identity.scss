@@ -1,0 +1,94 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.game-identity {
+  display: flex;
+  align-items: center;
+  gap: #{layout.$pixel-unit * 2.25};
+  min-width: 0;
+  padding: #{layout.$pixel-unit * 0.75} 0 #{layout.$pixel-unit * 1.25};
+  &__art {
+    display: grid;
+    flex: 0 0 #{layout.$pixel-unit * 12};
+    width: #{layout.$pixel-unit * 12};
+    height: #{layout.$pixel-unit * 10.5};
+    place-items: center;
+    border: #{layout.$pixel-unit * 0.5} solid colors.$lobby-setup-shadow;
+    border-radius: #{layout.$pixel-unit * 3.75};
+    background: colors.$preview-game-art;
+    box-shadow: #{layout.$pixel-unit * 0.5} #{layout.$pixel-unit * 0.5} 0
+      colors.$challenge-icon-glow;
+    font-size: fonts.$size-compact-section-heading;
+  }
+  &__art img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: #{layout.$pixel-unit * 2.75};
+    object-fit: cover;
+  }
+  &__name {
+    display: grid;
+    min-width: 0;
+    gap: #{layout.$pixel-unit * 0.5};
+  }
+  &__name strong {
+    max-width: #{layout.$pixel-unit * 47.5};
+    overflow: hidden;
+    color: colors.$white;
+    font-family: fonts.$family-review-value;
+    font-size: fonts.$size-example-heading;
+    text-overflow: ellipsis;
+    text-shadow: #{layout.$pixel-unit * 0.5} #{layout.$pixel-unit * 0.5} 0
+      colors.$lobby-setup-shadow;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  &__name small {
+    color: rgba(colors.$white, 0.78);
+    font-size: fonts.$size-tiny;
+    font-weight: fonts.$weight-action;
+    letter-spacing: fonts.$tracking-compact;
+  }
+  &__code small {
+    color: rgba(colors.$white, 0.78);
+    font-size: fonts.$size-tiny;
+    font-weight: fonts.$weight-action;
+    letter-spacing: fonts.$tracking-compact;
+  }
+  &__code {
+    display: flex;
+    align-items: center;
+    gap: #{layout.$pixel-unit * 1.5};
+    margin-left: auto;
+  }
+  &__code > span {
+    display: grid;
+    justify-items: end;
+    gap: #{layout.$pixel-unit * 0.25};
+  }
+  &__code strong {
+    color: colors.$white;
+    font-size: fonts.$size-label;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-compact;
+  }
+  &__code button {
+    display: grid;
+    width: #{layout.$pixel-unit * 8};
+    height: #{layout.$pixel-unit * 8.5};
+    place-items: center;
+    border: 0;
+    border-radius: #{layout.$pixel-unit * 2.25};
+    background: transparent;
+    color: colors.$white;
+    cursor: pointer;
+  }
+  @media (max-width: #{layout.$pixel-unit * 105}) {
+    &__name strong {
+      max-width: #{layout.$pixel-unit * 36.25};
+      font-size: fonts.$size-body;
+    }
+  }
+}

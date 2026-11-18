@@ -106,3 +106,15 @@
     line-height: 1.5;
   }
 }
+
+.overline {
+  &--inverse {
+    display: inline-flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.75;
+    color: colors.$accent-soft;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-extra-bold;
+    letter-spacing: fonts.$tracking-wide;
+  }
+}

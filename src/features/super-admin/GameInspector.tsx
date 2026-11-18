@@ -1,7 +1,12 @@
 import type { ReactNode } from "react";
 import Button from "../../components/ui/Button";
 import Dialog from "../../components/ui/Dialog";
-import Icon from "../../components/ui/Icon";
+import DialogPanel from "../../components/ui/DialogPanel";
+import IconButton from "../../components/ui/IconButton";
+import Overline from "../../components/ui/Overline";
+import Note from "../../components/ui/Note";
+import ContentPanel from "../../components/ui/ContentPanel";
+import ControlRow from "../../components/ui/ControlRow";
 import type { PlatformGameDetail } from "../../types/superAdmin";
 
 export default function GameInspector({
@@ -18,49 +23,45 @@ export default function GameInspector({
   feedback?: ReactNode;
 }) {
   return (
-    <Dialog
-      label="Game inspector"
-      className="sa-modal-backdrop"
-      onClose={onClose}
-    >
-      <section className="sa-modal">
-        <button
+    <Dialog label="Game inspector" variant="inspector" onClose={onClose}>
+      <DialogPanel variant="inspector">
+        <IconButton
           type="button"
-          aria-label="Close game inspector"
-          className="sa-close"
+          label="Close game inspector"
+          icon="x"
+          iconClassName="icon--size-24"
+          variant="panel-close"
           onClick={onClose}
-        >
-          <Icon name="x" className="icon--size-24" />
-        </button>
+        />
         {feedback}
         {detailLoading ? (
           <p>Loading game details…</p>
         ) : selected ? (
           <>
-            <span className="sa-kicker">GAME INSPECTOR</span>
+            <Overline variant="inverse">GAME INSPECTOR</Overline>
             <h2>{String(selected.game.name ?? "Game")}</h2>
-            <p className="sa-muted">
+            <Note variant="inverse">
               Host: {String(selected.game.host_email ?? "Unknown")}
-            </p>
+            </Note>
             <h3>Sessions and players</h3>
-            {selected.sessions.map((s) => (
-              <article className="sa-session" key={s.id}>
-                <div>
-                  <strong>{s.name}</strong>
-                  <span>
-                    {s.status} · Code {s.join_code}
-                  </span>
-                </div>
-                {s.players.map((p) => (
-                  <div className="sa-player" key={p.name}>
+            {selected.sessions.map((session) => (
+              <ContentPanel as="article" variant="record" key={session.id}>
+                <ControlRow variant="record-header">
+                  <strong>{session.name}</strong>
+                  <Note as="span" variant="record">
+                    {session.status} · Code {session.join_code}
+                  </Note>
+                </ControlRow>
+                {session.players.map((player) => (
+                  <ControlRow variant="score" key={player.name}>
                     <span>
-                      {p.name}
-                      {p.team_name ? ` · ${p.team_name}` : ""}
+                      {player.name}
+                      {player.team_name ? ` · ${player.team_name}` : ""}
                     </span>
-                    <b>{p.score} pts</b>
-                  </div>
+                    <b>{player.score} pts</b>
+                  </ControlRow>
                 ))}
-              </article>
+              </ContentPanel>
             ))}
           </>
         ) : (
@@ -73,7 +74,7 @@ export default function GameInspector({
             Retry inspection
           </Button>
         )}
-      </section>
+      </DialogPanel>
     </Dialog>
   );
 }

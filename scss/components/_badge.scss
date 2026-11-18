@@ -1,3 +1,5 @@
+@use "../tools/playback-marker";
+@use "../variables/layers";
 @use "../tools/reveal-heading";
 @use "../variables/colors";
 @use "../variables/fonts";
@@ -194,5 +196,15 @@
     font-size: fonts.$size-tiny;
     font-weight: fonts.$weight-heavy;
     text-transform: uppercase;
+  }
+}
+
+.badge {
+  &--playback {
+    @include playback-marker.playback-marker;
+    position: absolute;
+    z-index: layers.$playback-controls;
+    top: layout.$spacing-unit * 24;
+    right: layout.$spacing-unit * 6;
   }
 }

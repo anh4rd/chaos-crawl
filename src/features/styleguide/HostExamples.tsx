@@ -3,6 +3,7 @@ import IdeaCardExample from "./IdeaCardExample";
 import CatalogueExample from "./CatalogueExample";
 import SavedItemsExample from "./SavedItemsExample";
 import FilterToolbarExample from "./FilterToolbarExample";
+import PlatformGamesExample from "./PlatformGamesExample";
 import StagePlanExample from "./StagePlanExample";
 import OverlayPanelExample from "./OverlayPanelExample";
 import RewardPrimitivesExample from "./RewardPrimitivesExample";
@@ -119,6 +120,7 @@ export default function HostExamples() {
       <WorkspaceExamples />
       <SavedItemsExample />
       <FilterToolbarExample />
+      <PlatformGamesExample />
       <PlanningPrimitivesExample />
       <LobbyPrimitivesExample />
       <HostChromeExample />

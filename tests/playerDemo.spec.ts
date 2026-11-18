@@ -38,9 +38,9 @@ test("demo navigation keeps all pages local and preserves the static score refer
   await expect(
     page.getByRole("heading", { name: "Leaderboard", exact: true }),
   ).toBeVisible();
-  const ranks = page.locator(".cc-player-rank-row");
+  const ranks = page.locator(".standings-row");
   await expect(ranks).toHaveCount(5);
-  await expect(ranks.locator(".cc-player-rank-score strong")).toHaveText([
+  await expect(ranks.locator(".standings-row__score strong")).toHaveText([
     "120",
     "110",
     "90",

@@ -17,7 +17,8 @@ export default function Overline({
     | "reveal"
     | "workspace"
     | "banner"
-    | "moderation";
+    | "moderation"
+    | "inverse";
   withIcon?: boolean;
   as?: "span" | "div" | "strong";
 }) {

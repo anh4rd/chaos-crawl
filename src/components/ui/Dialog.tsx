@@ -19,7 +19,7 @@ export default function Dialog({
   labelledBy?: string;
   describedBy?: string;
   role?: "dialog" | "alertdialog";
-  variant?: "host" | "reveal" | "contribution";
+  variant?: "host" | "reveal" | "contribution" | "inspector";
   dismissDisabled?: boolean;
 }) {
   const ref = useModalDialog();

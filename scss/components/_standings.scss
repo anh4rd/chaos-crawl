@@ -1,0 +1,12 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+.standings {
+  display: grid;
+  gap: #{layout.$pixel-unit * 2};
+  border: #{layout.$pixel-unit * 0.5} solid colors.$lobby-setup-shadow;
+  border-radius: #{layout.$pixel-unit * 5.25};
+  background: colors.$white;
+  color: colors.$lobby-setup-shadow;
+  box-shadow: 0 #{layout.$pixel-unit * 1} 0 rgba(colors.$purple-dark, 0.35);
+}

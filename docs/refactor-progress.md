@@ -4141,3 +4141,61 @@ Evidence: `/tmp/legacy-join-lifetime-*`; browser source
 `/tmp/chaos-legacy-player-lifetime-after`. The checks copy documents its sole
 test-type correction (unsupported Testing Library option removed); app/browser
 sources are identical. No player payloads, storage keys or backend contracts change.
+
+## Completed platform, playback and demo presentation
+
+Platform administration now composes shared headings, statistics, panels, native
+DataTable, row actions and the native inspector dialog. All remaining 32 sa-*
+selector arms are retired. Its controlled local reference exercises notices,
+loading, pending writes, inspector/retry and intercepted navigation without a
+backend. Both independent 34-state desktop/mobile comparisons match all native
+DOM/text/attributes/focus/geometry/computed properties/RPC order and pixels.
+Both 28-case browser runs pass, as do 23 focused units and live types/lint/build.
+A neutral import cleanup exposed a retained mobile-navigation override; keeping
+HostPlanning imported preserves its four-column grid until that owner migrates.
+Sources/evidence: `/tmp/admin-presentation-handoff.md`,
+`/tmp/chaos-admin-presentation-curated`, `/tmp/admin-presentation-*`.
+
+Legacy playback now has controlled views, shared playback/empty/unavailable
+components and owned SCSS. The route adapts host/navigation to focused feature
+controllers. End commands have separately tested synchronous exclusion and host
+lifetime guards; actual native playback clears blocked-play feedback. The six
+new behavior regressions failed first. All 52 browser cases and 24 units pass;
+34 states match DOM/styles/geometry/focus/read/write contracts. Nonvideo
+screenshots are pixel-exact; six native video states retain inspected buffering,
+control-fade or progress timing differences. All 1,469 prior compiled rules and
+53 existing shared markup contracts remain exact. Five-second image cadence,
+video audio/controls, keys, media URLs and index reconciliation are preserved.
+Missing captions remain a real content-contract concern, without fake tracks or
+new upload UI. Evidence: `/tmp/legacy-slideshow-handoff.md` and its linked proofs.
+
+PlayerDemo retains its existing phone composition, local state, uploads/votes,
+semantic icons and seven tour targets. Demo-specific styling now lives in 23
+owned BEM component/route blocks; PlayerGame.css shrinks from 1,380 to 90 lines
+of retained V2 helpers/spinner. All 64 states at widths 393/420/481/1280 match
+DOM/every computed property/geometry/focus and pixels exactly. All 12 browser
+cases pass; 148 compiled selector/media projections and 14 retained legacy rule
+bodies match. Its pending layout choice is not silently treated as approval for
+a redesign. Evidence: `/tmp/player-demo-handoff.md`,
+`/tmp/player-demo-curated-source-proof.json`, `/tmp/chaos-player-demo-owned-after`.
+
+Review these large milestones in separate slices: platform frame/stat primitives;
+native table/actions; inspector; local platform reference; slideshow controlled
+markup; slideshow owned styling/token promotions; separately tested end/playback
+behavior; demo class renames; demo CSS retirement and BEM/token moves. Mechanical
+parity supports the neutral slices; native video timing and explicit async guards
+need the stated human scrutiny. Tests and fixtures remain part of review load.
+Root integrates tested blobs in the index without replacing peers' live files;
+a source snapshot of that exact staged tree must pass integration gates before
+commit. Current host/player style migrations and legacy administration remain
+outside these completed milestones.
+
+The exact proposed platform/playback/demo integration tree now passes all 529
+unit tests and all 92 scoped mocked desktop/mobile browser cases, forced strict
+app types, browser types, full lint and the upload-disabled build. Source is
+`/tmp/chaos-completed-presentation-index-final`; per-file staged provenance is
+`/tmp/completed-presentation-staged-provenance.json`. Its only correction from
+the browser-served index copy is formatting HostPlanning.css; no declarations
+or source behavior changed. The completed staged delta is approximately 6,700
+review lines across 100 files; use the slice map above rather than reviewing it
+as one undifferentiated change. Unfinished peer changes remain in the worktree.

@@ -108,7 +108,9 @@ it("retains incoming game order, full-collection statistics and case-insensitive
       .slice(1)
       .map((row) => within(row).getAllByRole("cell")[0]?.textContent),
   ).toEqual(["Garden chaos", "Night crawl", "Finished party"]);
-  const stats = document.querySelector(".sa-stats");
+  const stats = screen
+    .getByText("Total games")
+    .closest("article")?.parentElement;
   expect(stats?.textContent).toBe(
     "3Total games12Players across sessions2Live games",
   );

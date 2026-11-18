@@ -36,6 +36,7 @@ export default defineConfig({
     "**/legacyPages.spec.ts",
     "**/legacyVotingPrivacy.spec.ts",
     "**/legacyPlayerWorkspace.spec.ts",
+    "**/legacySlideshow.spec.ts",
     "**/superAdmin.spec.ts",
     "**/sessionSlideshow.spec.ts",
   ],

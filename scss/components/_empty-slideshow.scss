@@ -1,0 +1,11 @@
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.empty-slideshow {
+  &__title {
+    font-weight: fonts.$weight-bold;
+  }
+  &__action {
+    margin-top: layout.$spacing-unit * 6;
+  }
+}

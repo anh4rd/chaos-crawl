@@ -11,6 +11,7 @@ export default function Badge({
   children: ReactNode;
   as?: "span" | "div";
   variant?:
+    | "playback"
     | "eyebrow"
     | "sticker"
     | "metadata"

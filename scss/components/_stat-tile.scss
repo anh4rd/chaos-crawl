@@ -97,3 +97,25 @@
     }
   }
 }
+
+.stat-tile {
+  &--summary {
+    background: colors.$poster-secondary-shadow;
+    border: layout.$pixel-unit * 0.25 solid colors.$summary-tile-border;
+    border-radius: layout.$pixel-unit * 4.5;
+    padding: layout.$pixel-unit * 4;
+    color: colors.$white;
+    display: grid;
+    gap: layout.$pixel-unit * 1.25;
+    svg {
+      color: colors.$accent-soft;
+    }
+    .stat-tile__value {
+      font-size: fonts.$size-poster-heading;
+    }
+    .stat-tile__label {
+      font-size: fonts.$size-small;
+      color: colors.$summary-tile-label;
+    }
+  }
+}

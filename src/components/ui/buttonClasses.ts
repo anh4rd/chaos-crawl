@@ -1,4 +1,7 @@
 export type ButtonVariant =
+  | "table-action"
+  | "back-link"
+  | "panel-close"
   | "slideshow-fullscreen"
   | "idea-save"
   | "idea-saved"

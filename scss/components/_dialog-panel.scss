@@ -110,3 +110,32 @@
     }
   }
 }
+
+.dialog-panel {
+  &--inspector {
+    position: relative;
+    width: min(100%, layout.$pixel-unit * 155);
+    max-height: layout.$inspector-panel-max-height;
+    overflow: auto;
+    background: colors.$poster-surface;
+    border: layout.$pixel-unit * 0.75 solid colors.$filter-control-ink;
+    border-radius: layout.$pixel-unit * 5.5;
+    padding: layout.$pixel-unit * 6;
+    color: colors.$filter-control-ink;
+    box-shadow: none;
+    h2 {
+      font-family: fonts.$family-display;
+      font-size: fonts.$size-panel-heading;
+      margin: layout.$pixel-unit * 2 0;
+    }
+    h3 {
+      margin-top: layout.$pixel-unit * 5;
+    }
+    p:where(:not([class])) {
+      margin: 0;
+      font-size: inherit;
+      line-height: inherit;
+      color: inherit;
+    }
+  }
+}

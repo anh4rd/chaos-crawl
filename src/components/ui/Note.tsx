@@ -9,6 +9,10 @@ export default function Note({
 }: HTMLAttributes<HTMLElement> & {
   compact?: boolean;
   variant?:
+    | "playback-loading"
+    | "playback-waiting"
+    | "playback-notice"
+    | "media-unavailable"
     | "slideshow-copy"
     | "slideshow-error"
     | "slideshow-feedback"
@@ -17,7 +21,9 @@ export default function Note({
     | "session"
     | "access-intro"
     | "access-help"
-    | "collection-loading";
+    | "collection-loading"
+    | "inverse"
+    | "record";
   as?: "p" | "output" | "small" | "div" | "span";
 }) {
   return (

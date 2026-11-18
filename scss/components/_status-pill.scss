@@ -103,3 +103,22 @@
     }
   }
 }
+
+.status-pill {
+  &--table {
+    padding: layout.$pixel-unit layout.$pixel-unit * 2;
+    border-radius: layout.$badge-radius;
+    background: colors.$table-status-surface;
+    color: inherit;
+    font-size: inherit;
+    font-weight: fonts.$weight-bold;
+    letter-spacing: normal;
+    text-transform: capitalize;
+    &.status-pill--live {
+      background: colors.$accent-soft;
+    }
+    &.status-pill--completed {
+      background: colors.$table-status-completed;
+    }
+  }
+}

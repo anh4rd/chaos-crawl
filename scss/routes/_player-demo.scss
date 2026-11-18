@@ -1,6 +1,96 @@
 @use "../variables/colors";
 @use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/layers";
 
+.player-demo {
+  background: colors.$preview-base-surface;
+  &__header {
+    top: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: #{layout.$pixel-unit * 3};
+    color: colors.$white;
+  }
+  &__content {
+    margin: 0 auto;
+    display: grid;
+  }
+  @media (min-width: #{layout.$pixel-unit * 170}) {
+    &__content {
+      padding: #{layout.$pixel-unit * 7} #{layout.$pixel-unit * 4.5};
+    }
+  }
+  &__standings {
+    display: grid;
+    gap: #{layout.$pixel-unit * 3.5};
+  }
+  &__side {
+    display: grid;
+    gap: #{layout.$pixel-unit * 3.5};
+  }
+  &__final {
+    display: grid;
+    gap: #{layout.$pixel-unit * 3.5};
+  }
+  color: colors.$white;
+  background-color: colors.$entry-surface;
+  background-image: colors.$preview-page-background;
+  font-family: fonts.$family-entry;
+  position: relative;
+  min-height: #{layout.$preview-height};
+  padding-bottom: calc(
+    #{layout.$pixel-unit * 23} + env(safe-area-inset-bottom)
+  );
+  overflow-x: hidden;
+  &::before {
+    position: fixed;
+    z-index: 0;
+    inset: 0;
+    pointer-events: none;
+    content: "";
+    background: colors.$preview-page-rays;
+    mask-image: colors.$preview-page-mask;
+  }
+  &__header {
+    position: relative;
+    z-index: layers.$host-layout;
+    background: colors.$entry-header;
+    box-shadow: none;
+  }
+  &__content {
+    position: relative;
+    z-index: layers.$preview-content;
+    width: min(100%, #{layout.$pixel-unit * 122.5});
+    gap: #{layout.$pixel-unit * 3};
+    padding: #{layout.$pixel-unit * 1} #{layout.$pixel-unit * 4}
+      #{layout.$pixel-unit * 5.5};
+  }
+  &__header {
+    display: block;
+    min-height: 0;
+    padding: max(#{layout.$pixel-unit * 1.25}, env(safe-area-inset-top))
+      #{layout.$pixel-unit * 4} 0;
+  }
+  &__header .profile-summary {
+    margin: 0 auto;
+    width: min(100%, #{layout.$pixel-unit * 122.5});
+  }
+  &__header .profile-summary__copy h1 {
+    font-family: fonts.$family-entry;
+    font-size: fonts.$size-body;
+    color: colors.$white;
+    text-shadow: none;
+    transform: none;
+    text-transform: none;
+  }
+  @media (max-width: #{layout.$pixel-unit * 105}) {
+    &__content {
+      padding-right: #{layout.$pixel-unit * 3};
+      padding-left: #{layout.$pixel-unit * 3};
+    }
+  }
+}
 .player-demo {
   &__disclaimer {
     margin: 0;

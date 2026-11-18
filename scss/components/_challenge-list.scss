@@ -1,0 +1,13 @@
+@use "../variables/layout";
+
+.challenge-list {
+  & .side-challenge {
+    align-items: center;
+  }
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: #{layout.$pixel-unit * 2.25};
+  @media (max-width: #{layout.$pixel-unit * 105}) {
+    gap: #{layout.$pixel-unit * 1.75};
+  }
+}

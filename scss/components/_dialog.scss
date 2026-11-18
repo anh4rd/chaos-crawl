@@ -75,3 +75,14 @@
     }
   }
 }
+
+.dialog {
+  &--inspector {
+    position: fixed;
+    z-index: layers.$host-overlay;
+    background: colors.$inspector-overlay;
+    display: grid;
+    place-items: center;
+    padding: layout.$pixel-unit * 4;
+  }
+}

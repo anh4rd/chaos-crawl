@@ -7,6 +7,7 @@ export default function StatusPill({
   | { variant: "review"; tone: "submitted" | "approved" | "rejected" }
   | { variant: "history"; tone: "pending" | "approved" | "rejected" }
   | { variant: "reward"; tone: "open" | "completed" }
+  | { variant: "table"; tone: "default" | "live" | "completed" }
   | { variant?: undefined; tone: "planned" | "draft" | "live" | "completed" }
 )) {
   return (

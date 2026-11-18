@@ -99,3 +99,46 @@
     font-size: fonts.$size-small;
   }
 }
+
+.note {
+  &--inverse {
+    color: colors.$round-choice-description;
+    font-size: fonts.$size-label;
+    margin: 0;
+  }
+  &--record {
+    display: inline;
+    color: colors.$record-detail;
+    font-size: fonts.$size-caption;
+    margin: 0;
+  }
+}
+
+.note {
+  &--playback-loading {
+    margin: 0;
+    color: inherit;
+    font-size: fonts.$size-playback-loading;
+    line-height: fonts.$line-height-playback-loading;
+  }
+  &--playback-waiting {
+    margin: layout.$spacing-unit * 6 0 0;
+    color: inherit;
+    font-size: fonts.$size-playback-waiting;
+    line-height: fonts.$line-height-playback-waiting;
+  }
+  &--playback-notice {
+    position: absolute;
+    top: layout.$spacing-unit * 24;
+    margin: 0;
+    padding: layout.$spacing-unit * 3;
+    background: colors.$playback-overlay;
+    color: colors.$white;
+    font-size: inherit;
+  }
+  &--media-unavailable {
+    margin: layout.$spacing-unit * 3 0 0;
+    color: colors.$unavailable-upload-copy;
+    font-size: inherit;
+  }
+}

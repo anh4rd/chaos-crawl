@@ -25,7 +25,10 @@ export default function ContentPanel({
     | "workspace-error"
     | "moderation"
     | "history"
-    | "moderation-item";
+    | "moderation-item"
+    | "table"
+    | "notice"
+    | "record";
   stacked?: boolean;
   overlay?: boolean;
   compact?: boolean;

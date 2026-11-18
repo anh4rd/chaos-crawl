@@ -1,3 +1,5 @@
+@use "../tools/playback-marker";
+@use "../variables/layers";
 @use "../variables/effects";
 @use "../variables/colors";
 @use "../variables/layout";
@@ -129,5 +131,20 @@
     color: colors.$white;
     font-size: fonts.$size-body;
     font-weight: fonts.$weight-action;
+  }
+}
+
+.count-badge {
+  &--playback {
+    @include playback-marker.playback-marker;
+    position: absolute;
+    z-index: layers.$playback-controls;
+    display: block;
+    top: layout.$spacing-unit * 6;
+    left: layout.$spacing-unit * 6;
+    min-width: auto;
+    height: auto;
+    place-items: normal;
+    font: inherit;
   }
 }

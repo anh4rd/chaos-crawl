@@ -1,0 +1,26 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.data-table {
+  overflow: auto;
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+    color: colors.$filter-control-ink;
+    font-size: fonts.$size-small;
+    th {
+      text-align: left;
+      color: colors.$table-heading;
+      font-size: fonts.$size-micro;
+      text-transform: uppercase;
+      letter-spacing: fonts.$tracking-stage-label;
+      padding: layout.$pixel-unit * 2.5 layout.$pixel-unit * 2;
+    }
+    td {
+      padding: layout.$pixel-unit * 3.25 layout.$pixel-unit * 2;
+      border-top: layout.$pixel-unit * 0.25 solid colors.$session-empty-icon;
+      white-space: nowrap;
+    }
+  }
+}

@@ -112,3 +112,20 @@
     margin-bottom: layout.$pixel-unit * 4.5;
   }
 }
+
+.panel-heading {
+  &--overview {
+    gap: layout.$pixel-unit * 4;
+    margin: layout.$pixel-unit * 2 0 layout.$pixel-unit * 5.5;
+    h2 {
+      font-family: fonts.$family-display;
+      color: colors.$white;
+      font-size: fonts.$size-section-heading + layout.$pixel-unit * 0.5;
+      margin: layout.$pixel-unit * 2 0 layout.$pixel-unit * 0.75;
+    }
+    @media (max-width: layout.$control-stack-breakpoint) {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+}

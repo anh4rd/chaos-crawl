@@ -30,6 +30,18 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     dependencies:
       "SideChallenge presentation and narrow participation actions. No route, storage or live hook.",
   },
+  EmptySlideshow: {
+    usage:
+      "Controlled legacy empty-upload message with supplied reload callback. Legacy slideshow playback uses local data and a local reload action.",
+    dependencies:
+      "Owned empty-slideshow SCSS and Note waiting. Retains native div/h1/p/button and the existing inherited heading cascade; no queries or playback lifecycle.",
+  },
+  DataTable: {
+    usage:
+      "Native table inside its owned scroll wrapper. Supply native table props and caller-composed thead/tbody/row/cell slots; Local platform admin preserves explicit column scope and action labels.",
+    dependencies:
+      "Owned data-table SCSS. No column configuration, sorting, records, queries, selection or commands.",
+  },
   FinalSlideshow: {
     usage:
       "Connected final-TV coordinator keyed by session ID in its route adapter. Never mount in local examples; Shared TV slideshow uses presentation components only.",
@@ -42,11 +54,35 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     dependencies:
       "Typed inferred reads and focused external-system hooks. Identity changes discard previous evidence/feedback, while shared views receive resolved URLs and callbacks only.",
   },
+  PlaybackControls: {
+    usage:
+      "Controlled previous/pause-or-resume/next actions with a caller-composed end slot. Legacy slideshow playback demonstrates local state only.",
+    dependencies:
+      "Existing Button controls and owned ControlRow playback/end variants; no global keyboard listener, timers, backend or media lifecycle.",
+  },
+  UnavailableUpload: {
+    usage:
+      "Controlled unsupported/missing upload message with a supplied skip callback. The legacy local reference never reads storage or starts playback hooks.",
+    dependencies:
+      "Existing Button and retained native markup; no URL resolution or persistence.",
+  },
+  UploadCaption: {
+    usage:
+      "Controlled legacy upload metadata caption with supplied pub/challenge/player/team values.",
+    dependencies:
+      "Presentation-only Media projection. Does not select media, query records or format a route.",
+  },
+  SlideshowView: {
+    usage:
+      "Controlled legacy fullscreen/empty presentation with supplied media slot, playback values and callbacks. The route/player retains queries, timers and native media lifecycle.",
+    dependencies:
+      "Shared PlaybackControls and feature UploadCaption. Local example uses div and local state, never the global-keyboard playback hook.",
+  },
   SlideshowScreen: {
     usage:
       "Shared TV visual base accepting main/div, live, optional counter={index,total}, onFullscreen, error and children. Shared TV slideshow demonstrates local actions without requesting fullscreen or mounting a connected route.",
     dependencies:
-      "Owned slideshow-screen BEM styling and shared CountBadge/IconButton/Note variants. Caller owns every query, timer, media selection and fullscreen request.",
+      "Owned slideshow-screen BEM styling and shared CountBadge/IconButton/Note variants. Playback, empty and loading variants preserve the legacy base; caller owns every query, timer, media selection and fullscreen request.",
   },
   SlideshowMessage: {
     usage:
@@ -76,19 +112,19 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     usage:
       "Controlled platform list and inspector composition. Receives complete/filtered records, feedback/loading/access state and callbacks; no backend, auth or route parameters.",
     dependencies:
-      "Shared Button/Icon, feature GameTable and GameInspector, and retained sa-* styling. Existing totals use complete records rather than filtered rows.",
+      "Shared heading/statistics/panels, controlled GameTable and GameInspector, and owned SCSS. Existing totals use complete records rather than filtered rows; optional onBack intercepts navigation in the local reference only.",
   },
   GameTable: {
     usage:
       "Controlled platform-game table preserving supplied order, fallback host/venue copy and inspect callbacks. Never queries or chooses authorization.",
     dependencies:
-      "Frontend-inferred PlatformGame records, shared Button and retained sa-* styling. Existing empty action-header accessibility concern remains queued separately.",
+      "Frontend-inferred PlatformGame records, native DataTable slots, StatusPill table and Button table-action. Preserve incoming order, native column scope, literal status/fallback copy and supplied inspect callbacks.",
   },
   GameInspector: {
     usage:
       "Controlled native inspector dialog with supplied detail/loading, feedback and retry/close callbacks. Displays incoming sessions and player/team score copy without sorting or persistence.",
     dependencies:
-      "Shared Dialog/Icon and frontend-inferred PlatformGameDetail. Connected inspector lifecycle stays in useGameInspector; errors and retry remain inside the modal, and pending reads can be dismissed. Do not mount that hook in local references.",
+      "Shared Dialog/DialogPanel inspector, IconButton panel-close, supplied feedback, ContentPanel record and ControlRow/Note metadata and score rows. Frontend-inferred PlatformGameDetail is not deployed schema. Connected lifecycle stays in useGameInspector; local examples never mount it.",
   },
   ScoreOverview: {
     usage:
@@ -315,13 +351,13 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     usage:
       "Public /demo/player coordinator. Owns only local state and the existing guided-tour content; it never reads a live session.",
     dependencies:
-      "usePlayerDemo, PlayerDemoView, shared DemoNotice/GuidedTour/Icon and retained player-demo CSS. Layout unification awaits user design input; preserve local uploads/votes and tour targets in either layout.",
+      "usePlayerDemo, PlayerDemoView, shared DemoNotice/GuidedTour/Icon and owned BEM component/route SCSS. Layout unification awaits user design input; preserve local uploads/votes and tour targets in either layout.",
   },
   PlayerDemoView: {
     usage:
       "Controlled demo presentation with explicit local values/actions and supplied tour steps. Its public route is the backend-free interactive reference.",
     dependencies:
-      "No route, storage or backend access. Legacy visual composition is retained while the shared-layout choice is pending; do not promote duplicate live-session widgets from this view.",
+      "No route, storage or backend access. Owned BEM SCSS and tokens preserve the legacy phone composition while the shared-layout choice is pending; do not promote duplicate live-session widgets from this view.",
   },
 
   AccessHeader: {
@@ -388,7 +424,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   PanelGrid: {
     usage:
-      "Stack groups caller-ordered review/history rows; see Shared review and history. Ideas retains the three/two/one-column catalogue layout at 1140px/560px; Local catalogue demonstrates it. Collection supplies equal columns, stacking at 850px; see Local saved items. Two-panel layout with a wider first column, stacking at 900px. The local host frame example composes controls and context without connected controllers.",
+      "Stats preserves three columns, changing to two at 600px; Local platform admin supplies the tiles. Stack groups caller-ordered review/history rows; see Shared review and history. Ideas retains the three/two/one-column catalogue layout at 1140px/560px; Local catalogue demonstrates it. Collection supplies equal columns, stacking at 850px; see Local saved items. Two-panel layout with a wider first column, stacking at 900px. The local host frame example composes controls and context without connected controllers.",
     dependencies:
       "Native div attributes, supplied children and owned panel-grid SCSS. No queries, state or commands.",
   },
@@ -523,19 +559,19 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   ContentPanel: {
     usage:
-      "Moderation/history/moderation-item variants retain catalogue review frames in Shared review and history. Entity supports native article cards; workspace-error retains the plain div feedback surface. Both appear in Local saved items. Access variants retain native join markup in the local join/rejoin example. The overlay modifier supplies the shared centered/scrolled reward frame; compose Dialog separately for modal behavior. See Shared reward overlay frame. Section, library, selection, form, workspace, lobby, controls and session panel surfaces. Review-controls is a native div-compatible management well demonstrated locally; review-result supplies its published results surface. Session panels support stacked and compact spacing and appear in Shared session panels and invitation. Pass native props, a variant and optional as=div or as=main for its containing element; examples appear in Planning panels and fields. Choice variant supplies the participant choice surface in the local team reference.",
+      "Table, notice and record retain platform data surfaces and native div/article composition in Local platform admin; they supply appearance without access policy or modal behavior. Moderation/history/moderation-item variants retain catalogue review frames in Shared review and history. Entity supports native article cards; workspace-error retains the plain div feedback surface. Both appear in Local saved items. Access variants retain native join markup in the local join/rejoin example. The overlay modifier supplies the shared centered/scrolled reward frame; compose Dialog separately for modal behavior. See Shared reward overlay frame. Section, library, selection, form, workspace, lobby, controls and session panel surfaces. Review-controls is a native div-compatible management well demonstrated locally; review-result supplies its published results surface. Session panels support stacked and compact spacing and appear in Shared session panels and invitation. Pass native props, a variant and optional as=div or as=main for its containing element; examples appear in Planning panels and fields. Choice variant supplies the participant choice surface in the local team reference.",
     dependencies:
       "SCSS .content-panel; composes caller content without backend access.",
   },
   PanelHeading: {
     usage:
-      "Moderation and contribution variants retain catalogue section/editor arrangement; see Shared review and history and Local catalogue. The private-mission local reference demonstrates its reveal variant. dismissible reserves room for an absolutely positioned close action, as demonstrated in Shared reward overlay frame. Title/description and action arrangement inside a panel. Accepts native div props; demonstrated with CountBadge. Session variant retains the live panel heading and mobile arrangement. Choice variant retains the participant heading layout and existing color pending the separate contrast fix; see local team references.",
+      "Overview retains the native platform header and 600px reflow in Local platform admin. Moderation and contribution variants retain catalogue section/editor arrangement; see Shared review and history and Local catalogue. The private-mission local reference demonstrates its reveal variant. dismissible reserves room for an absolutely positioned close action, as demonstrated in Shared reward overlay frame. Title/description and action arrangement inside a panel. Accepts native div props; demonstrated with CountBadge. Session variant retains the live panel heading and mobile arrangement. Choice variant retains the participant heading layout and existing color pending the separate contrast fix; see local team references.",
     dependencies:
       "SCSS .panel-heading and the shared panel-title typography fragment.",
   },
   CountBadge: {
     usage:
-      "Moderation supplies the native review-queue counter; see Shared review and history. Tab supplies the native collection counter in Local catalogue. Filter supplies the inline collection count; see Local saved items. Round-index and round-index-current variants retain the detailed option number well; demonstrated in the shared round plan. Compact numeric/content badge accepting native span props. Shown in the planning panel example; session variant appears in Shared session panels and invitation. Choice variant supplies the participant capacity pill in the local team reference.",
+      "Moderation supplies the native review-queue counter; see Shared review and history. Tab supplies the native collection counter in Local catalogue. Filter supplies the inline collection count; see Local saved items. Round-index and round-index-current variants retain the detailed option number well; demonstrated in the shared round plan. Compact numeric/content badge accepting native span props. Shown in the planning panel example; session variant appears in Shared session panels and invitation. Choice variant supplies the participant capacity pill in the local team reference. Playback accepts native div and the legacy counter, including caller-composed Badge playback paused marker.",
     dependencies: "SCSS .count-badge; caller supplies the count.",
   },
   FormGrid: {
@@ -620,13 +656,13 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   StatTile: {
     usage:
-      "Review variant renders label before value in a compact vote-count well; shown in Shared review and presentation controls. Compact variant shows only number/label with div/strong/span markup; default variant retains its icon tile. Number/content and label paired with IconBadge; accepts icon, tone, value and label. Host patterns demonstrate all three tones.",
+      "Summary preserves native article, semantic icon, strong value and span label in Local platform admin; the caller owns totals and formatting. Review variant renders label before value in a compact vote-count well; shown in Shared review and presentation controls. Compact variant shows only number/label with div/strong/span markup; default variant retains its icon tile. Number/content and label paired with IconBadge; accepts icon, tone, value and label. Host patterns demonstrate all three tones.",
     dependencies:
       "SCSS .stat-tile; surrounding stat-grid controls arrangement.",
   },
   StatusPill: {
     usage:
-      "History retains pending/rejected tones and the original plain approved treatment; see Shared review and history. Reward variant accepts open/completed tones and preserves sentence case. Pill-shaped planned, draft, live or completed state. Review variant supplies submitted/approved/rejected styles and appears in Shared submission and evidence review. Pass tone and visible children; demonstrated in Host patterns.",
+      "Table accepts caller-projected default/live/completed tones and literal status copy, as shown in Local platform admin. History retains pending/rejected tones and the original plain approved treatment; see Shared review and history. Reward variant accepts open/completed tones and preserves sentence case. Pill-shaped planned, draft, live or completed state. Review variant supplies submitted/approved/rejected styles and appears in Shared submission and evidence review. Pass tone and visible children; demonstrated in Host patterns.",
     dependencies: "SCSS .status-pill; caller supplies state and label.",
   },
   ContextCard: {
@@ -698,7 +734,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   IconButton: {
     usage:
-      "Search-clear supplies the conditional clear action in Local catalogue, preserving its native type contract. Idea-save, idea-saved and idea-close retain catalogue native labels, titles and pending states, demonstrated in Shared idea card and Local catalogue. Entity-remove retains the saved-card border explicitly; see Local saved items. Semantic icon action with a required accessible label; optional danger, control-replay or dialog-dismiss variant. Demonstrated locally in Host patterns.",
+      "Panel-close retains the native inspector close button with required accessible label and caller-owned dismissal in Local platform admin. Search-clear supplies the conditional clear action in Local catalogue, preserving its native type contract. Idea-save, idea-saved and idea-close retain catalogue native labels, titles and pending states, demonstrated in Shared idea card and Local catalogue. Entity-remove retains the saved-card border explicitly; see Local saved items. Semantic icon action with a required accessible label; optional danger, control-replay or dialog-dismiss variant. Demonstrated locally in Host patterns.",
     dependencies:
       "Button comic/control variants, Icon and SCSS .btn; native button attributes pass through.",
   },
@@ -781,18 +817,18 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Overline: {
     usage:
-      "Moderation retains the catalogue kicker in Local catalogue and Shared review and history. Banner retains the uppercase lime label in Local catalogue. Workspace supplies the saved-item uppercase label; see Local saved items. The private-mission local reference demonstrates its reveal variant. Small uppercase-style label typography. Review variant supports native strong/span titles in Shared review and presentation controls. Accepts span/div/strong markup, primary/pink tones and an icon arrangement. Session variant appears in Shared session panels and invitation. Examples appear in the styleguide introduction, top bar and foundation panels. Choice variant supplies the participant eyebrow in the local team reference.",
+      "Inverse retains caller-composed platform/inspector kicker copy and optional semantic icon in Local platform admin. Moderation retains the catalogue kicker in Local catalogue and Shared review and history. Banner retains the uppercase lime label in Local catalogue. Workspace supplies the saved-item uppercase label; see Local saved items. The private-mission local reference demonstrates its reveal variant. Small uppercase-style label typography. Review variant supports native strong/span titles in Shared review and presentation controls. Accepts span/div/strong markup, primary/pink tones and an icon arrangement. Session variant appears in Shared session panels and invitation. Examples appear in the styleguide introduction, top bar and foundation panels. Choice variant supplies the participant eyebrow in the local team reference.",
     dependencies: "SCSS .overline. Text casing belongs to the caller.",
   },
   Note: {
     usage:
-      "Collection-loading supports a native div with catalogue loading copy, shown in Local catalogue. Access variants retain native join markup in the local join/rejoin example. Session variant provides panel copy with optional native small markup, demonstrated in Shared session panels and invitation. Control variant provides host timer messages. Lobby variant provides compact supporting copy and appears in Lobby surfaces and identity. Muted paragraph accepting shared HTML attributes. compact uses caption typography for dense descriptions; as=output supplies native status semantics, as shown in the local HostShell preview.",
+      "Inverse and record retain supplied platform copy and native session metadata spans in Local platform admin; they choose no records or statuses. Collection-loading supports a native div with catalogue loading copy, shown in Local catalogue. Access variants retain native join markup in the local join/rejoin example. Session variant provides panel copy with optional native small markup, demonstrated in Shared session panels and invitation. Control variant provides host timer messages. Lobby variant provides compact supporting copy and appears in Lobby surfaces and identity. Muted paragraph accepting shared HTML attributes. compact uses caption typography for dense descriptions; as=output supplies native status semantics, as shown in the local HostShell preview. Loading/waiting/notice/unavailable variants preserve legacy slideshow feedback in the local playback reference.",
     dependencies:
       "SCSS .note. Content and status semantics belong to the caller.",
   },
   ControlRow: {
     usage:
-      "Filters retains native platform filter arrangement and its 600px stacking, demonstrated by Shared filter toolbar. Moderation retains review/admin actions and their 650px grid reflow; see Shared review and history. Heading-actions supplies result-count/create arrangement in Local catalogue. Idea-actions retains the two-column catalogue action grid; see Local catalogue. Reward variant keeps right-aligned comic actions and a single-column mobile layout. Wrapping row of controls accepting native div props; timer and break variants provide compact clock/action wells. Examples appear in button and session previews.",
+      "Record-header and score retain native read-only metadata/value rows in Local platform admin. Filters retains native platform filter arrangement and its 600px stacking, demonstrated by Shared filter toolbar. Moderation retains review/admin actions and their 650px grid reflow; see Shared review and history. Heading-actions supplies result-count/create arrangement in Local catalogue. Idea-actions retains the two-column catalogue action grid; see Local catalogue. Reward variant keeps right-aligned comic actions and a single-column mobile layout. Wrapping row of controls accepting native div props; timer and break variants provide compact clock/action wells. Examples appear in button and session previews. Playback/end variants own the legacy slideshow toolbar and end-action arrangement.",
     dependencies: "SCSS .control-row. Compose controls through children.",
   },
   TimerReadout: {
@@ -819,7 +855,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Button: {
     usage:
-      'Moderation and editor variants retain comic controls; tag-option preserves controlled choices. See Shared review and history and Local catalogue. Collection-tab and category retain controlled tab/filter states in Local catalogue. Native button with poster, text, comic, setup, session, timer/flow, dialog, round/chip, review and access appearances. Idea-use/add variants retain catalogue actions; outline-toggle preserves the controlled expansion icon. Shared idea card and Local catalogue demonstrate them without a backend. Filter supplies controlled collection buttons; see Local saved items. fullWidth defaults to true. Set type="button" outside form submission; keep explicit disabled state and native attributes. Other local references demonstrate their corresponding variants.',
+      'Table-action, back-link and panel-close preserve native platform action/link/close appearance without adding business behavior; see Local platform admin. Moderation and editor variants retain comic controls; tag-option preserves controlled choices. See Shared review and history and Local catalogue. Collection-tab and category retain controlled tab/filter states in Local catalogue. Native button with poster, text, comic, setup, session, timer/flow, dialog, round/chip, review and access appearances. Idea-use/add variants retain catalogue actions; outline-toggle preserves the controlled expansion icon. Shared idea card and Local catalogue demonstrate them without a backend. Filter supplies controlled collection buttons; see Local saved items. fullWidth defaults to true. Set type="button" outside form submission; keep explicit disabled state and native attributes. Other local references demonstrate their corresponding variants.',
     dependencies:
       "Owned SCSS .btn and ordinary native button attributes. Feature controllers own actions; local examples use only supplied callbacks/state.",
   },
@@ -878,7 +914,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   DialogPanel: {
     usage:
-      "Contribution keeps the controlled catalogue editor frame, heading copy and 650px padding in Local catalogue; Dialog supplies modal behavior separately. The private-mission local reference demonstrates its reveal variant. Shared editor/confirmation surface. Defaults to section; as=form preserves native form props and typed submission events. Compose the heading, copy and fields through children.",
+      "Inspector retains the bounded native section, heading copy and record frame in Local platform admin. Contribution keeps the controlled catalogue editor frame, heading copy and 650px padding in Local catalogue; Dialog supplies modal behavior separately. The private-mission local reference demonstrates its reveal variant. Shared editor/confirmation surface. Defaults to section; as=form preserves native form props and typed submission events. Compose the heading, copy and fields through children.",
     dependencies:
       "SCSS .dialog-panel; place inside Dialog. No connected state or persistence. The host dialog reference demonstrates the form variant.",
   },
@@ -901,7 +937,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Dialog: {
     usage:
-      "The private-mission local reference demonstrates its reveal variant. Mount when open. Pass label, onClose, optional className and panel children. Native modal focus and Escape handling. The host variant retains the host overlay appearance; optional labelledBy and alertdialog role connect a visible title. dismissDisabled prevents Escape/backdrop dismissal during an operation and retains focus if its active control becomes disabled. describedBy links native descriptive copy; the private-mission reference demonstrates explicit acceptance with Escape/backdrop dismissal disabled.",
+      "Inspector retains the full native platform modal surface in Local platform admin; feature controllers own read lifetime and pending dismissal. The private-mission local reference demonstrates its reveal variant. Mount when open. Pass label, onClose, optional className and panel children. Native modal focus and Escape handling. The host variant retains the host overlay appearance; optional labelledBy and alertdialog role connect a visible title. dismissDisabled prevents Escape/backdrop dismissal during an operation and retains focus if its active control becomes disabled. describedBy links native descriptive copy; the private-mission reference demonstrates explicit acceptance with Escape/backdrop dismissal disabled.",
     dependencies:
       "Browser HTMLDialogElement and SCSS .dialog. Local demos appear in UI primitives and Host modal behavior.",
   },
@@ -1171,7 +1207,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Badge: {
     usage:
-      "Moderation-type supplies the community item type; see Shared review and history. Tag supplies catalogue chips inside TagList idea in Shared idea card. Idea variants supply category labels in Shared idea card and Local catalogue; callers choose the tone and text. Entity supplies the saved-item points tag; see Local saved items. The private-mission local reference demonstrates its reveal variant. Stage/stage-break variants supply the preview label pill, demonstrated in the local stage/plan reference. Eyebrow, sticker, metadata, outline and subtle badge variants. Vote badges display published names and choices in the local review body example. Optional semantic icon; children supply the label and className can position the badge. Dialog variant supplies the existing editor kicker and appears in Host modal behavior.",
+      "Moderation-type supplies the community item type; see Shared review and history. Tag supplies catalogue chips inside TagList idea in Shared idea card. Idea variants supply category labels in Shared idea card and Local catalogue; callers choose the tone and text. Entity supplies the saved-item points tag; see Local saved items. The private-mission local reference demonstrates its reveal variant. Stage/stage-break variants supply the preview label pill, demonstrated in the local stage/plan reference. Eyebrow, sticker, metadata, outline and subtle badge variants. Vote badges display published names and choices in the local review body example. Optional semantic icon; children supply the label and className can position the badge. Dialog variant supplies the existing editor kicker and appears in Host modal behavior. Playback supplies the local legacy paused marker.",
     dependencies:
       "Project SCSS .badge. Poster examples show invitation variants; the introduction and catalog demonstrate outline and subtle.",
   },

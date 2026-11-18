@@ -150,3 +150,12 @@ $contribution-panel-max-height: min(90vh, 900px);
 $slideshow-height: 100vh;
 $slideshow-caption-padding: clamp($pixel-unit * 5, 4vw, $pixel-unit * 12);
 $slideshow-feedback-width: min($pixel-unit * 125, 80vw);
+
+$inspector-panel-max-height: 85vh;
+
+$playback-marker-radius: 0.75rem;
+$playback-controls-width: 70%;
+
+$playback-media-width: 100vw;
+
+$preview-height: 100svh;

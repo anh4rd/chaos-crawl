@@ -8,6 +8,7 @@ interface Props extends Omit<
   icon: IconName;
   label: string;
   variant?:
+    | "panel-close"
     | "slideshow-fullscreen"
     | "danger"
     | "entity-remove"

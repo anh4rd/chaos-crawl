@@ -1,3 +1,5 @@
+@use "../variables/layers";
+@use "../variables/fonts";
 @use "../variables/colors";
 @use "../variables/layout";
 
@@ -94,5 +96,45 @@
     @media (max-width: layout.$control-stack-breakpoint) {
       flex-direction: column;
     }
+  }
+}
+
+.control-row {
+  &--record-header,
+  &--score {
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    align-items: normal;
+  }
+  &--record-header {
+    gap: layout.$pixel-unit * 2.5;
+  }
+  &--score {
+    gap: normal;
+    padding: layout.$pixel-unit * 1.75 0;
+    border-top: layout.$pixel-unit * 0.25 solid colors.$score-row-border;
+    font-size: fonts.$size-small;
+    margin-top: layout.$pixel-unit * 2;
+  }
+}
+
+.control-row {
+  &--playback,
+  &--playback-end {
+    position: absolute;
+    top: layout.$spacing-unit * 6;
+    right: layout.$spacing-unit * 6;
+    align-items: normal;
+  }
+  &--playback {
+    z-index: layers.$playback-controls;
+    max-width: layout.$playback-controls-width;
+    justify-content: flex-end;
+    gap: layout.$spacing-unit * 2;
+  }
+  &--playback-end {
+    display: block;
+    flex-wrap: nowrap;
+    gap: normal;
   }
 }

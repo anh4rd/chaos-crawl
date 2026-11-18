@@ -6,6 +6,7 @@ import Note from "../ui/Note";
 export default function SlideshowScreen({
   as: Element = "main",
   live = false,
+  variant,
   counter,
   onFullscreen,
   error,
@@ -13,6 +14,7 @@ export default function SlideshowScreen({
 }: {
   as?: "main" | "div";
   live?: boolean;
+  variant?: "playback" | "playback-empty" | "playback-loading";
   counter?: { index: number; total: number };
   onFullscreen?: () => void;
   error?: string;
@@ -20,7 +22,7 @@ export default function SlideshowScreen({
 }) {
   return (
     <Element
-      className="slideshow-screen"
+      className={`slideshow-screen${variant ? ` slideshow-screen--${variant}` : ""}`}
       aria-live={live ? "polite" : undefined}
     >
       {children}

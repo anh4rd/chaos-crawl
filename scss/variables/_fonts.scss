@@ -116,3 +116,17 @@ $size-slideshow-caption: clamp($size-art-symbol, 5vw, 58px);
 $size-slideshow-label: clamp($size-small, 1.7vw, $size-heading);
 $size-slideshow-message-heading: clamp($size-art-symbol, 5vw, 54px);
 $size-slideshow-message-copy: clamp($size-body, 2vw, $size-heading);
+
+$size-playback-loading: 1.25rem;
+$line-height-playback-loading: 1.75rem;
+$size-playback-waiting: 1.5rem;
+$line-height-playback-waiting: 2rem;
+$size-upload-location: 0.875rem;
+$line-height-upload-location: 1.25rem;
+
+$family-preview-name: "quicksand";
+$tracking-preview-device: 1px;
+$family-preview-sticker: "Hardbeat";
+$family-preview-challenge: "Hardbeat", Impact, sans-serif;
+$size-preview-challenge-art: 54px;
+$size-preview-side-art: 29px;

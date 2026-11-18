@@ -271,3 +271,26 @@
     }
   }
 }
+
+.content-panel {
+  &--table {
+    background: colors.$poster-surface;
+    border: layout.$pixel-unit * 0.75 solid colors.$filter-control-ink;
+    border-radius: layout.$pixel-unit * 5.5;
+    padding: layout.$pixel-unit * 4;
+    box-shadow: 0 layout.$pixel-unit * 1.25 0 colors.$poster-shadow;
+  }
+  &--notice {
+    background: colors.$pink;
+    color: colors.$white;
+    padding: layout.$pixel-unit * 3 layout.$pixel-unit * 3.5;
+    border-radius: layout.$pixel-unit * 3;
+    margin: layout.$pixel-unit * 3 0;
+  }
+  &--record {
+    border: layout.$pixel-unit * 0.25 solid colors.$filter-control-border;
+    border-radius: layout.$pixel-unit * 3.5;
+    padding: layout.$pixel-unit * 3;
+    margin: layout.$pixel-unit * 2.5 0;
+  }
+}

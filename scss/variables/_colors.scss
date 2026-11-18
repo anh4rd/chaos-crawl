@@ -498,3 +498,75 @@ $slideshow-caption-background: linear-gradient(transparent, rgba($black, 0.82));
 
 $filter-control-border: #c8baff;
 $filter-control-ink: #211044;
+
+$summary-tile-border: #8f75ff;
+$summary-tile-label: #d9d0ff;
+$table-heading: #766b9c;
+$table-status-surface: #e7e0ff;
+$table-status-completed: #dedede;
+$inspector-overlay: #160b3dcc;
+$record-detail: #75699a;
+$score-row-border: #e4dcff;
+
+$playback-overlay: color-mix(in oklab, $black 70%, transparent);
+$unavailable-upload-copy: oklch(70.5% 0.015 286.067);
+
+$preview-action-disabled-opacity: 0.56;
+$preview-base-surface: #f6f3ff;
+$preview-live: #63bf42;
+$preview-item-disabled-opacity: 0.5;
+$preview-tab-hover: #f3f0ff;
+$preview-card-border: #e5e0f4;
+$preview-rank-shadow: #e8e2fc;
+$preview-rank-selected-shadow: #c8bbff;
+$preview-rank-number-surface: #f0edf8;
+$preview-rank-number: #49435c;
+$preview-rank-unit: #8179a0;
+$preview-upload-disabled-opacity: 0.55;
+$preview-media-surface: #161124;
+$preview-item-detail: #5e5b6b;
+$preview-selected: #183e0b;
+$preview-page-background:
+  repeating-conic-gradient(
+    from 2deg at 50% 48%,
+    rgba($white, 0.1) 0deg 13deg,
+    transparent 13deg 28deg
+  ),
+  radial-gradient(ellipse at center, $entry-glow 0%, $entry-surface 70%);
+$preview-page-rays: repeating-conic-gradient(
+  from 2deg at 50% 48%,
+  rgba($white, 0.09) 0deg 13deg,
+  transparent 13deg 28deg
+);
+$preview-page-mask: radial-gradient(
+  ellipse at center,
+  $black 18%,
+  transparent 95%
+);
+$preview-art-highlight: #ffcf54;
+$preview-card-ink: #20124e;
+$preview-dock-shadow: #1f0f68;
+$preview-live-caption: #151039;
+$preview-upload-surface: #c4ed00;
+$preview-description: #3b3745;
+$preview-challenge-art-surface: #f5edff;
+$preview-game-art: linear-gradient(
+  135deg,
+  $preview-challenge-art-surface,
+  $white
+);
+$preview-challenge-art:
+  radial-gradient(circle, $challenge-icon-glow 0 34%, transparent 35%),
+  radial-gradient(
+    circle at 20% 25%,
+    $preview-art-highlight 0 10%,
+    transparent 11%
+  );
+$preview-side-art-surface: #f1eaff;
+$preview-side-art:
+  radial-gradient(
+    circle at 65% 35%,
+    $challenge-icon-glow 0 30%,
+    transparent 31%
+  ),
+  $preview-side-art-surface;

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import IconBadge from "./IconBadge";
-import type { IconName } from "./Icon";
+import Icon, { type IconName } from "./Icon";
 export default function StatTile({
   icon,
   tone,
@@ -9,11 +9,19 @@ export default function StatTile({
   variant = "default",
 }: {
   icon?: IconName;
-  variant?: "default" | "compact" | "review";
+  variant?: "default" | "compact" | "review" | "summary";
   tone?: "lime" | "violet" | "pink";
   value: ReactNode;
   label: string;
 }) {
+  if (variant === "summary")
+    return (
+      <article className="stat-tile stat-tile--summary">
+        {icon && <Icon name={icon} className="icon--size-24" />}
+        <strong className="stat-tile__value">{value}</strong>
+        <span className="stat-tile__label">{label}</span>
+      </article>
+    );
   if (variant === "review")
     return (
       <div className="stat-tile stat-tile--review">
