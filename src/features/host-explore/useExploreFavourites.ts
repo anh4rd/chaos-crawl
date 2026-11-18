@@ -6,6 +6,7 @@ import type {
   RouteIdea,
   ExploreActionFeedback,
 } from "./types";
+import { apiError } from "../../lib/apiResult";
 import { readHostIdentity } from "../../lib/hostAuth";
 import { readExploreFavourites } from "../../lib/hostExploreQueries";
 import { saveExploreFavourite } from "../../lib/hostExploreCommands";
@@ -19,14 +20,24 @@ export function useExploreFavourites({
 }: ExploreActionFeedback & { onQueryError: (message: string) => void }) {
   const [favourites, setFavourites] = useState<HostFavourite[]>([]);
   const [loadingFavourites, setLoadingFavourites] = useState(true);
-  const [busyFavourite, setBusyFavourite] = useState<string | null>(null);
+  const [busyFavourites, setBusyFavourites] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const pending = useRef(new Set<string>());
+  const currentFavourites = useRef<HostFavourite[]>([]);
+  const replaceFavourites = useCallback((items: HostFavourite[]) => {
+    currentFavourites.current = items;
+    setFavourites(items);
+  }, []);
   const mounted = useRef(false);
   const lifetime = useRef(0);
   useEffect(() => {
+    const operations = pending.current;
     mounted.current = true;
     lifetime.current += 1;
     return () => {
       mounted.current = false;
+      operations.clear();
     };
   }, []);
   const favouriteRead = useRef(0);
@@ -57,8 +68,8 @@ export function useExploreFavourites({
       );
       return;
     }
-    setFavourites(data ?? []);
-  }, [onQueryError]);
+    replaceFavourites(data ?? []);
+  }, [onQueryError, replaceFavourites]);
 
   useEffect(() => {
     void loadFavourites();
@@ -76,55 +87,66 @@ export function useExploreFavourites({
   ) {
     const generation = lifetime.current;
     const current = () => mounted.current && lifetime.current === generation;
-    if (!current()) return;
     const key = `${type}:${id}`;
-    setBusyFavourite(key);
+    if (!current() || pending.current.has(key)) return;
+    pending.current.add(key);
+    setBusyFavourites(new Set(pending.current));
     onActionStart();
-    const existing = favourites.find(
-      (item) => item.item_type === type && item.item_id === id,
-    );
-    if (existing) {
-      const { error: deleteError } = await removeHostFavourite({
-        id: existing.id,
-      });
-      if (!current()) return;
-      setBusyFavourite(null);
-      if (deleteError) {
-        onActionError(deleteError.message);
+    try {
+      const existing = currentFavourites.current.find(
+        (item) => item.item_type === type && item.item_id === id,
+      );
+      if (existing) {
+        const { error: deleteError } = await removeHostFavourite({
+          id: existing.id,
+        });
+        if (!current()) return;
+        if (deleteError) {
+          onActionError(deleteError.message);
+          return;
+        }
+        replaceFavourites(
+          currentFavourites.current.filter((item) => item.id !== existing.id),
+        );
         return;
       }
-      setFavourites((current) =>
-        current.filter((item) => item.id !== existing.id),
-      );
-      return;
-    }
 
-    const { data: userData, error: userError } = await readHostIdentity();
-    if (!current()) return;
-    if (userError || !userData.user) {
-      setBusyFavourite(null);
-      onActionError("Your host session has expired. Please log in again.");
-      return;
-    }
+      const { data: userData, error: userError } = await readHostIdentity();
+      if (!current()) return;
+      if (userError || !userData.user) {
+        onActionError("Your host session has expired. Please log in again.");
+        return;
+      }
 
-    const { data: saved, error: saveError } = await saveExploreFavourite({
-      hostId: userData.user.id,
-      itemType: type,
-      itemId: id,
-      itemData: favouriteData(data),
-    });
-    if (!current()) return;
-    setBusyFavourite(null);
-    if (saveError) {
-      onActionError(
-        type === "route"
-          ? "Route favourites need the latest host catalogue migration. Run 20261023_host_catalog_routes.sql in Supabase, then try again."
-          : saveError.message,
-      );
-      return;
+      const { data: saved, error: saveError } = await saveExploreFavourite({
+        hostId: userData.user.id,
+        itemType: type,
+        itemId: id,
+        itemData: favouriteData(data),
+      });
+      if (!current()) return;
+      if (saveError) {
+        onActionError(
+          type === "route"
+            ? "Route favourites need the latest host catalogue migration. Run 20261023_host_catalog_routes.sql in Supabase, then try again."
+            : saveError.message,
+        );
+        return;
+      }
+      if (saved) replaceFavourites([...currentFavourites.current, saved]);
+    } catch (error) {
+      if (current()) onActionError(apiError(error).message);
+    } finally {
+      if (current()) {
+        pending.current.delete(key);
+        setBusyFavourites(new Set(pending.current));
+      }
     }
-    if (saved) setFavourites((current) => [...current, saved]);
   }
 
-  return { loadingFavourites, busyFavourite, isSaved, toggleFavourite };
+  function isFavouriteBusy(type: HostFavourite["item_type"], id: string) {
+    return busyFavourites.has(`${type}:${id}`);
+  }
+
+  return { loadingFavourites, isFavouriteBusy, isSaved, toggleFavourite };
 }

@@ -34,7 +34,7 @@ export default function CatalogueWorkspace() {
     setActionError("");
     setQueryError("");
   }, []);
-  const { loadingFavourites, busyFavourite, isSaved, toggleFavourite } =
+  const { loadingFavourites, isFavouriteBusy, isSaved, toggleFavourite } =
     useExploreFavourites({
       onQueryError: setQueryError,
       onActionStart: clearFeedback,
@@ -57,7 +57,7 @@ export default function CatalogueWorkspace() {
     onActionError: setActionError,
     loadSubmissions,
   });
-  const { reviewingId, deleteCommunityChallenge, reviewSubmission } =
+  const { isReviewing, deleteCommunityChallenge, reviewSubmission } =
     useExploreModeration({
       isPlatformAdmin,
       onActionStart: clearFeedback,
@@ -132,7 +132,7 @@ export default function CatalogueWorkspace() {
     return {
       task,
       saved: isSaved("task", task.id),
-      busy: busyFavourite === `task:${task.id}`,
+      busy: isFavouriteBusy("task", task.id),
       onToggleSaved: () => {
         void toggleFavourite("task", task.id, task);
       },
@@ -140,7 +140,7 @@ export default function CatalogueWorkspace() {
       adminActions:
         isPlatformAdmin && communitySubmission
           ? {
-              busy: reviewingId === communitySubmission.id,
+              busy: isReviewing(communitySubmission.id),
               onEdit: () => editCommunityChallenge(communitySubmission),
               onDelete: () => {
                 void deleteCommunityChallenge(communitySubmission);
@@ -152,7 +152,7 @@ export default function CatalogueWorkspace() {
   const locationItems = visibleLocations.map((location) => ({
     location,
     saved: isSaved("venue", location.id),
-    busy: busyFavourite === `venue:${location.id}`,
+    busy: isFavouriteBusy("venue", location.id),
     onToggleSaved: () => {
       void toggleFavourite("venue", location.id, location);
     },
@@ -161,7 +161,7 @@ export default function CatalogueWorkspace() {
   const routeItems = visibleRoutes.map((route) => ({
     route,
     saved: isSaved("route", route.id),
-    busy: busyFavourite === `route:${route.id}`,
+    busy: isFavouriteBusy("route", route.id),
     expanded: expandedRoutes.includes(route.id),
     onToggleSaved: () => {
       void toggleFavourite("route", route.id, route);
@@ -183,7 +183,7 @@ export default function CatalogueWorkspace() {
               }
             : undefined,
         submittedDate: new Date(submission.created_at).toLocaleDateString(),
-        busy: reviewingId === submission.id,
+        busy: isReviewing(submission.id),
         onApprove: () => {
           void reviewSubmission(submission, "approved");
         },
