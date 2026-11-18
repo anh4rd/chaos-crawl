@@ -4,8 +4,14 @@ import type {
   UploadChallenge,
 } from "../../game/hooks/useChallengeParticipation";
 
-export type ChallengeParticipation = ReturnType<
-  typeof useChallengeParticipation
+export type ChallengeParticipation = Pick<
+  ReturnType<typeof useChallengeParticipation>,
+  | "completionKey"
+  | "uploadingKey"
+  | "completingKey"
+  | "hasCompleted"
+  | "complete"
+  | "chooseUpload"
 >;
 
 export default function ChallengeActions({

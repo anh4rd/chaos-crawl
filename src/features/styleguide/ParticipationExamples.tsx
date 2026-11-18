@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Button from "../../components/ui/Button";
 import Note from "../../components/ui/Note";
 import ChallengeActions, {
@@ -13,12 +13,9 @@ import ExampleGrid from "./ExampleGrid";
 export function ParticipationExamples() {
   const [completed, setCompleted] = useState<string[]>([]);
   const [notice, setNotice] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const participation: ChallengeParticipation = {
-    fileInputRef,
     uploadingKey: null,
     completingKey: null,
-    error: null,
     completionKey: (type, id) => `${type}:${id}`,
     hasCompleted: (type, id) => completed.includes(`${type}:${id}`),
     complete: async (type, id) => {
@@ -29,7 +26,6 @@ export function ParticipationExamples() {
       setNotice(
         "Photo / video upload selected. This demo does not upload files.",
       ),
-    handleFileSelected: async () => {},
   };
   return (
     <>

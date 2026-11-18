@@ -4048,3 +4048,45 @@ Historical completed parity JSON has been archived losslessly to reclaim disk:
 Each decompressed SHA was verified before removal; restoration paths and hashes
 are recorded in `/tmp/historical-parity-json-archive.jsonl`. Screenshots and proof
 scripts were retained. This does not replace any pending verification.
+
+## Legacy player presentation boundary
+
+LegacyJoin now adapts navigation to a focused join controller and a controlled
+LegacyJoinView. Ballot and SubmissionCard retain their existing external concerns
+while delegating markup to controlled BallotView and SubmissionCardView.
+VoteResultsView receives already-guarded published projections. SideChallenges
+composes BingoChallengeCard; its presentation contract now exposes only the six
+participation values/actions it uses. Existing local participation examples no
+longer fabricate unrelated hook fields. Local legacy player screens demonstrates
+join, ballot and result views without connected controllers or backend access.
+
+This slice preserves existing utility classes; their owned styling migration is
+next. It does not claim to finish the legacy player subsystem. The legacy join
+async lifecycle remains unchanged and needs its separate regression-first review.
+
+Verification: 32 desktop/mobile states have exact DOM including text-node
+boundaries, every computed property, rectangles, focus, native values and ordered
+write payloads after normalizing only the existing PageFrame root class mapping.
+31 screenshots are pixel-exact; desktop Players differs at seven glyph-edge pixels
+inside a 2-by-8 rectangle. No image tolerance is used. Initial comparison exposed
+a mid-hover-transition capture; the retained failed run led to recapturing both
+sides with the pointer moved away and finite animations settled.
+
+All 30 scoped browser cases pass, including completion rollback/retry, exact
+player/team vote writes, team-award draft retention/retry and the backend-free
+local reference. A first mobile test inspected optimistic completion before the
+second write reached the fixture; it now waits for the actual ordered commands.
+The coherent integrated source checkpoint passes all 526 unit tests, forced
+strict app types, browser types and upload-disabled build. JavaScript/SCSS lint
+passes; the concurrent admin files still awaited their final formatting when
+that live lint run sampled them. Proof: `/tmp/legacy-player-controlled-*`, source
+`/tmp/chaos-legacy-player-controlled-final`; baseline overrides are explicitly
+hashed in `/tmp/chaos-legacy-player-controlled-before/controlled-baseline-overrides.json`.
+
+The current combined in-progress review load is 8,275 lines across 115 files
+(+6,451/-1,824), before later test/catalog additions. This exceeds the review nudge.
+Review separately: player controlled markup moves and narrow props (mechanical,
+32-state proof); new fixture/browser contracts (human scrutiny); local examples
+(no backend); legacy host controller/command behavior; admin owned styling; and
+slideshow extraction/styling versus explicit end/playback behavior fixes. Full
+milestone maps remain required as the other subsystems finish.

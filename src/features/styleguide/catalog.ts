@@ -1,5 +1,35 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
+  LegacyJoinView: {
+    usage:
+      "Controlled legacy join form; accepts name, busy/locked state, feedback and callbacks. Local legacy player screens uses a div frame and local state.",
+    dependencies:
+      "PageFrame, Card, Input and Button. No route, storage, auth or player creation.",
+  },
+  BallotView: {
+    usage:
+      "Controlled legacy player/team ballot, checking/cast/rejoin states and supplied callbacks. Local legacy player screens never mounts the connected Ballot controller.",
+    dependencies:
+      "PageFrame, Card, Button and explicit presentation state. No queries, credential storage or navigation.",
+  },
+  VoteResultsView: {
+    usage:
+      "Controlled legacy published result list, preserving caller order and totals. Local legacy player screens supplies sample results.",
+    dependencies:
+      "PageFrame and Card. The connected route guards voting/publication before passing results; this view never chooses publication policy.",
+  },
+  SubmissionCardView: {
+    usage:
+      "Controlled legacy submission media and award fields; receives completion, player, resolved media and award state/callbacks.",
+    dependencies:
+      "Card, Button and native media/form controls. SubmissionCard owns the focused award hook; this view never persists scores.",
+  },
+  BingoChallengeCard: {
+    usage:
+      "One controlled legacy side challenge and its completion/upload actions. Demonstrated inside the local SideChallenges example.",
+    dependencies:
+      "SideChallenge presentation and narrow participation actions. No route, storage or live hook.",
+  },
   FinalSlideshow: {
     usage:
       "Connected final-TV coordinator keyed by session ID in its route adapter. Never mount in local examples; Shared TV slideshow uses presentation components only.",

@@ -17,6 +17,7 @@ import TeamChoicesExample from "../features/styleguide/TeamChoicesExample";
 import PlayerAccessExample from "../features/styleguide/PlayerAccessExample";
 import PrivateMissionExample from "../features/styleguide/PrivateMissionExample";
 import SlideshowExample from "../features/styleguide/SlideshowExample";
+import LegacyPlayerExample from "../features/styleguide/LegacyPlayerExample";
 import { ParticipationExamples } from "../features/styleguide/ParticipationExamples";
 import { FeedbackExamples } from "../features/styleguide/FeedbackExamples";
 import HostExamples from "../features/styleguide/HostExamples";
@@ -59,6 +60,7 @@ export default function Styleguide() {
         <TeamChoicesExample />
         <PrivateMissionExample />
         <SlideshowExample />
+        <LegacyPlayerExample />
         <PlayerAccessExample />
         <ParticipationExamples />
       </Section>

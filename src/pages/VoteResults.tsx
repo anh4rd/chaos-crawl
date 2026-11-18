@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import { useNavigate } from "react-router-dom";
 
-import Card from "../components/ui/Card";
+import VoteResultsView from "../features/voting/VoteResultsView";
 
 import { useGameState } from "../game/hooks/useGameState";
 
@@ -64,30 +64,6 @@ export default function VoteResults() {
       : tallyPlayerVotes(votes, players);
 
   return (
-    <main className="mx-auto min-h-screen max-w-md space-y-6 p-6">
-      <Card>
-        <h1 className="text-4xl font-bold">Voting Results</h1>
-
-        <p className="mt-3">{game.current_challenge}</p>
-      </Card>
-
-      <ol className="space-y-3">
-        {results.map((result, index) => (
-          <li key={result.id}>
-            <Card>
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="mr-3">{index === 0 ? "👑" : ""}</span>
-
-                  <strong>{result.name}</strong>
-                </div>
-
-                <div className="text-2xl font-bold">{result.votes}</div>
-              </div>
-            </Card>
-          </li>
-        ))}
-      </ol>
-    </main>
+    <VoteResultsView challenge={game.current_challenge} results={results} />
   );
 }
