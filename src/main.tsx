@@ -6,7 +6,10 @@ import App from "./App";
 import "./instrument";
 import "../scss/style.scss";
 
-ReactDOM.createRoot(document.getElementById("root")!, {
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Application root element is missing.");
+
+ReactDOM.createRoot(rootElement, {
   onUncaughtError: Sentry.reactErrorHandler(),
   onRecoverableError: Sentry.reactErrorHandler(),
 }).render(

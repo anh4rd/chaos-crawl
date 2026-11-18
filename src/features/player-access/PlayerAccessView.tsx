@@ -5,7 +5,6 @@ import FloatingNotice from "../../components/ui/FloatingNotice";
 import FormStack from "../../components/ui/FormStack";
 import MascotArt from "../../components/ui/MascotArt";
 import Note from "../../components/ui/Note";
-import ChaosMonster from "../../../public/chaos-logo.png";
 import Icon from "../../components/ui/Icon";
 import GameCodeInput from "../../components/ui/GameCodeInput";
 import PlayerDetailsFields from "./PlayerDetailsFields";
@@ -61,7 +60,12 @@ export default function PlayerAccessView({
             ← Back
           </Button>
         )}
-        {joinStep === 1 && <MascotArt src={ChaosMonster} alt="Chaos mascot" />}
+        {joinStep === 1 && (
+          <MascotArt
+            src={`${import.meta.env.BASE_URL}chaos-logo.png`}
+            alt="Chaos mascot"
+          />
+        )}
         <DisplayHeading as="h1" variant="access">
           {titleLead}
           <br />

@@ -4527,3 +4527,31 @@ four desktop/mobile inline-upload/evidence-review journeys. Evidence:
 canonical supported formats; ordered fallback decisions; exact assignment payload
 coverage. Source delta is two files,+135/-181=316review-relevant lines; no UI or
 storage path/RPC changes are included.
+
+## Small core boundary cleanup and audit accounting
+
+Bootstrap now checks the existing root element explicitly. Leaderboard map creation
+and get/create narrowing replace the two remaining runtime non-null assertions
+and the empty event-array assertion. Four thousand deterministic scoring cases
+match exactly (duplicate/missing IDs, personal/direct-team events, ordering and
+invalid/negative/zero points). PlayerAccessView references the public mascot with
+the configured base URL instead of importing public as a source module. Nine
+native image renders at393/800/1280 match original bytes, dimensions, computed
+styles and pixels in baseline dev, updated dev and updated production preview;
+bootstrap has zero page errors. Isolated593units, strict types, lint/build pass.
+The initial asset harness lacked Chromium's required library environment; its
+infrastructure log is retained and is not counted as an application failure.
+Evidence: /tmp/leaderboard-assertion-parity.json, /tmp/core-public-asset-proof.json,
+/tmp/core-boundaries-{allunit,types,lint,build}.log. Source diff: three small files.
+
+Audit history populations were reconciled rather than treated as code regressions.
+The current complete scan covers720files, including564production-classified files;
+the old142-file checkpoint and deliberately reset subjective placeholders are not
+comparable score baselines. Current117historical skip occurrences represent107
+unique issues plus10repeats;107unique split into76currentlyskipped and31no-longer
+skipped. Thus the historical116-vs75 gap of41 is10repeats+31removed entries, with
+zero current entries missing history. Current kinds are38false-positive and38
+permanent; work-item status totals are a different population. Evidence:
+/tmp/finishing-audit-state-accountability.json. A review re-import not reporting
+an old finding is never accepted as deployed policy/live-journey verification;
+those real external limitations remain unverified in this report.
