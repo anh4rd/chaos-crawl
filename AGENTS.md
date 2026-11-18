@@ -232,10 +232,31 @@ tested follow-ups, not fixes claimed by this presentation move.
 SuperAdmin adapts to features/super-admin/PlatformGames. Separate list and inspector
 hooks own reads; PlatformGamesView/GameTable/GameInspector accept controlled data
 and callbacks. Typed superAdminQueries preserve original RPC names/arguments and
-SDK error/rejection behavior in the neutral extraction. types/superAdmin.ts holds
+original SDK behavior in the neutral extraction; the subsequent lifecycle slice adds runApi transport recovery. types/superAdmin.ts holds
 inferred consumed shapes, not deployed schema types. Keep connected hooks out of
 local examples. Existing sa-* styles and recorded lifecycle/label defects await
 separate tested behavior and shared-primitives/SCSS slices.
+
+Catalogue reads settle current loading on rejected identity/read operations and
+ignore obsolete failures. Missing/rejected community identity clears user/admin
+presentation and cached private rows, retaining approved public data. Initial
+favourite snapshots reconcile successful local mutation keys, including removal
+tombstones; failed mutations do not override incoming records. Preserve unrelated
+incoming order, existing query/command payloads and query/action feedback precedence.
+
+HostGuard remounts its private Outlet only when the authenticated user ID changes;
+same-user token replacement preserves feature state. Auth notifications outrank
+older initial recovery. Keep subscription cleanup and player credential storage
+contracts intact; feature mount guards complement this shared identity boundary.
+
+Platform list/inspector reads guard mount/request lifetimes. Inspector open/id state
+is explicit; dismissing a pending read invalidates it synchronously, and obsolete
+responses cannot reopen or overwrite another inspection. Queries use runApi with
+unchanged RPC payloads. Keep list/detail feedback separate, with inspector errors
+and retry inside the native modal. List refresh cannot erase a failed detail read;
+explicit inspection/retry/dismissal clears feedback. Do not add duplicate admin
+auth wiring; HostGuard supplies the account remount boundary. Labels and owned
+SCSS remain separately tested follow-ups.
 
 Catalogue tabs compose the shared horizontal TabList and linked TabPanel primitives.
 Left/Right wrap; Home/End focus and activate native tab buttons through their

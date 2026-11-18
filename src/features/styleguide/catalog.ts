@@ -44,9 +44,9 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   GameInspector: {
     usage:
-      "Controlled native inspector dialog with supplied detail/loading state and close callback. Displays incoming sessions and player/team score copy without sorting or persistence.",
+      "Controlled native inspector dialog with supplied detail/loading, feedback and retry/close callbacks. Displays incoming sessions and player/team score copy without sorting or persistence.",
     dependencies:
-      "Shared Dialog/Icon and frontend-inferred PlatformGameDetail. Connected inspector lifecycle stays in useGameInspector; do not mount that hook in local references.",
+      "Shared Dialog/Icon and frontend-inferred PlatformGameDetail. Connected inspector lifecycle stays in useGameInspector; errors and retry remain inside the modal, and pending reads can be dismissed. Do not mount that hook in local references.",
   },
   MetadataList: {
     usage:

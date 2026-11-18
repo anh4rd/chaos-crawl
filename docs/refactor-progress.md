@@ -3711,9 +3711,99 @@ lifetime/feedback and slideshow session-ID/controller layers. The shared host au
 boundary also needs user-ID remount and stale initial recovery regressions. Legacy
 styling, remaining V2/legacy layers and final desloppify remain outstanding.
 
+## Phase 6d — catalogue read recovery and snapshot reconciliation
+
+Initial favourite identity/read exceptions now settle current loading and report
+feedback; obsolete outcomes stay silent. Community identity failure clears user/
+admin presentation and prunes cached non-approved rows, retaining approved public
+rows until recovery. The existing query/action feedback separation remains.
+
+A favourite read tracks successful local mutation keys since its request began.
+Its accepted snapshot combines untouched incoming records with current records
+for changed keys; removal remains a tombstone. An old initial GET can no longer
+undo a completed save/remove, and failed mutations do not override server rows.
+This preserves unrelated incoming order and existing commands without extra reads
+or disabling unrelated controls. It does not prove server uniqueness when an
+unknown existing favourite is saved before its initial read finishes.
+
+Six of nine new tests failed before fixes, with two escaped rejections. All
+**36 focused read/operation/page-lifecycle tests** and **58 mocked desktop/mobile
+catalogue/saved-item browser cases** pass. The new visible regression gates an old
+initial snapshot containing another saved task, completes a save, then verifies
+both saved labels and settled loading. The immutable snapshot's 827-file manifest
+and four owned live files were SHA-verified after testing. Evidence:
+`/tmp/catalogue-read-before.log`, `/tmp/catalogue-read-after.log`,
+`/tmp/catalogue-read-verified-*`.
+
+## Phase 6e — authenticated host identity boundary
+
+HostGuard keys its private outlet by authenticated user ID. A different host gets
+fresh feature state and lifecycles; a replacement token for the same host preserves
+local state. An auth notification also invalidates the older initial getSession
+recovery, preventing it from erasing newer sign-in state. Existing subscription
+cleanup, routes and separate player credential keys are preserved.
+
+Two corrected regression cases fail before the change; all **six unit cases** now
+pass, including same-host token retention, different-host remount, obsolete empty/
+non-empty recovery and unmount cleanup. The native SDK mocked desktop/mobile
+journey switches A→B, checks the reset/search and B's favourite read, replaces B's
+credentials without remount/read, then signs out to login with no writes.
+**Both browser cases pass** from the immutable snapshot. A later test-only type
+annotation correction has byte-identical emitted JavaScript; runtime evidence is
+retained rather than rerunning an unchanged journey. Evidence:
+`/tmp/host-identity-{before,after}-unit.log`, `/tmp/host-identity-styled-*` and
+`/tmp/host-identity-runtime-proof.json`.
+
+## Phase 6f — platform list and inspector lifecycle
+
+The list hook now guards mount and refresh generations, preserving current rows/
+loading/access feedback when older reads resolve. Inspector open/current-id state
+is explicit; close invalidates synchronously, including pending reads. Old replies
+cannot reopen, overwrite or unlock a fresh inspection. Retry retains its current
+id; null details become a recoverable error. Named queries adopt existing runApi
+transport recovery without changing either RPC or its arguments.
+
+List/detail feedback is separate. Inspector errors and retry render inside the
+native modal; its inert page duplicate is hidden. Starting inspection/retry and
+explicit dismissal clear both channels, while an ordinary list refresh cannot
+erase a detail failure. Escape, Close and backdrop remain available during reads
+and restore the opener. Shared HostGuard remount supplies account-identity
+invalidation; no duplicate auth subscription was added.
+
+Fourteen new regressions failed before fixes; all **21 scoped units** and **18
+mocked desktop/mobile browser cases** pass. Original modal negatives and corrected
+stale-refresh negatives are preserved. The first stale-refresh fixture gated only
+one StrictMode initial request and is not used as proof; its corrected baseline
+holds all initial reads and fails on obsolete denial, while legitimate persistent
+denial/explicit Refresh succeeds. All twelve owned live files match the tested
+839-file snapshot. Evidence: `/tmp/admin-lifecycle-before-unit.log`,
+`/tmp/admin-lifecycle-before-v2-browser.log`,
+`/tmp/admin-lifecycle-after-v2-browser.log` and
+`/tmp/admin-lifecycle-live-proof-v2.json`.
+
+Review the request/dialog state and feedback ownership separately from typed query
+recovery and regressions. No labels or SCSS migration is included; toolbar labels,
+empty action header and shared-primitives/owned-style conversion remain queued.
+
+### Immutable verification checkpoints
+
+Browser jobs now serve curated immutable copies of source, tests, styles, public
+assets and required config, with a unique Vite cache and dummy backend settings.
+No environment files or git metadata are copied. A SHA manifest verifies source
+stability during copying, exact served content and owned live-file correspondence
+after testing. Only the deliberate cacheDir config change is recorded separately.
+Served snapshot source remains frozen while agents work on the live checkout;
+failures require corrected live code and a new snapshot, not changes to evidence.
+
+The integrated checkpoint passes **463 unit tests**, an upload-disabled strict
+build and Playwright type checks. Live lint/format also passes; the first snapshot
+lint invocation lacked the Stylelint config and is not reported as a passing gate.
+The snapshot helper now includes the actual mjs config for future captures. The
+complete final browser suite and desloppify remain outstanding.
+
 ## Queued phases for the full refactor
 
-Next: catalogue read recovery/reconciliation, admin lifecycle/feedback and slideshow identity/controller layers. Catalogue cards, shell, filters, review/history and contribution bodies now
+Next: slideshow identity/controller verification, platform accessibility/shared styles and legacy host layering. Catalogue cards, shell, filters, review/history and contribution bodies now
 compose shared primitives with owned SCSS; their thin route, controllers and
 controlled views are verified. Continue separately tested lifecycle fixes and owned styling. Keep styling and intentional behavior fixes in
 separate verified slices. Continue remaining host utilities/admin and V2 player/
