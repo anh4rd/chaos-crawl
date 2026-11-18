@@ -3801,9 +3801,57 @@ lint invocation lacked the Stylelint config and is not reported as a passing gat
 The snapshot helper now includes the actual mjs config for future captures. The
 complete final browser suite and desloppify remain outstanding.
 
+## Phase 6g — TV session identity and focused external concerns
+
+Both TV routes are thin session-ID adapters to keyed FinalSlideshow and
+SecretSlideshow coordinators. Changing session immediately removes the previous
+session's evidence, selection and feedback, including when the next read is pending
+or fails. Returning A→B→A resets local playback even with unchanged/null host IDs.
+Obsolete read and fullscreen outcomes cannot mutate another mounted session.
+
+Typed inferred view contracts and named runApi read services live outside pages.
+Ordinary focused hooks own polling, atomic view/host-selection projection, media
+cadence/error reset and fullscreen lifecycle separately. The original public RPC
+names/session-only arguments, existing bucket URL resolver, 1500ms polling,
+latest-applied-response ordering, host selection/clamping and 6s/15s image cadence
+are retained. Shared presentation remains pure; no styling conversion is included.
+
+Eight identity regressions failed before fixes. All **36 focused route/query
+units** and **22 mocked desktop/mobile browser cases** pass, including pending/
+failed B privacy, A→B→A, obsolete responses/fullscreen, active media and local
+reference behavior. The integrated immutable checkpoint passed **463 unit tests**,
+upload-disabled strict build and browser type checks; live lint/format passed.
+
+All **34 same-session DOM/style/geometry/focus/RPC comparisons and PNG pairs are
+exact**. The four video states synchronously pause native play in the identical
+baseline/current capture harness before decoded-frame sampling; DOM stays stable
+across its PNG. Actual autoplay/ended/cadence is tested separately, not suppressed
+in the app. The previous phase6c temporal-video limitation remains recorded in
+its original evidence; this new controlled set has zero pixel delta. Two unused
+internal type exports were removed after snapshot capture with verified identical
+emitted runtime and strict type checks. Evidence:
+`/tmp/slideshow-identity-final-capture.log`,
+`/tmp/slideshow-identity-persistent-browser.log`,
+`/tmp/slideshow-identity-pixel-proof.json` and
+`/tmp/slideshow-identity-type-exports-proof.json`.
+
+This slice exceeds the approximate 800-line review budget. Review map:
+
+| Slice                                | Mechanical changes / scrutiny                                                                                  | Evidence                                                                 |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Thin routes and inferred query types | Move contracts/reads outside pages; scrutinize exact RPC arguments and unchanged URL resolver                  | Eight query units, strict types and exact RPC traces                     |
+| Polling/selection/media/fullscreen   | Focused ordinary hooks; scrutinize identity reset, obsolete outcomes and atomic selection/cadence interactions | Eight formerly failing identity cases, 36 scoped units, 22 browser cases |
+| Same-session preservation            | Shared view composition unchanged, no SCSS changes                                                             | Thirty-four exact DOM/style/geometry/RPC/PNG pairs                       |
+
+Across phases6d–6g, **100 affected desktop/mobile browser cases** passed (58
+catalogue,18 admin,22 TV,2 host identity). These are scoped checks, not completion
+of the registered full suite. Next: TV owned SCSS/BEM, admin visible labels/focus
+and owned styling, and legacy-host Challenges presentation. Remaining V2/legacy
+migration, complete mocked-suite verification and final desloppify remain pending.
+
 ## Queued phases for the full refactor
 
-Next: slideshow identity/controller verification, platform accessibility/shared styles and legacy host layering. Catalogue cards, shell, filters, review/history and contribution bodies now
+Next: TV owned styles, platform accessibility/shared styles and legacy host layering. Catalogue cards, shell, filters, review/history and contribution bodies now
 compose shared primitives with owned SCSS; their thin route, controllers and
 controlled views are verified. Continue separately tested lifecycle fixes and owned styling. Keep styling and intentional behavior fixes in
 separate verified slices. Continue remaining host utilities/admin and V2 player/

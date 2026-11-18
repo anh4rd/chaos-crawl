@@ -5,7 +5,13 @@ import {
   render,
   screen,
 } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import {
+  MemoryRouter,
+  Route,
+  Routes,
+  createMemoryRouter,
+  RouterProvider,
+} from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import SessionFinalSlideshow from "./SessionFinalSlideshow";
 import SessionSecretSlideshow from "./SessionSecretSlideshow";
@@ -17,6 +23,7 @@ const backend = vi.hoisted(() => ({
     data: { publicUrl: `/evidence/${path}` },
   })),
 }));
+vi.mock("../lib/monitoring", () => ({ reportError: vi.fn() }));
 vi.mock("../lib/sessionSupabase", () => ({
   supabase: {
     rpc: backend.rpc,
@@ -79,6 +86,38 @@ function mount(kind: "final" | "secret") {
   );
 }
 
+function navigable(kind: "final" | "secret") {
+  const router = createMemoryRouter(
+    [
+      {
+        path: "/final-slideshow/:sessionId",
+        element: <SessionFinalSlideshow />,
+      },
+      {
+        path: "/secret-slideshow/:sessionId",
+        element: <SessionSecretSlideshow />,
+      },
+    ],
+    { initialEntries: [`/${kind}-slideshow/session-a`] },
+  );
+  return { router, ...render(<RouterProvider router={router} />) };
+}
+function nextView() {
+  return {
+    ...view(),
+    mission: {
+      title: "New mission",
+      description: "Current rules.",
+      player_name: "New player",
+    },
+    items: view().items.map((item) => ({
+      ...item,
+      player_name: "New player",
+      challenge_title: "New challenge",
+    })),
+  };
+}
+
 beforeEach(() => {
   vi.useFakeTimers();
   backend.rpc.mockReset();
@@ -97,6 +136,168 @@ for (const kind of ["final", "secret"] as const) {
       kind === "final"
         ? "cc_get_session_final_slideshow"
         : "cc_get_session_secret_review_slideshow";
+
+    it("removes previous-session evidence and media feedback while the next identity connects", async () => {
+      const { router } = navigable(kind);
+      await advance();
+      fireEvent.error(screen.getByRole("img"));
+      expect(screen.getByRole("status")).toBeDefined();
+      const pending = deferred<{
+        data: ReturnType<typeof view>;
+        error: null;
+      }>();
+      backend.rpc.mockReturnValueOnce(pending.promise);
+      await act(async () => router.navigate(`/${kind}-slideshow/session-b`));
+      expect(screen.queryByRole("img")).toBeNull();
+      expect(screen.queryByRole("heading", { name: "Pat" })).toBeNull();
+      expect(screen.queryByRole("status")).toBeNull();
+      expect(screen.getByText(/Connecting to the .*slideshow/)).toBeDefined();
+      expect(backend.rpc).toHaveBeenLastCalledWith(rpc, {
+        p_session_id: "session-b",
+      });
+      await act(async () => pending.resolve({ data: nextView(), error: null }));
+      expect(screen.getByRole("heading", { name: "New player" })).toBeDefined();
+    });
+
+    it("shows only the current identity read failure instead of previous-session evidence", async () => {
+      const { router } = navigable(kind);
+      await advance();
+      backend.rpc.mockResolvedValueOnce({
+        data: null,
+        error: { message: "New session unavailable" },
+      });
+      await act(async () => router.navigate(`/${kind}-slideshow/session-b`));
+      await advance();
+      expect(screen.queryByRole("img")).toBeNull();
+      expect(screen.queryByRole("heading", { name: "Pat" })).toBeNull();
+      expect(screen.getByRole("alert").textContent).toContain(
+        "New session unavailable",
+      );
+      const pending = deferred<{
+        data: ReturnType<typeof view>;
+        error: null;
+      }>();
+      backend.rpc.mockReturnValueOnce(pending.promise);
+      await act(async () => router.navigate(`/${kind}-slideshow/session-c`));
+      expect(screen.queryByRole("alert")).toBeNull();
+      expect(screen.getByText(/Connecting to the .*slideshow/)).toBeDefined();
+    });
+
+    it("resets local playback across A-to-B-to-A navigation even when host evidence identifiers match", async () => {
+      backend.rpc.mockResolvedValue({
+        data: { ...view(), evidence_id: null },
+        error: null,
+      });
+      const { router } = navigable(kind);
+      await advance();
+      await advance(6000);
+      expect(screen.getByText("2 / 2")).toBeDefined();
+      await act(async () => router.navigate(`/${kind}-slideshow/session-b`));
+      await advance();
+      expect(screen.getByText("1 / 2")).toBeDefined();
+      await advance(6000);
+      expect(screen.getByText("2 / 2")).toBeDefined();
+      await act(async () => router.navigate(`/${kind}-slideshow/session-a`));
+      await advance();
+      expect(screen.getByText("1 / 2")).toBeDefined();
+    });
+
+    it.each(["success", "failure"] as const)(
+      "ignores an obsolete prior-session read %s after A-to-B-to-A navigation",
+      async (outcome) => {
+        const { router } = navigable(kind);
+        await advance();
+        const pending = deferred<{
+          data: ReturnType<typeof view> | null;
+          error: { message: string } | null;
+        }>();
+        backend.rpc.mockReturnValueOnce(pending.promise);
+        await advance(1500);
+        backend.rpc.mockResolvedValue({ data: nextView(), error: null });
+        await act(async () => router.navigate(`/${kind}-slideshow/session-b`));
+        await advance();
+        await act(async () => router.navigate(`/${kind}-slideshow/session-a`));
+        await advance();
+        await act(async () =>
+          pending.resolve(
+            outcome === "success"
+              ? { data: view(), error: null }
+              : { data: null, error: { message: "Obsolete read" } },
+          ),
+        );
+        expect(
+          screen.getByRole("heading", { name: "New player" }),
+        ).toBeDefined();
+        expect(screen.queryByRole("status")).toBeNull();
+        expect(screen.queryByRole("alert")).toBeNull();
+      },
+    );
+
+    it("ignores a fullscreen rejection from the previous session", async () => {
+      let reject: (error: Error) => void = () => {
+        throw new Error("Fullscreen request not initialized");
+      };
+      const fullscreen = new Promise<void>((_resolve, fail) => {
+        reject = fail;
+      });
+      Object.defineProperty(document.documentElement, "requestFullscreen", {
+        configurable: true,
+        value: () => fullscreen,
+      });
+      const { router } = navigable(kind);
+      await advance();
+      fireEvent.click(screen.getByRole("button", { name: "Enter fullscreen" }));
+      backend.rpc.mockResolvedValue({ data: nextView(), error: null });
+      await act(async () => router.navigate(`/${kind}-slideshow/session-b`));
+      await advance();
+      await act(async () => reject(new Error("Old fullscreen request")));
+      expect(screen.getByRole("heading", { name: "New player" })).toBeDefined();
+      expect(screen.queryByRole("status")).toBeNull();
+    });
+
+    it("renders the first host-selected gallery atomically without exposing the unselected image", async () => {
+      backend.rpc.mockResolvedValue({
+        data: { ...view(), evidence_id: "second" },
+        error: null,
+      });
+      const { container } = mount(kind);
+      const mountedMedia: string[] = [];
+      const observer = new MutationObserver((records) => {
+        for (const record of records) {
+          for (const node of record.addedNodes) {
+            if (!(node instanceof Element)) continue;
+            for (const element of [
+              node,
+              ...node.querySelectorAll("img,video"),
+            ]) {
+              if (element.matches("img,video"))
+                mountedMedia.push(element.tagName);
+            }
+          }
+        }
+      });
+      observer.observe(container, { childList: true, subtree: true });
+      await advance();
+      observer.disconnect();
+      expect(screen.getByText("2 / 2")).toBeDefined();
+      expect(container.querySelector("video")?.getAttribute("src")).toBe(
+        "/evidence/second.webm",
+      );
+      expect(mountedMedia).toContain("VIDEO");
+      expect(mountedMedia).not.toContain("IMG");
+    });
+
+    it("reports a thrown read failure and recovers on the next polling cadence", async () => {
+      backend.rpc.mockRejectedValueOnce(new Error("Transport unavailable"));
+      mount(kind);
+      await advance();
+      expect(screen.getByRole("alert").textContent).toContain(
+        "Transport unavailable",
+      );
+      await advance(1500);
+      expect(screen.queryByRole("alert")).toBeNull();
+      expect(screen.getByRole("heading", { name: "Pat" })).toBeDefined();
+    });
 
     it("connects through the public read contract and resolves the evidence bucket", async () => {
       const pending = deferred<{

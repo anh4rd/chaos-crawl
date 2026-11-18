@@ -226,8 +226,14 @@ frame supports main/div semantics and optional counter/fullscreen/feedback; loca
 Shared TV slideshow uses div, local state and a simulated fullscreen callback.
 Retain native video identity/autoplay/muted/playsInline and ended/error callbacks.
 Current cc-final-tv styles are an explicit legacy exception pending the separate
-SCSS slice. Query/timer extraction and session-ID invalidation remain separately
-tested follow-ups, not fixes claimed by this presentation move.
+SCSS slice. Session-ID route adapters now key focused FinalSlideshow/SecretSlideshow feature
+coordinators. Named typed reads use runApi and the existing evidence URL resolver;
+inferred models do not prove deployed schema. Polling, atomic view/host selection,
+media cadence/error and fullscreen lifetimes stay in separate ordinary hooks.
+Preserve 1500ms read cadence, latest-applied ordering, host clamping and 6s/15s
+playback. Identity changes clear old evidence/feedback immediately; obsolete
+fullscreen/read outcomes cannot affect a new session. Local demos never mount
+those connected hooks.
 
 SuperAdmin adapts to features/super-admin/PlatformGames. Separate list and inspector
 hooks own reads; PlatformGamesView/GameTable/GameInspector accept controlled data

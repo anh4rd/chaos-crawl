@@ -1,5 +1,17 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
+  FinalSlideshow: {
+    usage:
+      "Connected final-TV coordinator keyed by session ID in its route adapter. Never mount in local examples; Shared TV slideshow uses presentation components only.",
+    dependencies:
+      "Typed inferred view/read contracts, focused polling/selection/media/fullscreen hooks, existing sessionEvidenceUrl and shared TV views. Preserves same-session host selection and media cadence.",
+  },
+  SecretSlideshow: {
+    usage:
+      "Connected secret-review TV coordinator keyed by session ID. Missing mission retains the waiting guard; local examples never query its backend.",
+    dependencies:
+      "Typed inferred reads and focused external-system hooks. Identity changes discard previous evidence/feedback, while shared views receive resolved URLs and callbacks only.",
+  },
   SlideshowScreen: {
     usage:
       "Shared TV visual base accepting main/div, live, optional counter={index,total}, onFullscreen, error and children. Shared TV slideshow demonstrates local actions without requesting fullscreen or mounting a connected route.",
