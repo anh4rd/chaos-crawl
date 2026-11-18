@@ -1,0 +1,82 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/layers";
+
+.mobile-navigation {
+  @media (max-width: layout.$host-compact-breakpoint) {
+    position: fixed;
+    z-index: layers.$host-mobile-navigation;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    grid-template-columns: repeat(3, 1fr);
+    padding: (layout.$pixel-unit * 2) (layout.$pixel-unit * 2)
+      max((layout.$pixel-unit * 2), env(safe-area-inset-bottom));
+    border-top: (layout.$pixel-unit * 0.25) solid var(--host-line);
+    background: colors.$navigation-backdrop;
+    backdrop-filter: blur((layout.$pixel-unit * 3));
+  }
+  @media (max-width: layout.$host-compact-breakpoint) {
+    & a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: (layout.$pixel-unit * 0.75);
+      padding: (layout.$pixel-unit * 1.75);
+      border-radius: (layout.$pixel-unit * 2.5);
+      color: colors.$navigation-muted;
+      text-decoration: none;
+      font-size: fonts.$size-navigation-caption;
+      font-weight: fonts.$weight-action;
+    }
+  }
+  @media (max-width: layout.$host-compact-breakpoint) {
+    & a.active {
+      color: var(--host-purple);
+      background: colors.$navigation-active-wash;
+    }
+  }
+  display: none;
+  @media (max-width: layout.$host-mobile-breakpoint) {
+    position: fixed;
+    z-index: layers.$host-mobile-navigation;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    padding: (layout.$pixel-unit * 2.25) (layout.$pixel-unit * 2)
+      calc((layout.$pixel-unit * 2.25) + env(safe-area-inset-bottom));
+    background: colors.$mobile-navigation-surface;
+    border-top: (layout.$pixel-unit * 0.75) solid var(--cc-ink);
+  }
+  @media (max-width: layout.$host-mobile-breakpoint) {
+    & a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: (layout.$pixel-unit * 1);
+      color: colors.$white;
+      text-decoration: none;
+      font-size: fonts.$size-micro;
+      font-weight: fonts.$weight-label;
+      padding: (layout.$pixel-unit * 1.75) (layout.$pixel-unit * 3);
+      border-radius: (layout.$pixel-unit * 3.25);
+    }
+  }
+  @media (max-width: layout.$host-mobile-breakpoint) {
+    & a.active {
+      background: var(--cc-lime);
+      color: var(--cc-ink);
+    }
+  }
+  .host-portal.host-portal--app & {
+    border-top: (layout.$pixel-unit * 0.75) solid colors.$comic-ink;
+    background: colors.$mobile-navigation-surface;
+  }
+  .host-portal.host-portal--app & a.active {
+    background: colors.$accent-soft;
+    color: colors.$comic-ink;
+  }
+}

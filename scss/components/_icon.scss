@@ -1,3 +1,4 @@
+@use "../variables/motion";
 @use "../variables/icons";
 
 .icon {
@@ -99,5 +100,17 @@
   &--size-52 {
     width: icons.$size-52;
     height: icons.$size-52;
+  }
+}
+
+.icon {
+  &--spinning {
+    animation: icon-spin motion.$duration-spinner linear infinite;
+  }
+}
+
+@keyframes icon-spin {
+  to {
+    transform: rotate(motion.$rotation-full);
   }
 }

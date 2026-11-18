@@ -1,0 +1,8 @@
+@use "../variables/layout";
+
+.event-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: (layout.$pixel-unit * 2);
+  margin: (layout.$pixel-unit * 3.5) 0;
+}

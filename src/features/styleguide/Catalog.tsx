@@ -1,4 +1,8 @@
+import Badge from "../../components/ui/Badge";
+import Button from "../../components/ui/Button";
+import EmptyState from "../../components/ui/EmptyState";
 import Icon from "../../components/ui/Icon";
+import Note from "../../components/ui/Note";
 
 import { useState } from "react";
 import { componentCatalog } from "./catalog";
@@ -12,46 +16,51 @@ export function Catalog() {
   );
   return (
     <>
-      <label className="sg-search">
+      <label className="component-catalog__search">
         <Icon name="search" className="icon--size-19" />
-        <span className="sg-sr-only">Search component catalog</span>
+        <span className="u-visually-hidden">Search component catalog</span>
         <input
+          className="component-catalog__input"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search components, props or source paths…"
           type="search"
         />
       </label>
-      <p className="sg-note" role="status">
+      <Note role="status">
         {entries.length} of {componentCatalog.length} component modules
-      </p>
-      <div className="sg-catalog">
+      </Note>
+      <div className="component-catalog">
         {entries.map((entry) => (
-          <article key={entry.path}>
+          <article className="component-catalog__item" key={entry.path}>
             <div>
-              <span className="sg-tag">{entry.group}</span>
-              <h3>{entry.name}</h3>
-              <code>{entry.path}</code>
+              <Badge variant="subtle">{entry.group}</Badge>
+              <h3 className="component-catalog__title">{entry.name}</h3>
+              <code className="component-catalog__source">{entry.path}</code>
             </div>
             <div>
-              <p>{entry.usage}</p>
-              <p className="sg-note">{entry.dependencies}</p>
+              <p className="component-catalog__usage">{entry.usage}</p>
+              <Note compact>{entry.dependencies}</Note>
             </div>
           </article>
         ))}
       </div>
       {entries.length === 0 && (
-        <div className="sg-empty">
-          <Icon name="search" className="icon--size-28" />
-          <p>No components match “{search}”.</p>
-          <button
-            className="sg-text-button"
-            type="button"
-            onClick={() => setSearch("")}
-          >
-            Clear search
-          </button>
-        </div>
+        <EmptyState
+          icon="search"
+          action={
+            <Button
+              variant="text"
+              fullWidth={false}
+              type="button"
+              onClick={() => setSearch("")}
+            >
+              Clear search
+            </Button>
+          }
+        >
+          No components match “{search}”.
+        </EmptyState>
       )}
     </>
   );

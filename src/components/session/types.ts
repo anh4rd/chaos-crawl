@@ -12,6 +12,7 @@ export interface SessionProfile {
 }
 
 export interface SessionGame {
+  tourTarget?: string;
   name: string;
   code: string;
   photoUrl?: string | null;

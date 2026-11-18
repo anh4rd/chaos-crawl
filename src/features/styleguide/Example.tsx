@@ -7,11 +7,13 @@ export function Example({
   source,
   code,
   children,
+  className = "",
 }: {
   title: string;
   source: string;
   code: string;
   children: ReactNode;
+  className?: string;
 }) {
   const [copyStatus, setCopyStatus] = useState("");
   async function copy() {
@@ -23,21 +25,25 @@ export function Example({
     }
   }
   return (
-    <article className="sg-example">
-      <header>
-        <h3>{title}</h3>
-        <code>{source}</code>
+    <article className={`component-example ${className}`.trim()}>
+      <header className="component-example__header">
+        <h3 className="component-example__title">{title}</h3>
+        <code className="component-example__source">{source}</code>
       </header>
-      <div className="sg-preview">{children}</div>
-      <details>
-        <summary>Usage example</summary>
-        <div className="sg-code-toolbar">
-          <button type="button" onClick={() => void copy()}>
+      <div className="component-example__preview">{children}</div>
+      <details className="component-example__usage">
+        <summary className="component-example__summary">Usage example</summary>
+        <div className="component-example__toolbar">
+          <button
+            className="component-example__copy-button"
+            type="button"
+            onClick={() => void copy()}
+          >
             <Icon name="copy" className="icon--size-14" /> Copy code
           </button>
           <span role="status">{copyStatus}</span>
         </div>
-        <pre>
+        <pre className="component-example__code">
           <code>{code}</code>
         </pre>
       </details>

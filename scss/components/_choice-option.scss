@@ -1,0 +1,44 @@
+@use "../variables/colors";
+@use "../variables/effects";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.choice-option {
+  display: flex;
+  gap: layout.$pixel-unit * 2.5;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  padding: layout.$pixel-unit * 2.5;
+  border: layout.$pixel-unit * 0.25 solid colors.$choice-lavender;
+  border-radius: layout.$pixel-unit * 3.75;
+  background: colors.$white;
+  color: colors.$ink;
+  font: inherit;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: effects.$setup-disabled-opacity;
+    cursor: not-allowed;
+  }
+
+  &--selected {
+    border: layout.$session-border-width solid colors.$purple;
+    background: colors.$compact-rank-surface;
+  }
+
+  &__copy {
+    display: grid;
+    gap: layout.$pixel-unit * 0.75;
+    flex: 1;
+
+    small {
+      color: colors.$session-empty-copy;
+      font-size: fonts.$size-caption;
+    }
+  }
+
+  > svg {
+    color: colors.$purple;
+  }
+}

@@ -1,0 +1,83 @@
+@use "../tools/reveal-heading";
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../tools/dialog-copy";
+
+.dialog-panel {
+  width: min(100%, layout.$dialog-panel-width);
+  padding: layout.$pixel-unit * 5.5;
+  border: layout.$session-border-width solid colors.$session-frame-ink;
+  border-radius: layout.$pixel-unit * 5.5;
+  color: colors.$session-text;
+  background: colors.$white;
+  box-shadow: 0 layout.$pixel-unit * 2 0 colors.$session-frame-ink;
+
+  h2 {
+    margin: layout.$pixel-unit * 3 0 layout.$pixel-unit * 2;
+    font-family: fonts.$family-display;
+    font-size: fonts.$size-dialog-heading;
+  }
+  p:where(:not([class])) {
+    @include dialog-copy.dialog-copy;
+    color: colors.$editor-copy;
+  }
+  ul {
+    display: grid;
+    gap: layout.$pixel-unit * 1.5;
+    margin: layout.$pixel-unit * 3 0;
+    padding: layout.$pixel-unit * 3 layout.$pixel-unit * 3 layout.$pixel-unit *
+      3 layout.$pixel-unit * 7.5;
+    border-radius: layout.$pixel-unit * 3.25;
+    color: colors.$editor-label;
+    background: colors.$editor-list-surface;
+    font-size: fonts.$size-label;
+  }
+  &--form {
+    max-height: layout.$dialog-form-max-height;
+    overflow: auto;
+
+    input:not([type="checkbox"]),
+    textarea {
+      width: 100%;
+      padding: layout.$pixel-unit * 2.5 layout.$pixel-unit * 2.75;
+      border: layout.$control-border-width solid colors.$editor-input-border;
+      border-radius: layout.$pixel-unit * 2.5;
+      color: colors.$session-text;
+      background: colors.$white;
+      font: inherit;
+      font-size: fonts.$size-label;
+    }
+  }
+}
+
+.dialog-panel {
+  &--reveal {
+    width: min(100%, layout.$reveal-width);
+    overflow: hidden;
+    padding: layout.$pixel-unit * 3.25;
+    border: layout.$session-border-width solid colors.$lobby-setup-shadow;
+    border-radius: layout.$pixel-unit * 4.5;
+    background: colors.$challenge-icon-glow;
+    color: colors.$lobby-setup-shadow;
+    box-shadow: 0 layout.$pixel-unit * 1.25 0 colors.$lobby-setup-shadow;
+
+    h2 {
+      @include reveal-heading.reveal-heading;
+      margin: layout.$pixel-unit * 0.75 0 layout.$pixel-unit * 1.75;
+      font-size: fonts.$size-brand-host;
+      line-height: 0.9;
+      letter-spacing: fonts.$tracking-overview-heading;
+      text-transform: uppercase;
+    }
+    > p {
+      margin: 0 0 layout.$pixel-unit * 2.25;
+      color: colors.$lobby-setup-shadow;
+      font-family: fonts.$family-reveal-copy;
+      font-size: fonts.$size-caption;
+      font-weight: fonts.$weight-bold;
+      line-height: 1.28;
+      white-space: pre-wrap;
+    }
+  }
+}

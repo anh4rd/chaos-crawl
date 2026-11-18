@@ -2,9 +2,13 @@ import { useState } from "react";
 import GuidedTour from "../../components/tour/GuidedTour";
 import Button from "../../components/ui/Button";
 import DataError from "../../components/ui/DataError";
+import Note from "../../components/ui/Note";
+import TimerDisplay from "../../components/ui/TimerDisplay";
 import ScheduledCountdown from "../ScheduledCountdown";
 import QueryPanel from "../admin/QueryPanel";
 import { Example } from "./Example";
+import ExampleGrid from "./ExampleGrid";
+import StateExample from "./StateExample";
 
 export function FeedbackExamples() {
   const [failed, setFailed] = useState(true);
@@ -14,7 +18,7 @@ export function FeedbackExamples() {
   );
   return (
     <>
-      <div className="sg-grid">
+      <ExampleGrid>
         <Example
           title="QueryPanel"
           source="src/features/admin/QueryPanel.tsx"
@@ -22,7 +26,7 @@ export function FeedbackExamples() {
             '<QueryPanel queries={[query]} loadingText="Loading challenges...">\n  <ChallengeList challenges={query.data} />\n</QueryPanel>\n// query supplies loading, error and async reload.'
           }
         >
-          <div className="sg-state">
+          <StateExample>
             <strong>Loading</strong>
             <QueryPanel
               queries={[{ loading: true, error: null, reload: async () => {} }]}
@@ -30,8 +34,8 @@ export function FeedbackExamples() {
             >
               <p>Challenge list</p>
             </QueryPanel>
-          </div>
-          <div className="sg-state">
+          </StateExample>
+          <StateExample>
             <strong>Loaded / empty</strong>
             <QueryPanel
               queries={[
@@ -41,7 +45,7 @@ export function FeedbackExamples() {
             >
               <p>No challenges yet. Add your first challenge to get started.</p>
             </QueryPanel>
-          </div>
+          </StateExample>
         </Example>
         <Example
           title="DataError"
@@ -59,16 +63,17 @@ export function FeedbackExamples() {
               />
             </div>
           ) : (
-            <div className="sg-state">
+            <StateExample>
               <p role="status">Demo recovered successfully.</p>
-              <button
-                className="sg-text-button"
+              <Button
+                variant="text"
+                fullWidth={false}
                 type="button"
                 onClick={() => setFailed(true)}
               >
                 Show error again
-              </button>
-            </div>
+              </Button>
+            </StateExample>
           )}
         </Example>
         <Example
@@ -78,12 +83,10 @@ export function FeedbackExamples() {
             "<ScheduledCountdown targetTime={scheduledRevealAt} />\n// ISO date string; null renders nothing."
           }
         >
-          <p className="sg-timer">
+          <TimerDisplay>
             <ScheduledCountdown targetTime={targetTime} />
-          </p>
-          <p className="sg-note">
-            Live countdown · five minutes from opening this page
-          </p>
+          </TimerDisplay>
+          <Note>Live countdown · five minutes from opening this page</Note>
           <p>
             Expired: <ScheduledCountdown targetTime="2020-01-01T00:00:00Z" />
           </p>
@@ -98,11 +101,9 @@ export function FeedbackExamples() {
           <Button fullWidth={false} type="button" onClick={() => setTour(true)}>
             Preview guided tour
           </Button>
-          <p className="sg-note">
-            Uses the real tour overlay and existing page targets.
-          </p>
+          <Note>Uses the real tour overlay and existing page targets.</Note>
         </Example>
-      </div>
+      </ExampleGrid>
       {tour && (
         <GuidedTour
           label="STYLEGUIDE TOUR"

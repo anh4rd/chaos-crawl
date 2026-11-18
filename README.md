@@ -145,6 +145,11 @@ automatically; previews reuse the production components and styles.
 
 - `src/pages` composes routes. Admin tabs, game challenges, voting, slideshow
   playback, and submission review have focused components in `src/features`.
+- The V2 host route keys its feature coordinator by session ID. Focused controllers
+  own lobby, participation, roster, timer, rewards, final voting, secret reviews
+  and moderation. Host polling lives in its read hook, and timer writes are queued.
+- Host and participant persistence commands are typed services in `src/lib`.
+  Shared session UI receives presentation data and callbacks, with no backend access.
 - `src/game/hooks` owns live reads and challenge participation. Read hooks expose
   `{ data, loading, error, reload }`, cancel superseded requests, and refresh from
   the database when Realtime changes arrive.

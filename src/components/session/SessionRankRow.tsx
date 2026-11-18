@@ -4,15 +4,26 @@ import type { RankedParticipant } from "./types";
 
 export default function SessionRankRow({
   entry,
+  variant,
   rank,
   selected = false,
   action,
 }: {
   entry: RankedParticipant;
+  variant?: "compact";
   rank: number;
   selected?: boolean;
   action?: ReactNode;
 }) {
+  if (variant === "compact")
+    return (
+      <span className="session-rank-row session-rank-row--compact">
+        <b>
+          {rank}. {entry.name}
+        </b>
+        <small>{entry.score} pts</small>
+      </span>
+    );
   return (
     <article
       className={`session-rank-row${selected ? " session-rank-row--selected" : ""}`}

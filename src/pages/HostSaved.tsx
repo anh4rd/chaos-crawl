@@ -1,5 +1,6 @@
+import IconButton from "../components/ui/IconButton";
 import { useCallback, useEffect, useState } from "react";
-import HostShell from "../components/host/HostShell";
+import HostWorkspace from "../features/host-workspace/HostWorkspace";
 import Icon from "../components/ui/Icon";
 import { supabase } from "../lib/sessionSupabase";
 import "../styles/HostPortal.css";
@@ -72,7 +73,7 @@ export default function HostSaved() {
   );
 
   return (
-    <HostShell
+    <HostWorkspace
       title="Your saved stuff"
       subtitle="Keep challenges, location ideas and route templates close for next time."
       showCreate
@@ -151,14 +152,14 @@ export default function HostSaved() {
                     </span>
                   )}
                 </div>
-                <button
+                <IconButton
                   type="button"
-                  className="host-icon-button host-icon-button--danger"
-                  aria-label={`Remove ${title} from saved items`}
                   onClick={() => void remove(item)}
-                >
-                  <Icon name="trash2" className="icon--size-17" />
-                </button>
+                  icon="trash2"
+                  label={`Remove ${title} from saved items`}
+                  iconClassName="icon--size-17"
+                  variant="danger"
+                />
               </article>
             );
           })}
@@ -173,6 +174,6 @@ export default function HostSaved() {
           </p>
         </div>
       )}
-    </HostShell>
+    </HostWorkspace>
   );
 }

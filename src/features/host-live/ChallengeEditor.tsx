@@ -1,9 +1,19 @@
+import FormGrid from "../../components/ui/FormGrid";
+import FormLabel from "../../components/ui/FormLabel";
+import DialogPanel from "../../components/ui/DialogPanel";
+import DialogActions from "../../components/ui/DialogActions";
+import Button from "../../components/ui/Button";
+import Badge from "../../components/ui/Badge";
+import SessionFeedback from "../../components/session/SessionFeedback";
+import Dialog from "../../components/ui/Dialog";
 import type { Dispatch, SetStateAction } from "react";
 import { type FormEvent } from "react";
 import type { SessionChallenge } from "./types";
 
 interface ChallengeEditorProps {
   busy: boolean;
+  error: string;
+  onDismissError: () => void;
   setEditingBreakChallenge: Dispatch<SetStateAction<SessionChallenge | null>>;
   saveBreakChallengeEdit: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   editingBreakChallenge: SessionChallenge;
@@ -23,6 +33,8 @@ interface ChallengeEditorProps {
 
 export default function ChallengeEditor({
   busy,
+  error,
+  onDismissError,
   setEditingBreakChallenge,
   saveBreakChallengeEdit,
   editingBreakChallenge,
@@ -40,26 +52,22 @@ export default function ChallengeEditor({
   setEditChallengeEvidence,
 }: ChallengeEditorProps) {
   return (
-    <div
-      className="cc-host-override-backdrop"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !busy)
-          setEditingBreakChallenge(null);
-      }}
+    <Dialog
+      variant="host"
+      label="Update the upcoming challenge"
+      labelledBy="cc-host-break-edit-title"
+      dismissDisabled={busy}
+      onClose={() => setEditingBreakChallenge(null)}
     >
-      <form
-        className="cc-host-override-dialog cc-host-break-edit-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="cc-host-break-edit-title"
+      <DialogPanel
+        as="form"
         onSubmit={(event) => void saveBreakChallengeEdit(event)}
       >
-        <span className="cc-host-override-kicker">
+        <Badge variant="dialog">
           EDIT ROUND {editingBreakChallenge.round_number}
-        </span>
+        </Badge>
         <h2 id="cc-host-break-edit-title">Update the upcoming challenge</h2>
-        <label>
+        <FormLabel spaced>
           Challenge title
           <input
             required
@@ -67,8 +75,8 @@ export default function ChallengeEditor({
             value={editChallengeTitle}
             onChange={(event) => setEditChallengeTitle(event.target.value)}
           />
-        </label>
-        <label>
+        </FormLabel>
+        <FormLabel spaced>
           Instructions
           <textarea
             rows={4}
@@ -77,17 +85,17 @@ export default function ChallengeEditor({
               setEditChallengeDescription(event.target.value)
             }
           />
-        </label>
-        <label>
+        </FormLabel>
+        <FormLabel spaced>
           Equipment needed <small>Separate items with commas.</small>
           <textarea
             rows={2}
             value={editChallengeEquipment}
             onChange={(event) => setEditChallengeEquipment(event.target.value)}
           />
-        </label>
-        <div className="cc-host-break-edit-numbers">
-          <label>
+        </FormLabel>
+        <FormGrid variant="dialog">
+          <FormLabel>
             Minutes
             <input
               type="number"
@@ -98,8 +106,8 @@ export default function ChallengeEditor({
                 setEditChallengeDuration(Number(event.target.value))
               }
             />
-          </label>
-          <label>
+          </FormLabel>
+          <FormLabel>
             Points
             <input
               type="number"
@@ -110,29 +118,39 @@ export default function ChallengeEditor({
                 setEditChallengePoints(Number(event.target.value))
               }
             />
-          </label>
-        </div>
-        <label className="cc-host-break-edit-check">
+          </FormLabel>
+        </FormGrid>
+        <FormLabel spaced variant="checkbox">
           <input
             type="checkbox"
             checked={editChallengeEvidence}
             onChange={(event) => setEditChallengeEvidence(event.target.checked)}
           />{" "}
           Players must submit photo or video evidence
-        </label>
-        <div className="cc-host-override-actions">
-          <button
+        </FormLabel>
+        {error && (
+          <SessionFeedback message={error} onDismiss={onDismissError} />
+        )}
+        <DialogActions>
+          <Button
+            fullWidth={false}
+            variant="dialog"
             type="button"
             disabled={busy}
             onClick={() => setEditingBreakChallenge(null)}
           >
             Cancel
-          </button>
-          <button type="submit" disabled={busy || !editChallengeTitle.trim()}>
+          </Button>
+          <Button
+            fullWidth={false}
+            variant="dialog-primary"
+            type="submit"
+            disabled={busy || !editChallengeTitle.trim()}
+          >
             {busy ? "Saving…" : "Save challenge"}
-          </button>
-        </div>
-      </form>
-    </div>
+          </Button>
+        </DialogActions>
+      </DialogPanel>
+    </Dialog>
   );
 }

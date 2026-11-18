@@ -1,0 +1,14 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.step-label {
+  display: inline-flex;
+  align-items: center;
+  gap: (layout.$pixel-unit * 2);
+  color: colors.$purple;
+  font-size: fonts.$size-small;
+  font-weight: fonts.$weight-action;
+  letter-spacing: fonts.$tracking-compact;
+  text-transform: uppercase;
+}

@@ -1,8 +1,12 @@
+import TimelineItem from "./TimelineItem";
+import Explainer from "../../components/ui/Explainer";
+import FormGrid from "../../components/ui/FormGrid";
+import ContentPanel from "../../components/ui/ContentPanel";
+import Button from "../../components/ui/Button";
 import type { Dispatch, SetStateAction } from "react";
 import { Field } from "../../components/ui/Field";
 import Icon from "../../components/ui/Icon";
 import { Toggle } from "../../components/ui/Toggle";
-import { timePlus } from "../../utils/dateTime";
 import { type ScheduleItem, type SetupForm, type Task } from "./types";
 
 interface ScheduleBuilderProps {
@@ -37,8 +41,8 @@ export default function ScheduleBuilder({
   deleteScheduleItem,
 }: ScheduleBuilderProps) {
   return (
-    <section className="cc-section-card">
-      <div className="cc-schedule-top">
+    <ContentPanel variant="section">
+      <div className="timeline-header">
         <div>
           <h3>Event timeline</h3>
           <p>
@@ -46,12 +50,12 @@ export default function ScheduleBuilder({
             adjust the running order.
           </p>
         </div>
-        <div className="cc-end-time">
+        <div className="end-time">
           <small>Estimated finish</small>
           <strong>{calculatedEnd}</strong>
         </div>
       </div>
-      <div className="cc-form-grid">
+      <FormGrid>
         <Field label="Default break between challenges">
           <select
             value={form.breakMinutes}
@@ -75,9 +79,9 @@ export default function ScheduleBuilder({
             <option value={60}>60 minutes</option>
           </select>
         </Field>
-      </div>
+      </FormGrid>
       {form.sideChallenges && (
-        <div className="cc-explainer">
+        <Explainer>
           <Icon name="info" className="icon--size-18" />
           <p>
             <strong>
@@ -88,9 +92,9 @@ export default function ScheduleBuilder({
             {sideReviewCount === 1 ? "review" : "reviews"} at 5 minutes each. Up
             to {sideRewardPoints} challenge points are available to award.
           </p>
-        </div>
+        </Explainer>
       )}
-      <div className="cc-schedule-actions">
+      <div className="timeline-actions">
         <Field label="Add a challenge">
           <select
             defaultValue=""
@@ -109,154 +113,43 @@ export default function ScheduleBuilder({
               ))}
           </select>
         </Field>
-        <button
+        <Button
           type="button"
-          className="cc-secondary"
+          variant="setup-secondary"
+          fullWidth={false}
           onClick={() => addScheduleItem("challenge")}
         >
           <Icon name="plus" className="icon--size-15" /> Create challenge
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="cc-secondary"
+          variant="setup-secondary"
+          fullWidth={false}
           onClick={() => addScheduleItem("break")}
         >
           <Icon name="plus" className="icon--size-15" /> Add break
-        </button>
+        </Button>
       </div>
-      <div className="cc-schedule-list">
+      <div className="event-timeline">
         {form.schedule.map((item, index) => {
-          const start = form.schedule
-            .slice(0, index)
-            .reduce((m, x) => m + x.duration, 0);
           return (
-            <article
-              className={`cc-schedule-item type-${item.type}`}
+            <TimelineItem
               key={item.id}
-              draggable={item.type === "challenge"}
-              onDragStart={() => setDragged(item.id)}
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={() => {
-                if (!dragged || dragged === item.id) return;
-                const a = [...form.schedule];
-                const from = a.findIndex((x) => x.id === dragged);
-                const to = a.findIndex((x) => x.id === item.id);
-                if (from >= 0 && to >= 0) {
-                  const [moved] = a.splice(from, 1);
-                  a.splice(to, 0, moved);
-                  update("schedule", a);
-                }
-                setDragged(null);
-              }}
-            >
-              <div className="cc-schedule-time">
-                <strong>
-                  {item.type === "pregame"
-                    ? "BEFORE"
-                    : timePlus(form.startTime, start)}
-                </strong>
-                <small>
-                  {item.type === "pregame"
-                    ? "Before arrival"
-                    : `${item.duration} min`}
-                </small>
-              </div>
-              <div className="cc-schedule-detail">
-                <span className="cc-schedule-type">
-                  {item.type === "teams"
-                    ? "TEAM SELECTION"
-                    : item.type.toUpperCase()}
-                </span>
-                <>
-                  {item.type === "challenge" ? (
-                    <input
-                      className="cc-schedule-title-edit"
-                      aria-label={`Edit ${item.title}`}
-                      value={item.title}
-                      onChange={(e) =>
-                        updateScheduleItem(item.id, {
-                          title: e.target.value,
-                        })
-                      }
-                    />
-                  ) : (
-                    <strong>{item.title}</strong>
-                  )}
-                  {item.taskId && (
-                    <small>
-                      {allTasks.find((t) => t.id === item.taskId)?.prep}
-                    </small>
-                  )}
-                  {item.taskId &&
-                    !!allTasks.find((t) => t.id === item.taskId)?.equipment
-                      .length && (
-                      <small>
-                        Equipment:{" "}
-                        {allTasks
-                          .find((t) => t.id === item.taskId)
-                          ?.equipment.join(", ")}
-                      </small>
-                    )}
-                </>
-              </div>
-              {item.type !== "pregame" && (
-                <label className="cc-duration-edit">
-                  Duration
-                  <input
-                    type="number"
-                    min={1}
-                    max={240}
-                    value={item.duration}
-                    onChange={(e) =>
-                      updateScheduleItem(item.id, {
-                        duration: Math.max(1, Number(e.target.value)),
-                      })
-                    }
-                  />
-                </label>
-              )}
-              <button
-                type="button"
-                className="cc-icon-button"
-                title={`Delete ${item.title}`}
-                aria-label={`Delete ${item.title}`}
-                onClick={() => deleteScheduleItem(item.id)}
-              >
-                <Icon name="trash2" className="icon--size-15" />
-              </button>
-              {item.type === "challenge" && (
-                <div className="cc-schedule-move">
-                  <button
-                    onClick={() => {
-                      const next = form.schedule[index - 1];
-                      if (next?.type === "challenge") {
-                        const a = [...form.schedule];
-                        [a[index - 1], a[index]] = [a[index], a[index - 1]];
-                        update("schedule", a);
-                      }
-                    }}
-                  >
-                    <Icon name="arrow-up" className="icon--size-14" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      const next = form.schedule[index + 1];
-                      if (next?.type === "challenge") {
-                        const a = [...form.schedule];
-                        [a[index + 1], a[index]] = [a[index], a[index + 1]];
-                        update("schedule", a);
-                      }
-                    }}
-                  >
-                    <Icon name="arrow-down" className="icon--size-14" />
-                  </button>
-                </div>
-              )}
-            </article>
+              item={item}
+              index={index}
+              schedule={form.schedule}
+              startTime={form.startTime}
+              allTasks={allTasks}
+              dragged={dragged}
+              setDragged={setDragged}
+              onReorder={(items) => update("schedule", items)}
+              onPatch={updateScheduleItem}
+              onDelete={deleteScheduleItem}
+            />
           );
         })}
       </div>
-      <div className="cc-explainer">
+      <Explainer>
         <Icon name="info" className="icon--size-18" />
         <p>
           <strong>Flexible schedule.</strong> If a task overruns, the next
@@ -264,7 +157,7 @@ export default function ScheduleBuilder({
           override the schedule during the live game. Enable strict scheduling
           to turn on challenge timers.
         </p>
-      </div>
+      </Explainer>
       <Toggle
         title="Follow a strict schedule"
         detail="Enable countdown timers for timed challenges."
@@ -286,6 +179,6 @@ export default function ScheduleBuilder({
         checked={form.whatsappReminders}
         onChange={(v) => update("whatsappReminders", v)}
       />
-    </section>
+    </ContentPanel>
   );
 }

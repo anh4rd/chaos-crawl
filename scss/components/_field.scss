@@ -1,8 +1,11 @@
+@use "../tools/compact-select";
+@use "../variables/effects";
+@use "../variables/motion";
 @use "../variables/colors";
 @use "../variables/layout";
 @use "../variables/fonts";
 
-.field {
+.field:where(:not(.field--lobby)) {
   display: flex;
   flex-direction: column;
   gap: layout.$field-gap;
@@ -38,5 +41,67 @@
 
   select[multiple] {
     min-height: layout.$multiselect-height;
+  }
+}
+
+.field {
+  &--comic input,
+  &--comic select,
+  &--comic textarea,
+  &--comic select[multiple] {
+    min-height: auto;
+  }
+  &--comic {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: (layout.$pixel-unit * 1.75);
+    color: var(--host-ink);
+    font-size: fonts.$size-label;
+    font-weight: fonts.$weight-action;
+  }
+  &--comic input,
+  &--comic select,
+  &--comic textarea {
+    width: 100%;
+    min-width: 0;
+    border: (layout.$pixel-unit * 0.375) solid colors.$comic-control-border;
+    outline: none;
+    border-radius: (layout.$pixel-unit * 3.25);
+    padding: (layout.$pixel-unit * 3) (layout.$pixel-unit * 3.25);
+    color: var(--host-ink);
+    background: colors.$white;
+    font-weight: fonts.$weight-semibold;
+    font-size: fonts.$size-body;
+    box-shadow: 0 (layout.$pixel-unit * 0.25) 0 colors.$comic-control-shadow;
+  }
+  &--comic input:focus,
+  &--comic select:focus,
+  &--comic textarea:focus {
+    border-color: var(--host-purple);
+    box-shadow: 0 0 0 (layout.$pixel-unit * 0.75) colors.$context-border;
+  }
+  &--comic input::placeholder {
+    color: colors.$comic-placeholder;
+    font-weight: fonts.$weight-caption;
+  }
+  &--comic small {
+    color: var(--host-muted);
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-semibold;
+    line-height: 1.4;
+  }
+}
+
+.field {
+  &--lobby {
+    display: grid;
+    gap: (layout.$pixel-unit * 1.5);
+    color: colors.$purple-dark;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heavy;
+  }
+  &--lobby select {
+    @include compact-select.compact-select;
   }
 }

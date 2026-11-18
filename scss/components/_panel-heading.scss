@@ -1,0 +1,83 @@
+@use "../tools/panel-title";
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.panel-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: (layout.$pixel-unit * 2.5);
+  margin-bottom: (layout.$pixel-unit * 3);
+  & h3 {
+    @include panel-title.panel-title;
+  }
+  & small {
+    display: block;
+    margin-top: (layout.$pixel-unit * 1);
+    color: colors.$panel-heading-hint;
+    font-size: fonts.$size-micro;
+  }
+}
+
+.panel-heading {
+  .host-management &--session {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: layout.$pixel-unit * 3;
+    margin-bottom: 0;
+
+    h2 {
+      margin: layout.$pixel-unit 0;
+      color: colors.$white;
+      font-size: fonts.$size-session-panel-heading;
+      font-weight: fonts.$weight-heavy;
+      letter-spacing: fonts.$tracking-card-title;
+    }
+    p {
+      margin: 0;
+      color: colors.$session-helper;
+      font-size: fonts.$size-small;
+      line-height: 1.4;
+    }
+  }
+  @media (max-width: layout.$session-compact-breakpoint) {
+    .host-management &--session {
+      flex-direction: row;
+      gap: layout.$pixel-unit * 2;
+      h2 {
+        font-size: fonts.$size-heading;
+      }
+    }
+  }
+}
+
+.panel-heading {
+  &--dismissible {
+    position: relative;
+    padding-right: layout.$overlay-heading-clearance;
+  }
+}
+
+.panel-heading {
+  &--choice {
+    margin-bottom: layout.$pixel-unit * 3.5;
+
+    h2 {
+      margin: layout.$pixel-unit 0 0;
+      font-family: fonts.$family-choice-heading;
+      font-size: fonts.$size-stat;
+      font-weight: fonts.$weight-action;
+      line-height: 1.05;
+      color: colors.$white;
+    }
+  }
+}
+
+.panel-heading {
+  &--reveal {
+    gap: layout.$pixel-unit * 3;
+    margin-bottom: layout.$pixel-unit * 0.75;
+  }
+}

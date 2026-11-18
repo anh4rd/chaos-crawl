@@ -1,0 +1,200 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layers";
+@use "../variables/layout";
+
+@mixin action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: layout.$pixel-unit * 2.25;
+}
+
+.guided-tour {
+  --tour-gap: #{layout.$tour-gap};
+  --tour-edge: #{layout.$tour-edge};
+  --tour-width: #{layout.$tour-width};
+  --tour-target-pad: #{layout.$tour-target-pad};
+  --tour-preferred-room: #{layout.$tour-preferred-room};
+  --tour-dock-room: #{layout.$tour-dock-room};
+
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  z-index: layers.$tour;
+  pointer-events: none;
+  isolation: isolate;
+
+  &::backdrop {
+    background: transparent;
+  }
+
+  &__scrim {
+    position: fixed;
+    background: rgba(colors.$tour-scrim-ink, 0.7);
+    pointer-events: auto;
+
+    &--top {
+      top: 0;
+      left: 0;
+      right: 0;
+    }
+
+    &--left {
+      left: 0;
+    }
+
+    &--right {
+      right: 0;
+    }
+  }
+
+  &__card {
+    position: fixed;
+    z-index: layers.$tour-card;
+    box-sizing: border-box;
+    max-height: layout.$tour-card-max-height;
+    overflow: auto;
+    padding: layout.$pixel-unit * 4.5 layout.$pixel-unit * 5
+      layout.$pixel-unit * 4;
+    background: colors.$white;
+    border: layout.$pixel-unit * 0.75 solid colors.$border-ink;
+    border-radius: layout.$tour-card-radius;
+    box-shadow: layout.$pixel-unit * 1.75 layout.$pixel-unit * 1.75 0
+      colors.$purple-dark;
+    pointer-events: auto;
+    color: colors.$text-violet-ink;
+
+    h2 {
+      margin: layout.$pixel-unit 0 layout.$pixel-unit * 1.25;
+      font-size: fonts.$size-subheading;
+      line-height: 1.1;
+      font-weight: fonts.$weight-heavy;
+    }
+
+    p {
+      margin: 0;
+      color: colors.$text-muted;
+      line-height: 1.45;
+      font-size: fonts.$size-body;
+    }
+
+    @media (max-width: layout.$tour-mobile-breakpoint) {
+      padding: layout.$pixel-unit * 3.75 layout.$pixel-unit * 4
+        layout.$pixel-unit * 3.25;
+      border-radius: layout.$tour-card-mobile-radius;
+      max-height: layout.$tour-card-mobile-max-height;
+
+      h2 {
+        font-size: fonts.$size-heading;
+      }
+
+      p {
+        font-size: fonts.$size-label;
+      }
+    }
+  }
+
+  &__header {
+    @include action-row;
+
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-wide;
+    color: colors.$purple;
+
+    button {
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      width: layout.$pixel-unit * 8;
+      height: layout.$pixel-unit * 8;
+      background: colors.$surface-soft;
+      color: colors.$purple-dark;
+      cursor: pointer;
+    }
+  }
+
+  &__progress {
+    display: flex;
+    gap: layout.$pixel-unit * 1.25;
+    margin: layout.$pixel-unit * 3 0;
+
+    i {
+      height: layout.$pixel-unit * 1.25;
+      flex: 1;
+      border-radius: layout.$pixel-unit * 2.25;
+      background: colors.$progress-track;
+    }
+
+    i.guided-tour__step--done {
+      background: colors.$purple;
+    }
+  }
+
+  &__kicker {
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-wide;
+    color: colors.$pink;
+  }
+
+  &__actions {
+    @include action-row;
+
+    margin-top: layout.$pixel-unit * 4.25;
+
+    > div {
+      @include action-row;
+    }
+
+    button {
+      min-height: layout.$pixel-unit * 9.75;
+      border: 0;
+      border-radius: layout.$pixel-unit * 3;
+      padding: 0 layout.$pixel-unit * 3.25;
+      font: inherit;
+      font-size: fonts.$size-label;
+      font-weight: fonts.$weight-action;
+      cursor: pointer;
+    }
+
+    @media (max-width: layout.$tour-mobile-breakpoint) {
+      margin-top: layout.$pixel-unit * 3;
+    }
+  }
+
+  &__skip {
+    background: transparent;
+    color: colors.$text-subtle;
+  }
+
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.25;
+    background: colors.$surface-soft;
+    color: colors.$purple-dark;
+
+    &:disabled {
+      opacity: 0.35;
+    }
+  }
+
+  &__next {
+    display: inline-flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.5;
+    margin-left: layout.$pixel-unit * 1.5;
+    background: colors.$accent-soft;
+    color: colors.$text-violet-ink;
+  }
+}

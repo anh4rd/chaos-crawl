@@ -1,0 +1,50 @@
+@use "../tools/compact-input";
+@use "../tools/compact-select";
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+@use "../variables/effects";
+
+.team-editor {
+  &__members select {
+    @include compact-select.compact-select;
+  }
+  &__identity input {
+    @include compact-input.compact-input;
+  }
+  display: grid;
+  gap: (layout.$pixel-unit * 2);
+  padding: (layout.$pixel-unit * 2.25);
+  border: (layout.$pixel-unit * 0.25) solid colors.$team-editor-border-2;
+  border-radius: (layout.$pixel-unit * 3.25);
+  background: colors.$team-editor-surface;
+  &__identity {
+    display: flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 1.5);
+  }
+  &__members {
+    display: grid;
+    gap: (layout.$pixel-unit * 1.25);
+  }
+  &__members > label {
+    display: flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 1.5);
+    min-width: 0;
+  }
+  &__member-name {
+    flex: 1;
+    overflow: hidden;
+    font-size: fonts.$size-navigation-caption;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  &__members select {
+    min-height: (layout.$pixel-unit * 7.5);
+    max-width: (layout.$pixel-unit * 31.25);
+    padding: (layout.$pixel-unit * 1.25);
+    font-size: fonts.$size-navigation-caption;
+  }
+}

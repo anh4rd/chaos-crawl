@@ -1,0 +1,17 @@
+@use "../variables/layout";
+
+.round-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: layout.$pixel-unit * 1.75;
+  padding-top: layout.$pixel-unit * 0.75;
+}
+
+.round-selector {
+  &--detailed {
+    display: grid;
+    flex-wrap: nowrap;
+    gap: normal;
+    padding-top: 0;
+  }
+}

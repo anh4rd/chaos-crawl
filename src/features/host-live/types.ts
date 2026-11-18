@@ -182,6 +182,7 @@ export interface PresentationConnectionLike {
   state: string;
   close: () => void;
   addEventListener: (type: "statechange", listener: () => void) => void;
+  removeEventListener: (type: "statechange", listener: () => void) => void;
 }
 
 export type PresentationRequestConstructor = new (urls: string[]) => {

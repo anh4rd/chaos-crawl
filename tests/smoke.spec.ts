@@ -178,11 +178,11 @@ test("styleguide is public, searchable and uses local demo state", async ({
   await expect(
     page.getByRole("heading", { name: "Build on the good stuff." }),
   ).toBeVisible();
-  const catalogSize = await page.locator(".sg-catalog article").count();
+  const catalogSize = await page.locator(".component-catalog__item").count();
   expect(catalogSize).toBeGreaterThan(0);
   await page.getByLabel("Team name", { exact: true }).fill("The Trailblazers");
   await expect(
-    page.locator(".sg-player-chrome .session-profile__copy"),
+    page.locator(".session-preview .session-profile__copy"),
   ).toContainText("The Trailblazers");
 
   await page.getByRole("button", { name: "Try again", exact: true }).click();
@@ -195,8 +195,8 @@ test("styleguide is public, searchable and uses local demo state", async ({
   await page
     .getByLabel("Search component catalog")
     .fill("SessionPlayerProfile");
-  await expect(page.locator(".sg-catalog article")).toHaveCount(1);
-  await expect(page.locator(".sg-catalog")).toContainText(
+  await expect(page.locator(".component-catalog__item")).toHaveCount(1);
+  await expect(page.locator(".component-catalog")).toContainText(
     "SessionPlayerProfile",
   );
   await page.getByLabel("Search component catalog").fill("no-such-component");
@@ -204,7 +204,9 @@ test("styleguide is public, searchable and uses local demo state", async ({
     page.getByText("No components match", { exact: false }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Clear search" }).click();
-  await expect(page.locator(".sg-catalog article")).toHaveCount(catalogSize);
+  await expect(page.locator(".component-catalog__item")).toHaveCount(
+    catalogSize,
+  );
 
   await page.getByRole("button", { name: "Preview guided tour" }).click();
   await expect(
@@ -258,6 +260,13 @@ test("shared session styleguide switches roles and phases without backend access
   await expect(
     preview.getByRole("button", { name: "Host", exact: true }),
   ).toBeVisible();
+  await preview.getByRole("button", { name: "Host", exact: true }).click();
+  await preview
+    .getByRole("button", { name: "Return to sample game", exact: true })
+    .click();
+  await expect(
+    preview.getByRole("button", { name: "Game", exact: true }),
+  ).toBeFocused();
   await page.getByLabel("Phase", { exact: true }).selectOption("review");
   await expect(
     preview.getByRole("heading", { name: "Make a dramatic entrance" }),

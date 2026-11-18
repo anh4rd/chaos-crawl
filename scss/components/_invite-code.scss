@@ -1,0 +1,25 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+@use "../variables/effects";
+
+.invite-code {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: (layout.$pixel-unit * 2);
+  & > span {
+    display: grid;
+    gap: (layout.$pixel-unit * 0.5);
+    color: colors.$invite-code-text;
+    font-size: fonts.$size-tiny;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-compact;
+  }
+  & strong {
+    color: colors.$session-text;
+    font-size: fonts.$size-heading;
+    letter-spacing: fonts.$tracking-overline;
+  }
+}

@@ -1,7 +1,8 @@
+import Button from "../components/ui/Button";
 import Dialog from "../components/ui/Dialog";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import HostShell from "../components/host/HostShell";
+import HostWorkspace from "../features/host-workspace/HostWorkspace";
 import Icon from "../components/ui/Icon";
 import { supabase } from "../lib/sessionSupabase";
 import "../styles/HostPortal.css";
@@ -90,7 +91,7 @@ export default function SuperAdmin() {
   }
 
   return (
-    <HostShell title="Super Admin" subtitle="Platform-wide game oversight.">
+    <HostWorkspace title="Super Admin" subtitle="Platform-wide game oversight.">
       <div className="sa-header">
         <div>
           <span className="sa-kicker">
@@ -100,12 +101,13 @@ export default function SuperAdmin() {
           <h2>All games</h2>
           <p>View games created by every host account.</p>
         </div>
-        <button
-          className="host-button host-button--secondary"
+        <Button
+          variant="comic-secondary"
+          fullWidth={false}
           onClick={() => void load()}
         >
           <Icon name="refresh-cw" className="icon--size-16" /> Refresh
-        </button>
+        </Button>
       </div>
       {error && <div className="host-alert host-alert--error">{error}</div>}
       {denied && (
@@ -258,6 +260,6 @@ export default function SuperAdmin() {
           </section>
         </Dialog>
       )}
-    </HostShell>
+    </HostWorkspace>
   );
 }

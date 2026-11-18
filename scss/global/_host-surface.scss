@@ -1,0 +1,7 @@
+@use "../variables/colors";
+
+:root:has(.host-management__content),
+body:has(.host-management__content) {
+  min-height: 100%;
+  background: colors.$purple;
+}

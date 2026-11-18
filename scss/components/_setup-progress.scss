@@ -1,0 +1,81 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/motion";
+
+.setup-progress {
+  &__count {
+    color: colors.$purple-dark;
+  }
+  &__track span {
+    border-radius: (layout.$pixel-unit * 5);
+    transition: width motion.$duration-toggle motion.$easing-default;
+  }
+  & li {
+    color: colors.$progress-copy;
+  }
+  &__check {
+    color: colors.$purple-dark;
+    font-weight: fonts.$weight-heavy;
+  }
+  & li.setup-progress__item--complete {
+    color: colors.$purple-dark;
+    text-decoration: line-through;
+  }
+  & li.setup-progress__item--complete .setup-progress__check {
+    border-color: colors.$comic-ink;
+    color: colors.$comic-ink;
+  }
+  &__count {
+    display: block;
+    margin: 0 0 (layout.$pixel-unit * 2.5);
+    font-size: fonts.$size-body;
+  }
+  &__track {
+    height: (layout.$pixel-unit * 3.75);
+    border: (layout.$pixel-unit * 0.5) solid var(--cc-ink);
+    border-radius: (layout.$pixel-unit * 5);
+    overflow: hidden;
+    background: colors.$surface-soft;
+    margin-bottom: (layout.$pixel-unit * 3.75);
+  }
+  &__track span {
+    display: block;
+    height: 100%;
+    background: var(--cc-lime);
+    border-right: (layout.$pixel-unit * 0.5) solid var(--cc-ink);
+  }
+  & ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: (layout.$pixel-unit * 2.5);
+  }
+  & li {
+    display: flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 2.5);
+    font-size: fonts.$size-label;
+    font-weight: fonts.$weight-extra-bold;
+  }
+  &__check {
+    width: (layout.$pixel-unit * 5.75);
+    height: (layout.$pixel-unit * 5.75);
+    border: (layout.$pixel-unit * 0.5) solid var(--cc-ink);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: fonts.$size-small;
+    flex: none;
+  }
+  & li.setup-progress__item--complete .setup-progress__check {
+    background: var(--cc-lime);
+  }
+  .host-portal--app:has(.host-dashboard) &__count {
+    color: colors.$purple-dark;
+  }
+  .host-portal--app:has(.host-dashboard) & .setup-progress__check {
+    align-content: center;
+  }
+}

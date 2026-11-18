@@ -1,0 +1,56 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.explainer {
+  display: flex;
+  gap: (layout.$pixel-unit * 3);
+  align-items: flex-start;
+  margin: (layout.$pixel-unit * 3.5) 0;
+  padding: (layout.$pixel-unit * 3.25) (layout.$pixel-unit * 3.75);
+  border: (layout.$pixel-unit * 0.25) solid colors.$explainer-border;
+  border-radius: (layout.$pixel-unit * 3.5);
+  background: colors.$surface-soft;
+  color: colors.$explainer-text;
+  & svg {
+    flex: none;
+    margin-top: (layout.$pixel-unit * 0.5);
+  }
+  & p {
+    margin: 0;
+    font-size: fonts.$size-small;
+    line-height: 1.55;
+  }
+  &--pink {
+    border-color: colors.$explainer-pink-border;
+    background: colors.$explainer-pink-surface;
+    color: colors.$explainer-pink-text;
+  }
+}
+
+.explainer {
+  &--reward {
+    display: grid;
+    align-items: normal;
+    gap: layout.$pixel-unit * 1.5;
+    margin: 0;
+    padding: layout.$pixel-unit * 3.25 layout.$pixel-unit * 3.75;
+    border: layout.$control-border-width solid colors.$reward-instruction-border;
+    border-radius: layout.$pixel-unit * 3.75;
+    color: colors.$reward-instruction-ink;
+    background: colors.$reward-instruction-surface;
+    strong {
+      color: var(--lime);
+      font-size: fonts.$size-label;
+    }
+    span {
+      color: colors.$reward-instruction-copy;
+      font-size: fonts.$size-small;
+      line-height: 1.5;
+    }
+    b {
+      color: colors.$purple;
+      font-size: fonts.$size-small;
+    }
+  }
+}

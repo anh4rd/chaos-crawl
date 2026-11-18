@@ -1,0 +1,16 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+:root {
+  --cc-purple: #{colors.$purple};
+  --cc-purple-dark: #{colors.$purple-dark};
+  --cc-purple-deep: #{colors.$purple-deep};
+  --cc-lime: #{colors.$accent-soft};
+  --cc-pink: #{colors.$pink};
+  --cc-ink: #{colors.$comic-ink};
+  --cc-paper: #{colors.$white};
+  --cc-lavender: #{colors.$comic-lavender};
+  --cc-line: #{colors.$comic-line};
+  --cc-shadow: #{0 (layout.$pixel-unit * 1.25) 0 var(--cc-purple-dark)};
+  --cc-radius: #{(layout.$pixel-unit * 5.5)};
+}

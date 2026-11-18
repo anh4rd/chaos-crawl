@@ -1,0 +1,36 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.account-chip {
+  color: colors.$white;
+  @media (max-width: layout.$compact-breakpoint) {
+    &__name:last-child {
+      display: none;
+    }
+  }
+  &__preview {
+    color: colors.$white;
+    font-size: fonts.$size-tiny;
+    letter-spacing: fonts.$tracking-compact;
+    background: var(--cc-pink);
+    padding: (layout.$pixel-unit * 1) (layout.$pixel-unit * 2.25);
+    border-radius: (layout.$pixel-unit * 5);
+    font-weight: fonts.$weight-heavy;
+  }
+  font-size: fonts.$size-label;
+  @media (max-width: layout.$compact-breakpoint) {
+    &__name:last-child {
+      display: none;
+    }
+  }
+  display: flex;
+  align-items: center;
+  gap: (layout.$pixel-unit * 2.5);
+  font-weight: fonts.$weight-label;
+  @media (max-width: layout.$host-mobile-breakpoint) {
+    &__name {
+      display: none;
+    }
+  }
+}

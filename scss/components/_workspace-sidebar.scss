@@ -1,0 +1,47 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/layers";
+
+.workspace-sidebar {
+  position: sticky;
+  top: 0;
+  min-height: calc(100svh - (layout.$pixel-unit * 20.5));
+  grid-column: 1;
+  grid-row: 1;
+  padding: (layout.$pixel-unit * 6.5) (layout.$pixel-unit * 3.5)
+    (layout.$pixel-unit * 7.5);
+  background: colors.$sidebar-surface;
+  border-right: (layout.$pixel-unit * 0.5) solid colors.$sidebar-border;
+  display: flex;
+  flex-direction: column;
+  gap: (layout.$pixel-unit * 2.25);
+  @media (max-width: layout.$host-mobile-breakpoint) {
+    display: none;
+  }
+  .host-portal.host-portal--app & {
+    position: relative;
+    isolation: isolate;
+    border-right: 0;
+    background: transparent;
+  }
+  .host-portal.host-portal--app &::before {
+    position: absolute;
+    z-index: layers.$sidebar-decoration;
+    inset: (layout.$pixel-unit * 7) (layout.$pixel-unit * 2.5)
+      (layout.$pixel-unit * 6);
+    border: (layout.$pixel-unit * 0.5) solid colors.$comic-ink;
+    border-radius: (layout.$pixel-unit * 5.5);
+    background: colors.$sidebar-raised-surface;
+    box-shadow: (layout.$pixel-unit * 1) (layout.$pixel-unit * 1.25) 0
+      colors.$purple-dark;
+    content: "";
+  }
+  .host-portal.host-portal--app &--setup {
+    min-width: 0;
+  }
+  @media (max-width: layout.$host-stacked-breakpoint) {
+    .host-portal.host-portal--app &::before {
+      display: none;
+    }
+  }
+}

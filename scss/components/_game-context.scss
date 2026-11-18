@@ -1,0 +1,16 @@
+@use "../variables/layout";
+
+.game-context {
+  flex-direction: column;
+  position: sticky;
+  top: (layout.$pixel-unit * 4.5);
+  display: grid;
+  gap: (layout.$pixel-unit * 3.5);
+  @media (max-width: layout.$host-rail-breakpoint) {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (max-width: layout.$host-mobile-breakpoint) {
+    grid-template-columns: 1fr;
+  }
+}

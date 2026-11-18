@@ -1,0 +1,73 @@
+@use "../variables/effects";
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.count-badge {
+  display: grid;
+  place-items: center;
+  min-width: (layout.$pixel-unit * 6.75);
+  height: (layout.$pixel-unit * 6.75);
+  border-radius: 50%;
+  background: colors.$purple;
+  color: colors.$white;
+  font-size: fonts.$size-small;
+  font-weight: fonts.$weight-action;
+}
+
+.count-badge {
+  .host-management &--session {
+    display: inline;
+    min-width: auto;
+    height: auto;
+    place-items: normal;
+    flex: 0 0 auto;
+    border: layout.$control-border-width solid
+      rgba(colors.$accent-soft, effects.$session-count-border-opacity);
+    border-radius: layout.$badge-radius;
+    padding: layout.$pixel-unit * 2 layout.$pixel-unit * 2.5;
+    color: colors.$session-count-ink;
+    background: colors.$accent-soft;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-action;
+  }
+  @media (max-width: layout.$session-compact-breakpoint) {
+    .host-management &--session {
+      padding: layout.$pixel-unit * 1.5 layout.$pixel-unit * 2;
+      font-size: fonts.$size-navigation-caption;
+    }
+  }
+}
+
+.count-badge {
+  &--round-index,
+  &--round-index-current {
+    flex: 0 0 layout.$pixel-unit * 8;
+    min-width: auto;
+    width: layout.$pixel-unit * 8;
+    height: layout.$pixel-unit * 8;
+    border: layout.$pixel-unit * 0.25 solid colors.$session-panel-shadow;
+    border-radius: layout.$pixel-unit * 2.5;
+    background: colors.$stat-tile-border;
+    color: colors.$session-field-ink;
+    font-size: inherit;
+    font-weight: fonts.$weight-heavy;
+  }
+  &--round-index-current {
+    background: colors.$accent-soft;
+    color: colors.$round-index-current-ink;
+  }
+}
+
+.count-badge {
+  &--choice {
+    display: block;
+    min-width: auto;
+    height: auto;
+    place-items: normal;
+    border: 0;
+    border-radius: layout.$badge-radius;
+    padding: layout.$pixel-unit * 1.75 layout.$pixel-unit * 2.25;
+    font-size: fonts.$size-caption;
+  }
+}

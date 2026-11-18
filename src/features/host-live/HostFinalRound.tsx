@@ -1,3 +1,9 @@
+import StatTile from "../../components/ui/StatTile";
+import FormLabel from "../../components/ui/FormLabel";
+import FormGrid from "../../components/ui/FormGrid";
+import Overline from "../../components/ui/Overline";
+import ContentPanel from "../../components/ui/ContentPanel";
+import Button from "../../components/ui/Button";
 import SessionFinalRound from "../../components/session/SessionFinalRound";
 import Icon from "../../components/ui/Icon";
 import HostManagement from "./HostManagement";
@@ -80,14 +86,14 @@ export default function HostFinalRound({
   return (
     <>
       <HostManagement>
-        <section className="cc-session-card" data-tour="host-final-round">
-          <div className="cc-host-final-controls">
-            <strong className="cc-host-final-controls-title">
+        <ContentPanel variant="session" data-tour="host-final-round">
+          <ContentPanel variant="review-controls" as="div">
+            <Overline variant="review" as="strong">
               HOST CONTROLS
-            </strong>
-            <div className="cc-host-final-control-grid">
+            </Overline>
+            <FormGrid variant="review">
               {sideChallenges.length > 0 && (
-                <label className="cc-host-final-challenge-picker">
+                <FormLabel variant="review">
                   Choose side challenge
                   <select
                     value={selectedFinalChallengeId}
@@ -107,120 +113,139 @@ export default function HostFinalRound({
                       </option>
                     ))}
                   </select>
-                </label>
+                </FormLabel>
               )}
               {selectedFinalChallengeStatus === "pending" &&
                 sideChallenges.length > 0 && (
                   <>
-                    <button
+                    <Button
                       type="button"
-                      className="host-button cc-host-final-control-button is-primary"
+                      fullWidth={false}
                       disabled={busy}
                       onClick={() => void setFinalGallery(true, true)}
+                      variant="review-comic-primary"
                     >
                       <Icon name="heart" className="icon--size-15" /> Open
                       Voting
-                    </button>
+                    </Button>
                   </>
                 )}
               {selectedFinalChallengeStatus === "voting" && (
                 <>
-                  <div className="cc-host-final-player-count">
-                    <span>Players voted</span>
-                    <strong>
-                      {selectedFinalChallengeVotes.length}/{players.length}
-                    </strong>
-                  </div>
-                  <button
+                  <StatTile
+                    variant="review"
+                    label="Players voted"
+                    value={
+                      <>
+                        {selectedFinalChallengeVotes.length}/{players.length}
+                      </>
+                    }
+                  />
+                  <Button
                     type="button"
-                    className="host-button cc-host-final-control-button is-primary"
+                    fullWidth={false}
                     disabled={busy}
                     onClick={() => void setFinalGallery(true, false)}
+                    variant="review-comic-primary"
                   >
                     <Icon name="flag" className="icon--size-15" /> Show Results
-                  </button>
+                  </Button>
                 </>
               )}
               {selectedFinalChallengeStatus === "results" && (
                 <>
                   {session.final_gallery_open ? (
                     <>
-                      <div className="cc-host-final-player-count">
-                        <span>Results shared</span>
-                        <strong>
-                          {selectedFinalChallengeState?.votes_cast ?? 0} votes
-                        </strong>
-                      </div>
-                      <button
+                      <StatTile
+                        variant="review"
+                        label="Results shared"
+                        value={
+                          <>
+                            {selectedFinalChallengeState?.votes_cast ?? 0} votes
+                          </>
+                        }
+                      />
+                      <Button
                         type="button"
-                        className="host-button cc-host-final-control-button"
+                        fullWidth={false}
                         disabled={busy}
                         onClick={() => void reopenFinalChallengeVoting()}
+                        variant="review-comic"
                       >
                         <Icon name="heart" className="icon--size-15" /> Reopen
                         Voting
-                      </button>
+                      </Button>
                       {nextPendingFinalChallenge ? (
-                        <button
+                        <Button
                           type="button"
-                          className="host-button cc-host-final-control-button is-primary is-wide"
+                          fullWidth={false}
                           disabled={busy}
                           onClick={() => void advanceFinalChallenge()}
+                          variant="review-comic-primary"
+                          className="btn--review-wide"
                         >
                           <Icon name="arrow-right" className="icon--size-15" />{" "}
                           Next challenge · {nextPendingFinalChallenge.title}
-                        </button>
+                        </Button>
                       ) : (
-                        <button
+                        <Button
                           type="button"
-                          className="host-button cc-host-final-control-button is-primary is-wide"
+                          fullWidth={false}
                           disabled={busy}
                           onClick={() => void setFinalGallery(false, false)}
+                          variant="review-comic-primary"
+                          className="btn--review-wide"
                         >
                           Return all players to game
-                        </button>
+                        </Button>
                       )}
                     </>
                   ) : (
                     <>
-                      <button
+                      <Button
                         type="button"
-                        className="host-button cc-host-final-control-button"
+                        fullWidth={false}
                         disabled={busy}
                         onClick={() => void setFinalGallery(true, false)}
+                        variant="review-comic"
                       >
                         <Icon name="heart" className="icon--size-15" /> Show
                         Results
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className="host-button cc-host-final-control-button"
+                        fullWidth={false}
                         disabled={busy}
                         onClick={() => void reopenFinalChallengeVoting()}
+                        variant="review-comic"
                       >
                         <Icon name="heart" className="icon--size-15" /> Reopen
                         Voting
-                      </button>
+                      </Button>
                       {nextPendingFinalChallenge ? (
-                        <button
+                        <Button
                           type="button"
-                          className="host-button cc-host-final-control-button is-primary is-wide"
+                          fullWidth={false}
                           disabled={busy || !session.final_gallery_open}
                           title="Share the results before moving to the next challenge."
                           onClick={() => void advanceFinalChallenge()}
+                          variant="review-comic-primary"
+                          className="btn--review-wide"
                         >
                           <Icon name="arrow-right" className="icon--size-15" />{" "}
                           Next challenge · {nextPendingFinalChallenge.title}
-                        </button>
+                        </Button>
                       ) : (
-                        <button
+                        <Button
                           type="button"
-                          className="host-button cc-host-final-control-button is-primary is-wide"
+                          fullWidth={false}
                           disabled={busy}
                           onClick={() => void setFinalGallery(false, false)}
+                          variant="review-comic-primary"
+                          className="btn--review-wide"
                         >
                           Return all players to game
-                        </button>
+                        </Button>
                       )}
                     </>
                   )}
@@ -231,9 +256,9 @@ export default function HostFinalRound({
                 <>
                   {isFinalSlideshowConnected && (
                     <>
-                      <button
+                      <Button
                         type="button"
-                        className="host-button cc-host-final-control-button"
+                        fullWidth={false}
                         disabled={
                           busy || selectedFinalChallengeEvidence.length < 2
                         }
@@ -250,13 +275,14 @@ export default function HostFinalRound({
                               item.id,
                             );
                         }}
+                        variant="review-comic"
                       >
                         <Icon name="arrow-left" className="icon--size-15" />{" "}
                         Previous
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className="host-button cc-host-final-control-button"
+                        fullWidth={false}
                         disabled={
                           busy || selectedFinalChallengeEvidence.length < 2
                         }
@@ -271,15 +297,16 @@ export default function HostFinalRound({
                               item.id,
                             );
                         }}
+                        variant="review-comic"
                       >
                         Next{" "}
                         <Icon name="arrow-right" className="icon--size-15" />
-                      </button>
+                      </Button>
                     </>
                   )}
-                  <button
+                  <Button
                     type="button"
-                    className={`host-button cc-host-final-control-button${isFinalSlideshowConnected ? " is-primary" : ""}`}
+                    fullWidth={false}
                     disabled={
                       !isFinalSlideshowConnected &&
                       (!selectedFinalEvidence || busy)
@@ -289,15 +316,20 @@ export default function HostFinalRound({
                         ? disconnectFinalSlideshow()
                         : void castFinalSlideshow()
                     }
+                    variant={
+                      isFinalSlideshowConnected
+                        ? "review-comic-primary"
+                        : "review-comic"
+                    }
                   >
                     <Icon name="cast" className="icon--size-15" />
                     {isFinalSlideshowConnected ? "Disconnect" : "Cast"}
-                  </button>
+                  </Button>
                 </>
               )}
-            </div>
-          </div>
-        </section>
+            </FormGrid>
+          </ContentPanel>
+        </ContentPanel>
       </HostManagement>
       {!participantView && (
         <SessionFinalRound

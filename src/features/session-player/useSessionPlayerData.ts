@@ -1,3 +1,4 @@
+import { isFinalVotingOpen } from "./votingState";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/sessionSupabase";
 import type {
@@ -189,9 +190,12 @@ export function useSessionPlayerData(
           nextError ||
           `The final gallery couldn't refresh: ${galleryError.message}`;
       } else {
-        const finalRoundData = galleryData as FinalGalleryView;
+        const finalRoundData = galleryData as FinalGalleryView | null;
         setFinalGalleryView(finalRoundData);
-        if (finalRoundData.voting_completed)
+        if (
+          finalRoundData?.voting_completed &&
+          !isFinalVotingOpen(finalRoundData, currentView?.session)
+        )
           setLeaderboard(finalRoundData.leaderboard);
       }
     } else {

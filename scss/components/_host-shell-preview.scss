@@ -1,0 +1,17 @@
+@use "../variables/layout";
+.host-shell-preview {
+  transform: translate(0);
+  overflow: hidden;
+  .host-shell.host-portal.host-portal--app {
+    min-height: 0;
+  }
+  .host-shell.host-portal.host-portal--app .host-shell__layout {
+    min-height: layout.$host-mobile-nav-height * 3;
+  }
+  @media (max-width: layout.$host-mobile-breakpoint) {
+    .host-header {
+      flex-wrap: nowrap;
+      gap: layout.$pixel-unit;
+    }
+  }
+}

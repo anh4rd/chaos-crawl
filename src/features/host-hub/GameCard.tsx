@@ -1,8 +1,11 @@
+import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
 
-import { challengeIcon } from "../../lib/challengeVisuals";
+import ChallengeIcons from "../../components/challenge/ChallengeIcons";
+import CoverArtwork from "../../components/ui/CoverArtwork";
+import StatusPill from "../../components/ui/StatusPill";
 import { dateLabel, timeLabel } from "../../utils/hostDate";
-import { type HostGame } from "./types";
+import { type HostGame } from "../../types/hostHub";
 
 export function GameCard({
   game,
@@ -27,50 +30,41 @@ export function GameCard({
     (task) => !task.kind || task.kind === "main",
   );
 
+  const statusLabels = {
+    planned: "Planned",
+    draft: "Draft",
+    live: "Live",
+    completed: "Completed",
+  };
+  const ownershipLabel = completed
+    ? "Past game"
+    : readOnly
+      ? "Host game"
+      : "Your game";
+  const editLabel = completed
+    ? "View plan"
+    : game.status === "draft"
+      ? "Continue setup"
+      : "Edit plan";
+  const playLabel = playing
+    ? "Starting…"
+    : game.status === "live"
+      ? "Resume live game"
+      : "Play game";
+
   return (
-    <article className="host-game-card">
-      <div className="host-game-card-art">
-        {game.plan_data?.gamePhotoUrl ? (
-          <img src={game.plan_data.gamePhotoUrl} alt={`${game.name} cover`} />
-        ) : (
-          <>
-            <Icon name="sparkles" className="icon--size-27" />
-            <span>{game.name.slice(0, 1).toUpperCase() || "C"}</span>
-          </>
-        )}
-      </div>
-      <div className="host-game-card-content">
-        <div className="host-card-topline">
-          <span className={`host-status host-status--${game.status}`}>
-            {game.status === "planned"
-              ? "Planned"
-              : game.status === "draft"
-                ? "Draft"
-                : game.status === "live"
-                  ? "Live"
-                  : "Completed"}
-          </span>
-          <span className="host-muted host-small">
-            {completed ? "Past game" : readOnly ? "Host game" : "Your game"}
-          </span>
+    <article className="game-plan-card">
+      <CoverArtwork name={game.name} imageSrc={game.plan_data?.gamePhotoUrl} />
+      <div className="game-plan-card__content">
+        <div className="game-plan-card__topline">
+          <StatusPill tone={game.status}>
+            {statusLabels[game.status]}
+          </StatusPill>
+          <span className="host-muted host-small">{ownershipLabel}</span>
         </div>
         <h3>{game.name}</h3>
-        {challengeTasks.length > 0 && (
-          <div
-            className="host-game-challenge-icons"
-            aria-label="Challenges in this game"
-          >
-            {challengeTasks.slice(0, 4).map((task, index) => (
-              <span
-                key={task.id ?? `${task.title}-${index}`}
-                title={task.title}
-              >
-                {challengeIcon(task.title, task.description)}
-              </span>
-            ))}
-          </div>
-        )}
-        <div className="host-game-meta">
+        <ChallengeIcons tasks={challengeTasks} />
+        <div className="game-plan-card__meta">
           <span>
             <Icon name="calendar-days" className="icon--size-15" />
             {dateLabel(game.event_date)}
@@ -81,7 +75,7 @@ export function GameCard({
             {game.end_time ? `–${timeLabel(game.end_time)}` : ""}
           </span>
         </div>
-        <div className="host-game-meta">
+        <div className="game-plan-card__meta">
           <span>
             <Icon name="map-pin" className="icon--size-15" />
             {game.venue_name || "Venue not set"}
@@ -91,44 +85,37 @@ export function GameCard({
             About {game.player_count} players
           </span>
         </div>
-        <div className="host-game-actions">
-          <button
+        <div className="game-plan-card__actions">
+          <Button
             type="button"
-            className="host-button host-button--secondary"
+            variant="comic-secondary"
+            fullWidth={false}
             onClick={() => onEdit(game.id)}
             disabled={readOnly}
           >
-            <Icon name="edit3" className="icon--size-15" />{" "}
-            {completed
-              ? "View plan"
-              : game.status === "draft"
-                ? "Continue setup"
-                : "Edit plan"}
-          </button>
+            <Icon name="edit3" className="icon--size-15" /> {editLabel}
+          </Button>
           {canPlay && (
-            <button
+            <Button
               type="button"
-              className="host-button host-button--lime"
+              variant="comic-lime"
+              fullWidth={false}
               onClick={() => onPlay(game)}
               disabled={playing || readOnly}
             >
               {playing ? (
                 <Icon
                   name="loader-circle"
-                  className="icon--size-15 host-button-spinner"
+                  className="icon--size-15 icon--spinning"
                 />
               ) : (
                 <Icon name="play" className="icon--size-15" />
               )}
-              {playing
-                ? "Starting…"
-                : game.status === "live"
-                  ? "Resume live game"
-                  : "Play game"}
-            </button>
+              {playLabel}
+            </Button>
           )}
           {readOnly && (
-            <span className="host-preview-readonly-label">Read-only</span>
+            <span className="game-plan-card__readonly">Read-only</span>
           )}
         </div>
       </div>

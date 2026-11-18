@@ -1,0 +1,8 @@
+@use "../variables/fonts";
+@use "../variables/layout";
+
+@mixin dialog-copy {
+  margin: layout.$pixel-unit * 2 0;
+  font-size: fonts.$size-body;
+  line-height: 1.5;
+}

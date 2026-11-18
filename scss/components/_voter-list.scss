@@ -1,0 +1,6 @@
+@use "../variables/layout";
+.voter-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: layout.$pixel-unit * 1.5;
+}

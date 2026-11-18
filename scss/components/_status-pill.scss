@@ -1,0 +1,82 @@
+@use "../variables/effects";
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.status-pill {
+  display: inline-flex;
+  letter-spacing: fonts.$tracking-status;
+  &--planned {
+    color: colors.$status-planned-ink;
+    background: colors.$status-planned-surface;
+  }
+  &--completed {
+    color: colors.$status-completed-ink;
+    background: colors.$status-completed-surface;
+  }
+  padding: (layout.$pixel-unit * 1.25) (layout.$pixel-unit * 2.25);
+  border-radius: (layout.$pixel-unit * 5);
+  background: colors.$status-planned-surface;
+  color: colors.$status-default-ink;
+  font-size: fonts.$size-micro;
+  font-weight: fonts.$weight-heavy;
+  text-transform: uppercase;
+  &--live {
+    background: var(--cc-pink);
+    color: colors.$white;
+  }
+  &--draft {
+    background: colors.$status-draft-surface;
+    color: var(--cc-purple-dark);
+  }
+}
+
+.status-pill {
+  &--review {
+    display: block;
+    letter-spacing: normal;
+    padding: layout.$pixel-unit * 1.5 layout.$pixel-unit * 2;
+    border: layout.$control-border-width solid
+      rgba(colors.$session-frame-ink, effects.$review-status-border-opacity);
+    border-radius: layout.$badge-radius;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-action;
+    text-transform: none;
+    white-space: nowrap;
+    @media (max-width: layout.$session-compact-breakpoint) {
+      justify-self: start;
+    }
+  }
+  &--submitted {
+    color: colors.$review-pending-ink;
+    background: colors.$review-pending-surface;
+  }
+  &--approved {
+    color: colors.$review-approved-ink;
+    background: colors.$accent-soft;
+  }
+  &--rejected {
+    color: colors.$review-rejected-ink;
+    background: colors.$review-rejected-surface;
+  }
+}
+
+.status-pill {
+  &--reward {
+    display: block;
+    flex: 0 0 auto;
+    padding: layout.$pixel-unit * 1.75 layout.$pixel-unit * 2.25;
+    border-radius: layout.$badge-radius;
+    background: colors.$reward-open-surface;
+    color: colors.$reward-open-ink;
+    letter-spacing: normal;
+    text-transform: none;
+    &.status-pill--completed {
+      background: colors.$reward-completed-surface;
+      color: colors.$reward-completed-ink;
+    }
+    @media (max-width: layout.$reward-compact-breakpoint) {
+      margin-left: layout.$pixel-unit * 16;
+    }
+  }
+}

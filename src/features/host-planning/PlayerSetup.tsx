@@ -1,3 +1,6 @@
+import Explainer from "../../components/ui/Explainer";
+import FormGrid from "../../components/ui/FormGrid";
+import ContentPanel from "../../components/ui/ContentPanel";
 import { Field } from "../../components/ui/Field";
 import Icon from "../../components/ui/Icon";
 import { Toggle } from "../../components/ui/Toggle";
@@ -11,8 +14,8 @@ interface PlayerSetupProps {
 
 export default function PlayerSetup({ form, update }: PlayerSetupProps) {
   return (
-    <section className="cc-section-card">
-      <div className="cc-form-grid">
+    <ContentPanel variant="section">
+      <FormGrid>
         <Field label="Approximate player count">
           <input
             type="number"
@@ -42,7 +45,7 @@ export default function PlayerSetup({ form, update }: PlayerSetupProps) {
             <option value="mixed">Keep it optional</option>
           </select>
         </Field>
-      </div>
+      </FormGrid>
       <Toggle
         title="Host joins the game"
         detail="You will appear as a player and can complete challenges too."
@@ -87,13 +90,13 @@ export default function PlayerSetup({ form, update }: PlayerSetupProps) {
               <option value="players">Players choose teams</option>
             </select>
           </Field>
-          <div className="cc-explainer">
+          <Explainer>
             <Icon name="users" className="icon--size-18" />
             <p>
               If you choose host assignment, you'll pick teams during the game
               after everyone has joined. You don't need to decide the teams now.
             </p>
-          </div>
+          </Explainer>
         </>
       )}
       <Field
@@ -130,6 +133,6 @@ export default function PlayerSetup({ form, update }: PlayerSetupProps) {
           ))}
         </select>
       </Field>
-    </section>
+    </ContentPanel>
   );
 }

@@ -1,0 +1,37 @@
+@use "../tools/poster-copy";
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.instruction-step {
+  background: colors.$instruction-surface;
+  border: layout.$pixel-unit * 0.375 solid colors.$instruction-border;
+  border-radius: layout.$pixel-unit * 4;
+  padding: layout.$pixel-unit * 3.5;
+
+  &__number {
+    display: block;
+    color: colors.$instruction-number;
+    font-size: fonts.$size-small;
+    margin-bottom: layout.$pixel-unit * 2.25;
+  }
+
+  &__title {
+    display: block;
+    font-size: fonts.$size-label;
+  }
+
+  &__copy {
+    @include poster-copy.poster-copy;
+  }
+
+  @media (max-width: layout.$compact-breakpoint) {
+    display: grid;
+    grid-template-columns: layout.$pixel-unit * 9 1fr;
+    column-gap: layout.$pixel-unit * 2;
+
+    &__number {
+      grid-row: span 2;
+    }
+  }
+}

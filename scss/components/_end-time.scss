@@ -1,0 +1,21 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.end-time {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  padding: (layout.$pixel-unit * 2.25) (layout.$pixel-unit * 3.25);
+  border-radius: (layout.$pixel-unit * 2.75);
+  background: colors.$frame-shadow;
+  color: colors.$white;
+  & small {
+    font-size: fonts.$size-navigation-caption;
+    color: colors.$end-time-text;
+  }
+  & strong {
+    font-size: fonts.$size-summary-value;
+    color: colors.$accent-soft;
+  }
+}

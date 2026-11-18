@@ -1,3 +1,5 @@
+import Explainer from "../../components/ui/Explainer";
+import ContentPanel from "../../components/ui/ContentPanel";
 import Icon from "../../components/ui/Icon";
 import { type SetupForm, type Task } from "./types";
 
@@ -21,8 +23,8 @@ export default function LaunchSummary({
   preparation,
 }: LaunchSummaryProps) {
   return (
-    <section className="cc-section-card">
-      <div className="cc-review-hero">
+    <ContentPanel variant="section">
+      <div className="plan-summary">
         <Icon name="sparkles" className="icon--size-23" />
         <div>
           <small>GAME PLAN</small>
@@ -33,7 +35,7 @@ export default function LaunchSummary({
           </p>
         </div>
       </div>
-      <div className="cc-review-grid">
+      <div className="summary-grid">
         <div>
           <Icon name="users" className="icon--size-24" />
           <strong>{form.playerCount} players approx.</strong>
@@ -65,7 +67,7 @@ export default function LaunchSummary({
           <small>{form.venueAddress || "Address not added"}</small>
         </div>
       </div>
-      <div className="cc-review-block">
+      <div className="summary-section">
         <h3>Equipment list</h3>
         {equipment.length ? (
           <ul>
@@ -77,7 +79,7 @@ export default function LaunchSummary({
           <p>No specific equipment listed.</p>
         )}
       </div>
-      <div className="cc-review-block">
+      <div className="summary-section">
         <h3>Preparation for players</h3>
         {preparation.length ? (
           preparation.map((t) => (
@@ -89,7 +91,7 @@ export default function LaunchSummary({
           <p>No advance preparation required.</p>
         )}
       </div>
-      <div className="cc-review-block">
+      <div className="summary-section">
         <h3>Reward methods</h3>
         <p>
           {form.decideRewardInGame
@@ -104,15 +106,15 @@ export default function LaunchSummary({
             : "No side-challenge final required."}
         </p>
       </div>
-      <div className="cc-explainer">
+      <Explainer>
         <Icon name="shield-check" className="icon--size-18" />
         <p>
           Saving a plan does not launch the game. Player invitations and the
           pre-event portal become available when a session is created from this
           plan.
         </p>
-      </div>
-      <div className="cc-explainer">
+      </Explainer>
+      <Explainer>
         <Icon name="play" className="icon--size-18" />
         <p>
           <strong>Host game demo</strong>
@@ -121,7 +123,7 @@ export default function LaunchSummary({
           standalone demo route. I have not linked this button to a real session
           because that would create a live game rather than a demo.
         </p>
-      </div>
-    </section>
+      </Explainer>
+    </ContentPanel>
   );
 }

@@ -1,0 +1,12 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+// The overlay reveals the target without changing its stacking context.
+.tour-highlight {
+  outline: layout.$pixel-unit * 0.75 solid colors.$pink !important;
+  outline-offset: layout.$pixel-unit * 1.25 !important;
+  box-shadow:
+    0 0 0 layout.$pixel-unit * 0.5 colors.$white,
+    0 0 0 layout.$pixel-unit * 1.75 rgba(colors.$pink, 0.28) !important;
+  border-radius: layout.$pixel-unit * 4 !important;
+}

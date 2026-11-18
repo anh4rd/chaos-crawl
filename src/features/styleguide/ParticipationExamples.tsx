@@ -1,4 +1,6 @@
 import { useRef, useState } from "react";
+import Button from "../../components/ui/Button";
+import Note from "../../components/ui/Note";
 import ChallengeActions, {
   type ChallengeParticipation,
 } from "../game/ChallengeActions";
@@ -6,6 +8,7 @@ import LiveTask from "../game/LiveTask";
 import SideChallenges from "../game/SideChallenges";
 import { demoGame } from "./demoGame";
 import { Example } from "./Example";
+import ExampleGrid from "./ExampleGrid";
 
 export function ParticipationExamples() {
   const [completed, setCompleted] = useState<string[]>([]);
@@ -47,21 +50,22 @@ export function ParticipationExamples() {
           allowMedia
           participation={participation}
         />
-        <p role="status" className="sg-note">
+        <Note role="status">
           {notice || "Try the actions. Demo state stays on this page."}
-        </p>
-        <button
+        </Note>
+        <Button
           type="button"
-          className="sg-text-button"
+          variant="text"
+          fullWidth={false}
           onClick={() => {
             setCompleted([]);
             setNotice("Demo reset.");
           }}
         >
           Reset demo
-        </button>
+        </Button>
       </Example>
-      <div className="sg-grid">
+      <ExampleGrid>
         <Example
           title="LiveTask"
           source="src/features/game/LiveTask.tsx"
@@ -103,7 +107,7 @@ export function ParticipationExamples() {
             participation={participation}
           />
         </Example>
-      </div>
+      </ExampleGrid>
     </>
   );
 }

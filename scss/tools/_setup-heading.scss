@@ -1,0 +1,11 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+@mixin setup-heading {
+  margin: (layout.$pixel-unit * 2) 0 (layout.$pixel-unit * 1);
+  font-size: fonts.$size-builder-heading;
+  font-weight: fonts.$weight-heading;
+  letter-spacing: fonts.$tracking-brand;
+  color: colors.$control-text;
+}

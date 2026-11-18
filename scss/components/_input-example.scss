@@ -1,0 +1,14 @@
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.input-example {
+  &__label {
+    display: block;
+    font-size: fonts.$size-label;
+    font-weight: fonts.$weight-extra-bold;
+    margin: 0 0 (layout.$pixel-unit * 2);
+  }
+  &__label:not(:first-child) {
+    margin-top: (layout.$pixel-unit * 4.5);
+  }
+}

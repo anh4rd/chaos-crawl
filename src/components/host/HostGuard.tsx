@@ -1,3 +1,4 @@
+import LoadingScreen from "../ui/LoadingScreen";
 import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
@@ -32,12 +33,7 @@ export default function HostGuard() {
   }, []);
 
   if (checking) {
-    return (
-      <main className="host-auth-loading">
-        <span className="host-spinner" />
-        Checking your session…
-      </main>
-    );
+    return <LoadingScreen>Checking your session…</LoadingScreen>;
   }
 
   if (!session) return <Navigate to="/host/login" replace />;

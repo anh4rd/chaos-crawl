@@ -1,9 +1,9 @@
+import DemoNotice from "../components/ui/DemoNotice";
 import { useCallback, useState } from "react";
 import GuidedTour, { type GuidedTourStep } from "../components/tour/GuidedTour";
 import Icon from "../components/ui/Icon";
 import { challengeIcon } from "../lib/challengeVisuals";
 import "../styles/PlayerGame.css";
-import "../styles/GuidedTour.css";
 
 const steps: GuidedTourStep[] = [
   {
@@ -60,7 +60,7 @@ export default function PlayerDemo() {
     [],
   );
   return (
-    <main className="cc-session-player-app">
+    <main className="player-demo cc-session-player-app">
       <header className="cc-player-game-header">
         <div className="cc-player-system-bar">
           <span>Chaos</span>
@@ -107,13 +107,12 @@ export default function PlayerDemo() {
             </button>
           </div>
         </section>
-        <div className="cc-demo-tour-banner">
-          <Icon name="sparkles" className="icon--size-16" /> Interactive sample
-          — nothing here changes a real game{" "}
-          <button type="button" onClick={() => setTourOpen(true)}>
-            Restart tour
-          </button>
-        </div>
+        <DemoNotice
+          actionLabel="Restart tour"
+          onAction={() => setTourOpen(true)}
+        >
+          Interactive sample — nothing here changes a real game
+        </DemoNotice>
         <nav
           className="cc-player-page-nav"
           data-tour="demo-navigation"
@@ -353,7 +352,7 @@ export default function PlayerDemo() {
             </article>
           </section>
         )}
-        <p className="cc-demo-disclaimer">
+        <p className="player-demo__disclaimer">
           This is a guided preview using sample players and tasks. Uploads,
           votes and points are not saved.
         </p>

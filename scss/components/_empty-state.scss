@@ -1,0 +1,38 @@
+@use "../variables/fonts";
+@use "../variables/effects";
+@use "../variables/colors";
+@use "../variables/layout";
+
+.empty-state {
+  padding: layout.$pixel-unit * 9;
+  text-align: center;
+  color: colors.$reference-muted;
+
+  > svg {
+    margin: auto;
+  }
+}
+
+.empty-state {
+  &--session {
+    display: flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 3;
+    border: layout.$control-border-width dashed
+      rgba(colors.$white, effects.$session-empty-border-opacity);
+    border-radius: layout.$pixel-unit * 3.25;
+    padding: layout.$pixel-unit * 3.5;
+    background: colors.$workspace-soft-middle;
+    color: colors.$session-empty-icon;
+    text-align: inherit;
+    > svg {
+      margin: 0;
+    }
+    p {
+      margin: 0;
+      color: colors.$session-empty-copy;
+      font-size: fonts.$size-caption;
+      line-height: 1.45;
+    }
+  }
+}

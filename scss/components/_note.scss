@@ -1,0 +1,49 @@
+@use "../variables/effects";
+@use "../variables/motion";
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.note {
+  display: block;
+  font-size: fonts.$size-small;
+  color: colors.$reference-muted;
+  margin: layout.$pixel-unit * 3.5 0;
+
+  &--compact {
+    font-size: fonts.$size-caption;
+    margin: 0 0 layout.$pixel-unit * 2;
+  }
+}
+
+.note {
+  &--lobby {
+    margin: 0;
+    color: colors.$note-text;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-bold;
+    line-height: 1.4;
+  }
+}
+
+.note {
+  &--control {
+    margin: 0;
+    color: colors.$white;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-extra-bold;
+    line-height: fonts.$line-height-control-note;
+  }
+}
+
+.note {
+  .host-management &--session {
+    margin: 0;
+    color: colors.$session-helper;
+    font-size: fonts.$size-small;
+    line-height: 1.5;
+  }
+  &--inline {
+    display: inline;
+  }
+}

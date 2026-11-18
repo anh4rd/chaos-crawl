@@ -1,0 +1,7 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+
+.muted-copy {
+  color: colors.$muted-copy-text;
+  font-size: fonts.$size-body;
+}

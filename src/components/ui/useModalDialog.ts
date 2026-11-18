@@ -6,10 +6,8 @@ export function useModalDialog() {
     const dialog = ref.current;
     if (!dialog) return;
     dialog.showModal();
-    // Keep Tab inside even when the only control would otherwise hand focus to browser chrome.
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Tab") return;
-      const controls = [
+    const controls = () =>
+      [
         ...dialog.querySelectorAll<HTMLElement>(
           "button, [href], input, select, textarea, [tabindex]",
         ),
@@ -19,8 +17,14 @@ export function useModalDialog() {
           !element.matches(":disabled") &&
           element.getClientRects().length > 0,
       );
-      const first = controls[0];
-      const last = controls.at(-1);
+    // Chromium may initially focus a scrollable form instead of its first control.
+    controls()[0]?.focus({ preventScroll: true });
+    // Keep Tab inside even when the only control would otherwise hand focus to browser chrome.
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Tab") return;
+      const available = controls();
+      const first = available[0];
+      const last = available.at(-1);
       if (!first) {
         event.preventDefault();
         dialog.focus();

@@ -57,9 +57,252 @@ One named component per file. Pages orchestrate; components implement. Extract h
 
 `SessionPlayerGame` adapts route parameters to `features/session-player/SessionParticipant`. The participant controller is reused inline by `HostLiveSession` after explicit host participation, with the host-specific player token and callbacks for navigation/recovery. Do not open a second player window for routine host uploads, submissions or voting. A host without a valid participation credential gets read-only shared content and an explicit join action. Host management remains separately composed and reachable during reward, final and secret-review stages.
 
+The host route keys `features/host-live/HostSession` by session ID. That coordinator composes focused lobby, participation, roster, round/timer, reward, final, secret-review and moderation controllers. `useHostSessionData` owns the single host polling lifecycle; the timer controller owns its separate ticking/publish cadence and serialized write queue. Presentation connections remove listeners and close on identity changes or unmount. Keep these external concerns separate; do not duplicate polling in panels.
+
+Named host and participant commands in `src/lib/*Commands.ts` use `runApi` and typed arguments. UI prompts, notices and credential storage stay in feature controllers. `useHostOperation` supplies the shared synchronous host action lock. Command feedback is separate from query feedback so a refresh cannot erase a failed operation. Preserve the original RPC payloads, filters and multi-step write ordering when extending a workflow.
+
 Feature adapters translate database contracts into shared presentation models. Queries, timer subscriptions and participation commands stay in feature hooks/services; evidence validation and persistence live in `src/lib/sessionEvidence.ts`. Ignore obsolete query responses after navigation, identity changes or unmount. Hide winners, vote totals and voter identities while voting is open, even if a stale payload includes them. Preserve secret-review precedence over reward and ordinary game content.
 
+ParticipantTeams projects team capacity, selected state and status copy into
+shared ChoiceOption buttons. TeamNameForm supplies the controlled 40-character
+name input and native form in both participant and host flows. Callers compose
+their submit control and retain trimming, busy state, placeholders and commands;
+the input remains editable while an operation is pending. Neither shared view
+reads routes, storage or Supabase. Local team references use state only and cover
+selection, creation and busy behavior through native keyboard paths. Their
+styles live in the choice-option and team-name-form blocks, with shared Avatar choice,
+ContentPanel/PanelHeading/Overline/CountBadge choice variants, CandidateList spaced
+and Button team-create. The original compact player breakpoint is 480px. Both
+form variants retain native types, callbacks and input bounds. Do not restore the
+retired player team selectors or team-create-form block. Keep the pending contrast
+fixes in a separate, approved accessibility slice.
+
+PrivateMissionDialog composes the shared native Dialog with linked heading and
+description IDs. Play is the only acknowledgement; Escape and backdrop dismissal
+remain disabled. The participant controller owns ordering, phase visibility and
+separate seen/dismissed storage keys. Phase takeover must close without marking a
+mission seen; an underlying tour regains focus after acceptance. The local
+private-mission example uses state only. Reveal variants of Dialog, DialogPanel,
+PanelHeading, Badge, IconBadge, Overline and Button own its styling in SCSS. The
+outlined heading fragment is shared by its label/title; preserve native tags,
+linked IDs and explicit acceptance when composing these variants. Do not restore
+the retired announcement classes in PlayerGame.css.
+
+Join adapts URL code/entry mode and successful redirects to PlayerAccess.
+usePlayerAccess owns form state, validation, feedback and V2 credential storage;
+PlayerAccessView and PlayerDetailsFields are controlled presentation. Shared
+GameCodeInput retains the six-digit native input contract and visible label.
+The local join reference uses state only and a section root. lib/playerAccess.ts
+preserves the SDK error objects because existing feedback distinguishes Error
+instances from plain database errors. Its consumed response type is a frontend
+contract, not verified deployed schema. Retained join CSS awaits its independent
+styling slice; stale pending completion remains a separately tested lifecycle
+finding. Keep URL hydration, entry-only mode selection, trimmed payloads, replaced
+history/welcomeBack state and legacy/V2 credential isolation intact.
+
 Supabase auth is shared by the legacy and session clients. Legacy player IDs and V2 session-player credentials use different storage keys and are not interchangeable. Preserve RPC payloads, storage paths, query ordering, score semantics, subscription cleanup, timer behavior, error handling, and route/query parameters. Client storage is not an authorization boundary; policies and atomic awards require server enforcement.
+
+`HostLogin` composes `features/host-access/HostAccess`. Its focused hook owns credentials, initial session recovery, command feedback and redirects through the typed SDK functions in `lib/hostAuth.ts`. `HostAccessForm` receives controlled values and callbacks; shared `BrandLink` and `InputIcon` remain presentation-only. The host header and login use the same host wordmark variant.
+
+Host routes compose `features/host-workspace/HostWorkspace`, whose identity hook reads the current user and supplies sign-out/create navigation callbacks. `components/host/HostShell` is presentation-only and composes its header/navigation, account chip, content and optional sidebar/context slots. It accepts explicit identity and callbacks; use `contentAs="div"` when embedding it inside another main landmark. Its styleguide preview uses local identity/actions, including the read-only state, and never mounts the connected workspace.
+
+Shell layout, header and navigation styling belongs to the `host-shell`, `host-header`, `host-navigation` and `mobile-navigation` SCSS blocks. Update their owned partials rather than adding overrides to a route stylesheet. `onNavigate` optionally intercepts shell links for controlled previews; omit it for normal router navigation. The local reference intercepts header/mobile links and the wordmark so exercising the preview cannot open a connected workspace.
+
+Host controls use shared `Button` comic variants, `ButtonLink` (`to` for router links,
+`href` for native anchors) and labeled `IconButton`. `Field variant="comic"`
+preserves host form styling. `PageHeading` composes optional title/subtitle/action;
+`WorkspaceSidebar` owns the responsive aside. Their local Host patterns examples
+include disabled controls, native link handling and a toggled sidebar. Preserve
+native link attributes and form button types when migrating callers.
+
+`HostHub` adapts its route to `features/host-hub/HostDashboard`. `useHostHub`
+coordinates reads and launch feedback through typed `lib/hostHubQueries.ts`
+contracts; presentation-only GameCard, GameContext, GameOverview, SetupProgress
+and HostDirectory accept data and callbacks. The shared checklist/context/artwork
+components are also used by HostPlanSetup. Keep feature checklist rules and
+navigation out of those shared components. Local Host patterns demonstrate their
+primitives without mounting the connected dashboard.
+
+`HostPlanSetup` adapts plan/import parameters to `features/host-planning/PlanEditor`.
+Hydration, favourites, cover upload, saving, challenge editing and scheduling have
+separate controllers. Pure plan/import models own stored-plan defaults, payload
+projection and provider-specific challenge defaults; persistence stays in
+`lib/hostPlanApi.ts`, with shared contracts in `types/hostPlanning.ts`. Preserve
+legacy selectedTaskIds recovery and separate schedule phases. Schedule bootstrap
+runs only on entry to build and preserves later edits. Feature presentation
+components receive state/callbacks; connected editor hooks never run in local
+styleguide demos. Planning styling belongs to owned partials under `scss/components/`, including
+PlanBuilder, PlanNavigation, SelectedChallenge and TimelineItem. Shared
+ContentPanel variants own the basics/builder surfaces; CountBadge, PanelHeading,
+FormGrid, Explainer and ImageUpload remain presentation-only. Setup Button
+variants preserve native button types and states; ImageUpload delegates file
+validation/persistence to its caller. Keep their local planning examples updated.
+RoundNumber supplies live-host numbering through owned SCSS; audit any retained
+legacy planning selectors separately before removing them.
+
+The six host lobby steps compose shared Avatar, ImageWell, compact StatTile,
+ContentPanel/Field/Note lobby variants, StepProgress and lobby Button variants.
+Their owned styles live in `scss/components/`; do not restore lobby overrides in
+HostLiveGame.css. Avatar also supplies the existing account initial. Keep native
+form types, file chooser contracts and roster callbacks unchanged during visual
+moves. TeamChoiceCard, TeamEditor and CreateTeamForm are presentation-only;
+queries and mutations stay in useHostRoster/useHostParticipation. StepProgress
+accepts a data ratio and needs an adjacent visible step label. Its width is runtime
+geometry, not a design value. Local lobby reference examples never mount those
+connected controllers. Keep avatar/team file inputs keyboard-focusable via the
+visually-hidden fragment and their label focus rings. Player choice buttons expose
+full names and aria-pressed state; do not rely on avatar initials for their names.
+
+HostManagement owns the host frame, native focus rules and reduced-motion behavior
+in its SCSS partial; global host surface rules live in the global SCSS layer.
+HostLiveGame.css and its three legacy frame classes are retired. Do not restore
+nested HostShell, alert, avatar/team or player-header compatibility selectors.
+The inherited `--lime` alias remains for existing consumers; other old palette
+aliases have no consumers and were removed. Compose host controls through
+ControlPanel and its ContentPanel controls surface. Button session-action,
+session-secondary and session-ghost own the live pink/ghost appearances;
+session-send composes the action appearance. SessionInvite uses these explicit
+variants for its native button/link. Preserve round controls' distinct base,
+hover and active shadows. Local reward, submission, mission and invitation
+references use the same appearances and never mount connected controllers.
+Host and participant tour triggers use Button session-tour; the local host-frame
+example exercises its controls and tour.
+GuidedTour uses the shared native-dialog lifecycle. Targets must be visible in
+the current session phase; highlighting must not change their positioning. Host
+tour navigation belongs to useHostTour, which closes when the session phase
+changes. Shared SessionPage/titlebar target props remain presentation-only.
+
+Host timer controls compose TimerReadout, ControlRow timer/break variants, Note
+control copy and Button control/flow variants. IconButton control-replay preserves
+the replay action's native label and button attributes. RoundFlowControls is the
+shared presentation of backup round actions in both host panels; it receives
+round/timer/reward state and callbacks, with an optional footer action. It never
+owns ticking, reads or writes. The local timer reference demonstrates busy/reward
+states and callbacks without backend access. Layout specific to the compact host
+controls belongs to host-round-controls SCSS; timer and flow primitives own their
+own blocks. Existing pause/menu text glyphs remain unchanged for visual parity
+until the separate semantic-icon migration.
+
+Host override, break-timer and upcoming-challenge editors use the shared native
+Dialog host variant. Keep visible heading IDs linked with labelledBy; the
+confirmation retains alertdialog semantics. dismissDisabled blocks Escape and
+backdrop dismissal while an operation is pending and keeps focus inside when
+its controls become disabled. useModalDialog focuses the first enabled control
+rather than a Chromium-focusable scroll container. Challenge save feedback must
+render inside the modal through SessionFeedback; the underlying page is inert.
+Editor error dismissal uses the parent callback to clear both displayed query
+and action feedback; queries still cannot erase a failed action. The local
+host-dialog reference uses only local state. The editor-panel styles are owned by shared primitives in SCSS.
+
+Host editor and confirmation bodies use DialogPanel, with native form/section
+props and typed submission events. DialogActions composes explicit Button dialog
+and dialog-primary variants; do not restore last-child styling in route CSS.
+Badge dialog supplies the kicker. FormLabel preserves direct native label/control
+markup, optional small hints, spaced editor rows and checkbox layout; FormGrid
+dialog keeps numeric fields in two columns at every viewport size. DialogNotice
+owns warning/error copy and optional labeled dismissal through IconButton
+(dialog-dismiss). These components stay presentation-only. Their styles live in
+owned SCSS partials; the small recurring dialog-copy fragment supplies paragraph
+typography. Local host-dialog examples save preview state and never mount live
+controllers. Preserve native types, heading IDs, validation attributes and parent
+callbacks when composing these primitives.
+
+Shared SubmissionList/SubmissionRow and EvidenceReview/EvidenceReviewItem accept
+presentation values and resolved media URLs only. Host feature adapters keep
+status copy, time formatting, fallback names and approval/score callbacks.
+StatusPill review tones and ControlRow review actions retain those rows' native
+markup; their styles live in owned SCSS partials. Keep the local submission
+reference backend-free, and use the deterministic test-only WebM when verifying
+native media controls. Native video captions remain an accessibility concern
+for a separately tested slice, not something to suppress during styling moves.
+
+Shared AssignmentList/AssignmentRow accept illustration, title, recipient/status
+presentation and optional evidence children. Secret-mission controllers/adapters
+retain status precedence, scheduling and persistence. The row composes the
+IconBadge assignment variant; its native div and decorative aria-hidden boundary
+are explicit. EmptyState session retains the compact inline message. Their local
+assignment reference uses local data and a checkbox, never a connected controller.
+
+MissionAssignmentForm and MissionCreationForm are controlled presentation forms.
+Their callbacks accept values/events; recipient and mission choices use minimal
+presentation records. Scheduling, trimming/defaults, sort order, persistence and
+feedback stay in useHostSecretMissions. The forms compose FormLabel session/
+session-checkbox, Disclosure session and Button session-send. Preserve native
+required/min/max/length attributes, nested labels and details open behavior.
+Their local reference submits only local state and demonstrates the existing
+busy contract: assignment controls and submit actions disable, while creation
+fields remain editable.
+
+Final-round and secret-review management compose ContentPanel review-controls,
+Overline review (native strong/span), FormGrid review, FormLabel review and StatTile
+review. Keep native/comic Button review variants explicit: final controls retain
+their existing comic hover/active effects; secret controls retain native effects.
+The wide modifier controls grid placement only. PresentationControls owns the
+TV action surface; connection lifecycle and evidence navigation remain in feature
+controllers. Final evidence navigation wraps; secret navigation disables at its
+boundaries. Their local reference uses only local state and never opens a device
+picker or reads the backend.
+
+HostRewardRound composes RewardSetupForm and RewardAwardControls. These controlled
+feature views retain native form types, bounds, option labels and player/team
+selection callbacks. useHostRewards still owns start/complete/cancel/release
+commands, confirmation, action locks, feedback and reloads. Preserve edited award
+points, selected winner ordering and separate player/team payload fields. Their
+owned reward-setup/reward-review SCSS keeps arrangement separate from shared
+fields, instructions, summaries and candidate rows.
+
+Reward setup and awards compose FormLabel reward/award-points, ControlRow reward,
+Explainer reward, IconBadge method and StatusPill reward open/completed variants.
+RoundSummary receives caller-composed marker/status slots and title/detail copy;
+CandidateList only groups caller-supplied candidates. These shared views never
+choose a reward method, target or winner and never call persistence. Keep the
+local reward reference backend-free, including disabled controls and read-only
+candidates. Reward overlays compose the existing native Dialog, disable close/dismissal while
+busy, and receive the coordinator's feedback slot inside the modal. Inline reward
+views keep ordinary page feedback. useNavigationFocus attaches through the native
+SessionNavigation elementRef and recovers focus to the active item only when a
+refreshed release/cancel removed the opener and left focus on the document. It
+cancels scheduled frames on unmount and never steals focus from another control.
+The local session reference demonstrates this recovery without a backend.
+ContentPanel overlay owns the centered/scrolled frame, PanelHeading dismissible
+reserves close-action space, and Button overlay-dismiss retains the native text
+close mark and states. Compose Dialog separately for modal behavior; the visual
+flags do not provide focus or dismissal. Their owned SCSS and local shared-overlay
+reference preserve frame, focus/hover transitions and pending-write disabled
+appearance. Do not restore the retired reward-overlay compatibility rules.
+
+StagePreview and RoundPlan receive presentation values and callbacks only.
+upcomingStageModel in the host feature retains next-round availability, active-
+break precedence, stage copy and illustration selection. RoundPlan composes the
+detailed RoundSelector; both detailed options and existing chips use RoundChoice.
+The feature owns live/read-only capability, busy state, autoplay confirmation and
+round-change commands. Preserve incoming order, nullable round labels and numeric
+selection payloads. The local stage/plan reference uses local selection, read-only
+and break state. StagePreview, RoundSelector and RoundChoice own their SCSS.
+Stage labels/illustrations and round numbers compose Badge, IconBadge and
+CountBadge variants; detailed choices preserve native Button semantics. Keep
+selected outlines, hover/focus and pending states when extending these views.
+Host controls compose the presentation-only PanelGrid for invitation and round
+overview panels. Its owned SCSS preserves the wider first column and stacks at
+900px. The local host-frame reference demonstrates it without live controllers;
+keep query, command and timer coordination in the caller.
+
+Secret-review summaries and published voter rows use ReviewSummary and VoterList
+with Badge vote. ContentPanel review-result owns the published result surface;
+SessionLeaderboard/SessionRankRow compact retain native div/span markup. The
+feature owns visibility guards, assignment filtering, missing-player names,
+score/name sorting and the top-eight limit. Shared presentation preserves caller
+order and never queries or chooses which results to publish. Keep their local
+review-body example backend-free and on its intended dark review surface.
+
+Voting presentation is conservative across independently refreshed sources: any
+known open flag or voting status hides unpublished result details, even when a
+completion/result field disagrees. Secret review keeps precedence while its
+mission details are missing, rendering the shared loading state. Player vote
+actions still require the explicit RPC voting-open flag; uncertain data is
+read-only. Never promote a completed gallery's leaderboard while another voting
+signal is active. Release results again when the open signals clear; preserve
+command payloads and server-side score/award enforcement.
 
 Local SQL migrations are not automatically applied. Legacy database contracts are inferred, and V2 RPCs have incomplete local schema coverage. Do not change backend contracts or claim live correctness based on mocked tests. Keep ordinary tests isolated from real database, auth, storage, Realtime, and Sentry endpoints.
 

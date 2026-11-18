@@ -4,6 +4,7 @@ import type { RankedParticipant } from "./types";
 
 export default function SessionLeaderboard({
   title = "Leaderboard",
+  variant,
   entries,
   teams = [],
   viewerId,
@@ -12,6 +13,7 @@ export default function SessionLeaderboard({
   tourTarget,
 }: {
   title?: string;
+  variant?: "compact";
   entries: RankedParticipant[];
   teams?: RankedParticipant[];
   viewerId?: string | null;
@@ -19,6 +21,19 @@ export default function SessionLeaderboard({
   controls?: (entry: RankedParticipant) => ReactNode;
   tourTarget?: string;
 }) {
+  if (variant === "compact")
+    return (
+      <div className="session-leaderboard session-leaderboard--compact">
+        {entries.map((entry, index) => (
+          <SessionRankRow
+            key={entry.id}
+            entry={entry}
+            rank={index + 1}
+            variant="compact"
+          />
+        ))}
+      </div>
+    );
   return (
     <section className="session-leaderboard" data-tour={tourTarget}>
       <header className="session-leaderboard__heading">

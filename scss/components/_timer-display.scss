@@ -1,0 +1,9 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+
+.timer-display {
+  font-size: fonts.$size-timer;
+  font-weight: fonts.$weight-action;
+  color: colors.$purple;
+  line-height: 1.2;
+}

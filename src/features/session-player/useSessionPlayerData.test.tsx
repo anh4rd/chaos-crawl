@@ -86,3 +86,63 @@ it("cleans polling timers and ignores in-flight work on unmount", async () => {
   ).toHaveLength(0);
   expect(vi.getTimerCount()).toBe(0);
 });
+
+for (const signal of ["session", "gallery", "status"] as const) {
+  it(`does not promote a completed gallery leaderboard while the ${signal} voting signal is active`, async () => {
+    rpc.mockImplementation((name: string) =>
+      Promise.resolve({
+        data:
+          name === "cc_get_game_session_view"
+            ? {
+                session: {
+                  final_gallery_open: true,
+                  final_voting_open: signal === "session",
+                },
+                player: { id: "player" },
+              }
+            : name === "cc_player_get_session_final_round_gallery"
+              ? {
+                  voting_open: signal === "gallery",
+                  challenge_status: signal === "status" ? "voting" : "results",
+                  voting_completed: true,
+                  leaderboard: [
+                    {
+                      player_id: "unpublished",
+                      name: "Unpublished leader",
+                      score: 777,
+                    },
+                  ],
+                }
+              : null,
+        error: null,
+      }),
+    );
+    const { result } = renderHook(() =>
+      useSessionPlayerData("123456", "token", "final"),
+    );
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.leaderboard).toEqual([]);
+    expect(result.current.finalGallery?.voting_completed).toBe(true);
+  });
+}
+
+it("finishes loading when the gallery RPC has no current gallery", async () => {
+  rpc.mockImplementation((name: string) =>
+    Promise.resolve({
+      data:
+        name === "cc_get_game_session_view"
+          ? {
+              session: { final_gallery_open: true, final_voting_open: false },
+              player: { id: "player" },
+            }
+          : null,
+      error: null,
+    }),
+  );
+  const { result } = renderHook(() =>
+    useSessionPlayerData("123456", "token", "final"),
+  );
+  await waitFor(() => expect(result.current.loading).toBe(false));
+  expect(result.current.finalGallery).toBeNull();
+  expect(result.current.leaderboard).toEqual([]);
+});

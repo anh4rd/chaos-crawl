@@ -1,44 +1,35 @@
-import SecretMissionCard from "./SecretMissionCard";
-import SessionFeedback from "../../components/session/SessionFeedback";
-import SessionSubmission from "../../components/session/SessionSubmission";
+import { isSecretVotingOpen } from "./votingState";
+import Button from "../../components/ui/Button";
 import SessionBreak from "../../components/session/SessionBreak";
+import SessionFeedback from "../../components/session/SessionFeedback";
 import SessionNavigation from "../../components/session/SessionNavigation";
 import SessionPage from "../../components/session/SessionPage";
 import SessionState from "../../components/session/SessionState";
+import SessionSubmission from "../../components/session/SessionSubmission";
 import Icon from "../../components/ui/Icon";
-import {
-  prepareSessionEvidence,
-  uploadSessionEvidence,
-} from "../../lib/sessionEvidence";
+import { sessionEvidenceUrl } from "../../lib/sessionMedia";
+import ParticipantTeams from "./ParticipantTeams";
 import PlayerRewardRoundPanel from "./PlayerRewardRoundPanel";
+import PrivateMissionDialog from "./PrivateMissionDialog";
+import SecretMissionCard from "./SecretMissionCard";
 import SecretMissionReview from "./SecretMissionReview";
 import SessionFinalGallery from "./SessionFinalGallery";
 import SessionLeaderboard from "./SessionLeaderboard";
 import SessionSideChallenges from "./SessionSideChallenges";
-import type {
-  ChallengeInfo,
-  FinalGalleryItem,
-  PlayerPage,
-  SecretMission,
-} from "./types";
+import type { PlayerPage } from "./types";
+import { useParticipantSubmissions } from "./useParticipantSubmissions";
+import { useParticipantTeams } from "./useParticipantTeams";
+import { useParticipantVoting } from "./useParticipantVoting";
+import { usePrivateMissions } from "./usePrivateMissions";
 import { useSessionPlayerData } from "./useSessionPlayerData";
 import { useSessionTimer } from "./useSessionTimer";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import SessionMainChallengeCard from "../../components/session/SessionMainChallengeCard";
 import GuidedTour, {
   type GuidedTourStep,
 } from "../../components/tour/GuidedTour";
-import { challengeIcon } from "../../lib/challengeVisuals";
-import { supabase } from "../../lib/sessionSupabase";
 import "../../styles/PlayerGame.css";
 function playerStorageKey(code: string) {
   return `chaos-crawl-session-player:${code.replace(/\D/g, "")}`;
@@ -86,17 +77,8 @@ export default function SessionParticipant({
     lastUpdated,
     loadView,
   } = useSessionPlayerData(code, token, activePage);
-  const [activeSecretMissionId, setActiveSecretMissionId] = useState<
-    string | null
-  >(null);
-  const [dismissedSecretMissionKeys, setDismissedSecretMissionKeys] = useState<
-    string[]
-  >([]);
-  const [dismissedSecretMissionCardIds, setDismissedSecretMissionCardIds] =
-    useState<string[]>([]);
   const [copiedCode, setCopiedCode] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
-  const [teamName, setTeamName] = useState("");
   const [tourOpen, setTourOpen] = useState(false);
   const { sharedTimer, sharedTimerError, timerReceivedAt, timerNow } =
     useSessionTimer(view?.session.id, view?.session.status, activePage);
@@ -104,20 +86,6 @@ export default function SessionParticipant({
   useEffect(() => {
     setStoredToken(localStorage.getItem(playerStorageKey(code)));
   }, [code]);
-
-  useEffect(() => {
-    const playerId = view?.player.id;
-    if (!playerId) return;
-    const storageKey = `chaos-crawl-dismissed-secret-missions:${code}:${playerId}`;
-    try {
-      const parsed = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
-      setDismissedSecretMissionCardIds(
-        Array.isArray(parsed) ? parsed.map(String) : [],
-      );
-    } catch {
-      setDismissedSecretMissionCardIds([]);
-    }
-  }, [code, view?.player.id]);
 
   useEffect(() => {
     if (!view) return;
@@ -139,45 +107,6 @@ export default function SessionParticipant({
   ]);
 
   useEffect(() => {
-    const playerId = view?.player.id;
-    if (
-      !playerId ||
-      activePage !== "game" ||
-      view?.session.status !== "live" ||
-      rewardRound ||
-      sharedTimer?.is_on_break
-    )
-      return;
-    const storageKey = `chaos-crawl-seen-secret-missions:${code}:${playerId}`;
-    let seenIds: string[] = [];
-    try {
-      const parsed = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
-      if (Array.isArray(parsed)) seenIds = parsed.map(String);
-    } catch {
-      /* Use in-memory dismissal if local storage is unavailable. */
-    }
-    const seen = new Set([
-      ...seenIds,
-      ...dismissedSecretMissionKeys
-        .filter((key) => key.startsWith(`${storageKey}:`))
-        .map((key) => key.slice(storageKey.length + 1)),
-    ]);
-    const unseenMission = secretMissions.find(
-      (mission) => !seen.has(mission.assignment_id),
-    );
-    setActiveSecretMissionId(unseenMission?.assignment_id ?? null);
-  }, [
-    activePage,
-    code,
-    dismissedSecretMissionKeys,
-    rewardRound,
-    secretMissions,
-    sharedTimer?.is_on_break,
-    view?.player.id,
-    view?.session.status,
-  ]);
-
-  useEffect(() => {
     if (activePage !== "side-challenges" || !focusChallengeId) return;
     const frame = window.requestAnimationFrame(() => {
       document
@@ -186,37 +115,6 @@ export default function SessionParticipant({
     });
     return () => window.cancelAnimationFrame(frame);
   }, [activePage, focusChallengeId, view?.side_challenges.length]);
-
-  async function voteInRewardRound(candidateId: string) {
-    if (
-      !rewardRound ||
-      !token ||
-      !code ||
-      busyKey !== null ||
-      rewardRound.status !== "open"
-    )
-      return;
-    setBusyKey("reward-vote");
-    setError("");
-    const { error: voteError } = await supabase.rpc(
-      "cc_player_cast_session_reward_vote",
-      {
-        p_join_code: code,
-        p_player_token: token,
-        p_reward_round_id: rewardRound.id,
-        p_target_player_id:
-          rewardRound.target_kind === "player" ? candidateId : null,
-        p_target_team_id:
-          rewardRound.target_kind === "team" ? candidateId : null,
-      },
-    );
-    setBusyKey(null);
-    if (voteError) {
-      setError(voteError.message);
-      return;
-    }
-    await loadView();
-  }
 
   const currentSubmission = useMemo(() => {
     if (!view?.challenge) return null;
@@ -237,8 +135,7 @@ export default function SessionParticipant({
   );
 
   function mediaUrl(path: string) {
-    return supabase.storage.from("session-evidence").getPublicUrl(path).data
-      .publicUrl;
+    return sessionEvidenceUrl(path);
   }
 
   function evidenceForChallenge(challengeId: string) {
@@ -254,267 +151,6 @@ export default function SessionParticipant({
     );
   }
 
-  async function uploadEvidence(
-    event: ChangeEvent<HTMLInputElement>,
-    parent:
-      | { type: "challenge"; challenge: ChallengeInfo }
-      | { type: "secret"; mission: SecretMission },
-  ) {
-    const input = event.currentTarget;
-    const file = input.files?.[0];
-    input.value = "";
-    if (!file || !view || !token || !code) return;
-
-    const prepared = prepareSessionEvidence(file);
-    if (prepared.error || !prepared.data) {
-      setError(prepared.error?.message ?? "Choose a supported file.");
-      return;
-    }
-    const parentKey =
-      parent.type === "challenge"
-        ? parent.challenge.id
-        : parent.mission.assignment_id;
-    if (
-      parent.type === "challenge" &&
-      parent.challenge.submission_status === "approved"
-    ) {
-      setError(
-        "This challenge has already been approved, so no more evidence can be added.",
-      );
-      return;
-    }
-    if (parent.type === "secret") {
-      const finalReview = secretReview?.my_final_reviews.find(
-        (item) => item.assignment_id === parent.mission.assignment_id,
-      );
-      if (parent.mission.status === "approved" || finalReview) {
-        setError(
-          "This secret mission has a final result, so no more evidence can be added.",
-        );
-        return;
-      }
-    }
-
-    setBusyKey(`upload:${parentKey}`);
-    setError("");
-    const result = await uploadSessionEvidence({
-      file,
-      sessionId: view.session.id,
-      playerId: view.player.id,
-      code,
-      token,
-      challengeId:
-        parent.type === "challenge"
-          ? parent.challenge.id
-          : parent.mission.challenge_id,
-      assignmentId:
-        parent.type === "secret" ? parent.mission.assignment_id : null,
-      metadata: prepared.data,
-    });
-    setBusyKey(null);
-    if (result.error) {
-      setError(result.error.message);
-      return;
-    }
-    await loadView();
-  }
-
-  async function voteForFinalMedia(item: FinalGalleryItem) {
-    if (!token || !code) return;
-    setBusyKey(`vote:${item.id}`);
-    setError("");
-    const { error: voteError } = await supabase.rpc(
-      "cc_player_cast_session_final_round_vote",
-      {
-        p_join_code: code,
-        p_player_token: token,
-        p_evidence_id: item.id,
-      },
-    );
-    setBusyKey(null);
-    if (voteError) {
-      setError(voteError.message);
-      return;
-    }
-    await loadView();
-  }
-
-  async function chooseTeam(teamId: string) {
-    if (!token || !code) return;
-    setBusyKey(`team:${teamId}`);
-    setError("");
-    const { error: chooseError } = await supabase.rpc(
-      "cc_player_choose_session_team",
-      {
-        p_join_code: code,
-        p_player_token: token,
-        p_team_id: teamId,
-      },
-    );
-    setBusyKey(null);
-    if (chooseError) {
-      setError(chooseError.message);
-      return;
-    }
-    await loadView();
-  }
-
-  async function createTeam(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!token || !code || !teamName.trim()) return;
-    setBusyKey("create-team");
-    setError("");
-    const { error: createError } = await supabase.rpc(
-      "cc_player_create_session_team",
-      {
-        p_join_code: code,
-        p_player_token: token,
-        p_team_name: teamName.trim(),
-      },
-    );
-    setBusyKey(null);
-    if (createError) {
-      setError(createError.message);
-      return;
-    }
-    setTeamName("");
-    await loadView();
-  }
-
-  async function submitChallenge(challenge: ChallengeInfo) {
-    if (!token || !code) return;
-    if (
-      (challenge.kind === "side" || challenge.allow_photo_upload) &&
-      evidenceForChallenge(challenge.id).length === 0
-    ) {
-      setError(
-        "Upload at least one photo or video before marking this challenge complete.",
-      );
-      return;
-    }
-    setBusyKey(challenge.id);
-    setError("");
-    const { error: submitError } = await supabase.rpc(
-      "cc_player_submit_session_challenge",
-      {
-        p_join_code: code,
-        p_player_token: token,
-        p_challenge_id: challenge.id,
-      },
-    );
-    setBusyKey(null);
-    if (submitError) {
-      setError(submitError.message);
-      return;
-    }
-    await loadView();
-  }
-
-  async function submitSecretMission(mission: SecretMission) {
-    if (!token || !code) return;
-    if (
-      secretReview?.my_final_reviews.some(
-        (item) => item.assignment_id === mission.assignment_id,
-      )
-    ) {
-      setError(
-        "This secret mission has already received a final review result.",
-      );
-      return;
-    }
-    if (
-      mission.allow_photo_upload &&
-      evidenceForSecret(mission.assignment_id).length === 0
-    ) {
-      setError(
-        "Upload at least one photo or video before submitting this secret mission.",
-      );
-      return;
-    }
-    setBusyKey(mission.assignment_id);
-    setError("");
-    const { error: submitError } = await supabase.rpc(
-      "cc_player_submit_secret_mission",
-      {
-        p_join_code: code,
-        p_player_token: token,
-        p_assignment_id: mission.assignment_id,
-      },
-    );
-    setBusyKey(null);
-    if (submitError) {
-      setError(submitError.message);
-      return;
-    }
-    await loadView();
-  }
-
-  async function voteOnSecretReview(vote: "success" | "fail") {
-    if (
-      !token ||
-      !code ||
-      !secretReview?.assignment_id ||
-      !secretReview.voting_open
-    )
-      return;
-    setBusyKey("secret-review-vote");
-    setError("");
-    const { error: voteError } = await supabase.rpc(
-      "cc_player_cast_secret_review_vote",
-      {
-        p_join_code: code,
-        p_player_token: token,
-        p_assignment_id: secretReview.assignment_id,
-        p_vote: vote,
-      },
-    );
-    setBusyKey(null);
-    if (voteError) {
-      setError(voteError.message);
-      return;
-    }
-    await loadView();
-  }
-
-  function playSecretMission(mission: SecretMission) {
-    const playerId = view?.player.id;
-    if (!playerId) return;
-    const storageKey = `chaos-crawl-seen-secret-missions:${code}:${playerId}`;
-    const dismissalKey = `${storageKey}:${mission.assignment_id}`;
-    setDismissedSecretMissionKeys((keys) =>
-      keys.includes(dismissalKey) ? keys : [...keys, dismissalKey],
-    );
-    try {
-      const parsed = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
-      const seenIds = Array.isArray(parsed) ? parsed.map(String) : [];
-      localStorage.setItem(
-        storageKey,
-        JSON.stringify([...new Set([...seenIds, mission.assignment_id])]),
-      );
-    } catch {
-      /* The mission remains dismissed for this visit. */
-    }
-    setActiveSecretMissionId(null);
-  }
-
-  function dismissCompletedSecretMission(mission: SecretMission) {
-    const playerId = view?.player.id;
-    if (!playerId) return;
-    const storageKey = `chaos-crawl-dismissed-secret-missions:${code}:${playerId}`;
-    const nextIds = [
-      ...new Set([...dismissedSecretMissionCardIds, mission.assignment_id]),
-    ];
-    setDismissedSecretMissionCardIds(nextIds);
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(nextIds));
-    } catch {
-      setError(
-        "The mission was dismissed for this visit, but the dismissal couldn't be saved on this device.",
-      );
-    }
-    playSecretMission(mission);
-  }
-
   async function copyGameCode() {
     try {
       await navigator.clipboard.writeText(code);
@@ -524,6 +160,46 @@ export default function SessionParticipant({
       setError("Copy isn't available in this browser. Game code: " + code);
     }
   }
+  const { teamName, setTeamName, chooseTeam, createTeam } = useParticipantTeams(
+    { token, code, setBusyKey, setError, loadView },
+  );
+  const { voteInRewardRound, voteForFinalMedia, voteOnSecretReview } =
+    useParticipantVoting({
+      rewardRound,
+      token,
+      code,
+      busyKey,
+      setBusyKey,
+      setError,
+      loadView,
+      secretReview,
+    });
+  const { uploadEvidence, submitChallenge, submitSecretMission } =
+    useParticipantSubmissions({
+      view,
+      token,
+      code,
+      setError,
+      secretReview,
+      setBusyKey,
+      loadView,
+      evidenceForChallenge: (...args) => evidenceForChallenge(...args),
+      evidenceForSecret: (...args) => evidenceForSecret(...args),
+    });
+  const {
+    activeSecretMissionId,
+    dismissedSecretMissionCardIds,
+    playSecretMission,
+    dismissCompletedSecretMission,
+  } = usePrivateMissions({
+    view,
+    code,
+    activePage,
+    rewardRound,
+    sharedTimer,
+    secretMissions,
+    setError,
+  });
 
   if (embedded && (!token || (!loading && !view)))
     return (
@@ -596,7 +272,7 @@ export default function SessionParticipant({
   const finalRoundTakeover =
     activePage === "final" && session.final_gallery_open;
   const secretReviewTakeover = Boolean(
-    secretReview?.open && secretReview.mission,
+    secretReview?.open || isSecretVotingOpen(secretReview),
   );
   const playerTourSteps: GuidedTourStep[] = [
     {
@@ -690,7 +366,7 @@ export default function SessionParticipant({
       {(error || sharedTimerError) && (
         <SessionFeedback message={error || sharedTimerError} />
       )}
-      {secretReviewTakeover && secretReview?.mission && (
+      {secretReviewTakeover && secretReview && (
         <SecretMissionReview
           secretReview={secretReview}
           mediaUrl={mediaUrl}
@@ -760,76 +436,16 @@ export default function SessionParticipant({
                 )}
 
               {teamSelectionAllowed && (
-                <section className="cc-player-team-card">
-                  <div className="cc-player-section-heading">
-                    <div>
-                      <span className="cc-player-eyebrow">SQUAD UP</span>
-                      <h2>Choose your team</h2>
-                    </div>
-                    <span className="cc-player-count-chip">
-                      {session.team_size} max
-                    </span>
-                  </div>
-                  <div className="cc-player-team-options">
-                    {teams.map((team) => {
-                      const full =
-                        team.member_count >= session.team_size &&
-                        player.team_id !== team.id;
-                      return (
-                        <button
-                          type="button"
-                          key={team.id}
-                          disabled={busyKey !== null || full}
-                          className={`cc-player-team-option${player.team_id === team.id ? " is-current" : ""}`}
-                          onClick={() => void chooseTeam(team.id)}
-                        >
-                          <span className="cc-player-team-dot">
-                            {team.name.slice(0, 1).toUpperCase()}
-                          </span>
-                          <span>
-                            <strong>{team.name}</strong>
-                            <small>
-                              {full
-                                ? "Team full"
-                                : `${team.member_count}/${session.team_size} players`}
-                            </small>
-                          </span>
-                          {player.team_id === team.id && (
-                            <Icon
-                              name="check-circle2"
-                              className="icon--size-19"
-                            />
-                          )}
-                        </button>
-                      );
-                    })}
-                    <form
-                      className="cc-player-create-team"
-                      onSubmit={(event) => void createTeam(event)}
-                    >
-                      <input
-                        value={teamName}
-                        onChange={(event) => setTeamName(event.target.value)}
-                        placeholder="Or name a new team…"
-                        aria-label="New team name"
-                        maxLength={40}
-                      />
-                      <button
-                        type="submit"
-                        disabled={busyKey !== null || !teamName.trim()}
-                      >
-                        {busyKey === "create-team" ? (
-                          <Icon
-                            name="loader-circle"
-                            className="icon--size-17 cc-spin"
-                          />
-                        ) : (
-                          "Create team"
-                        )}
-                      </button>
-                    </form>
-                  </div>
-                </section>
+                <ParticipantTeams
+                  session={session}
+                  teams={teams}
+                  player={player}
+                  busyKey={busyKey}
+                  chooseTeam={chooseTeam}
+                  createTeam={createTeam}
+                  teamName={teamName}
+                  setTeamName={setTeamName}
+                />
               )}
 
               {session.status === "live" && (
@@ -1007,48 +623,10 @@ export default function SessionParticipant({
             session.status === "live" &&
             !rewardRound &&
             !secretReviewTakeover && (
-              <div className="cc-player-secret-modal-backdrop">
-                <section
-                  className="cc-player-secret-modal"
-                  role="dialog"
-                  aria-modal="true"
-                  aria-labelledby="cc-player-secret-modal-title"
-                  aria-describedby="cc-player-secret-modal-description"
-                >
-                  <div className="cc-player-secret-modal-top">
-                    <span className="cc-player-secret-modal-label">
-                      SECRET
-                      <br />
-                      MISSION
-                    </span>
-                    <span
-                      className="cc-player-secret-modal-art"
-                      aria-hidden="true"
-                    >
-                      {challengeIcon(
-                        activeSecretMission.title,
-                        activeSecretMission.description,
-                      )}
-                    </span>
-                  </div>
-                  <h2 id="cc-player-secret-modal-title">
-                    {activeSecretMission.title}
-                  </h2>
-                  <p id="cc-player-secret-modal-description">
-                    {activeSecretMission.description}
-                  </p>
-                  <div className="cc-player-secret-modal-points">
-                    +{activeSecretMission.points} points
-                  </div>
-                  <button
-                    type="button"
-                    className="cc-player-secret-modal-play"
-                    onClick={() => playSecretMission(activeSecretMission)}
-                  >
-                    Play <Icon name="check" className="icon--size-17" />
-                  </button>
-                </section>
-              </div>
+              <PrivateMissionDialog
+                activeSecretMission={activeSecretMission}
+                playSecretMission={playSecretMission}
+              />
             )}
 
           {tourOpen && (
@@ -1064,6 +642,7 @@ export default function SessionParticipant({
     </>
   );
   if (embedded) return sessionContent;
+
   return (
     <SessionPage
       viewerRole="player"
@@ -1093,13 +672,14 @@ export default function SessionParticipant({
       }
       toolbar={
         !embeddedHostMode && !finalRoundTakeover && !secretReviewTakeover ? (
-          <button
+          <Button
+            variant="session-tour"
+            fullWidth={false}
             type="button"
-            className="session-page__tour"
             onClick={() => setTourOpen(true)}
           >
             ✦ How to play / Take a tour
-          </button>
+          </Button>
         ) : null
       }
       navigation={

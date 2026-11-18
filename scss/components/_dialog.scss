@@ -1,3 +1,8 @@
+@use "../variables/colors";
+@use "../variables/effects";
+@use "../variables/layers";
+@use "../variables/layout";
+
 .dialog {
   isolation: isolate;
   inset: 0;
@@ -27,5 +32,27 @@
 
   &::backdrop {
     background: transparent;
+  }
+}
+
+.dialog {
+  &--host {
+    position: fixed;
+    z-index: layers.$host-overlay;
+    padding: layout.$pixel-unit * 4.5;
+    background: rgba(colors.$host-overlay-ink, effects.$host-overlay-opacity);
+    backdrop-filter: blur(layout.$host-overlay-blur);
+  }
+}
+
+.dialog {
+  &--reveal {
+    position: fixed;
+    z-index: layers.$reveal-overlay;
+    display: grid;
+    place-items: center;
+    padding: layout.$pixel-unit * 5.5;
+    background: rgba(colors.$reveal-scrim, effects.$reward-overlay-opacity);
+    backdrop-filter: blur(layout.$control-border-width);
   }
 }

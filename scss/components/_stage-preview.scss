@@ -1,0 +1,33 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+.stage-preview {
+  display: grid;
+  gap: layout.$pixel-unit * 1.5;
+  margin-top: 0;
+  padding: layout.$pixel-unit * 2.5 layout.$pixel-unit * 2.75;
+  border: layout.$control-border-width solid colors.$session-frame-ink;
+  border-radius: layout.$pixel-unit * 4;
+  color: colors.$session-text;
+  background: colors.$host-control-paper;
+  box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
+    colors.$session-frame-ink;
+  &--highlighted {
+    background: colors.$dialog-notice-surface;
+  }
+  &__heading {
+    display: flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 2.25;
+  }
+  &__title {
+    color: colors.$session-text;
+    font-family: fonts.$family-stage;
+    font-size: fonts.$size-intro;
+  }
+  &__description {
+    color: colors.$session-text;
+    font-size: fonts.$size-micro;
+    line-height: fonts.$line-height-control-note;
+  }
+}

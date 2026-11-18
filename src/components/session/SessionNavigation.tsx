@@ -1,3 +1,4 @@
+import type { Ref } from "react";
 import SessionNavItem from "./SessionNavItem";
 import type { SessionSection } from "./types";
 
@@ -6,6 +7,7 @@ type Navigation =
   | { onSelect: (section: SessionSection) => void; hrefFor?: never };
 export default function SessionNavigation({
   active,
+  elementRef,
   showFinal = false,
   showHost = false,
   challengeCount,
@@ -14,6 +16,7 @@ export default function SessionNavigation({
   ...navigation
 }: Navigation & {
   active: SessionSection;
+  elementRef?: Ref<HTMLElement>;
   showFinal?: boolean;
   showHost?: boolean;
   challengeCount?: number;
@@ -26,6 +29,7 @@ export default function SessionNavigation({
       : { onClick: () => navigation.onSelect?.(section) };
   return (
     <nav
+      ref={elementRef}
       className="session-navigation"
       aria-label="Game pages"
       data-tour={tourTarget}

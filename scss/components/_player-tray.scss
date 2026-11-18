@@ -1,0 +1,17 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+@use "../variables/effects";
+
+.player-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: (layout.$pixel-unit * 1.75);
+  min-height: (layout.$pixel-unit * 8.75);
+  & > p {
+    margin: 0;
+    color: colors.$note-text;
+    font-size: fonts.$size-micro;
+  }
+}

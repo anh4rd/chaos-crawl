@@ -1,0 +1,99 @@
+@use "../variables/effects";
+@use "../variables/motion";
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.stat-tile {
+  &--default {
+    display: flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 3);
+    min-width: 0;
+    padding: (layout.$pixel-unit * 3.5);
+    border: (layout.$pixel-unit * 0.5) solid colors.$comic-ink;
+    border-radius: (layout.$pixel-unit * 4.5);
+    background: colors.$stat-surface;
+    box-shadow: (layout.$pixel-unit * 0.75) (layout.$pixel-unit * 0.75) 0
+      colors.$purple-dark;
+    .stat-tile__copy {
+      display: grid;
+      gap: (layout.$pixel-unit * 0.25);
+      min-width: 0;
+    }
+    .stat-tile__value {
+      color: colors.$stat-value;
+      font-size: fonts.$size-stat;
+      font-weight: fonts.$weight-heavy;
+      line-height: 1;
+    }
+    .stat-tile__label {
+      color: colors.$stat-label;
+      font-size: fonts.$size-micro;
+      font-weight: fonts.$weight-label;
+    }
+    @media (max-width: layout.$reference-mobile-breakpoint) {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: (layout.$pixel-unit * 2);
+      padding: (layout.$pixel-unit * 2.5);
+      border-radius: (layout.$pixel-unit * 3.5);
+    }
+    @media (max-width: layout.$reference-mobile-breakpoint) {
+      .stat-tile__value {
+        font-size: fonts.$size-brand-tablet;
+      }
+    }
+    @media (max-width: layout.$reference-mobile-breakpoint) {
+      .stat-tile__label {
+        font-size: fonts.$size-navigation-caption;
+      }
+    }
+  }
+}
+
+.stat-tile {
+  &--compact {
+    display: grid;
+    justify-items: center;
+    gap: (layout.$pixel-unit * 0.5);
+    padding: (layout.$pixel-unit * 2.5);
+    border: (layout.$pixel-unit * 0.25) solid colors.$stat-tile-border;
+    border-radius: (layout.$pixel-unit * 3);
+    background: colors.$challenge-icon-surface;
+  }
+  &--compact .stat-tile__value {
+    color: colors.$purple;
+    font-family: fonts.$family-display;
+    font-size: fonts.$size-brand-host;
+  }
+  &--compact .stat-tile__label {
+    color: colors.$stat-tile-text;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-action;
+  }
+}
+
+.stat-tile {
+  &--review {
+    display: grid;
+    place-content: center;
+    gap: layout.$pixel-unit * 0.5;
+    min-height: layout.$review-control-height;
+    padding: layout.$pixel-unit * 1.5 layout.$pixel-unit * 2.25;
+    border-radius: layout.$pixel-unit * 3.25;
+    background: colors.$white;
+    color: colors.$purple-dark;
+    text-align: center;
+    .stat-tile__label {
+      font-size: fonts.$size-tiny;
+      font-weight: fonts.$weight-action;
+      text-transform: uppercase;
+    }
+    .stat-tile__value {
+      font-family: fonts.$family-review-value;
+      font-size: fonts.$size-example-heading;
+      line-height: 1;
+    }
+  }
+}

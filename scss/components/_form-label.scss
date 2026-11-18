@@ -1,0 +1,151 @@
+@use "../variables/effects";
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.form-label {
+  display: grid;
+  gap: layout.$pixel-unit * 1.5;
+  color: colors.$editor-label;
+  font-size: fonts.$size-small;
+  font-weight: fonts.$weight-heavy;
+
+  small {
+    display: inline;
+    color: colors.$editor-hint;
+    font-weight: fonts.$weight-bold;
+  }
+  &--spaced {
+    margin-top: layout.$pixel-unit * 3;
+  }
+  &--checkbox {
+    display: flex !important;
+    align-items: center;
+    gap: layout.$pixel-unit * 2.25 !important;
+
+    input {
+      width: layout.$pixel-unit * 4.5;
+      height: layout.$pixel-unit * 4.5;
+      accent-color: colors.$purple;
+    }
+  }
+}
+
+.form-label {
+  &--session {
+    gap: layout.$pixel-unit * 1.75;
+    min-width: 0;
+    color: colors.$session-field-label;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-action;
+    > span {
+      display: flex;
+      align-items: center;
+      gap: layout.$pixel-unit * 1.25;
+    }
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-width: 0;
+      min-height: layout.$session-form-control-height;
+      border: layout.$control-border-width solid colors.$session-field-border;
+      border-radius: layout.$pixel-unit * 3;
+      padding: layout.$pixel-unit * 2.75 layout.$pixel-unit * 3;
+      color: colors.$session-field-ink;
+      background: colors.$btn-surface;
+      font: inherit;
+      font-size: fonts.$size-small;
+      outline: none;
+      &:focus {
+        box-shadow: 0 0 0 layout.$pixel-unit * 0.75
+          rgba(colors.$purple, effects.$session-field-focus-opacity);
+      }
+    }
+    small {
+      color: colors.$session-field-hint;
+      font-size: fonts.$size-micro;
+      font-weight: fonts.$weight-caption;
+      line-height: 1.4;
+    }
+  }
+  &--session-checkbox {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    > span {
+      gap: layout.$pixel-unit * 2;
+    }
+    input[type="checkbox"] {
+      width: layout.$pixel-unit * 4;
+      height: layout.$pixel-unit * 4;
+      min-height: 0;
+      accent-color: colors.$purple;
+    }
+  }
+}
+
+.form-label {
+  &--review {
+    grid-column: 1 / -1;
+    gap: layout.$pixel-unit * 1.25;
+    min-width: 0;
+    color: colors.$white;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-action;
+    select {
+      min-height: layout.$pixel-unit * 9.5;
+      padding: layout.$pixel-unit * 1.75 layout.$pixel-unit * 2.5;
+      border: layout.$pixel-unit * 0.25 solid colors.$review-picker-border;
+      border-radius: layout.$pixel-unit * 2.5;
+      background: colors.$white;
+      color: colors.$ink;
+      font: inherit;
+    }
+  }
+}
+
+.form-label {
+  &--reward,
+  &--award-points {
+    min-width: 0;
+    color: colors.$purple-dark;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-action;
+    > span {
+      color: colors.$white;
+    }
+    input,
+    select {
+      width: 100%;
+      min-width: 0;
+      padding: layout.$pixel-unit * 2.75 layout.$pixel-unit * 3;
+      border: layout.$control-border-width solid colors.$session-field-border;
+      border-radius: layout.$pixel-unit * 3;
+      background: colors.$btn-surface;
+      color: colors.$session-field-ink;
+      font: inherit;
+    }
+  }
+  &--reward {
+    gap: layout.$pixel-unit * 1.75;
+    input,
+    select {
+      font-size: fonts.$size-label;
+    }
+  }
+  &--award-points {
+    $columns: minmax(0, 1fr)
+      minmax(layout.$award-points-min-width, layout.$award-points-max-width);
+    grid-template-columns: $columns;
+    align-items: center;
+    gap: layout.$pixel-unit * 3;
+    padding: layout.$pixel-unit * 3 layout.$pixel-unit * 3.5;
+    border: layout.$pixel-unit * 0.25 solid colors.$reward-field-border;
+    border-radius: layout.$pixel-unit * 3;
+    background: colors.$reward-field-surface;
+    @media (max-width: layout.$small-screen-breakpoint) {
+      grid-template-columns: 1fr;
+    }
+  }
+}

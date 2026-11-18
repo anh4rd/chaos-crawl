@@ -1,0 +1,66 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.host-access-form {
+  margin-top: (layout.$pixel-unit * 6.25);
+  padding: layout.$access-card-padding;
+  background: colors.$white;
+  border-radius: (layout.$pixel-unit * 6.75);
+  box-shadow: 0 (layout.$pixel-unit * 6) (layout.$pixel-unit * 17.5)
+    colors.$host-access-shadow;
+  &__title {
+    margin: (layout.$pixel-unit * 2) 0 (layout.$pixel-unit * 2.5);
+    color: var(--host-ink);
+    font-family: fonts.$family-type-sample;
+    font-size: fonts.$size-access-heading;
+    line-height: 1.02;
+    letter-spacing: fonts.$tracking-access;
+    text-shadow: none;
+  }
+  &__description {
+    margin: 0;
+    font-size: fonts.$size-body;
+    line-height: 1.5;
+  }
+  &__modes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: (layout.$pixel-unit * 1);
+    margin: (layout.$pixel-unit * 6.25) 0 (layout.$pixel-unit * 5.5);
+    padding: (layout.$pixel-unit * 1);
+    border-radius: (layout.$pixel-unit * 3.5);
+    background: colors.$host-mode-surface;
+  }
+  // Outrank the route-loaded host font reset during the migration.
+  & &__mode {
+    border: 0;
+    padding: (layout.$pixel-unit * 2.75);
+    color: colors.$host-mode-copy;
+    border-radius: (layout.$pixel-unit * 2.75);
+    background: transparent;
+    font-weight: fonts.$weight-extra-bold;
+    font-size: fonts.$size-label;
+  }
+  & &__mode--selected {
+    background: colors.$white;
+    color: var(--host-purple);
+    box-shadow: 0 (layout.$pixel-unit * 0.5) (layout.$pixel-unit * 2.5)
+      colors.$host-mode-shadow;
+  }
+  &__footnote {
+    margin: (layout.$pixel-unit * 4.5) 0 0;
+    color: colors.$host-access-footnote;
+    font-size: fonts.$size-caption;
+    line-height: 1.45;
+    text-align: center;
+  }
+}
+
+.host-access-form {
+  &__fields {
+    display: flex;
+    flex-direction: column;
+    gap: (layout.$pixel-unit * 4);
+  }
+}

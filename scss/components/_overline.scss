@@ -1,0 +1,58 @@
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/colors";
+@use "../tools/micro-label";
+
+.overline {
+  @include micro-label.micro-label;
+  &--primary {
+    color: colors.$purple;
+  }
+}
+
+.overline {
+  .host-management &--session {
+    color: colors.$accent-soft;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-overline;
+  }
+  .host-management &--pink {
+    color: colors.$pink;
+  }
+  &--icon {
+    display: flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.5;
+  }
+}
+
+.overline {
+  &--review {
+    color: colors.$pink;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-compact;
+  }
+}
+
+.overline {
+  &--choice {
+    display: block;
+    color: colors.$purple-mid;
+    letter-spacing: fonts.$tracking-choice;
+  }
+}
+
+.overline {
+  &--reveal {
+    margin-bottom: layout.$pixel-unit * 2;
+    color: colors.$reveal-points;
+    font-family: fonts.$family-stage;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-heavy;
+    font-style: italic;
+    letter-spacing: normal;
+    text-transform: uppercase;
+  }
+}

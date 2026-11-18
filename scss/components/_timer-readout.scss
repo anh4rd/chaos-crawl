@@ -1,0 +1,30 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.timer-readout {
+  display: flex;
+  min-width: layout.$timer-readout-min-width;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: layout.$pixel-unit * 0.25;
+  margin: 0;
+  padding: layout.$pixel-unit layout.$pixel-unit * 1.75;
+  color: colors.$lobby-setup-shadow;
+  background: transparent;
+
+  &__label {
+    color: colors.$purple;
+    font-size: fonts.$size-tiny;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-eyebrow;
+  }
+  &__value {
+    color: colors.$lobby-setup-shadow;
+    font-family: fonts.$family-display;
+    font-size: fonts.$size-control-timer;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+}

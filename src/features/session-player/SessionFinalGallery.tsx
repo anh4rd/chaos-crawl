@@ -1,3 +1,4 @@
+import { isFinalVotingOpen } from "./votingState";
 import SessionFinalRound from "../../components/session/SessionFinalRound";
 import type {
   FinalGalleryItem,
@@ -13,6 +14,7 @@ export default function SessionFinalGallery({
   busyKey,
   voteForFinalMedia,
   leaderboard,
+  session,
 }: {
   finalGallery: FinalGalleryView | null;
   mediaUrl: (path: string) => string;
@@ -28,14 +30,16 @@ export default function SessionFinalGallery({
     member_count: number;
   }[];
 }) {
+  const votingOpen = isFinalVotingOpen(finalGallery, session);
+  const completed = Boolean(finalGallery?.voting_completed && !votingOpen);
   return (
     <SessionFinalRound
       title={finalGallery?.challenge_title}
       description={finalGallery?.challenge_description}
       points={finalGallery?.challenge_points ?? 0}
       galleryOpen={Boolean(finalGallery?.gallery_open)}
-      votingOpen={Boolean(finalGallery?.voting_open)}
-      completed={Boolean(finalGallery?.voting_completed)}
+      votingOpen={votingOpen}
+      completed={completed}
       busy={busyKey !== null}
       entries={(finalGallery?.items ?? []).map((item) => ({
         id: item.id,
@@ -51,9 +55,9 @@ export default function SessionFinalGallery({
           description: `${item.player_name}'s entry for ${item.challenge_title}`,
         },
         selected: item.is_my_vote,
-        winner: Boolean(finalGallery?.voting_completed && item.is_winner),
-        voteCount: finalGallery?.voting_open ? null : item.vote_count,
-        voters: finalGallery?.voting_completed
+        winner: Boolean(completed && item.is_winner),
+        voteCount: votingOpen ? null : item.vote_count,
+        voters: completed
           ? item.voters.map((voter) => ({
               id: voter.id,
               name: voter.name,
@@ -61,10 +65,14 @@ export default function SessionFinalGallery({
             }))
           : undefined,
       }))}
-      onVote={(id) => {
-        const item = finalGallery?.items.find((entry) => entry.id === id);
-        if (item) void voteForFinalMedia(item);
-      }}
+      onVote={
+        finalGallery?.voting_open
+          ? (id) => {
+              const item = finalGallery.items.find((entry) => entry.id === id);
+              if (item) void voteForFinalMedia(item);
+            }
+          : undefined
+      }
       leaderboard={leaderboard.map((entry) => ({
         id: entry.player_id,
         name: entry.name,

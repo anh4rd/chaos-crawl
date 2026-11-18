@@ -1,0 +1,12 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+
+.player-demo {
+  &__disclaimer {
+    margin: 0;
+    text-align: center;
+    color: colors.$white;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-extra-bold;
+  }
+}

@@ -1,0 +1,63 @@
+@use "../variables/colors";
+@use "../variables/effects";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/motion";
+.round-choice {
+  display: flex;
+  align-items: center;
+  gap: layout.$pixel-unit * 3;
+  width: 100%;
+  margin-top: layout.$pixel-unit * 1.25;
+  padding: layout.$pixel-unit * 3 layout.$pixel-unit * 2.5;
+  border: layout.$control-border-width solid colors.$plan-navigation-border;
+  border-radius: layout.$pixel-unit * 3.25;
+  background: rgba(colors.$white, effects.$round-choice-surface-opacity);
+  color: colors.$white;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: none;
+  text-transform: none;
+  scale: none;
+  transition-property: all;
+  transition-duration: motion.$duration-none;
+  transition-timing-function: motion.$easing-default;
+  &:disabled {
+    cursor: default;
+  }
+  &:hover {
+    background: rgba(colors.$white, effects.$round-choice-hover-opacity);
+  }
+  &--current {
+    outline: layout.$pixel-unit * 0.25 solid
+      rgba(colors.$accent-soft, effects.$translucent-border-opacity);
+    border-color: colors.$accent-soft;
+    background: rgba(colors.$accent-soft, effects.$invite-accent-opacity);
+  }
+  &--current:hover {
+    background: rgba(colors.$accent-soft, effects.$invite-accent-opacity);
+  }
+  &__copy {
+    display: grid;
+    gap: layout.$pixel-unit;
+    flex: 1;
+    min-width: 0;
+  }
+  &__copy strong {
+    font-size: fonts.$size-label;
+  }
+  &__copy small {
+    font-size: fonts.$size-caption;
+    color: colors.$round-choice-description;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  &__points {
+    font-size: fonts.$size-caption;
+    color: colors.$accent-soft;
+    font-weight: fonts.$weight-action;
+    white-space: nowrap;
+  }
+}

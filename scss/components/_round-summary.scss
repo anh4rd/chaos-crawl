@@ -1,0 +1,31 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+.round-summary {
+  display: flex;
+  align-items: center;
+  gap: layout.$pixel-unit * 3;
+  padding: layout.$pixel-unit * 3.75;
+  border-radius: layout.$pixel-unit * 4;
+  background: colors.$host-panel;
+  > div {
+    flex: 1;
+    min-width: 0;
+  }
+  h3 {
+    margin: 0 0 layout.$pixel-unit;
+    color: colors.$purple-dark;
+    font-size: fonts.$size-brand-mobile;
+    font-weight: fonts.$weight-heavy;
+  }
+  p {
+    margin: 0;
+    color: colors.$session-empty-copy;
+    font-size: fonts.$size-small;
+    line-height: 1.45;
+  }
+  @media (max-width: layout.$reward-compact-breakpoint) {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}

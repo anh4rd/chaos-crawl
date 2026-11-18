@@ -12,13 +12,6 @@
     font-size: layout.$session-header-size;
     text-shadow: none;
   }
-  &__tour {
-    border: 0;
-    padding: layout.$spacing-unit * 2;
-    background: transparent;
-    color: colors.$white;
-    cursor: pointer;
-  }
   &__toolbar {
     width: min(100%, layout.$session-content-width);
     margin-inline: auto;

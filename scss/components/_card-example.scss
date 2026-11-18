@@ -1,0 +1,10 @@
+@use "../variables/layout";
+@use "../variables/fonts";
+.card-example {
+  &__copy {
+    margin-top: layout.$spacing-unit * 3;
+  }
+  &__detail {
+    font-weight: fonts.$weight-bold;
+  }
+}

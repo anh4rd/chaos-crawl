@@ -1,8 +1,8 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { hostDispatchDueSecretMissions } from "../../lib/hostSecretCommands";
 import { supabase } from "../../lib/sessionSupabase";
 import type {
   GameSession,
-  RewardMethod,
   SecretMissionAssignment,
   SecretReviewAssignment,
   SecretReviewState,
@@ -21,6 +21,7 @@ import type {
 } from "./types";
 
 export function useHostSessionData(sessionId: string) {
+  const requestVersion = useRef(0);
   const [session, setSession] = useState<GameSession | null>(null);
 
   const [challenges, setChallenges] = useState<SessionChallenge[]>([]);
@@ -63,24 +64,24 @@ export function useHostSessionData(sessionId: string) {
 
   const [rewardAwards, setRewardAwards] = useState<SessionRewardAward[]>([]);
 
-  const [rewardChallengeId, setRewardChallengeId] = useState("");
-
-  const [rewardMethod, setRewardMethod] = useState<RewardMethod>("voting");
-
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState("");
 
   const load = useCallback(async () => {
-    if (!sessionId) return;
+    if (!sessionId) {
+      setLoading(false);
+      return;
+    }
+    const version = ++requestVersion.current;
     // Send any scheduled missions whose time has arrived while this game is live.
-    const { error: dispatchError } = await supabase.rpc(
-      "cc_host_dispatch_due_secret_missions",
-      { p_session_id: sessionId },
-    );
+    const { error: dispatchError } = await hostDispatchDueSecretMissions({
+      p_session_id: sessionId,
+    });
     if (dispatchError)
       console.warn("SECRET MISSION DISPATCH:", dispatchError.message);
 
+    if (version !== requestVersion.current) return;
     const [
       sessionResult,
       challengeResult,
@@ -189,6 +190,7 @@ export function useHostSessionData(sessionId: string) {
         .eq("session_id", sessionId),
     ]);
 
+    if (version !== requestVersion.current) return;
     if (sessionResult.error) {
       setError(
         `Couldn't load this game session: ${sessionResult.error.message}`,
@@ -199,30 +201,6 @@ export function useHostSessionData(sessionId: string) {
     setSession(sessionResult.data as GameSession);
     const loadedChallenges = (challengeResult.data ?? []) as SessionChallenge[];
     setChallenges(loadedChallenges);
-    setRewardChallengeId(
-      (current) =>
-        current ||
-        loadedChallenges.find(
-          (item) =>
-            item.kind === "main" &&
-            item.round_number ===
-              Number(sessionResult.data.current_round_number),
-        )?.id ||
-        loadedChallenges.find((item) => item.kind === "main")?.id ||
-        loadedChallenges[0]?.id ||
-        "",
-    );
-    const allowedRewardMethods = ((sessionResult.data as GameSession)
-      .reward_methods ?? [
-      "voting",
-      "host_awards",
-      "audience_cheers",
-    ]) as RewardMethod[];
-    setRewardMethod((current) =>
-      allowedRewardMethods.includes(current)
-        ? current
-        : (allowedRewardMethods[0] ?? "host_awards"),
-    );
     setPlayers((playerResult.data ?? []) as SessionPlayer[]);
     setTeams((teamResult.data ?? []) as SessionTeam[]);
     setSubmissions((submissionResult.data ?? []) as SessionSubmission[]);
@@ -270,6 +248,26 @@ export function useHostSessionData(sessionId: string) {
     else setError("");
     setLoading(false);
   }, [sessionId]);
+  useEffect(() => {
+    let active = true;
+    let refreshing = false;
+    const refresh = async () => {
+      if (!active || refreshing) return;
+      refreshing = true;
+      try {
+        await load();
+      } finally {
+        refreshing = false;
+      }
+    };
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 3000);
+    return () => {
+      active = false;
+      requestVersion.current += 1;
+      window.clearInterval(timer);
+    };
+  }, [load]);
   return {
     session,
     setSession,
@@ -288,10 +286,6 @@ export function useHostSessionData(sessionId: string) {
     rewardRounds,
     rewardVotes,
     rewardAwards,
-    rewardChallengeId,
-    setRewardChallengeId,
-    rewardMethod,
-    setRewardMethod,
     loading,
     error,
     setError,

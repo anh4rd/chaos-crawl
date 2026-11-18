@@ -1,0 +1,24 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: (layout.$pixel-unit * 2);
+  margin: (layout.$pixel-unit * 3) 0;
+  & label {
+    display: flex;
+    gap: (layout.$pixel-unit * 2);
+    align-items: center;
+    padding: (layout.$pixel-unit * 3);
+    border: (layout.$pixel-unit * 0.25) solid colors.$choice-grid-border;
+    border-radius: (layout.$pixel-unit * 2.75);
+    background: colors.$workspace-gradient-middle;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-extra-bold;
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    grid-template-columns: 1fr;
+  }
+}

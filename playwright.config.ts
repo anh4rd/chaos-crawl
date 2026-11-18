@@ -7,7 +7,23 @@ const baseURL = `http://127.0.0.1:${port}/chaos-crawl/`;
 
 export default defineConfig({
   testDir: "./tests",
-  testMatch: ["**/smoke.spec.ts", "**/session.spec.ts"],
+  testMatch: [
+    "**/smoke.spec.ts",
+    "**/session.spec.ts",
+    "**/hostHub.spec.ts",
+    "**/planning.spec.ts",
+    "**/lobby.spec.ts",
+    "**/tour.spec.ts",
+    "**/hostDialogs.spec.ts",
+    "**/reviewControls.spec.ts",
+    "**/votingPrivacy.spec.ts",
+    "**/rewardControls.spec.ts",
+    "**/rewardModal.spec.ts",
+    "**/hostRoundControls.spec.ts",
+    "**/participantTeams.spec.ts",
+    "**/privateMissions.spec.ts",
+    "**/join.spec.ts",
+  ],
 
   fullyParallel: false,
 

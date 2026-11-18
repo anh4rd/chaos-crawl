@@ -1,0 +1,17 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.foundation-panel {
+  border: (layout.$pixel-unit * 0.25) solid colors.$reference-border;
+  border-radius: (layout.$pixel-unit * 4);
+  background: colors.$surface-soft;
+  padding: (layout.$pixel-unit * 6.5);
+  & p {
+    margin: (layout.$pixel-unit * 3.5) 0;
+  }
+  & h3 {
+    font-size: fonts.$size-panel-heading;
+    margin: (layout.$pixel-unit * 4) 0;
+  }
+}

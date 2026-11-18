@@ -1,0 +1,103 @@
+@use "../variables/fonts";
+@use "../variables/colors";
+@use "../variables/layout";
+
+.icon-badge {
+  display: grid;
+  place-items: center;
+  flex: 0 0 (layout.$pixel-unit * 10.5);
+  width: (layout.$pixel-unit * 10.5);
+  height: (layout.$pixel-unit * 10.5);
+  border: (layout.$pixel-unit * 0.5) solid colors.$comic-ink;
+  border-radius: (layout.$pixel-unit * 3.25);
+  color: colors.$comic-ink;
+  background: colors.$accent-soft;
+  &--violet {
+    background: colors.$icon-badge-violet;
+  }
+  &--pink {
+    color: colors.$white;
+    background: colors.$pink;
+  }
+  @media (max-width: layout.$reference-mobile-breakpoint) {
+    width: (layout.$pixel-unit * 8.5);
+    height: (layout.$pixel-unit * 8.5);
+    flex-basis: (layout.$pixel-unit * 8.5);
+    border-radius: (layout.$pixel-unit * 2.5);
+  }
+  @media (max-width: layout.$reference-mobile-breakpoint) {
+    & svg {
+      width: (layout.$pixel-unit * 4.5);
+      height: (layout.$pixel-unit * 4.5);
+    }
+  }
+}
+
+.icon-badge {
+  &--assignment {
+    flex: 0 0 layout.$pixel-unit * 9.25;
+    width: layout.$pixel-unit * 9.25;
+    height: layout.$pixel-unit * 9.25;
+    border: 0 solid;
+    border-radius: layout.$pixel-unit * 3;
+    color: colors.$assignment-icon-ink;
+    background: colors.$assignment-icon-surface;
+    font-size: fonts.$size-compact-section-heading;
+  }
+}
+
+.icon-badge {
+  &--method {
+    flex: 0 0 layout.$pixel-unit * 13;
+    width: layout.$pixel-unit * 13;
+    height: layout.$pixel-unit * 13;
+    border: 0 solid;
+    border-radius: layout.$pixel-unit * 3.75;
+    background: colors.$purple;
+    color: colors.$white;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-method;
+    &.icon-badge--lime {
+      color: colors.$ink;
+      background: colors.$accent-soft;
+    }
+    &.icon-badge--pink {
+      background: colors.$pink;
+    }
+  }
+}
+
+.icon-badge {
+  &--stage,
+  &--stage-break {
+    flex: 0 0 layout.$pixel-unit * 9.25;
+    width: layout.$pixel-unit * 9.25;
+    height: layout.$pixel-unit * 9.25;
+    border: layout.$session-border-width solid colors.$session-frame-ink;
+    border-radius: layout.$pixel-unit * 3.25;
+    background: colors.$challenge-icon-background;
+    color: inherit;
+    box-shadow: layout.$pixel-unit * 0.5 layout.$pixel-unit * 0.5 0
+      colors.$purple-dark;
+    font-size: fonts.$size-lobby-25;
+  }
+  &--stage-break {
+    font-size: fonts.$size-poster-heading;
+  }
+}
+
+.icon-badge {
+  &--reveal {
+    flex: 0 1 auto;
+    width: layout.$pixel-unit * 12.5;
+    height: layout.$pixel-unit * 12.5;
+    border: layout.$session-border-width solid colors.$lobby-setup-shadow;
+    border-radius: 50%;
+    background: colors.$white;
+    color: inherit;
+    box-shadow: layout.$pixel-unit * 0.25 layout.$pixel-unit * 0.5 0
+      colors.$lobby-setup-shadow;
+    font-size: fonts.$size-display;
+  }
+}

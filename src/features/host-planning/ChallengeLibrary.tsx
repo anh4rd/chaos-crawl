@@ -1,7 +1,13 @@
+import ChallengeTile from "./ChallengeTile";
+import SelectedChallenge from "./SelectedChallenge";
+import CountBadge from "../../components/ui/CountBadge";
+import PanelHeading from "../../components/ui/PanelHeading";
+import ContentPanel from "../../components/ui/ContentPanel";
+import Explainer from "../../components/ui/Explainer";
+import Button from "../../components/ui/Button";
 import type { Dispatch, SetStateAction } from "react";
 import { type FormEvent } from "react";
 import Icon from "../../components/ui/Icon";
-import { challengeIcon } from "../../lib/challengeVisuals";
 import { vibes } from "./catalog";
 import { type Favourite, type Task } from "./types";
 
@@ -59,41 +65,41 @@ export default function ChallengeLibrary({
   return (
     <>
       {tab === "side" && (
-        <div className="cc-explainer">
+        <Explainer>
           <Icon name="info" className="icon--size-18" />
           <p>
             <strong>Optional challenges.</strong> Players can complete these
             alongside the main game. Evidence is required, and submissions are
             reviewed and voted on during the live final.
           </p>
-        </div>
+        </Explainer>
       )}
       {tab === "secret" && (
-        <div className="cc-explainer cc-explainer--pink">
+        <Explainer tone="pink">
           <Icon name="shield-check" className="icon--size-18" />
           <p>
             <strong>Private individual missions.</strong> Create the missions
             now; assign them to actual players only after those players have
             joined the game. Evidence is required.
           </p>
-        </div>
+        </Explainer>
       )}
       {tab === "main" && (
-        <div className="cc-explainer">
+        <Explainer>
           <Icon name="info" className="icon--size-18" />
           <p>
             <strong>Challenge library.</strong> Browse, create and favourite
             ideas here. Favouriting does not add a challenge to the running
             order; add it from Schedule when you are ready.
           </p>
-        </div>
+        </Explainer>
       )}
       <div
-        className={`cc-builder-columns${tab === "main" ? " cc-library-only" : ""}`}
+        className={`challenge-library__columns${tab === "main" ? " challenge-library__columns--single" : ""}`}
       >
         {tab !== "main" && (
-          <section className="cc-rounds-panel">
-            <div className="cc-panel-head">
+          <ContentPanel variant="selection">
+            <PanelHeading>
               <div>
                 <h3>
                   {tab === "side"
@@ -102,84 +108,53 @@ export default function ChallengeLibrary({
                 </h3>
                 <small>Selected items for this game.</small>
               </div>
-              <span className="cc-count">{selectedIds.length}</span>
-            </div>
+              <CountBadge>{selectedIds.length}</CountBadge>
+            </PanelHeading>
             {selectedIds.map((taskId, index) => {
               const task = allTasks.find((t) => t.id === taskId);
               if (!task) return null;
               return (
-                <article
+                <SelectedChallenge
                   key={taskId}
-                  className="cc-round-card"
-                  draggable
-                  onDragStart={() => setDragged(taskId)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={() => dropTask(taskId)}
-                >
-                  <Icon
-                    name="grip-vertical"
-                    className="icon--size-17 cc-grip"
-                  />
-                  <div className="cc-round-number">{index + 1}</div>
-                  <span className="cc-round-task-icon" aria-hidden="true">
-                    {challengeIcon(task.title, task.description)}
-                  </span>
-                  <div className="cc-round-copy">
-                    <strong>{task.title}</strong>
-                    <small>
-                      {tab === "side"
-                        ? `${task.points} pts`
-                        : `${task.minutes} min · ${task.points} pts`}
-                      {task.preGame ? " · PRE-GAME" : ""}
-                    </small>
-                  </div>
-                  <div className="cc-round-actions">
-                    <button
-                      title="Move up"
-                      onClick={() => moveTask(taskId, -1)}
-                    >
-                      <Icon name="arrow-up" className="icon--size-14" />
-                    </button>
-                    <button
-                      title="Move down"
-                      onClick={() => moveTask(taskId, 1)}
-                    >
-                      <Icon name="arrow-down" className="icon--size-14" />
-                    </button>
-                  </div>
-                  <button
-                    className="cc-icon-button"
-                    title="Remove"
-                    onClick={() => selectTask(task)}
-                  >
-                    <Icon name="trash2" className="icon--size-15" />
-                  </button>
-                </article>
+                  task={task}
+                  index={index}
+                  count={selectedIds.length}
+                  tab={tab}
+                  setDragged={setDragged}
+                  dropTask={dropTask}
+                  moveTask={moveTask}
+                  selectTask={selectTask}
+                />
               );
             })}
-          </section>
+          </ContentPanel>
         )}
-        <section className="cc-library-panel" id="cc-task-library">
-          <div className="cc-panel-head">
+        <ContentPanel variant="library" id="cc-task-library">
+          <PanelHeading>
             <div>
               <h3>Challenge library</h3>
               <small>Favourite tasks first, then filter and add.</small>
             </div>
-            <button
-              className={`cc-filter-chip${favouritesOnly ? " active" : ""}`}
+            <Button
+              variant="setup-filter"
+              fullWidth={false}
+              className={`${favouritesOnly ? " btn--setup-filter-active" : ""}`}
+              aria-pressed={favouritesOnly}
               onClick={() => setFavouritesOnly((v) => !v)}
             >
               <Icon name="heart" className="icon--size-14" /> Favourites
-            </button>
-          </div>
+            </Button>
+          </PanelHeading>
           <input
-            className="cc-search"
+            className="search-control"
+            aria-label="Search challenges"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search challenges…"
           />
-          <div className="cc-filter-row">
+          <div className="challenge-library__filters">
             <select
+              aria-label="Filter challenges by vibe"
               value={vibeFilter}
               onChange={(e) => setVibeFilter(e.target.value)}
             >
@@ -191,6 +166,7 @@ export default function ChallengeLibrary({
               ))}
             </select>
             <select
+              aria-label="Filter challenges by accessibility"
               value={accessFilter}
               onChange={(e) => setAccessFilter(e.target.value)}
             >
@@ -206,101 +182,54 @@ export default function ChallengeLibrary({
               </option>
             </select>
           </div>
-          <div className="cc-task-results">
+          <div className="challenge-library__results">
             {visibleTasks.map((task) => {
               const selected = selectedIds.includes(task.id);
               const saved = favourites.some(
                 (f) => f.item_type === "task" && f.item_id === task.id,
               );
               return (
-                <article
-                  className={`cc-task-result${selected ? " selected" : ""}`}
+                <ChallengeTile
                   key={task.id}
-                >
-                  <span className="cc-task-result-icon" aria-hidden="true">
-                    {challengeIcon(task.title, task.description)}
-                  </span>
-                  <div className="cc-task-result-main">
-                    <div className="cc-task-result-title">
-                      <strong>{task.title}</strong>
-                      <button
-                        className={`cc-heart${saved ? " saved" : ""}`}
-                        onClick={() => void toggleFavourite(task)}
-                        aria-label="Favourite"
-                      >
-                        <Icon
-                          name="heart"
-                          className="icon--size-16"
-                          fill={saved ? "currentColor" : "none"}
-                        />
-                      </button>
-                    </div>
-                    <p>{task.description}</p>
-                    <div className="cc-task-tags">
-                      {tab !== "side" && <span>{task.minutes} min</span>}
-                      <span>{task.points} pts</span>
-                      {task.preGame && <span>Pre-game</span>}
-                      {task.equipment.length > 0 && <span>Equipment</span>}
-                      {task.evidenceRequired && <span>Evidence required</span>}
-                    </div>
-                  </div>
-                  <button
-                    className={`cc-select-task${tab === "main" ? (saved ? " selected" : "") : selected ? " selected" : ""}`}
-                    onClick={() =>
-                      tab === "main"
-                        ? void toggleFavourite(task)
-                        : selectTask(task)
-                    }
-                  >
-                    {tab === "main" ? (
-                      saved ? (
-                        <>
-                          <Icon name="check" className="icon--size-14" />{" "}
-                          Favourited
-                        </>
-                      ) : (
-                        <>
-                          <Icon name="heart" className="icon--size-14" />{" "}
-                          Favourite
-                        </>
-                      )
-                    ) : selected ? (
-                      <>
-                        <Icon name="check" className="icon--size-14" /> Added
-                      </>
-                    ) : (
-                      <>
-                        <Icon name="plus" className="icon--size-14" /> Add
-                      </>
-                    )}
-                  </button>
-                </article>
+                  task={task}
+                  tab={tab}
+                  selected={selected}
+                  saved={saved}
+                  toggleFavourite={toggleFavourite}
+                  selectTask={selectTask}
+                />
               );
             })}
             {!visibleTasks.length && (
-              <p className="cc-muted">
+              <p className="muted-copy">
                 No matching challenges. Try changing the filters.
               </p>
             )}
           </div>
-          <form className="cc-custom-task" onSubmit={addCustomTask}>
+          <form className="challenge-form" onSubmit={addCustomTask}>
             <strong>Create a custom challenge</strong>
             <input
+              aria-label="Custom challenge name"
               value={customTitle}
               onChange={(e) => setCustomTitle(e.target.value)}
               placeholder="Challenge name"
             />
             <input
+              aria-label="Custom challenge description"
               value={customDesc}
               onChange={(e) => setCustomDesc(e.target.value)}
               placeholder="Short description"
             />
-            <button className="cc-secondary" disabled={!customTitle.trim()}>
+            <Button
+              variant="setup-secondary"
+              fullWidth={false}
+              disabled={!customTitle.trim()}
+            >
               <Icon name="plus" className="icon--size-15" /> Add custom
               challenge
-            </button>
+            </Button>
           </form>
-        </section>
+        </ContentPanel>
       </div>
     </>
   );

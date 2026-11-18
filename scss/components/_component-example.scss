@@ -1,0 +1,77 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/effects";
+
+.component-example {
+  min-width: 0;
+  border: (layout.$pixel-unit * 0.25) solid colors.$reference-example-border;
+  border-radius: (layout.$pixel-unit * 4);
+  overflow: hidden;
+  background: colors.$white;
+  margin-bottom: (layout.$pixel-unit * 5);
+  &__header {
+    padding: (layout.$pixel-unit * 4.5) (layout.$pixel-unit * 5.5);
+    border-bottom: (layout.$pixel-unit * 0.25) solid colors.$reference-divider;
+    @media (max-width: layout.$reference-mobile-breakpoint) {
+      padding: (layout.$pixel-unit * 4) (layout.$pixel-unit * 4.5);
+    }
+  }
+  &__title {
+    font-family: inherit;
+    font-weight: fonts.$weight-action;
+    font-size: fonts.$size-example-heading;
+    line-height: 1.4;
+    margin: 0 0 (layout.$pixel-unit * 1);
+  }
+  &__source {
+    display: block;
+    font-size: fonts.$size-micro;
+    color: colors.$reference-muted;
+    overflow-wrap: anywhere;
+  }
+  &__preview {
+    padding: (layout.$pixel-unit * 6.5);
+    background: colors.$reference-preview;
+    @media (max-width: layout.$reference-mobile-breakpoint) {
+      padding: (layout.$pixel-unit * 4.5);
+    }
+  }
+  &__preview input:disabled {
+    opacity: effects.$disabled-input-opacity;
+  }
+  &__usage {
+    border-top: (layout.$pixel-unit * 0.25) solid colors.$reference-divider;
+  }
+  &__summary {
+    cursor: pointer;
+    padding: (layout.$pixel-unit * 3) (layout.$pixel-unit * 5.5);
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-extra-bold;
+  }
+  &__toolbar {
+    display: flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 3);
+    padding: (layout.$pixel-unit * 3) (layout.$pixel-unit * 5);
+    font-size: fonts.$size-caption;
+  }
+  &__copy-button {
+    display: flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 1.5);
+    border: (layout.$pixel-unit * 0.25) solid colors.$reference-example-border;
+    border-radius: (layout.$pixel-unit * 1.5);
+    padding: (layout.$pixel-unit * 1.25) (layout.$pixel-unit * 2.5);
+    background: colors.$white;
+  }
+  &__code {
+    margin: 0;
+    padding: (layout.$pixel-unit * 5);
+    background: colors.$reference-code-surface;
+    color: colors.$reference-code-copy;
+    font-size: fonts.$size-small;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+}

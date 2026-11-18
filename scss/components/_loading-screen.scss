@@ -1,0 +1,14 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.loading-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: (layout.$pixel-unit * 3);
+  color: colors.$white;
+  background: var(--host-purple);
+  font: fonts.$weight-bold fonts.$size-example-heading fonts.$family-type-sample;
+}

@@ -1,0 +1,80 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/effects";
+
+.game-overview {
+  display: grid;
+  grid-template-columns: (layout.$pixel-unit * 23) 1fr;
+  gap: (layout.$pixel-unit * 3.5);
+  align-items: center;
+  & p {
+    margin: (layout.$pixel-unit * 1.25) 0;
+    color: colors.$context-muted;
+    font-size: fonts.$size-label;
+    font-weight: fonts.$weight-medium-bold;
+  }
+  .host-portal--app:has(.host-dashboard) & {
+    position: relative;
+  }
+  .host-portal--app:has(.host-dashboard) &__details {
+    min-width: 0;
+  }
+  .host-portal--app:has(.host-dashboard) &__details h3 {
+    margin: (layout.$pixel-unit * 1) (layout.$pixel-unit * 6)
+      (layout.$pixel-unit * 2.5) 0;
+    color: colors.$context-heading;
+    font-size: fonts.$size-example-heading;
+    font-weight: fonts.$weight-heavy;
+    overflow-wrap: anywhere;
+  }
+  .host-portal--app:has(.host-dashboard) &__details ul {
+    display: grid;
+    gap: (layout.$pixel-unit * 2.25);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .host-portal--app:has(.host-dashboard) &__details li {
+    display: flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 2);
+    color: colors.$context-copy;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-extra-bold;
+  }
+  .host-portal--app:has(.host-dashboard) &__details li .icon {
+    flex: 0 0 auto;
+    color: colors.$purple;
+  }
+  .host-portal--app:has(.host-dashboard) &__edit {
+    position: absolute;
+    top: (layout.$pixel-unit * 15.75);
+    right: (layout.$pixel-unit * 3.75);
+    display: grid;
+    place-items: center;
+    width: (layout.$pixel-unit * 7.5);
+    height: (layout.$pixel-unit * 7.5);
+    border: 0;
+    border-radius: (layout.$pixel-unit * 2.25);
+    color: colors.$purple-dark;
+    background: colors.$surface-soft;
+  }
+  .host-portal--app:has(.host-dashboard) &__edit:disabled {
+    opacity: effects.$context-disabled-opacity;
+  }
+  .host-portal--app:has(.host-dashboard) &__empty {
+    grid-column: 1 / -1;
+  }
+  .host-portal--app:has(.host-dashboard) &__empty h3 {
+    margin: 0 0 (layout.$pixel-unit * 1.5);
+    color: colors.$context-heading;
+    font-size: fonts.$size-example-heading;
+  }
+  .host-portal--app:has(.host-dashboard) &__empty p {
+    margin: 0;
+    color: colors.$context-muted;
+    font-size: fonts.$size-small;
+    line-height: 1.45;
+  }
+}

@@ -1,22 +1,25 @@
+import { useNavigationFocus } from "../../components/ui/useNavigationFocus";
 import { useState } from "react";
-import SessionPage from "../../components/session/SessionPage";
-import SessionNavigation from "../../components/session/SessionNavigation";
-import SessionState from "../../components/session/SessionState";
 import SessionBreak from "../../components/session/SessionBreak";
-import SessionMainChallengeCard from "../../components/session/SessionMainChallengeCard";
 import SessionChallengeCard from "../../components/session/SessionChallengeCard";
-import SessionSubmission from "../../components/session/SessionSubmission";
-import SessionLeaderboard from "../../components/session/SessionLeaderboard";
-import SessionFinalRound from "../../components/session/SessionFinalRound";
-import SessionRewardRound from "../../components/session/SessionRewardRound";
-import SessionReview from "../../components/session/SessionReview";
 import SessionFeedback from "../../components/session/SessionFeedback";
+import SessionFinalRound from "../../components/session/SessionFinalRound";
+import SessionLeaderboard from "../../components/session/SessionLeaderboard";
+import SessionMainChallengeCard from "../../components/session/SessionMainChallengeCard";
+import SessionNavigation from "../../components/session/SessionNavigation";
+import SessionPage from "../../components/session/SessionPage";
+import SessionReview from "../../components/session/SessionReview";
+import SessionRewardRound from "../../components/session/SessionRewardRound";
+import SessionState from "../../components/session/SessionState";
+import SessionSubmission from "../../components/session/SessionSubmission";
 import type {
+  RewardPresentation,
   SessionRole,
   SessionSection,
-  RewardPresentation,
   VotingEntry,
 } from "../../components/session/types";
+import ControlRow from "../../components/ui/ControlRow";
+import DemoNotice from "../../components/ui/DemoNotice";
 
 const entries = [
   { id: "alex", name: "Alex", score: 120, teamName: "Team Chaos" },
@@ -51,6 +54,7 @@ const reward: RewardPresentation = {
 };
 
 export default function SessionExamples() {
+  const { navigationRef, restoreFocus } = useNavigationFocus();
   const [viewerRole, setViewerRole] = useState<SessionRole>("player");
   const [section, setSection] = useState<SessionSection>("game");
   const [phase, setPhase] = useState("live");
@@ -61,7 +65,20 @@ export default function SessionExamples() {
   const closed = phase === "results";
   return (
     <>
-      <div className="sg-button-row">
+      <DemoNotice
+        actionLabel="Reset preview"
+        onAction={() => {
+          setSection("game");
+          setPhase("live");
+          setSubmitted(false);
+          setUploaded(false);
+          setSelected(false);
+          setNotice("");
+        }}
+      >
+        Local demonstration — these controls do not change a real game.
+      </DemoNotice>
+      <ControlRow>
         <label htmlFor="session-preview-role">Preview as</label>
         <select
           id="session-preview-role"
@@ -92,9 +109,10 @@ export default function SessionExamples() {
             <option key={value}>{value}</option>
           ))}
         </select>
-      </div>
+      </ControlRow>
       <SessionPage
         as="section"
+        contentTourTarget="example-session-content"
         viewerRole={viewerRole}
         profile={{ name: "Alex", subtitle: "Team Chaos", score: 120, rank: 1 }}
         game={{
@@ -113,6 +131,7 @@ export default function SessionExamples() {
         }
         navigation={
           <SessionNavigation
+            elementRef={navigationRef}
             active={section}
             showHost={viewerRole === "host"}
             showFinal
@@ -131,6 +150,16 @@ export default function SessionExamples() {
               onClick={() => setNotice("Local host action completed.")}
             >
               Demo host action
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                setSection("game");
+                restoreFocus();
+              }}
+            >
+              Return to sample game
             </button>
           </SessionState>
         ) : section === "leaderboard" ? (
@@ -162,7 +191,7 @@ export default function SessionExamples() {
             points={20}
             galleryOpen
             votingOpen={!closed}
-            completed={closed}
+            completed
             entries={[{ ...votingEntry, selected }]}
             onVote={() => setSelected(!selected)}
             leaderboard={entries}

@@ -1,3 +1,9 @@
+import DialogNotice from "../../components/ui/DialogNotice";
+import DialogPanel from "../../components/ui/DialogPanel";
+import DialogActions from "../../components/ui/DialogActions";
+import Button from "../../components/ui/Button";
+import Badge from "../../components/ui/Badge";
+import Dialog from "../../components/ui/Dialog";
 import type { Dispatch, SetStateAction } from "react";
 import type { GameSession, SessionPlayer, SessionTeam } from "./types";
 
@@ -34,21 +40,20 @@ export default function RoundOverrideDialog({
   confirmHostOverride,
 }: RoundOverrideDialogProps) {
   return (
-    <div
-      className="cc-host-override-backdrop"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !busy)
-          setOverridePrompt(null);
-      }}
+    <Dialog
+      variant="host"
+      label={
+        overridePrompt.kind === "start"
+          ? "Start before everything is ready?"
+          : "Override autoplay?"
+      }
+      labelledBy="cc-host-override-title"
+      dismissDisabled={busy}
+      onClose={() => setOverridePrompt(null)}
+      role="alertdialog"
     >
-      <section
-        className="cc-host-override-dialog"
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby="cc-host-override-title"
-      >
-        <span className="cc-host-override-kicker">HOST CONTROL</span>
+      <DialogPanel>
+        <Badge variant="dialog">HOST CONTROL</Badge>
         <h2 id="cc-host-override-title">
           {overridePrompt.kind === "start"
             ? "Start before everything is ready?"
@@ -72,26 +77,30 @@ export default function RoundOverrideDialog({
           players.length > 0 &&
           session.teams_enabled &&
           unassignedPlayers.length > 0 && (
-            <p className="cc-host-override-blocked">
+            <DialogNotice kind="error">
               Assign every player to a team before starting. This requirement
               cannot be overridden.
-            </p>
+            </DialogNotice>
           )}
         {autoplayEnabled && (
-          <p className="cc-host-override-note">
+          <DialogNotice kind="warning">
             Autoplay is enabled. Confirming gives you manual control for the
             rest of this game.
-          </p>
+          </DialogNotice>
         )}
-        <div className="cc-host-override-actions">
-          <button
+        <DialogActions>
+          <Button
+            fullWidth={false}
+            variant="dialog"
             type="button"
             disabled={busy}
             onClick={() => setOverridePrompt(null)}
           >
             Go back
-          </button>
-          <button
+          </Button>
+          <Button
+            fullWidth={false}
+            variant="dialog-primary"
             type="button"
             disabled={
               busy ||
@@ -114,9 +123,9 @@ export default function RoundOverrideDialog({
                   : overridePrompt.forceBreak
                     ? "Override & start break"
                     : "Override & move round"}
-          </button>
-        </div>
-      </section>
-    </div>
+          </Button>
+        </DialogActions>
+      </DialogPanel>
+    </Dialog>
   );
 }

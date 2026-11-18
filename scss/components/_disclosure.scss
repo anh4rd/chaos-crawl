@@ -1,0 +1,19 @@
+@use "../variables/colors";
+@use "../variables/effects";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.disclosure {
+  &--session {
+    border: layout.$control-border-width dashed colors.$disclosure-border;
+    border-radius: layout.$pixel-unit * 3.75;
+    padding: layout.$pixel-unit * 3 layout.$pixel-unit * 3.5;
+    background: rgba(colors.$white, effects.$disclosure-surface-opacity);
+    summary {
+      color: colors.$white;
+      font-size: fonts.$size-small;
+      font-weight: fonts.$weight-heavy;
+      cursor: pointer;
+    }
+  }
+}

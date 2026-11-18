@@ -1,0 +1,77 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/effects";
+
+.host-portal {
+  --host-purple: #{colors.$purple};
+  --host-purple-light: #{colors.$purple-mid};
+  --host-purple-deep: #{colors.$purple-dark};
+  --host-lime: #{colors.$accent-soft};
+  --host-pink: #{colors.$pink};
+  --host-ink: #{colors.$ink};
+  --host-muted: #{colors.$host-muted};
+  --host-line: #{colors.$host-line};
+  --host-panel: #{colors.$host-panel};
+  color: var(--host-ink);
+  font-family: fonts.$family-body;
+  & * {
+    box-sizing: border-box;
+  }
+  & *::before {
+    box-sizing: border-box;
+  }
+  & *::after {
+    box-sizing: border-box;
+  }
+  & button {
+    font: inherit;
+  }
+  & input {
+    font: inherit;
+  }
+  & select {
+    font: inherit;
+  }
+  & textarea {
+    font: inherit;
+  }
+  & button {
+    cursor: pointer;
+  }
+  & button:disabled {
+    opacity: effects.$disabled-control-opacity;
+    cursor: not-allowed;
+  }
+  // Keep the host palette's disabled opacity above setup navigation's local state.
+  & .plan-navigation button:disabled {
+    opacity: effects.$disabled-control-opacity;
+  }
+}
+
+.host-portal {
+  &--app {
+    min-height: 100svh;
+  }
+  &--app {
+    background: colors.$workspace-wash;
+  }
+  &.host-portal--app {
+    min-height: 100vh;
+    color: var(--cc-ink);
+    background: colors.$workspace-soft-wash;
+    font-family: inherit;
+  }
+  &.host-portal--app:has(.page-heading) {
+    min-height: 100vh;
+    background-color: colors.$workspace-background;
+    background-image: colors.$workspace-scene;
+    background-attachment: fixed;
+    background-size: cover;
+  }
+  &.host-portal--app:has(.host-dashboard) {
+    background-color: colors.$workspace-background;
+    background-image: colors.$workspace-scene;
+    background-attachment: fixed;
+    background-size: cover;
+  }
+}

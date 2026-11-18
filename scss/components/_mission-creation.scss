@@ -1,0 +1,24 @@
+@use "../variables/layout";
+
+$columns: repeat(2, minmax(0, 1fr)) layout.$mission-points-width auto;
+
+.mission-creation {
+  display: grid;
+  grid-template-columns: $columns;
+  align-items: end;
+  gap: layout.$pixel-unit * 2.5;
+  padding-top: layout.$pixel-unit * 3.5;
+  textarea {
+    resize: vertical;
+  }
+  > button {
+    justify-content: center;
+    white-space: nowrap;
+  }
+  @media (max-width: layout.$mission-form-breakpoint) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    > button {
+      grid-column: 1 / -1;
+    }
+  }
+}

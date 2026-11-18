@@ -1,0 +1,21 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.challenge-icons {
+  display: flex;
+  gap: (layout.$pixel-unit * 1.5);
+  margin: (layout.$pixel-unit * -0.5) 0 (layout.$pixel-unit * 2);
+  & span {
+    display: grid;
+    width: (layout.$pixel-unit * 8.25);
+    height: (layout.$pixel-unit * 8.25);
+    place-items: center;
+    border: (layout.$pixel-unit * 0.375) solid colors.$comic-ink;
+    border-radius: (layout.$pixel-unit * 2.75);
+    background: colors.$challenge-icon-background;
+    box-shadow: (layout.$pixel-unit * 0.25) (layout.$pixel-unit * 0.5) 0
+      colors.$purple-dark;
+    font-size: fonts.$size-subheading;
+  }
+}

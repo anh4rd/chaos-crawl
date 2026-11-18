@@ -1,0 +1,9 @@
+@use "../variables/layout";
+
+@mixin visually-hidden {
+  position: absolute;
+  width: (layout.$pixel-unit * 0.25);
+  height: (layout.$pixel-unit * 0.25);
+  overflow: hidden;
+  clip-path: inset(50%);
+}

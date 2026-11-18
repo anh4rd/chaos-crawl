@@ -1,0 +1,83 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.schedule-item {
+  display: grid;
+  grid-template-columns: (layout.$pixel-unit * 19) minmax(0, 1fr) auto auto;
+  gap: (layout.$pixel-unit * 2.5);
+  align-items: center;
+  padding: (layout.$pixel-unit * 2.75);
+  border: (layout.$pixel-unit * 0.25) solid colors.$schedule-item-border;
+  border-radius: (layout.$pixel-unit * 3);
+  background: colors.$toggle-surface;
+  &.schedule-item--break {
+    background: colors.$timeline-break-surface;
+  }
+  &.schedule-item--final {
+    border-color: colors.$timeline-final-border;
+    background: colors.$timeline-final-surface;
+  }
+  &__time {
+    display: flex;
+    flex-direction: column;
+    gap: (layout.$pixel-unit * 0.75);
+  }
+  &__time strong {
+    font-size: fonts.$size-label;
+    color: colors.$purple;
+  }
+  &__time small {
+    font-size: fonts.$size-micro;
+    color: colors.$schedule-item-time-text;
+  }
+  &__detail small {
+    font-size: fonts.$size-micro;
+    color: colors.$schedule-item-time-text;
+  }
+  &__detail {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: (layout.$pixel-unit * 0.75);
+  }
+  &__detail strong {
+    font-size: fonts.$size-small;
+  }
+  &__type {
+    font-size: fonts.$size-tiny;
+    font-weight: fonts.$weight-heading;
+    letter-spacing: fonts.$tracking-compact;
+    color: colors.$schedule-item-type-text;
+  }
+  &__move {
+    display: flex;
+    gap: (layout.$pixel-unit * 0.75);
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    grid-template-columns: (layout.$pixel-unit * 14.5) minmax(0, 1fr) auto;
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    &__move {
+      grid-column: 3;
+      grid-row: 1;
+    }
+  }
+  &__title {
+    width: 100%;
+    min-width: 0;
+    border: (layout.$pixel-unit * 0.25) solid colors.$schedule-item-title-border;
+    border-radius: (layout.$pixel-unit * 1.75);
+    padding: (layout.$pixel-unit * 1.5) (layout.$pixel-unit * 2);
+    background: colors.$white;
+    color: colors.$challenge-tile-heading-text;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-label;
+  }
+  &.schedule-item--pregame-review {
+    border-left: (layout.$pixel-unit * 1) solid colors.$pink;
+  }
+  &.schedule-item--secret-reveal {
+    border-left: (layout.$pixel-unit * 1) solid colors.$purple;
+  }
+}

@@ -1,3 +1,4 @@
+@use "../variables/fonts";
 @use "../variables/colors";
 @use "../variables/layout";
 .session-rank-row {
@@ -41,5 +42,24 @@
   }
   &__score {
     color: colors.$purple-dark;
+  }
+}
+
+.session-rank-row {
+  &--compact {
+    align-items: normal;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    gap: layout.$pixel-unit * 2;
+    padding: layout.$pixel-unit * 1.5 layout.$pixel-unit * 2;
+    border: 0 solid;
+    border-radius: layout.$pixel-unit * 2;
+    background: colors.$compact-rank-surface;
+    font-size: fonts.$size-micro;
+    small {
+      color: colors.$compact-rank-score;
+      font-size: fonts.$size-micro;
+      font-weight: fonts.$weight-action;
+    }
   }
 }

@@ -1,0 +1,17 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: (layout.$pixel-unit * 1.25);
+  & span {
+    padding: (layout.$pixel-unit * 0.75) (layout.$pixel-unit * 1.5);
+    border-radius: (layout.$pixel-unit * 1.5);
+    background: colors.$workspace-soft-end;
+    color: colors.$tag-list-text;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-extra-bold;
+  }
+}

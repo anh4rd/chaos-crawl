@@ -25,3 +25,375 @@ $toggle-track: #c8c2d8;
 $accent-soft: #d3fb6e;
 $feedback-error: #9e214c;
 $feedback-success: #385b11;
+$tour-scrim-ink: #110837;
+$border-ink: #08051c;
+$text-violet-ink: #17102f;
+$surface-soft: #eee9ff;
+$progress-track: #e8e2ff;
+$text-muted: #514b66;
+$text-subtle: #655b7d;
+$poster-ink: #17113f;
+$poster-surface: #f7f3ff;
+$poster-shadow: #24136f;
+$poster-description: #34256f;
+$badge-surface: #e9e0ff;
+$badge-border: #b7a2ff;
+$poster-action-shadow: #a1d62b;
+$poster-secondary-shadow: #321b9c;
+$poster-hint: #6a5d94;
+$instruction-surface: #ece5ff;
+$instruction-border: #c3b2ff;
+$instruction-number: #7b4dff;
+$poster-copy: #514675;
+$preparation-divider: #ddd2ff;
+$reference-muted: #655c75;
+$text-action: #4521cd;
+
+$reference-surface: #f5f3fc;
+$reference-label: #625b76;
+$reference-border: #dfd9ee;
+$reference-hover: #e9e3ff;
+$reference-number: #79708e;
+$reference-sidebar-copy: #716880;
+$reference-glow: #977aff;
+$reference-outline: #b6a3ff;
+$reference-swatch-border: #00000014;
+$reference-swatch-copy: #6b617a;
+$reference-example-border: #d9d2e9;
+$reference-divider: #e5e0ee;
+$reference-preview: #faf9fd;
+$reference-code-surface: #231b37;
+$reference-code-copy: #eee8ff;
+$reference-search-border: #b5a9d0;
+$reference-tag: #4a27bd;
+$reference-hero-background:
+  radial-gradient(ellipse at 95% 10%, $reference-glow 0, transparent 52%),
+  var(--purple);
+$host-surface: #f8f7fc;
+$host-access-shadow: rgba(22, 13, 82, 0.26);
+$host-mode-surface: #f1eff8;
+$host-mode-copy: #68627d;
+$host-mode-shadow: rgba(35, 22, 110, 0.09);
+$host-access-footnote: #8b859b;
+$host-access-footer: rgba(255, 255, 255, 0.75);
+$host-muted: #77728c;
+$host-line: #e7e3f1;
+$host-panel: #f7f5ff;
+$host-avatar-ink: #090817;
+$spinner-track: rgba(255, 255, 255, 0.4);
+
+$navigation-backdrop: rgba(255, 255, 255, 0.96);
+$navigation-muted: #88829b;
+$navigation-active-wash: #f1eeff;
+$header-gradient-start: #542cf1;
+$header-gradient-middle: #633cff;
+$header-gradient-end: #7652ff;
+$header-shadow: rgba(35, 22, 110, 0.25);
+$navigation-surface: #291477;
+$navigation-border: #160b50;
+$navigation-highlight: rgba(255, 255, 255, 0.12);
+$context-surface: rgba(255, 255, 255, 0.32);
+$context-border: rgba(92, 54, 251, 0.12);
+$mobile-navigation-surface: #24116f;
+$comic-ink: #080817;
+$header-background: linear-gradient(
+  105deg,
+  $header-gradient-start 0%,
+  $header-gradient-middle 58%,
+  $header-gradient-end 100%
+);
+
+$comic-control-border: #ddd7f0;
+$comic-control-shadow: rgba(35, 22, 110, 0.025);
+$comic-placeholder: #aaa5bb;
+$comic-danger-border: #f3d9e4;
+$comic-danger-surface: #fff8fb;
+$comic-primary-shadow: rgba(35, 22, 110, 0.13);
+$comic-quiet: #77718d;
+$comic-lime-shadow: rgba(0, 0, 0, 0.11);
+$workspace-glow: rgba(211, 251, 110, 0.24);
+$workspace-gradient-middle: #f8f6ff;
+$workspace-gradient-end: #e8e1ff;
+$purple-deep: #180d55;
+$comic-lavender: #f1edff;
+$comic-line: #d7ceff;
+$workspace-soft-glow: rgba(211, 251, 110, 0.18);
+$workspace-purple-glow: rgba(92, 54, 251, 0.14);
+$workspace-soft-middle: #f8f5ff;
+$workspace-soft-end: #eeeaff;
+$comic-icon-border: rgba(255, 255, 255, 0.8);
+$sidebar-surface: rgba(255, 255, 255, 0.82);
+$sidebar-border: #d5caff;
+$heading-copy: #615985;
+$workspace-background: #4822d4;
+$workspace-radial-glow: rgba(151, 119, 255, 0.9);
+$workspace-ray: rgba(255, 255, 255, 0.09);
+$workspace-scene-start: #2b1688;
+$workspace-scene-middle: #5630e8;
+$workspace-scene-end: #7653ff;
+$sidebar-raised-surface: rgba(255, 255, 255, 0.94);
+$heading-inverse-copy: #f3edff;
+$heading-inverse-shadow: rgba(35, 22, 110, 0.55);
+$workspace-wash:
+  radial-gradient(ellipse at 75% 5%, $workspace-glow, transparent 28%),
+  linear-gradient(
+    135deg,
+    $surface-soft 0%,
+    $workspace-gradient-middle 48%,
+    $workspace-gradient-end 100%
+  );
+$workspace-soft-wash:
+  radial-gradient(ellipse at 72% 25%, $workspace-soft-glow, transparent 32%),
+  radial-gradient(ellipse at 18% 65%, $workspace-purple-glow, transparent 38%),
+  linear-gradient(
+    135deg,
+    $surface-soft 0%,
+    $workspace-soft-middle 48%,
+    $workspace-soft-end 100%
+  );
+$workspace-scene:
+  radial-gradient(circle at 77% 38%, $workspace-radial-glow, transparent 28%),
+  repeating-conic-gradient(
+    from 2deg at 77% 38%,
+    $workspace-ray 0deg 8deg,
+    transparent 8deg 16deg
+  ),
+  linear-gradient(
+    115deg,
+    $workspace-scene-start 0%,
+    $workspace-scene-middle 55%,
+    $workspace-scene-end 100%
+  );
+
+$status-planned-ink: #3c6811;
+$status-planned-surface: #efffd0;
+$status-completed-ink: #5d5870;
+$status-completed-surface: #eeeaf5;
+$read-only-copy: #7a7195;
+$context-heading: #160d40;
+$context-copy: #35275f;
+$progress-copy: #5c5472;
+$hint-border: #8e7be4;
+$artwork-plan-start: #5834fa;
+$artwork-plan-end: #8468ff;
+$plan-metadata: #6f668d;
+$status-default-ink: #31520b;
+$status-draft-surface: #e9e1ff;
+$artwork-overview-glow: #a58cff;
+$artwork-overview-start: #4623cf;
+$artwork-overview-end: #8663ff;
+$context-muted: #5d5678;
+$hint-surface: #e9e2ff;
+$challenge-icon-glow: #eaff00;
+$challenge-icon-surface: #f2edff;
+$stat-surface: rgba(255, 255, 255, 0.92);
+$icon-badge-violet: #d9ceff;
+$stat-value: #100b2d;
+$stat-label: #5d527e;
+$artwork-plan-background: linear-gradient(
+  145deg,
+  $artwork-plan-start,
+  $artwork-plan-end
+);
+$artwork-overview-background:
+  radial-gradient(circle at 70% 20%, $artwork-overview-glow, transparent 40%),
+  linear-gradient(135deg, $artwork-overview-start, $artwork-overview-end);
+$challenge-icon-background:
+  radial-gradient(
+    circle at 68% 30%,
+    $challenge-icon-glow 0 28%,
+    transparent 29%
+  ),
+  $challenge-icon-surface;
+
+$frame-shadow: #24106d;
+$muted-copy-text: #635d80;
+$image-upload-border: #a997ff;
+$image-upload-preview-surface: #d8ccff;
+$image-upload-text: #625b7b;
+$setup-secondary-text: #38228d;
+$workspace-frame-border: #20104f;
+$explainer-border: #b8a9f4;
+$explainer-text: #362181;
+$explainer-pink-border: #f59ac9;
+$explainer-pink-surface: #ffe8f3;
+$explainer-pink-text: #8c1855;
+$content-panel-border: #d0c5f7;
+$panel-heading-text: #211354;
+$panel-heading-hint: #817a98;
+$selected-challenge-border: #d8d0f4;
+$selected-challenge-grip-text: #9c91c6;
+$selected-challenge-copy-text: #77708f;
+$setup-move-text: #4a2db1;
+$setup-icon-surface: #ffe7f1;
+$setup-icon-text: #bd276c;
+$setup-filter-border: #d2c8f3;
+$setup-filter-text: #62548d;
+$setup-filter-active-text: #d52372;
+$challenge-library-filters-text: #34246f;
+$challenge-tile-border: #e0daf5;
+$challenge-tile-selected-border: #a38df9;
+$challenge-tile-selected-surface: #f6f2ff;
+$challenge-tile-heading-text: #241654;
+$challenge-tile-text: #706987;
+$tag-list-text: #5d4a9c;
+$setup-select-border: #b9a8f4;
+$setup-select-selected-border: #b2d94b;
+$setup-select-selected-text: #1c1740;
+$challenge-form-border: #b7a8ef;
+$choice-grid-border: #d6cdf1;
+$required-feature-border: #b8a5ff;
+$required-feature-text: #4b2ab2;
+$timeline-header-text: #746d8e;
+$end-time-text: #d8d0ff;
+$schedule-item-border: #ddd5f5;
+$timeline-break-surface: #f2effb;
+$timeline-final-border: #fb9ac7;
+$timeline-final-surface: #fff0f7;
+$schedule-item-time-text: #827b98;
+$schedule-item-type-text: #8b7cc1;
+$duration-control-text: #77708e;
+$duration-control-border: #d1c8ed;
+$preparation-list-border: #e8e2f7;
+$invite-placeholder-surface: #fff4d9;
+$invite-placeholder-text: #78551a;
+$plan-summary-text: #e3dcff;
+$summary-grid-border: #e2dcf5;
+$schedule-item-title-border: #d5ccef;
+$panel-surface: rgba(255, 255, 255, 0.97);
+$setup-step-text: #716b8e;
+$setup-step-number-border: #b7a9e9;
+$setup-sidebar-divider-surface: #ded7f5;
+$plan-navigation-border: rgba(255, 255, 255, 0.14);
+$plan-navigation-shadow: rgba(31, 15, 104, 0.28);
+
+$lobby-setup-shadow: #17102c;
+$lobby-setup-text: #f0eaff;
+$session-frame-ink: #10072e;
+$session-text: #17102e;
+$session-text-2: #514967;
+$image-well-surface: #6945ff;
+$invite-link-border: #c7b9ff;
+$invite-code-text: #6d6291;
+$btn-surface: #f4f0ff;
+$btn-border: rgba(23, 16, 44, 0.2);
+$btn-text: #4b4267;
+$btn-surface-2: #d8d0e9;
+$lobby-participation-text: #26600d;
+$portrait-upload-border: #a99ae5;
+$portrait-upload-surface: #f5f1ff;
+$portrait-upload-text: #786e98;
+$team-image-upload-border: #8d7ae0;
+$stat-tile-border: #c9bfff;
+$stat-tile-text: #4e456a;
+$player-roster-border: #ece7f7;
+$field-border: #cfc5ee;
+$team-editor-border: #d2c9eb;
+$team-editor-border-2: #d9d1ea;
+$team-editor-surface: #f9f7ff;
+$note-text: #716688;
+$team-choice-card-surface: #f5f0ff;
+$team-choice-card-surface-2: #ffd8e9;
+$team-choice-card-surface-3: #f5ffd8;
+$team-choice-card-surface-4: #e8ffb5;
+
+// Keep the existing control palette while legacy descendant styles migrate.
+$host-control-outline: #110833;
+$host-control-paper: #f8f4ff;
+
+$flow-outline: #d8cfee;
+
+$host-overlay-ink: #0f072c;
+
+$dialog-kicker-ink: #21145b;
+$editor-copy: #50476a;
+$editor-label: #34245f;
+$editor-list-surface: #f2efff;
+$dialog-notice-surface: #fff0f6;
+$dialog-error-ink: #7c173d;
+$editor-hint: #655c79;
+$editor-input-border: #c9baff;
+
+$session-panel-surface-start: #312081;
+$session-panel-surface-middle: #25166d;
+$session-panel-surface-end: #20115d;
+$session-panel-shadow: #14083f;
+$session-panel-shadow-soft: #100535;
+$session-panel-gradient: linear-gradient(
+  152deg,
+  $session-panel-surface-start 0%,
+  $session-panel-surface-middle 70%,
+  $session-panel-surface-end 100%
+);
+$session-paper-ink: #20144d;
+$overview-copy: #6c6087;
+$round-caption-ink: #3b104c;
+$round-caption-surface: #ffadd0;
+$round-total: #82749f;
+$round-chip-ink: #39265e;
+$round-action-ink: #35113d;
+$session-secondary-ink: #261047;
+$session-ghost-ink: #ff9abc;
+$session-action-hover: #ff77a7;
+$round-finish-ink: #a31951;
+$round-finish-surface: #ffe0ec;
+$session-helper: #d0c6ff;
+$session-count-ink: #25145f;
+$upcoming-copy: #51456e;
+
+$submission-title: #594777;
+$submission-time: #82749a;
+$review-pending-ink: #2b1452;
+$review-pending-surface: #ffd66e;
+$review-approved-ink: #1b3b0b;
+$review-rejected-ink: #4b0830;
+$review-rejected-surface: #ff8bb4;
+$review-media-border: #cfc4e7;
+$review-media-backdrop: #171128;
+$review-media-label: #716487;
+
+$assignment-icon-ink: #3a247d;
+$assignment-icon-surface: #fdd3e7;
+$session-empty-icon: #e1d9ff;
+$session-empty-copy: #77718b;
+
+$session-field-label: #37304e;
+$session-field-hint: #817b92;
+$session-field-border: #8c78f5;
+$session-field-ink: #24135f;
+$mission-form-border: #e9e3f7;
+$mission-form-surface: #faf8ff;
+$disclosure-border: #a797ff;
+
+$review-control-surface: #39268d;
+$review-picker-border: #d7d0e9;
+
+$review-summary-copy: #e7e1ff;
+$vote-badge-surface: #f3efff;
+$vote-badge-ink: $assignment-icon-ink;
+$compact-rank-surface: #f7f4ff;
+$compact-rank-score: #655d78;
+$review-summary-border: rgba($white, 0.2);
+$review-summary-surface: rgba($white, 0.08);
+
+$reward-field-border: #e4dff0;
+$reward-field-surface: #faf9ff;
+$reward-open-surface: #fff0c9;
+$reward-open-ink: #78550a;
+$reward-completed-surface: #e3f8d6;
+$reward-completed-ink: #235b20;
+$reward-instruction-copy: #625d71;
+$reward-instruction-border: rgba($accent-soft, 0.32);
+$reward-instruction-ink: #e5ddff;
+$reward-instruction-surface: #352186;
+$candidate-list-border: #eeeaf7;
+
+$round-index-current-ink: #21105c;
+
+$round-choice-description: #cfc4ff;
+
+$choice-lavender: #ded6fe;
+$team-name-border: #c9c2de;
+
+$reveal-scrim: #1d0c68;
+$reveal-points: #ff2673;

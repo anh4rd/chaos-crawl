@@ -1,0 +1,37 @@
+@use "../tools/visually-hidden";
+@use "../tools/focus-ring";
+@use "../tools/image-cover";
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+@use "../variables/effects";
+
+.team-image-upload {
+  & input {
+    @include visually-hidden.visually-hidden;
+  }
+  & img {
+    @include image-cover.image-cover;
+  }
+  display: flex;
+  align-items: center;
+  gap: (layout.$pixel-unit * 2);
+  color: colors.$purple;
+  font-size: fonts.$size-micro;
+  font-weight: fonts.$weight-action;
+  cursor: pointer;
+  & > span {
+    display: grid;
+    width: (layout.$pixel-unit * 9.5);
+    height: (layout.$pixel-unit * 9.5);
+    place-items: center;
+    overflow: hidden;
+    border: (layout.$pixel-unit * 0.25) dashed colors.$team-image-upload-border;
+    border-radius: (layout.$pixel-unit * 3);
+    background: colors.$surface-soft;
+  }
+  &:focus-within {
+    @include focus-ring.focus-ring;
+  }
+}

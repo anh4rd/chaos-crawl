@@ -1,3 +1,5 @@
+import Explainer from "../../components/ui/Explainer";
+import ContentPanel from "../../components/ui/ContentPanel";
 import Icon from "../../components/ui/Icon";
 import { Toggle } from "../../components/ui/Toggle";
 import { type RewardMode, type SetupForm } from "./types";
@@ -9,8 +11,8 @@ interface GameOptionsProps {
 
 export default function GameOptions({ form, update }: GameOptionsProps) {
   return (
-    <section className="cc-section-card">
-      <div className="cc-explainer">
+    <ContentPanel variant="section">
+      <Explainer>
         <Icon name="wand-sparkles" className="icon--size-18" />
         <p>
           <strong>
@@ -19,7 +21,7 @@ export default function GameOptions({ form, update }: GameOptionsProps) {
           Choose which methods the host can use for ordinary reward rounds. Side
           challenges always have their own final vote at the end.
         </p>
-      </div>
+      </Explainer>
       <Toggle
         title="Decide reward method during the game"
         detail="Recommended. The host chooses voting, host awards or audience cheers when a reward round happens."
@@ -30,7 +32,7 @@ export default function GameOptions({ form, update }: GameOptionsProps) {
         }}
       />
       {!form.decideRewardInGame && (
-        <div className="cc-reward-options">
+        <div className="choice-grid">
           <p>Enable one or more methods:</p>
           {(
             [
@@ -57,7 +59,7 @@ export default function GameOptions({ form, update }: GameOptionsProps) {
           ))}
         </div>
       )}
-      <div className="cc-final-required">
+      <div className="required-feature">
         <Icon name="check-circle2" className="icon--size-24" />
         <div>
           <strong>Fan-favourite final vote</strong>
@@ -82,14 +84,14 @@ export default function GameOptions({ form, update }: GameOptionsProps) {
         }}
       />
       {form.sideChallenges && (
-        <div className="cc-explainer">
+        <Explainer>
           <Icon name="info" className="icon--size-18" />
           <p>
             The live final and TV slideshow are automatically enabled. The host
             gathers everyone around the screen to review side-challenge evidence
             before the final vote.
           </p>
-        </div>
+        </Explainer>
       )}
       <Toggle
         title="Secret missions"
@@ -112,6 +114,6 @@ export default function GameOptions({ form, update }: GameOptionsProps) {
         checked={form.autoplay}
         onChange={(v) => update("autoplay", v)}
       />
-    </section>
+    </ContentPanel>
   );
 }

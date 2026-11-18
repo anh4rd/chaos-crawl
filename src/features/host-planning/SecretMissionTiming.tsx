@@ -1,3 +1,5 @@
+import Explainer from "../../components/ui/Explainer";
+import ContentPanel from "../../components/ui/ContentPanel";
 import { Field } from "../../components/ui/Field";
 import Icon from "../../components/ui/Icon";
 import { type SetupForm } from "./types";
@@ -12,7 +14,7 @@ export default function SecretMissionTiming({
   update,
 }: SecretMissionTimingProps) {
   return (
-    <section className="cc-section-card">
+    <ContentPanel variant="section">
       <h3>Mission reveal timing</h3>
       <p>
         Choose whether reveals happen at a planned point in the game or at a
@@ -64,14 +66,14 @@ export default function SecretMissionTiming({
           />
         </Field>
       )}
-      <div className="cc-explainer cc-explainer--pink">
+      <Explainer tone="pink">
         <Icon name="info" className="icon--size-18" />
         <p>
           Player assignment happens after joining, from the host's live game
           controls. Scheduled reveals are automatically shown in the Schedule;
           random reveals are not given a fixed slot.
         </p>
-      </div>
-    </section>
+      </Explainer>
+    </ContentPanel>
   );
 }

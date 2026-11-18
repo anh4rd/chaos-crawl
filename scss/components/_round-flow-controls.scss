@@ -1,0 +1,24 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.round-flow-controls {
+  display: grid;
+  gap: layout.$pixel-unit * 1.75;
+  padding: layout.$pixel-unit * 2.5;
+  border: layout.$control-border-width solid colors.$flow-outline;
+  border-radius: layout.$pixel-unit * 3.5;
+  background: colors.$host-control-paper;
+
+  &__heading {
+    color: colors.$purple;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-eyebrow;
+  }
+  &__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: layout.$pixel-unit * 1.5;
+  }
+}

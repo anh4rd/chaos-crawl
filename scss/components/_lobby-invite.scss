@@ -1,0 +1,13 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+@use "../variables/effects";
+
+.lobby-invite {
+  &__count {
+    color: colors.$purple;
+    font-size: fonts.$size-caption;
+    text-align: center;
+  }
+}

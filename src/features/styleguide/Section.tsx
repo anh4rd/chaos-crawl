@@ -16,14 +16,16 @@ export function Section({
   return (
     <section
       id={`sg-${id}`}
-      className="sg-section"
+      className="component-section"
       aria-labelledby={`sg-${id}-title`}
     >
-      <div className="sg-section-heading">
-        <span>{number}</span>
+      <div className="component-section__heading">
+        <span className="component-section__number">{number}</span>
         <div>
-          <h2 id={`sg-${id}-title`}>{title}</h2>
-          <p>{description}</p>
+          <h2 className="component-section__title" id={`sg-${id}-title`}>
+            {title}
+          </h2>
+          <p className="component-section__description">{description}</p>
         </div>
       </div>
       {children}

@@ -1,6 +1,12 @@
+import DialogNotice from "../../components/ui/DialogNotice";
+import FormLabel from "../../components/ui/FormLabel";
+import DialogPanel from "../../components/ui/DialogPanel";
+import DialogActions from "../../components/ui/DialogActions";
+import Button from "../../components/ui/Button";
+import Badge from "../../components/ui/Badge";
+import Dialog from "../../components/ui/Dialog";
 import type { Dispatch, SetStateAction } from "react";
 import { type FormEvent } from "react";
-import Icon from "../../components/ui/Icon";
 import type { GameSession } from "./types";
 
 interface BreakTimerEditorProps {
@@ -12,7 +18,7 @@ interface BreakTimerEditorProps {
   editBreakMinutes: number;
   setEditBreakMinutes: Dispatch<SetStateAction<number>>;
   error: string;
-  setError: Dispatch<SetStateAction<string>>;
+  onDismissError: () => void;
 }
 
 export default function BreakTimerEditor({
@@ -24,25 +30,18 @@ export default function BreakTimerEditor({
   editBreakMinutes,
   setEditBreakMinutes,
   error,
-  setError,
+  onDismissError,
 }: BreakTimerEditorProps) {
   return (
-    <div
-      className="cc-host-override-backdrop"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !busy)
-          setEditingBreakTimer(false);
-      }}
+    <Dialog
+      variant="host"
+      label="Edit the time until the next round"
+      labelledBy="cc-host-break-timer-title"
+      dismissDisabled={busy}
+      onClose={() => setEditingBreakTimer(false)}
     >
-      <form
-        className="cc-host-override-dialog cc-host-break-edit-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="cc-host-break-timer-title"
-        onSubmit={(event) => void saveBreakTimer(event)}
-      >
-        <span className="cc-host-override-kicker">BREAK TIMER</span>
+      <DialogPanel as="form" onSubmit={(event) => void saveBreakTimer(event)}>
+        <Badge variant="dialog">BREAK TIMER</Badge>
         <h2 id="cc-host-break-timer-title">
           Edit the time until the next round
         </h2>
@@ -50,7 +49,7 @@ export default function BreakTimerEditor({
           Round {breakResumeRound ?? session.current_round_number + 1} will
           start when the break timer ends.
         </p>
-        <label>
+        <FormLabel spaced>
           Break minutes
           <input
             type="number"
@@ -63,33 +62,32 @@ export default function BreakTimerEditor({
               setEditBreakMinutes(Number(event.target.value))
             }
           />
-        </label>
+        </FormLabel>
         {error && (
-          <div className="cc-host-override-blocked" role="alert">
-            <span>{error}</span>
-            <button
-              type="button"
-              className="cc-host-alert-dismiss"
-              aria-label="Dismiss error"
-              onClick={() => setError("")}
-            >
-              <Icon name="x" className="icon--size-16" />
-            </button>
-          </div>
+          <DialogNotice kind="error" onDismiss={onDismissError}>
+            {error}
+          </DialogNotice>
         )}
-        <div className="cc-host-override-actions">
-          <button
+        <DialogActions>
+          <Button
+            fullWidth={false}
+            variant="dialog"
             type="button"
             disabled={busy}
             onClick={() => setEditingBreakTimer(false)}
           >
             Cancel
-          </button>
-          <button type="submit" disabled={busy || editBreakMinutes < 1}>
+          </Button>
+          <Button
+            fullWidth={false}
+            variant="dialog-primary"
+            type="submit"
+            disabled={busy || editBreakMinutes < 1}
+          >
             {busy ? "Saving…" : "Save timer"}
-          </button>
-        </div>
-      </form>
-    </div>
+          </Button>
+        </DialogActions>
+      </DialogPanel>
+    </Dialog>
   );
 }

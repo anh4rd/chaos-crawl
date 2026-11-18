@@ -1,0 +1,197 @@
+@use "../variables/layers";
+@use "../variables/effects";
+@use "../variables/motion";
+@use "../variables/fonts";
+@use "../tools/panel-title";
+@use "../variables/colors";
+@use "../variables/layout";
+
+.content-panel {
+  &--selection,
+  &--library,
+  &--section {
+    min-width: 0;
+    border: (layout.$pixel-unit * 0.375) solid colors.$content-panel-border;
+    border-radius: (layout.$pixel-unit * 4.25);
+    background: colors.$white;
+  }
+  &--selection,
+  &--library {
+    padding: (layout.$pixel-unit * 3.75);
+  }
+  &--section h3 {
+    @include panel-title.panel-title;
+  }
+  &--section {
+    padding: (layout.$pixel-unit * 4.5);
+  }
+  .challenge-library__columns--single &--library {
+    width: 100%;
+  }
+  &--form {
+    border: (layout.$pixel-unit * 0.75) solid colors.$control-text;
+    border-radius: (layout.$pixel-unit * 7);
+    box-shadow: 0 (layout.$pixel-unit * 2) 0 colors.$frame-shadow;
+  }
+  &--workspace {
+    border: (layout.$pixel-unit * 0.5) solid colors.$workspace-frame-border;
+    border-radius: (layout.$pixel-unit * 6);
+    box-shadow: 0 (layout.$pixel-unit * 1.5) 0 colors.$frame-shadow;
+  }
+  &--form,
+  &--workspace {
+    color: colors.$control-text;
+    background: colors.$poster-surface;
+  }
+  .host-portal.host-portal--app &--form,
+  .host-portal.host-portal--app &--workspace {
+    border: (layout.$pixel-unit * 0.625) solid colors.$comic-ink;
+    border-radius: (layout.$pixel-unit * 5);
+    box-shadow: (layout.$pixel-unit * 1) (layout.$pixel-unit * 1) 0
+      colors.$purple-dark;
+    background-color: colors.$panel-surface;
+  }
+}
+
+.content-panel {
+  &--lobby {
+    display: grid;
+    gap: (layout.$pixel-unit * 2.75);
+    min-width: 0;
+    padding: (layout.$pixel-unit * 3.25);
+    border: (layout.$pixel-unit * 0.5) solid colors.$session-frame-ink;
+    border-radius: (layout.$pixel-unit * 4.75);
+    color: colors.$session-text;
+    background: colors.$white;
+    box-shadow: (layout.$pixel-unit * 1) (layout.$pixel-unit * 1) 0
+      colors.$session-frame-ink;
+  }
+  &--lobby h2 {
+    margin: 0;
+    color: colors.$session-text;
+    font-family: fonts.$family-display;
+    font-size: fonts.$size-stat;
+    line-height: 0.98;
+    text-align: center;
+    text-transform: uppercase;
+  }
+  &--lobby > p {
+    margin: 0;
+    color: colors.$session-text-2;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-bold;
+    line-height: 1.4;
+    text-align: center;
+  }
+}
+
+.content-panel {
+  &--controls {
+    padding: layout.$pixel-unit * 2.75;
+    border: layout.$session-border-width solid colors.$session-frame-ink;
+    border-radius: layout.$pixel-unit * 4.5;
+    color: colors.$white;
+    background: colors.$purple-dark;
+    box-shadow: layout.$pixel-unit layout.$pixel-unit 0
+      colors.$session-frame-ink;
+  }
+}
+
+.content-panel {
+  .host-management &--session {
+    min-width: 0;
+    padding: layout.$session-panel-padding;
+    border: layout.$session-border-width solid colors.$host-control-outline;
+    border-radius: layout.$pixel-unit * 6;
+    color: colors.$white;
+    background: colors.$session-panel-gradient;
+    box-shadow:
+      0 layout.$pixel-unit * 1.5 0 colors.$session-panel-shadow,
+      0 layout.$pixel-unit * 4 layout.$pixel-unit * 7
+        rgba(
+          colors.$session-panel-shadow-soft,
+          effects.$session-panel-shadow-opacity
+        );
+  }
+  .host-management &--stacked {
+    display: grid;
+    gap: layout.$pixel-unit * 3.75;
+  }
+  .host-management &--compact {
+    gap: layout.$pixel-unit * 3.25;
+  }
+  @media (max-width: layout.$session-compact-breakpoint) {
+    .host-management &--session {
+      padding: layout.$pixel-unit * 4;
+      border-radius: layout.$pixel-unit * 4.75;
+    }
+  }
+}
+
+.content-panel {
+  &--review-controls {
+    display: grid;
+    gap: layout.$pixel-unit * 2.25;
+    padding: layout.$pixel-unit * 3.25;
+    border-radius: layout.$pixel-unit * 4.25;
+    background: colors.$purple-dark;
+    color: colors.$white;
+  }
+}
+
+.content-panel {
+  &--review-result {
+    display: grid;
+    gap: layout.$pixel-unit * 1.75;
+    padding: layout.$pixel-unit * 3;
+    border-radius: layout.$pixel-unit * 3.25;
+    background: colors.$white;
+    color: colors.$purple-dark;
+  }
+  &--review-result > strong {
+    color: colors.$purple;
+    font-size: fonts.$size-intro;
+    font-weight: fonts.$weight-heavy;
+  }
+  &--review-result > span,
+  &--review-result > b {
+    font-size: fonts.$size-caption;
+  }
+}
+
+.content-panel {
+  .host-management &--overlay {
+    position: fixed;
+    z-index: layers.$reward-overlay;
+    inset: 50% auto auto 50%;
+    width: min(
+      layout.$overlay-panel-width,
+      calc(100vw - layout.$overlay-panel-gutter)
+    );
+    max-height: calc(100dvh - layout.$overlay-panel-vertical-gutter);
+    overflow-y: auto;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    padding: layout.$overlay-panel-padding;
+    box-shadow:
+      0 0 0 layout.$overlay-scrim-spread
+        rgba(colors.$session-frame-ink, effects.$reward-overlay-opacity),
+      0 layout.$pixel-unit * 3 0 colors.$session-frame-ink;
+  }
+}
+
+.content-panel {
+  &--choice {
+    border: layout.$session-border-width solid colors.$lobby-setup-shadow;
+    border-radius: layout.$pixel-unit * 5.25;
+    padding: layout.$pixel-unit * 5;
+    background: colors.$white;
+    color: colors.$lobby-setup-shadow;
+    box-shadow: 0 layout.$pixel-unit 0
+      rgba(colors.$purple-dark, effects.$translucent-border-opacity);
+
+    @media (max-width: layout.$player-compact-breakpoint) {
+      padding: layout.$pixel-unit * 4;
+    }
+  }
+}

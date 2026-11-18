@@ -2,6 +2,7 @@ import Icon from "../ui/Icon";
 import type { SessionGame } from "./types";
 
 export function SessionGameTitlebar({
+  tourTarget,
   name,
   code,
   photoUrl,
@@ -9,7 +10,11 @@ export function SessionGameTitlebar({
   onCopy,
 }: SessionGame) {
   return (
-    <section className="session-titlebar" aria-label="Game details">
+    <section
+      className="session-titlebar"
+      aria-label="Game details"
+      data-tour={tourTarget}
+    >
       <span className="session-titlebar__art">
         {photoUrl ? (
           <img src={photoUrl} alt={`${name} game art`} />

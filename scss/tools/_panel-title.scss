@@ -1,0 +1,8 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@mixin panel-title {
+  margin: 0;
+  color: colors.$panel-heading-text;
+  font-size: fonts.$size-example-heading;
+  font-weight: fonts.$weight-heading;
+}

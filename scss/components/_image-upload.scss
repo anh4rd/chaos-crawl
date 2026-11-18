@@ -1,0 +1,48 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.image-upload {
+  display: flex;
+  align-items: center;
+  gap: (layout.$pixel-unit * 4.5);
+  margin: (layout.$pixel-unit * 6) 0;
+  padding: (layout.$pixel-unit * 4);
+  border: (layout.$pixel-unit * 0.5) dashed colors.$image-upload-border;
+  border-radius: (layout.$pixel-unit * 4.5);
+  background: colors.$reference-code-copy;
+  &__preview {
+    width: (layout.$pixel-unit * 23.5);
+    height: (layout.$pixel-unit * 23.5);
+    flex: none;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: (layout.$pixel-unit * 3.75);
+    background: colors.$image-upload-preview-surface;
+    color: colors.$purple;
+  }
+  &__preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  & p {
+    margin: (layout.$pixel-unit * 1) 0 (layout.$pixel-unit * 2.5);
+    color: colors.$image-upload-text;
+    font-size: fonts.$size-label;
+  }
+  &__control {
+    position: relative;
+    overflow: hidden;
+  }
+  &__control input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    align-items: flex-start;
+  }
+}

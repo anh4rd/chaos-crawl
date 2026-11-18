@@ -1,3 +1,6 @@
+import Explainer from "../../components/ui/Explainer";
+import ContentPanel from "../../components/ui/ContentPanel";
+import Button from "../../components/ui/Button";
 import type { Dispatch, SetStateAction } from "react";
 import { Field } from "../../components/ui/Field";
 import Icon from "../../components/ui/Icon";
@@ -30,15 +33,15 @@ export default function PlayerInvites({
   setNotice,
 }: PlayerInvitesProps) {
   return (
-    <section className="cc-section-card">
-      <div className="cc-explainer">
+    <ContentPanel variant="section">
+      <Explainer>
         <Icon name="users" className="icon--size-18" />
         <p>
           <strong>Invite players before the event.</strong> Players can join
           early, learn how the app works and see what they need to prepare. The
           demo uses sample tasks, never your actual game challenges.
         </p>
-      </div>
+      </Explainer>
       <Toggle
         title="Allow players to join before the event"
         detail="Create a pre-event player lobby and shareable invite."
@@ -58,7 +61,7 @@ export default function PlayerInvites({
           onChange={(e) => update("rules", e.target.value)}
         />
       </Field>
-      <div className="cc-prep-list">
+      <div className="preparation-list">
         <h3>What players need to prepare</h3>
         {preparation.length ? (
           preparation.map((t) => (
@@ -68,13 +71,13 @@ export default function PlayerInvites({
             </div>
           ))
         ) : (
-          <p className="cc-muted">
+          <p className="muted-copy">
             No preparation notes yet. Add prep details to a challenge to show
             them here.
           </p>
         )}
       </div>
-      <div className="cc-prep-list">
+      <div className="preparation-list">
         <h3>Pre-game challenge</h3>
         <Toggle
           title="Add a challenge to complete before arriving"
@@ -112,7 +115,7 @@ export default function PlayerInvites({
               </select>
             </Field>
             <form
-              className="cc-custom-task"
+              className="challenge-form"
               onSubmit={(e) => {
                 e.preventDefault();
                 if (!customTitle.trim()) return;
@@ -151,10 +154,14 @@ export default function PlayerInvites({
                 onChange={(e) => setCustomDesc(e.target.value)}
                 placeholder="What should players do?"
               />
-              <button className="cc-secondary" disabled={!customTitle.trim()}>
+              <Button
+                variant="setup-secondary"
+                fullWidth={false}
+                disabled={!customTitle.trim()}
+              >
                 <Icon name="plus" className="icon--size-15" /> Create pre-game
                 task
-              </button>
+              </Button>
             </form>
           </>
         )}
@@ -164,7 +171,7 @@ export default function PlayerInvites({
           evidence remains optional unless the host explicitly requests it.
         </small>
       </div>
-      <div className="cc-prep-list">
+      <div className="preparation-list">
         <h3>Secret mission assignment</h3>
         <p>
           Missions are created now but recipients are selected only after
@@ -184,7 +191,7 @@ export default function PlayerInvites({
           </select>
         </Field>
       </div>
-      <div className="cc-invite-placeholder">
+      <div className="invite-placeholder">
         <Icon name="info" className="icon--size-18" />
         <p>
           The invite portal settings are saved with this plan. A shareable
@@ -193,6 +200,6 @@ export default function PlayerInvites({
           library.
         </p>
       </div>
-    </section>
+    </ContentPanel>
   );
 }

@@ -1,3 +1,5 @@
+import { activateByKeyboard, tabTo } from "./support/keyboard";
+import { createInvitationFixture } from "./support/invitation";
 import { expect, test } from "@playwright/test";
 import {
   installSessionBackend,
@@ -698,5 +700,1055 @@ test("host and player scores use the same team totals", async ({ page }) => {
   await page.goto(`#/host/live/${sessionId}`);
   await page.getByRole("button", { name: "Scores", exact: true }).click();
   await expect(teamRow()).toHaveCount(1);
+  backend.verify();
+});
+
+test("host timer start and pause publish the existing shared timer fields", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Host", exact: true }).click();
+  await page.getByRole("button", { name: "Start Timer", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Pause", exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(() =>
+      backend.requests
+        .filter(
+          (r) => r.name === "cc_game_session_timers" && r.method === "POST",
+        )
+        .some((r) => (r.body as { is_running: boolean }).is_running),
+    )
+    .toBe(true);
+  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "Start Timer", exact: true }),
+  ).toBeVisible();
+  const writes = backend.requests.filter(
+    (r) => r.name === "cc_game_session_timers" && r.method === "POST",
+  );
+  expect(writes.at(-1)?.body).toMatchObject({
+    session_id: sessionId,
+    round_number: 1,
+    is_running: false,
+    is_on_break: false,
+    resume_round_number: null,
+    break_ends_at: null,
+  });
+  backend.verify();
+});
+
+test("host moderation preserves approval payload and failure feedback", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.rows.cc_game_session_submissions = [
+    {
+      id: "submission-1",
+      player_id: "test-player",
+      challenge_id: "test-challenge",
+      status: "submitted",
+      awarded_points: 0,
+      submitted_at: "2030-01-01",
+    },
+  ];
+  backend.responses.cc_host_review_session_submission = null;
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Host", exact: true }).click();
+  page.on("dialog", (dialog) => void dialog.accept("15"));
+  await page
+    .getByRole("button", { name: /Approve/ })
+    .first()
+    .click();
+  await expect
+    .poll(
+      () =>
+        backend.requests.filter(
+          (r) => r.name === "cc_host_review_session_submission",
+        ).length,
+    )
+    .toBe(1);
+  expect(
+    backend.requests.find((r) => r.name === "cc_host_review_session_submission")
+      ?.body,
+  ).toEqual({ p_submission_id: "submission-1", p_approve: true, p_points: 15 });
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "Approved submission for 15 points." }),
+  ).toBeVisible();
+  backend.failures.add("cc_host_review_session_submission");
+  await page
+    .getByRole("button", { name: /Reject/ })
+    .first()
+    .click();
+  await expect(page.getByRole("alert")).toContainText(
+    "Fixture connection failed",
+  );
+  backend.verify();
+});
+
+test("host reward cancellation preserves confirmation and command payload", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.rows.cc_game_session_reward_rounds = [
+    {
+      id: "reward-1",
+      session_id: sessionId,
+      challenge_id: "test-challenge",
+      reward_method: "voting",
+      target_kind: "player",
+      points: 20,
+      status: "open",
+      created_at: "2030-01-01",
+      started_at: "2030-01-01",
+      completed_at: null,
+      released_at: null,
+    },
+  ];
+  backend.responses.cc_host_cancel_session_reward_round = null;
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Host", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Continue reward flow", exact: true })
+    .click();
+  page.on("dialog", (dialog) => void dialog.accept());
+  await page.getByRole("button", { name: "Cancel flow", exact: true }).click();
+  await expect
+    .poll(
+      () =>
+        backend.requests.filter(
+          (r) => r.name === "cc_host_cancel_session_reward_round",
+        ).length,
+    )
+    .toBe(1);
+  expect(
+    backend.requests.find(
+      (r) => r.name === "cc_host_cancel_session_reward_round",
+    )?.body,
+  ).toEqual({ p_reward_round_id: "reward-1" });
+  backend.verify();
+});
+
+test("host round progression runs the planned break before starting the next round", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.challenges.push({
+    ...backend.challenges[0],
+    id: "round-2",
+    title: "Second entrance",
+    round_number: 2,
+    sort_order: 3,
+  });
+  backend.rows.host_games = [
+    { id: "test-plan", plan_data: { breakMinutes: 1 } },
+  ];
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Host", exact: true }).click();
+  await page
+    .getByRole("region", { name: "Host controls", exact: true })
+    .getByRole("button", { name: "Next", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Start Now", exact: true }),
+  ).toBeVisible();
+  const writes = backend.requests.filter(
+    (r) => r.name === "cc_game_session_timers" && r.method === "POST",
+  );
+  expect(
+    writes.some(
+      (r) =>
+        (r.body as { is_on_break: boolean; resume_round_number: number })
+          .is_on_break &&
+        (r.body as { resume_round_number: number }).resume_round_number === 2,
+    ),
+  ).toBe(true);
+  expect(
+    backend.requests.filter((r) => r.name === "cc_host_set_game_session_round"),
+  ).toHaveLength(0);
+  await page.getByRole("button", { name: "Start Now", exact: true }).click();
+  await expect
+    .poll(
+      () =>
+        backend.requests.filter(
+          (r) => r.name === "cc_host_set_game_session_round",
+        ).length,
+    )
+    .toBe(1);
+  expect(
+    backend.requests.find((r) => r.name === "cc_host_set_game_session_round")
+      ?.body,
+  ).toEqual({ p_session_id: sessionId, p_round_number: 2 });
+  await expect(
+    page.getByRole("heading", { name: "Second entrance", exact: true }),
+  ).toBeVisible();
+  backend.verify();
+});
+
+test("host can assign an unassigned player from the extracted lobby step", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    lobby: true,
+  });
+  backend.session.teams_enabled = true;
+  backend.session.host_chooses_teams = true;
+  backend.rows.cc_game_session_teams = [
+    { id: "team-1", name: "Team Chaos", created_at: "2030-01-01" },
+  ];
+  await page.addInitScript(() =>
+    localStorage.setItem("chaos-crawl-host-flow:test-session", "4"),
+  );
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Add Pat", exact: true }).click();
+  await expect
+    .poll(
+      () =>
+        backend.requests.filter(
+          (r) => r.name === "cc_game_session_players" && r.method === "PATCH",
+        ).length,
+    )
+    .toBe(1);
+  expect(
+    backend.requests.find(
+      (r) => r.name === "cc_game_session_players" && r.method === "PATCH",
+    )?.body,
+  ).toEqual({ team_id: "team-1" });
+  await expect(page.getByText("Pat · Unassigned", { exact: true })).toHaveCount(
+    0,
+  );
+  backend.verify();
+});
+
+test("host avatar upload failure keeps participation and survives the next data refresh", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    lobby: true,
+  });
+  backend.failures.add("storage:game-assets");
+  await page.addInitScript(() =>
+    localStorage.setItem("chaos-crawl-host-flow:test-session", "2"),
+  );
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByLabel(/Upload a profile picture/).setInputFiles({
+    name: "avatar.png",
+    mimeType: "image/png",
+    buffer: Buffer.from("fixture"),
+  });
+  await page
+    .getByRole("button", { name: "Yes, I’ll play", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText(
+    "You joined, but your profile photo couldn't upload",
+  );
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("chaos-crawl-host-player:test-session"),
+    ),
+  ).toBe("host-player-token");
+  const reads = backend.requests.filter(
+    (r) => r.name === "cc_game_sessions" && r.method === "GET",
+  ).length;
+  await expect
+    .poll(
+      () =>
+        backend.requests.filter(
+          (r) => r.name === "cc_game_sessions" && r.method === "GET",
+        ).length,
+    )
+    .toBeGreaterThan(reads);
+  await expect(page.getByRole("alert")).toContainText("Fixture storage failed");
+  backend.verify();
+});
+
+test("switching host sessions resets the selected section and never reuses the previous host token", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  await page.goto(`#/host/live/${sessionId}`);
+  await page
+    .getByRole("button", { name: "Join and play", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Challenges", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Find a pineapple", exact: true }),
+  ).toBeVisible();
+  backend.session.id = "second-session";
+  const reads = backend.requests.filter(
+    (r) => r.name === "cc_get_game_session_view",
+  ).length;
+  await page.goto("#/host/live/second-session");
+  await expect(
+    page.getByRole("heading", { name: "Make an entrance", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Join and play", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Game", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  expect(
+    backend.requests.filter((r) => r.name === "cc_get_game_session_view"),
+  ).toHaveLength(reads);
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("chaos-crawl-host-player:second-session"),
+    ),
+  ).toBeNull();
+  backend.verify();
+});
+
+test("public invitation keeps its details, optional sections and join navigation", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  backend.responses.cc_get_public_game_invite = createInvitationFixture();
+  await page.goto(`#/invite/${sessionCode}`);
+  await expect(
+    page.getByRole("heading", { name: "Friday Night Chaos", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("The Test Venue", { exact: true })).toBeVisible();
+  await expect(page.getByText("4 / 12 joined", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Bring a bold hat", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "What to prepare", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Be kind. Play fair.", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Join the chaos", exact: true })
+    .click();
+  await expect(page).toHaveURL(/#\/join\?code=123456$/);
+  expect(
+    backend.requests
+      .filter((r) => r.name === "cc_get_public_game_invite")
+      .every(
+        (r) => (r.body as { p_join_code: string }).p_join_code === sessionCode,
+      ),
+  ).toBe(true);
+  backend.verify();
+});
+
+test("unavailable public invitation retains its recovery navigation", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  backend.failures.add("cc_get_public_game_invite");
+  await page.goto(`#/invite/${sessionCode}`);
+  await expect(
+    page.getByRole("heading", { name: "Invitation unavailable", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Fixture connection failed", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("link", { name: "Back to Chaos Crawl", exact: true })
+    .click();
+  await expect(page).toHaveURL(/#\/$/);
+  backend.verify();
+});
+
+test("public invitation hides disabled optional content", async ({ page }) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  backend.responses.cc_get_public_game_invite = {
+    ...createInvitationFixture(),
+    demo_enabled: false,
+    pre_game_enabled: false,
+    preparation: [],
+    rules: null,
+  };
+  await page.goto(`#/invite/${sessionCode}`);
+  await expect(
+    page.getByRole("heading", { name: "Friday Night Chaos", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Take the interactive game tour" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Bring a bold hat", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "What to prepare", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "The rules", exact: true }),
+  ).toHaveCount(0);
+  backend.verify();
+});
+
+test("host login failure remains recoverable when changing account action", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  await page.route("**/auth/v1/token**", async (route) => {
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().postDataJSON()).toMatchObject({
+      email: "host@example.test",
+      password: "secret-pass",
+    });
+    await route.fulfill({
+      status: 400,
+      contentType: "application/json",
+      body: JSON.stringify({
+        code: "invalid_credentials",
+        msg: "Invalid login credentials",
+      }),
+    });
+  });
+  await page.goto("#/host/login");
+  await page.getByLabel("Email address").fill("host@example.test");
+  await page.getByLabel("Password", { exact: true }).fill("secret-pass");
+  await page.getByRole("button", { name: "Log in to Host Hub" }).click();
+  await expect(page.getByRole("alert")).toHaveText("Invalid login credentials");
+  await expect(
+    page.getByRole("button", { name: "Log in to Host Hub" }),
+  ).toBeEnabled();
+  await page.getByRole("tab", { name: "Create account" }).click();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.getByLabel("Your name")).toBeVisible();
+  backend.verify();
+});
+test("host signup sends display metadata and keeps email confirmation on the form", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  await page.route("**/auth/v1/signup**", async (route) => {
+    expect(route.request().method()).toBe("POST");
+    expect(route.request().postDataJSON()).toMatchObject({
+      email: "host@example.test",
+      password: "secret-pass",
+      data: { display_name: "Alex Chaos" },
+    });
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        id: "00000000-0000-4000-8000-000000000001",
+        aud: "authenticated",
+        email: "host@example.test",
+        identities: [],
+        created_at: "2030-01-01T12:00:00Z",
+      }),
+    });
+  });
+  await page.goto("#/host/login");
+  await page.getByRole("tab", { name: "Create account" }).click();
+  await page.getByLabel("Your name").fill("  Alex Chaos  ");
+  await page.getByLabel("Email address").fill("host@example.test");
+  await page.getByLabel(/^Password/).fill("secret-pass");
+  await page.getByRole("button", { name: "Create host account" }).click();
+  await expect(page.getByRole("status")).toContainText("Check your email");
+  await expect(page).toHaveURL(/#\/host\/login$/);
+  await page.getByRole("tab", { name: "Log in", exact: true }).click();
+  await expect(page.getByRole("status")).toHaveCount(0);
+  backend.verify();
+});
+test("host password login opens the authenticated shell", async ({ page }) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  await page.route("**/auth/v1/token**", async (route) => {
+    expect(route.request().postDataJSON()).toMatchObject({
+      email: "host@example.test",
+      password: "secret-pass",
+    });
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        access_token: "test-host-access-token",
+        refresh_token: "test-host-refresh-token",
+        token_type: "bearer",
+        expires_in: 3600,
+        user: {
+          id: "00000000-0000-4000-8000-000000000001",
+          aud: "authenticated",
+          role: "authenticated",
+          email: "host@example.test",
+          user_metadata: { display_name: "Test Host" },
+          app_metadata: { provider: "email" },
+          created_at: "2030-01-01T12:00:00Z",
+        },
+      }),
+    });
+  });
+  await page.goto("#/host/login");
+  await page.getByLabel("Email address").fill("host@example.test");
+  await page.getByLabel("Password", { exact: true }).fill("secret-pass");
+  await page.getByRole("button", { name: "Log in to Host Hub" }).click();
+  await expect(page).toHaveURL(/#\/host$/);
+  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+  backend.verify();
+});
+test("an existing host session redirects away from login", async ({ page }) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  await page.goto("#/host/login");
+  await expect(page).toHaveURL(/#\/host$/);
+  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+  backend.verify();
+});
+
+test("host shell styleguide composes local identity and callbacks without authentication reads", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  await page.goto("#/styleguide");
+  const example = page
+    .getByRole("heading", { name: "HostShell + host navigation", exact: true })
+    .locator("xpath=ancestor::article[1]");
+  await expect(page.getByRole("main")).toHaveCount(1);
+  await expect(example.locator(".account-chip__name")).toHaveText("Alex");
+  await example.getByRole("button", { name: "Create new game" }).click();
+  await expect(example.getByRole("status")).toHaveText(
+    "Create game selected locally.",
+  );
+  await example.getByRole("button", { name: "Sign out" }).click();
+  await expect(example.getByRole("status")).toHaveText(
+    "Sign out selected locally.",
+  );
+  await example.getByRole("button", { name: "Show read-only preview" }).click();
+  await expect(example.getByText("PREVIEW", { exact: true })).toBeVisible();
+  await expect(example.getByRole("button", { name: "Sign out" })).toHaveCount(
+    0,
+  );
+  await expect(
+    example.getByRole("navigation", { name: "Host navigation" }),
+  ).toHaveCount(0);
+  await example
+    .getByRole("button", { name: "Show interactive preview" })
+    .click();
+  await example.getByRole("link", { name: "Explore", exact: true }).click();
+  await expect(example.getByRole("status")).toHaveText(
+    "Navigation selected locally: #/host/explore",
+  );
+  await expect(page).toHaveURL(/#\/styleguide$/);
+  await example.getByRole("link", { name: "CHAOSCRAWL", exact: true }).click();
+  await expect(example.getByRole("status")).toHaveText(
+    "Navigation selected locally: #/host",
+  );
+  await expect(page).toHaveURL(/#\/styleguide$/);
+  expect(backend.requests).toEqual([]);
+  backend.verify();
+});
+
+test("shared comic control demos preserve native links and local keyboard actions", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  await page.goto("#/styleguide");
+  const example = page
+    .getByRole("heading", { name: "Shared comic controls", exact: true })
+    .locator("xpath=ancestor::article[1]");
+  await expect(
+    example.getByRole("button", { name: "Working…" }),
+  ).toBeDisabled();
+  const link = example.getByRole("link", { name: "Open invite" });
+  await expect(link).toHaveAttribute("href", "#/styleguide");
+  await link.focus();
+  await page.keyboard.press("Enter");
+  await expect(example.getByRole("status")).toHaveText(
+    "Invite link selected locally.",
+  );
+  await example.getByRole("button", { name: "Delete example" }).focus();
+  await page.keyboard.press("Space");
+  await expect(example.getByRole("status")).toHaveText(
+    "Delete selected locally.",
+  );
+  await expect(page).toHaveURL(/#\/styleguide$/);
+  const shell = page
+    .getByRole("heading", { name: "HostShell + host navigation", exact: true })
+    .locator("xpath=ancestor::article[1]");
+  await shell.getByRole("button", { name: "Show sidebar preview" }).click();
+  await expect(
+    shell.getByText("Sidebar content supplied by the route."),
+  ).toHaveCount(1);
+  await shell.getByRole("button", { name: "Hide sidebar preview" }).click();
+  await expect(
+    shell.getByText("Sidebar content supplied by the route."),
+  ).toHaveCount(0);
+  expect(backend.requests).toEqual([]);
+  backend.verify();
+});
+
+test("host workspace navigation keeps default routing and active links", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  await page.goto("#/host");
+  await page.getByRole("link", { name: "Saved", exact: true }).click();
+  await expect(page).toHaveURL(/#\/host\/saved$/);
+  await expect(
+    page.getByRole("heading", { name: "Your saved stuff", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Saved", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await page.getByRole("link", { name: /^(My games|Games)$/ }).click();
+  await expect(page).toHaveURL(/#\/host\/games$/);
+  await expect(
+    page.getByRole("heading", { name: "Your games", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /^(My games|Games)$/ }),
+  ).toHaveAttribute("aria-current", "page");
+  backend.verify();
+});
+
+test("host timer actions work by keyboard and preserve reset/pause payloads", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  await page.goto(`#/host/live/${sessionId}`);
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Host", exact: true }),
+  );
+  const controls = page.getByRole("region", {
+    name: "Host controls",
+    exact: true,
+  });
+  await activateByKeyboard(
+    page,
+    controls.getByRole("button", { name: "Start Timer", exact: true }),
+  );
+  await expect(
+    controls.getByRole("button", { name: "Pause", exact: true }),
+  ).toBeVisible();
+  await activateByKeyboard(
+    page,
+    controls.getByRole("button", { name: "Redo timer", exact: true }),
+  );
+  await expect(
+    controls.getByRole("button", { name: "Start Timer", exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(
+      () =>
+        backend.requests
+          .filter(
+            (r) => r.name === "cc_game_session_timers" && r.method === "POST",
+          )
+          .at(-1)?.body,
+    )
+    .toMatchObject({
+      session_id: sessionId,
+      round_number: 1,
+      remaining_seconds: 300,
+      is_running: false,
+      is_on_break: false,
+    });
+  await activateByKeyboard(
+    page,
+    controls.getByRole("button", { name: "Start Timer", exact: true }),
+  );
+  await activateByKeyboard(
+    page,
+    controls.getByRole("button", { name: "Pause", exact: true }),
+  );
+  await expect
+    .poll(
+      () =>
+        backend.requests
+          .filter(
+            (r) => r.name === "cc_game_session_timers" && r.method === "POST",
+          )
+          .at(-1)?.body,
+    )
+    .toMatchObject({
+      session_id: sessionId,
+      round_number: 1,
+      is_running: false,
+      is_on_break: false,
+    });
+  backend.verify();
+});
+
+test("shared timer and round-flow examples use local keyboard actions and disabled states", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  await page.goto("#/styleguide");
+  const panel = page.getByRole("region", {
+    name: "Local timer controls",
+    exact: true,
+  });
+  await activateByKeyboard(
+    page,
+    panel.getByRole("button", { name: "Start sample timer", exact: true }),
+  );
+  await expect(
+    page.getByText("Local timer started.", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    panel.getByRole("button", { name: "Skip & review", exact: true }),
+  ).toBeEnabled();
+  await activateByKeyboard(
+    page,
+    panel.getByRole("button", { name: "Reset sample timer", exact: true }),
+  );
+  await expect(
+    panel.getByRole("button", { name: "Start sample timer", exact: true }),
+  ).toBeEnabled();
+  await activateByKeyboard(
+    page,
+    panel.getByRole("button", { name: "Review", exact: true }),
+  );
+  await expect(
+    page.getByText("Reward review selected locally.", { exact: true }),
+  ).toBeVisible();
+  await page.getByLabel("Sample reward active", { exact: true }).check();
+  await expect(
+    panel.getByRole("button", { name: "Back", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    panel.getByRole("button", { name: "Next", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    panel.getByRole("button", { name: "Continue review", exact: true }),
+  ).toBeEnabled();
+  await page.getByLabel("Sample controls busy", { exact: true }).check();
+  for (const button of await panel.getByRole("button").all())
+    await expect(button).toBeDisabled();
+  expect(backend.requests).toEqual([]);
+  backend.verify();
+});
+
+test("host evidence review keeps main, side and secret media contracts and approval payload", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  const { seedReviewEvidence } = await import("./support/reviewEvidence");
+  seedReviewEvidence(backend);
+  backend.responses.cc_host_review_session_submission = null;
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Host", exact: true }).click();
+  const main = page.locator('[data-tour="host-review"]');
+  const side = page.locator('[data-tour="host-side-review"]');
+  await expect(main.getByText("Needs review", { exact: true })).toBeVisible();
+  await expect(main.getByText("+20 pts", { exact: true })).toBeVisible();
+  await expect(main.getByText("Rejected", { exact: true })).toBeVisible();
+  await expect(
+    main.getByRole("img", {
+      name: "Evidence for Make an entrance",
+      exact: true,
+    }),
+  ).toHaveCount(3);
+  await expect(
+    side.getByText("Auto-approved · +5 pts", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    side.getByRole("img", {
+      name: "Evidence for Find a pineapple",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("img", {
+      name: "Evidence for Secret portrait",
+      exact: true,
+    }),
+  ).toBeVisible();
+  const videos = page.locator('video[src*="test-session/test-player/"]');
+  await expect(videos).toHaveCount(5);
+  for (const video of await videos.all()) {
+    await expect(video).toHaveAttribute("controls", "");
+    await expect(video).toHaveAttribute("playsinline", "");
+    await expect(video).toHaveAttribute("preload", "metadata");
+  }
+  page.once("dialog", (dialog) => void dialog.accept("17"));
+  await main
+    .getByRole("button", { name: "Approve & award points", exact: true })
+    .click();
+  await expect
+    .poll(
+      () =>
+        backend.requests.filter(
+          (r) => r.name === "cc_host_review_session_submission",
+        ).length,
+    )
+    .toBe(1);
+  expect(
+    backend.requests.find((r) => r.name === "cc_host_review_session_submission")
+      ?.body,
+  ).toEqual({
+    p_submission_id: "main-submitted",
+    p_approve: true,
+    p_points: 17,
+  });
+  backend.verify();
+});
+
+test("local submission evidence review supports approve, reset and reject without backend writes", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  await page.goto("#/styleguide");
+  const panel = page.getByRole("region", {
+    name: "Local submission review",
+    exact: true,
+  });
+  await activateByKeyboard(
+    page,
+    panel.getByRole("button", { name: "Approve sample evidence", exact: true }),
+  );
+  await expect(panel.getByText("+20 pts", { exact: true })).toBeVisible();
+  await expect(
+    panel.getByRole("button", { name: "Reject sample evidence", exact: true }),
+  ).toBeDisabled();
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", {
+      name: "Reset sample evidence review",
+      exact: true,
+    }),
+  );
+  await page.keyboard.press("Shift+Tab");
+  await expect(
+    panel.getByRole("button", { name: "Reject sample evidence", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(panel.getByText("Rejected", { exact: true })).toBeVisible();
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "Sample rejected locally; no submission changed." }),
+  ).toBeVisible();
+  expect(backend.requests).toEqual([]);
+  backend.verify();
+});
+
+test("shared assignment reference toggles its empty state by keyboard without backend requests", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  await page.goto("#/styleguide");
+  const panel = page.getByRole("region", {
+    name: "Local assignments",
+    exact: true,
+  });
+  await expect(panel.getByText("For Pat", { exact: true })).toBeVisible();
+  await expect(
+    panel.getByText("Scheduled · tomorrow", { exact: true }),
+  ).toBeVisible();
+  const toggle = page.getByRole("checkbox", {
+    name: "Show empty sample assignments",
+    exact: true,
+  });
+  await tabTo(page, toggle);
+  await page.keyboard.press("Space");
+  await expect(
+    panel.getByText(
+      "No sample assignments. Restore the list with the checkbox below.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  await expect(panel.getByText("For Pat", { exact: true })).toHaveCount(0);
+  await page.keyboard.press("Space");
+  await expect(panel.getByText("For Pat", { exact: true })).toBeVisible();
+  expect(backend.requests).toEqual([]);
+  backend.verify();
+});
+
+test("custom secret mission creation and immediate/scheduled assignment preserve their contracts", async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date("2026-11-18T12:00:00Z"));
+  const backend = await installSessionBackend(page, { host: true });
+  backend.responses.cc_host_assign_secret_mission = null;
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Host", exact: true }).click();
+  const assign = page.getByRole("button", {
+    name: "Assign secret mission",
+    exact: true,
+  });
+  await expect(assign).toBeDisabled();
+  await activateByKeyboard(
+    page,
+    page.getByText("Add a custom secret mission to this game", { exact: true }),
+  );
+  await page
+    .getByLabel("Mission title", { exact: true })
+    .fill(" Secret conga ");
+  await page
+    .getByLabel("Instructions (private to the assigned player)", {
+      exact: true,
+    })
+    .fill(" Start the dance quietly. ");
+  await page
+    .getByRole("spinbutton", { name: "Points", exact: true })
+    .fill("25");
+  await tabTo(
+    page,
+    page.getByRole("checkbox", {
+      name: "Require photo/video evidence",
+      exact: true,
+    }),
+  );
+  await page.keyboard.press("Space");
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Add mission", exact: true }),
+  );
+  await expect
+    .poll(
+      () =>
+        backend.requests.filter(
+          (r) => r.name === "cc_game_session_challenges" && r.method === "POST",
+        ).length,
+    )
+    .toBe(1);
+  expect(
+    backend.requests.find(
+      (r) => r.name === "cc_game_session_challenges" && r.method === "POST",
+    )?.body,
+  ).toEqual({
+    session_id: sessionId,
+    kind: "secret",
+    round_number: null,
+    title: "Secret conga",
+    description: "Start the dance quietly.",
+    points: 25,
+    duration_minutes: 10,
+    sort_order: 3,
+    allow_photo_upload: true,
+  });
+  await expect(page.getByLabel("Mission title", { exact: true })).toHaveValue(
+    "",
+  );
+  await expect(
+    page.getByRole("checkbox", {
+      name: "Require photo/video evidence",
+      exact: true,
+    }),
+  ).not.toBeChecked();
+  await page
+    .getByRole("combobox", { name: "Send to one player", exact: true })
+    .selectOption("test-player");
+  await expect(
+    page.getByRole("combobox", { name: "Secret mission", exact: true }),
+  ).toHaveValue("custom-secret-2");
+  await activateByKeyboard(page, assign);
+  await expect
+    .poll(
+      () =>
+        backend.requests.filter(
+          (r) => r.name === "cc_host_assign_secret_mission",
+        ).length,
+    )
+    .toBe(1);
+  expect(
+    backend.requests.find((r) => r.name === "cc_host_assign_secret_mission")
+      ?.body,
+  ).toEqual({
+    p_session_id: sessionId,
+    p_player_id: "test-player",
+    p_challenge_id: "custom-secret-2",
+    p_scheduled_at: "2026-11-18T12:00:00.000Z",
+  });
+  const delivery = page.getByRole("textbox", {
+    name: /Deliver at \(optional\)/,
+  });
+  await delivery.fill("2026-11-20T18:30");
+  const scheduled = await page.evaluate(() =>
+    new Date("2026-11-20T18:30").toISOString(),
+  );
+  backend.failures.add("cc_host_assign_secret_mission");
+  await activateByKeyboard(page, assign);
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Fixture connection failed" }),
+  ).toBeVisible();
+  await expect(delivery).toHaveValue("2026-11-20T18:30");
+  backend.failures.delete("cc_host_assign_secret_mission");
+  await activateByKeyboard(page, assign);
+  await expect
+    .poll(
+      () =>
+        backend.requests.filter(
+          (r) => r.name === "cc_host_assign_secret_mission",
+        ).length,
+    )
+    .toBe(3);
+  expect(
+    backend.requests
+      .filter((r) => r.name === "cc_host_assign_secret_mission")
+      .at(-1)?.body,
+  ).toEqual({
+    p_session_id: sessionId,
+    p_player_id: "test-player",
+    p_challenge_id: "custom-secret-2",
+    p_scheduled_at: scheduled,
+  });
+  await expect(delivery).toHaveValue("");
+  backend.verify();
+});
+
+test("local mission forms submit by keyboard and retain busy states without backend requests", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  await page.goto("#/styleguide");
+  const panel = page.getByRole("region", {
+    name: "Local mission forms",
+    exact: true,
+  });
+  await activateByKeyboard(
+    page,
+    panel.getByRole("button", { name: "Assign secret mission", exact: true }),
+  );
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "Sample mission assignment selected locally." }),
+  ).toBeVisible();
+  await activateByKeyboard(
+    page,
+    panel.getByText("Add a custom secret mission to this game", {
+      exact: true,
+    }),
+  );
+  const add = panel.getByRole("button", { name: "Add mission", exact: true });
+  await expect(add).toBeDisabled();
+  await panel
+    .getByRole("textbox", { name: "Mission title", exact: true })
+    .fill("Local conga");
+  await activateByKeyboard(page, add);
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "Sample mission creation selected locally." }),
+  ).toBeVisible();
+  await tabTo(
+    page,
+    page.getByRole("checkbox", {
+      name: "Sample mission forms busy",
+      exact: true,
+    }),
+  );
+  await page.keyboard.press("Space");
+  await expect(add).toBeDisabled();
+  await expect(
+    panel.getByRole("button", { name: "Assign secret mission", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    panel.getByRole("combobox", { name: "Send to one player", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    panel.getByRole("textbox", { name: "Mission title", exact: true }),
+  ).toBeEnabled();
+  expect(backend.requests).toEqual([]);
   backend.verify();
 });

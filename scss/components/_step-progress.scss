@@ -1,0 +1,21 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+@use "../variables/effects";
+
+/* Width is the current step ratio, supplied as runtime data.*/
+.step-progress {
+  height: (layout.$pixel-unit * 1.75);
+  overflow: hidden;
+  border: (layout.$pixel-unit * 0.25) solid colors.$lobby-setup-shadow;
+  border-radius: layout.$badge-radius;
+  background: colors.$navigation-surface;
+  & i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: colors.$challenge-icon-glow;
+    transition: width motion.$duration-toggle ease;
+  }
+}

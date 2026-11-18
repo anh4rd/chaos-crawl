@@ -1,0 +1,43 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+@use "../variables/effects";
+
+.lobby-setup {
+  display: grid;
+  gap: (layout.$pixel-unit * 3);
+  padding: (layout.$pixel-unit * 0.75) 0 (layout.$pixel-unit * 6);
+  &__heading {
+    display: grid;
+    gap: (layout.$pixel-unit * 1.75);
+    color: colors.$white;
+  }
+  &__heading > span {
+    color: colors.$challenge-icon-glow;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-wide;
+  }
+  &__heading h1 {
+    margin: (layout.$pixel-unit * 0.5) 0 0;
+    color: colors.$white;
+    font-family: fonts.$family-display;
+    font-size: fonts.$size-compact-section-heading;
+    line-height: 0.97;
+    text-shadow: (layout.$pixel-unit * 0.5) (layout.$pixel-unit * 0.5) 0
+      colors.$lobby-setup-shadow;
+  }
+  &__heading p {
+    margin: 0;
+    color: colors.$lobby-setup-text;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-bold;
+    line-height: 1.35;
+  }
+  &__actions {
+    display: flex;
+    justify-content: space-between;
+    gap: (layout.$pixel-unit * 2.5);
+  }
+}

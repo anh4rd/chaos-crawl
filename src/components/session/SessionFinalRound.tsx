@@ -62,7 +62,7 @@ export default function SessionFinalRound({
               />
             ))}
           </div>
-          {completed && (
+          {completed && !votingOpen && (
             <SessionLeaderboard
               title="Updated leaderboard"
               entries={leaderboard}

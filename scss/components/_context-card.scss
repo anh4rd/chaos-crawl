@@ -1,0 +1,38 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.context-card {
+  & h3 {
+    margin: (layout.$pixel-unit * 1) 0 (layout.$pixel-unit * 2.75);
+    color: colors.$context-heading;
+    font-size: fonts.$size-ribbon;
+    font-weight: fonts.$weight-heavy;
+    overflow-wrap: anywhere;
+  }
+  & ul {
+    display: flex;
+    flex-direction: column;
+    gap: (layout.$pixel-unit * 2.5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  & li {
+    display: flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 2.25);
+    color: colors.$context-copy;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-extra-bold;
+  }
+  & li .icon {
+    flex: 0 0 auto;
+    color: colors.$purple;
+  }
+  background: colors.$white;
+  border: (layout.$pixel-unit * 0.625) solid var(--cc-ink);
+  border-radius: (layout.$pixel-unit * 5.5);
+  padding: (layout.$pixel-unit * 4.5);
+  box-shadow: 0 (layout.$pixel-unit * 1) 0 var(--cc-purple-dark);
+}

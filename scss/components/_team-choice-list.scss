@@ -1,0 +1,10 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+@use "../variables/effects";
+
+.team-choice-list {
+  display: grid;
+  gap: (layout.$pixel-unit * 2.25);
+}

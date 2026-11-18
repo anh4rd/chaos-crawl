@@ -1,0 +1,15 @@
+@use "../variables/layout";
+
+.input-icon {
+  position: relative;
+  & > svg {
+    position: absolute;
+    top: 50%;
+    left: (layout.$pixel-unit * 3.25);
+    color: var(--host-purple);
+    transform: translateY(-50%);
+  }
+  & input {
+    padding-left: (layout.$pixel-unit * 10.5);
+  }
+}

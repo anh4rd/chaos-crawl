@@ -1,3 +1,4 @@
+import SessionFinalRound from "./SessionFinalRound";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, expect, it, vi } from "vitest";
@@ -85,4 +86,43 @@ it("renders the same reward round read-only or interactive and releases tied res
   rerender(<SessionRewardRound round={{ ...round, completed: true }} />);
   expect(screen.getAllByText(/\+20 pts/)).toHaveLength(2);
   expect(screen.queryByRole("button")).toBeNull();
+});
+
+it("does not publish a final leaderboard from a stale completion flag while voting remains open", () => {
+  const { rerender } = render(
+    <SessionFinalRound
+      title="Final"
+      points={20}
+      galleryOpen
+      votingOpen
+      completed
+      entries={[entry]}
+      leaderboard={[
+        { id: "private-leader", name: "Unpublished leader", score: 777 },
+      ]}
+    />,
+  );
+  expect(
+    screen.queryByRole("heading", { name: "Updated leaderboard" }),
+  ).toBeNull();
+  expect(screen.queryByText("Unpublished leader")).toBeNull();
+  expect(screen.queryByText("7 votes")).toBeNull();
+  rerender(
+    <SessionFinalRound
+      title="Final"
+      points={20}
+      galleryOpen
+      votingOpen={false}
+      completed
+      entries={[entry]}
+      leaderboard={[
+        { id: "private-leader", name: "Unpublished leader", score: 777 },
+      ]}
+    />,
+  );
+  expect(
+    screen.getByRole("heading", { name: "Updated leaderboard" }),
+  ).toBeTruthy();
+  expect(screen.getByText("Unpublished leader")).toBeTruthy();
+  expect(screen.getByText("7 votes")).toBeTruthy();
 });

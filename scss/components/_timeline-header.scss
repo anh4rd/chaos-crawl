@@ -1,0 +1,16 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  gap: (layout.$pixel-unit * 3);
+  align-items: center;
+  margin-bottom: (layout.$pixel-unit * 4);
+  & p {
+    margin: (layout.$pixel-unit * 1) 0;
+    color: colors.$timeline-header-text;
+    font-size: fonts.$size-caption;
+  }
+}

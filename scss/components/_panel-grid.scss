@@ -1,0 +1,15 @@
+@use "../variables/layout";
+
+.panel-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(
+      layout.$panel-grid-side-width,
+      0.78fr
+    );
+  gap: layout.$pixel-unit * 4;
+  align-items: start;
+
+  @media (max-width: layout.$host-stacked-breakpoint) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

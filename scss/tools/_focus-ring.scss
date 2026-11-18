@@ -1,0 +1,7 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+@mixin focus-ring {
+  outline: layout.$focus-ring-width solid colors.$purple;
+  outline-offset: layout.$focus-ring-width;
+}

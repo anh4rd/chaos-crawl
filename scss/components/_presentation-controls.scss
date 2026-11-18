@@ -1,0 +1,11 @@
+@use "../variables/layout";
+
+.presentation-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: layout.$pixel-unit * 2;
+  > button {
+    min-width: layout.$pixel-unit * 23;
+  }
+}

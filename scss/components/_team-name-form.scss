@@ -1,0 +1,30 @@
+@use "../tools/compact-input";
+@use "../variables/colors";
+@use "../variables/layout";
+
+.team-name-form {
+  display: flex;
+  gap: layout.$pixel-unit * 1.75;
+
+  &--lobby input {
+    @include compact-input.compact-input;
+  }
+
+  &--participant {
+    gap: layout.$pixel-unit * 2;
+    margin-top: layout.$pixel-unit;
+
+    input {
+      min-width: 0;
+      flex: 1;
+      border: layout.$pixel-unit * 0.25 solid colors.$team-name-border;
+      border-radius: layout.$pixel-unit * 3;
+      padding: layout.$pixel-unit * 2.75;
+      font: inherit;
+    }
+
+    @media (max-width: layout.$player-compact-breakpoint) {
+      flex-direction: column;
+    }
+  }
+}

@@ -1,3 +1,4 @@
+@use "../variables/fonts";
 @use "../variables/colors";
 @use "../variables/layout";
 @use "../variables/shadows";
@@ -9,5 +10,22 @@
     padding: layout.$spacing-unit * 6;
     box-shadow: shadows.$surface;
     backdrop-filter: blur(layout.$surface-blur);
+  }
+}
+
+.card {
+  &--poster {
+    background: colors.$poster-surface;
+    border: layout.$poster-border solid colors.$poster-ink;
+    border-radius: layout.$poster-radius;
+    padding: layout.$poster-padding;
+    box-shadow: 0 layout.$poster-shadow-offset 0 colors.$poster-shadow;
+    margin-bottom: layout.$pixel-unit * 4.5;
+    backdrop-filter: none;
+    font-family: fonts.$family-poster;
+  }
+
+  &--accent {
+    border-color: colors.$pink;
   }
 }

@@ -1,0 +1,84 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.cover-art {
+  &--plan {
+    flex: 0 0 (layout.$pixel-unit * 21);
+    min-height: (layout.$pixel-unit * 33);
+  }
+  &--plan span {
+    color: var(--host-lime);
+    font-size: fonts.$size-art-initial;
+    font-weight: fonts.$weight-heavy;
+    text-shadow: (layout.$pixel-unit * 0.5) (layout.$pixel-unit * 0.5) 0
+      var(--host-purple-deep);
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    &--plan {
+      flex-basis: (layout.$pixel-unit * 13.75);
+      min-height: (layout.$pixel-unit * 23);
+    }
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    &--plan svg {
+      width: (layout.$pixel-unit * 5);
+    }
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    &--plan span {
+      font-size: fonts.$size-stat;
+    }
+  }
+  &--overview {
+    align-items: center;
+    justify-content: center;
+    gap: (layout.$pixel-unit * 2.5);
+    min-height: (layout.$pixel-unit * 21.5);
+    margin-bottom: (layout.$pixel-unit * 2.75);
+  }
+  &--overview span {
+    color: colors.$white;
+    font-size: fonts.$size-poster-heading;
+    font-weight: fonts.$weight-heavy;
+    font-style: italic;
+    -webkit-text-stroke: (layout.$pixel-unit * 0.175) colors.$comic-ink;
+  }
+  &--plan {
+    border-radius: (layout.$pixel-unit * 3.5);
+    background: colors.$artwork-plan-background;
+    color: colors.$white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: (layout.$pixel-unit * 3.75);
+    font-size: fonts.$size-art-symbol;
+    font-weight: fonts.$weight-heavy;
+  }
+  &--overview {
+    height: (layout.$pixel-unit * 23);
+    border: (layout.$pixel-unit * 0.5) solid var(--cc-ink);
+    border-radius: (layout.$pixel-unit * 4.25);
+    background: colors.$artwork-overview-background;
+    display: grid;
+    place-items: center;
+    color: var(--cc-lime);
+    font-size: fonts.$size-example-heading;
+    font-weight: fonts.$weight-heavy;
+    text-shadow: (layout.$pixel-unit * 0.5) (layout.$pixel-unit * 0.5) 0
+      var(--cc-ink);
+  }
+  &--plan {
+    position: relative;
+    overflow: hidden;
+  }
+  &--plan img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: cover;
+  }
+}

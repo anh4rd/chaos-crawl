@@ -157,3 +157,2408 @@ fixtures; deployed Supabase policy/schema correctness remains outside this proof
 - Cumulative `npm run review:load` against main: 152 files, +12,270 / -9,561 lines (21,831 total). This includes the
   prior uncommitted phase and discounts whitespace, pure renames, lockfiles and
   generated output. Use the review map above to split human review.
+
+## Phase 3: host management and persistence boundaries
+
+Baseline: local commit `151c8ad`. The host route now keys its feature coordinator
+by session ID. Management panels and the six lobby steps have their own files;
+focused controllers own participation, roster forms, rewards, final voting,
+secret assignment/review, moderation and challenge editing. Participant team,
+voting, submission and private-mission concerns also have focused controllers.
+Existing shared session presentation and legacy host/player classes remain intact.
+
+Named typed services own persistence through `runApi`, including transport
+failure normalization. Prompts, notices and credentials remain in controllers.
+Pure feature models own rankings, evidence selection and review projections.
+Host reads own one polling lifecycle; the timer owns ticking, five-second
+publishing and serialized writes. Slideshow connections close and detach listeners
+on unmount/session changes, including connections that resolve late.
+
+Behavioral corrections are separate from the mechanical panel moves: synchronous
+host operation locking, rejection of obsolete reads, identity-based remounting,
+connection listener cleanup and persistent command errors. Query refreshes no
+longer erase failed command feedback. The avatar failure journey proves that a
+successful host join survives a failed photo upload and that its error remains
+visible through a subsequent poll. Avatar preview URLs are revoked on cleanup.
+
+### Phase 3 review map
+
+This extraction exceeds the approximate 800-line review budget. Review in these
+slices; no deployment or backend migration is included.
+
+| Slice                                        | Mechanical work                                                               | Scrutiny and evidence                                                               |
+| -------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Persistence services                         | Existing payloads, filters and storage options moved into named functions     | Exact protocol tests; transport/storage/database failure normalization              |
+| Management and lobby panels                  | JSX moved into feature components, with existing classes and stylesheet order | Baseline/current desktop/mobile element, text and computed-style comparisons        |
+| Participant controllers                      | Team, voting, submission and mission logic extracted from composition         | Existing standalone/inline host journeys and private-mission regressions            |
+| Timers, queries and presentation connections | External concerns given explicit owners                                       | Timer sequencing/cleanup, stale responses, session capture, late connection cleanup |
+| Operation and feedback coordination          | Shared host lock and separate command/query feedback                          | Synchronous conflict test; failures preserve usable controls and survive refresh    |
+
+### Phase 3 verification
+
+- Unit/component suite: 292 passing tests across 43 files.
+- Isolated browser suite: 86 passing desktop/mobile checks.
+- All 24 sampled desktop/mobile panels match in element structure, text and
+  computed styles. The comparison coalesces adjacent React text nodes whose
+  segmentation changes when JSX is formatted, without changing their text.
+  Twenty-three screenshot pairs are byte-identical; one desktop reward-panel
+  image has a small raster difference despite matching layout/style snapshots.
+- Lint, formatting, application and Playwright TypeScript checks, production
+  build and whitespace checks: all pass; 48 existing Oxlint warnings and no errors.
+- Review load against the committed phase-2 baseline: 66 files, +9,032 / -5,544 lines (14,576 total).
+
+## Phase 4a — invitation, guided tour and shared presentation patterns
+
+The public invitation now composes shared poster cards, headings, brand links,
+badges, instruction steps and button/link variants. Feature components own the
+hero, preparation, rules and optional pre-event task. Its public RPC, code
+cleaning, optional sections and join navigation retain their existing contracts;
+the read lifecycle lives in `useInvitationData`.
+
+Guided-tour styling now uses owned BEM blocks and exact-value tokens. Runtime
+positioning reads its gap, edge and preferred width from token-backed CSS custom
+properties instead of duplicating design dimensions in JavaScript. The demo
+notice is a shared component with a local styleguide example.
+
+Repeated styleguide patterns now use `Note`, `ControlRow`, `TimerDisplay`,
+`EmptyState` and the text button variant. Compact notes explicitly own the
+typography and margins previously supplied by catalog paragraph overrides.
+Shared components remain presentation-only, and the catalog documents their
+contracts. The remaining styleguide shell and examples still use transitional
+CSS; this is the first styling slice, not the end of the styling migration.
+
+### Phase 4a verification
+
+- Unit/component suite: 295 passing tests across 44 files. New invitation
+  regressions cover cleaned codes, unavailable/closed invitations and obsolete
+  responses after a code change.
+- Isolated browser suite: 92 passing desktop/mobile checks, including full,
+  unavailable and optional-section invitation journeys and existing host/player
+  workflows. The styleguide keyboard and focus-return journeys pass.
+- Compiled CSS comparisons preserve declarations in 29 guided-tour and 36
+  invitation selector/media projections, plus six shared reference-pattern
+  projections. Four unused tour selector families and unused invitation modal
+  styles were removed. Shared Card/Button variants reset inherited defaults to
+  preserve the existing poster appearance.
+- Ten product scenario pairs (full/minimal/unavailable invitation and two demo
+  tour steps, desktop/mobile) have matching normalized DOM and computed styles
+  and byte-identical screenshots. The two styleguide-tour popup comparisons
+  differ only in vertical placement by less than 0.6px because added examples
+  change native scroll centering; all other sampled properties match.
+- Fourteen shared reference previews have matching normalized DOM/computed
+  styles and byte-identical screenshots with a common capture position and
+  backdrop. Normalizing that capture avoids unrelated page content behind
+  transparent previews and differences in scroll rasterization.
+- Lint, formatting, application and Playwright TypeScript checks, production
+  build and whitespace checks pass. Oxlint retains 48 warnings and no errors.
+  No dependencies were added. Browsers used isolated fixtures; Sentry uploads
+  were disabled for the verification build.
+
+### Phase 4a review map
+
+The cumulative uncommitted changes include Phase 3 and exceed the approximate
+800-line review budget. Keep the management-controller review map above separate
+from these styling slices:
+
+| Slice                          | Mechanical work                                                              | Scrutiny and evidence                                                               |
+| ------------------------------ | ---------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Tour and demo notice           | Class ownership, exact-value tokens and CSS geometry inputs                  | Compiled projections; two demo steps at both viewports; runtime positioning         |
+| Invitation feature composition | Existing public data flow and optional content moved into focused components | RPC/code/error regressions; navigation and conditional-content browser checks       |
+| Shared poster UI               | Existing invitation shapes promoted into generic UI and SCSS                 | Variant defaults, semantic elements and cascade resets; product pixel comparisons   |
+| Shared reference patterns      | Repeated note/control/timer/empty markup replaced with shared components     | Compact catalog notes and text-button resets; fourteen isolated preview comparisons |
+
+## Phase 4b — styleguide layers and examples
+
+The styleguide route is now a 74-line composition. Focused examples own their
+local button, clipboard, challenge and host-action state; only the name shared
+between input and profile examples stays in the route. The shell, reference
+sidebar, introduction, palette, type samples, example containers and catalog
+have owned BEM blocks. The route partial contains shell layout and scoped page
+defaults; component declarations live in component partials.
+
+`Styleguide.css` is removed. Existing colors, dimensions and typography have
+exact-value tokens. A small recurring label fragment serves `Overline` and the
+reference sidebar. Shared Badge gains outline/subtle variants, BrandLink gains
+its existing compact icon treatment, and their contract notes/examples are
+updated. Swatches use explicit token classes and read the displayed value from
+the actual CSS variable, removing inline styles and a duplicate hex catalog.
+The Card example's remaining utility classes have also moved into owned SCSS.
+
+### Phase 4b verification and review map
+
+- Unit/component suite: 295 passing tests across 44 files.
+- All 92 isolated desktop/mobile browser checks pass. Following the final
+  preview-only cascade correction, all six targeted styleguide interaction,
+  keyboard/focus and role/phase checks pass again.
+- All 104 used selector/media declaration projections match after normalizing
+  equivalent color serialization. Five stale player-preview rules with no
+  consumers were removed.
+- All 30 sampled desktop/mobile views have matching normalized DOM and computed
+  styles, with byte-identical isolated screenshots. Samples include the shell,
+  sidebar, introduction, foundations, primitive examples, expanded usage code,
+  session profile/challenge, feedback, host actions, catalog and empty results.
+  Normalization covers intentional BEM/shared-class changes, removal of inline
+  swatch styles, adjacent text-node segmentation and the catalog count increasing
+  for the new shared component. Screenshots use a common position/backdrop and
+  count text. Normal viewport captures were inspected; neither viewport has
+  horizontal page overflow.
+- Lint, formatting, app/Playwright TypeScript checks, production build and
+  whitespace checks pass. There remain 48 Oxlint warnings, with no errors.
+  Verification used isolated backend fixtures and disabled Sentry uploads.
+
+This slice exceeds the approximate 800-line review budget. The cumulative diff
+also contains the independently described earlier phases.
+
+| Slice                        | Mechanical work                                                           | Scrutiny and evidence                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Route and local examples     | Existing JSX/state moved into focused components                          | Name-to-profile coordination, clipboard and demo actions; browser interaction suite                |
+| Owned SCSS blocks            | Existing declarations/classes promoted into tokens and BEM partials       | Cascade and responsive layout; 104 compiled declaration projections and 30 rendered comparisons    |
+| Shared variants and palette  | Existing labels/badges/brand treatment promoted; swatches read CSS tokens | Variant resets and displayed token values; catalog contracts, palette and shell comparisons        |
+| Legacy host preview boundary | Preview reset explicitly outranks route-loaded legacy host styles         | Host preview height/background at desktop/mobile; scoped selectors avoid affecting real host pages |
+
+## Phase 4c — host authentication and shared wordmark
+
+The login route now composes `HostAccess`, a focused auth hook and a controlled
+form. Named SDK functions in `lib/hostAuth.ts` preserve the existing session,
+password-login and signup calls, including trimmed email/display-name values,
+metadata, confirmation feedback and redirects. The typed auth API uses the
+existing shared Supabase client; no separate authentication stack was added.
+
+The host header and login now use the same `BrandLink` host variant, including
+their existing glyph sizes. `InputIcon` owns the leading input icon. Both shared
+components have local styleguide examples and catalog notes. Auth shell/form,
+input-icon and wordmark styling moved from HostPortal.css into owned SCSS with
+exact-value tokens. Superseded wordmark declaration sets and its ineffective
+early 560px rule were removed. Native form controls and the remaining shell
+styles still use their transitional host styles; those are the next slice.
+
+The migration preserves existing auth behavior. Mode-control semantics and
+broader lifecycle/accessibility findings remain assigned to the explicit final
+accessibility/lifecycle pass rather than being silently changed during extraction.
+
+### Phase 4c verification and review map
+
+- Unit/component suite: 301 passing tests across 45 files. Six new auth
+  regressions cover login payloads/redirects, failed login and mode recovery,
+  signup metadata/confirmation, session-bearing signup, existing sessions and
+  rejection of a late session-check redirect while the router stays mounted.
+- Full isolated desktop/mobile browser suite: 100 passing checks, including
+  eight new auth checks. Following the final CSS compatibility fixes, all
+  fourteen affected auth/styleguide checks pass again.
+- Twenty-one effective selector/media declaration projections match after
+  consolidating overridden wordmark values and removing its dead early 560px
+  override. Shared wordmark defaults are reset explicitly. Temporary scoped
+  rules prevent the remaining route-loaded host reset/field styles from
+  overriding mode-button typography and input-icon padding.
+- Fifteen before/after view pairs have matching normalized DOM and computed
+  styles and byte-identical screenshots: login, signup, failure, confirmation
+  and pending requests at desktop/mobile sizes, plus host headers at 393, 640,
+  900, 1280 and 1600 pixels. Normalization covers intentional BEM/shared classes
+  and adjacent text-node segmentation; layouts and form states remain intact.
+- Lint, formatting, application and Playwright TypeScript checks, production
+  build and whitespace checks pass. Oxlint retains 48 warnings and no errors.
+  No dependencies were added. Browser/backend operations were isolated fixtures;
+  verification builds disabled Sentry uploads.
+
+This slice and the cumulative diff exceed the approximate 800-line review
+budget. Review the auth extraction independently from the prior controller and
+styling slices.
+
+| Slice                          | Mechanical work                                                      | Scrutiny and evidence                                                                                   |
+| ------------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Auth route/form/hook           | Existing state, form markup and SDK calls given explicit owners      | Payloads, confirmation and redirect behavior; unit and mocked browser regressions                       |
+| Shared wordmark and input icon | Existing header/login markup consolidated with preserved glyph sizes | Native link props, decoration and responsive wordmark rules; fifteen rendered comparisons               |
+| Owned auth SCSS                | Existing values promoted to tokens; obsolete overrides removed       | Legacy-reset specificity and field inset compatibility; effective compiled declarations and screenshots |
+| Contracts and local examples   | Guidance/catalog updated; presentation-only examples added           | Styleguide flows and examples run without live backend access                                           |
+
+## Phase 4d — host workspace and presentation boundaries
+
+Host routes now compose a connected `HostWorkspace`. Its focused identity hook
+preserves the existing user lookup, preview identity/home link, sign-out call and
+navigation behavior through named SDK functions. `HostShell` is presentation-only
+and receives identity and callbacks. Its header and two navigation variants have
+separate component owners. The shell retains its content/sidebar/context slots;
+embedded examples can select a div instead of introducing a nested main landmark.
+
+Account chips, initial avatars, loading screens and spinners are shared UI.
+Their styles and the host palette/reset moved into owned SCSS partials; root
+defaults load before component declarations. A narrow compatibility rule
+preserves the existing disabled opacity in planning navigation while its legacy
+stylesheet still loads later. Shell/navigation and other control styles remain
+transitional CSS and are the next migration work.
+
+The local shell preview demonstrates callbacks, read-only capabilities, account
+identity, navigation and loading without authentication reads. Native output
+semantics avoid adding a new status-role warning; Note keeps paragraph semantics
+by default. The reference wrapper adapts the embedded mobile header spacing and
+contains its fixed navigation without changing product layouts.
+
+### Phase 4d verification and review map
+
+- Unit/component suite: 304 passing tests across 46 files. New regressions prove
+  the shell performs no identity query, delegates actions, preserves connected
+  identity/sign-out navigation, and retains read-only preview links/capabilities.
+- Full isolated desktop/mobile suite: 102 passing checks. A new browser case
+  exercises local shell actions and read-only mode, verifies one main landmark
+  and asserts zero backend requests. Affected planning/reference journeys were
+  rerun after the compatibility and reference-only changes.
+- Sixteen effective selector/media projections and spinner keyframes match.
+  The additional planning-specific compatibility rule preserves the former
+  cascade; inherited form fonts and scoped palette values remain unchanged.
+- Twenty-three sampled product view pairs have matching normalized DOM and
+  computed styles: host hub, planning, saved, read-only preview, pending session,
+  three further responsive header sizes, and ten authentication states/views.
+  Twenty-two screenshot pairs are byte-identical. The mobile read-only preview
+  differs at four raster pixels while its sampled DOM/styles match. Loading
+  comparisons pause both CSS animations and set their time to 200ms before
+  capture. Normalization covers deliberate class renames, the shell marker and
+  adjacent React text-node segmentation.
+- Lint, formatting, application/Playwright TypeScript checks, production build
+  and whitespace checks pass. Oxlint remains at 48 warnings, with no errors.
+  No dependencies were added; fixture browsers and Sentry-disabled builds kept
+  verification isolated from live services.
+
+The cumulative diff exceeds the approximate 800-line review budget. Review this
+slice independently from the preceding auth, controller and styling changes.
+
+| Slice                                | Mechanical work                                                                 | Scrutiny and evidence                                                                                                    |
+| ------------------------------------ | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Connected workspace                  | Existing user lookup, preview derivation and navigation moved to a focused hook | Shared SDK identity and sign-out behavior; unit and route browser regressions                                            |
+| Presentation shell/header/navigation | Existing JSX split; identity/actions supplied as props                          | Read-only controls, sidebar/context slots, native landmarks; rendered product comparisons and backend-free local preview |
+| Account/loading UI and host defaults | Existing declarations promoted into tokens and owned blocks                     | Cascade, disabled planning state, chip visibility and animation; compiled projections and fixed-time screenshots         |
+| Reference contracts                  | Local interactive/read-only examples and native output feedback                 | No backend requests, local callback results and one main landmark; desktop/mobile browser checks                         |
+
+## Phase 4e — owned host shell and navigation styling
+
+The shell's layout/content/context/mascot elements and the header's actions/help
+now have owned BEM classes. Top and mobile navigation have their own blocks.
+Their styles moved from HostPortal.css and HostTheme.css into four component
+partials. Remaining feature-specific legacy selectors were updated to reference
+those owners without changing their conditions or specificity.
+
+The migration replaces 97 distributed rules with their effective declarations,
+removing 71 superseded declarations. Existing colors, gradients, breakpoint
+boundaries, z-index values and dimensions now use project tokens. Sidebar,
+heading and action-control furniture remain separate migration work; the shell
+does not acquire their declaration sets.
+
+The shell/header/navigation accept an optional local navigation callback.
+Normal application links retain router behavior. The reference preview supplies
+the callback so exercising its top/mobile links or wordmark stays on the
+styleguide and does not mount a connected workspace. This reference-only behavior
+correction is separate from the mechanical CSS/class moves.
+
+### Phase 4e verification and review map
+
+- Unit/component suite: 304 passing tests across 46 files.
+- The full 102-case isolated desktop/mobile browser suite passes, including the
+  extended preview case that clicks its navigation/wordmark and verifies zero
+  backend requests. Two added desktop/mobile application-navigation checks pass
+  separately, covering saved/games routes and active-link semantics: 104 current
+  browser cases verified in total, with unchanged application source between runs.
+- Twenty-eight compiled selector projections match across 33 viewport samples,
+  including both sides of every migrated breakpoint. Comparison uses the full
+  original declaration sequence to account for the removed superseded values.
+- Thirteen rendered view pairs match in normalized DOM, element bounds, sampled
+  typography and every migrated CSS property, with byte-identical screenshots.
+  Samples cover hub, games, planning, saved and read-only views on desktop/mobile,
+  plus headers at 640, 900 and 1600 pixels. Normalization covers deliberate class
+  renames and adjacent React text-node segmentation; image decoding completes
+  before capture.
+- Lint, formatting, app/Playwright TypeScript checks, production build and
+  whitespace checks pass. Oxlint remains at 48 warnings and no errors. No
+  dependencies were added; fixture browsers and Sentry-disabled builds kept
+  verification isolated from live services.
+
+This slice and the cumulative diff exceed the approximate 800-line review budget.
+Review the CSS ownership separately from the local navigation callback behavior.
+
+| Slice                                   | Mechanical work                                             | Scrutiny and evidence                                                                                                             |
+| --------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Shell and header ownership              | Existing selectors/classes moved to BEM component partials  | Grid/slot placement, fixed mascot and responsive header; compiled projections and rendered bounds/screenshots                     |
+| Navigation ownership                    | Existing link styles and active-state specificity preserved | Active routes and responsive visibility; saved/games routing checks and rendered comparisons                                      |
+| Design tokens and obsolete declarations | Existing values promoted; superseded values removed         | Breakpoint-edge projections across 33 viewport samples; all thirteen screenshot pairs identical                                   |
+| Local preview navigation                | Optional callback intercepts links only when supplied       | Header/mobile/wordmark clicks remain on the reference with zero backend requests; default application routing verified separately |
+
+## Phase 4f — shared controls and page furniture
+
+Fifty application button/link sites now compose shared Button comic variants or
+ButtonLink, and both icon actions use labeled IconButton. ButtonLink supports a
+native href as well as router navigation, preserving the invite's target and rel.
+The host auth form composes Field with its comic variant. HostShell composes
+PageHeading and WorkspaceSidebar with the same DOM structure and slot behavior.
+
+Active styles moved from the legacy portal/theme/planning/hub files into owned
+SCSS partials. The migration covers 79 source rules, removes 70 superseded
+declarations and removes 41 unreachable sidebar/form/navigation selector rules.
+The application root modifier is now host-portal--app. Existing global cc custom
+property names remain available, defined through tokens in the global layer.
+Feature-specific skins remain transitional consumers until their subsystem moves.
+
+The styleguide demonstrates comic tones, disabled actions, a local native link,
+accessible icon actions, comic fields and a toggled workspace sidebar. The demos
+use local state; the connected workspace remains outside the reference.
+
+### Phase 4f verification and review map
+
+- Unit/component suite: 304 passing tests across 46 files.
+- Forty-eight compiled selector projections match across twenty viewport samples,
+  covering both sides of migrated breakpoints. The comparison preserves every
+  original declaration and separately accounts for resets needed to neutralize
+  the shared Button/Field base styles. Runtime DOM/style comparisons verify those
+  resets rather than treating their addition as proof of parity.
+- Twenty-seven rendered view pairs match in normalized DOM, sampled computed
+  styles and byte-identical screenshots: thirteen workspace/header views, ten
+  auth states, and four live/populated-saved views. Workspace/live/saved pairs
+  also compare element bounds. Normalization covers class renames, added shared
+  base classes, React text segmentation and the local fixture port.
+- All 104 existing isolated desktop/mobile browser cases pass. Two added cases
+  also pass, verifying native link semantics, keyboard actions and the local
+  sidebar toggle with zero backend requests: 106 current browser cases verified.
+- Two additional visible host-management pairs match in DOM, bounds, computed
+  styles and screenshots after masking only the QR matrix. Its encoded local
+  server port differs between the fixture apps; the link href/target/rel remain
+  part of the DOM comparison.
+- Lint, formatting, app/Playwright TypeScript checks, production build and
+  whitespace checks pass. No dependencies were added. Verification uses mocked
+  backend traffic and disables Sentry uploads. Final token deduplication produces
+  byte-identical expanded CSS. Oxlint reports 47 warnings and no errors.
+
+This slice and the cumulative delta exceed the approximate 800-line review budget.
+
+| Slice               | Mechanical work                                                             | Scrutiny and evidence                                                                                       |
+| ------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Shared control APIs | Native buttons/anchor composed through shared wrappers                      | Native types, href/target/rel, labels and callbacks; full workflow regressions and control view comparisons |
+| Page furniture      | Heading/sidebar markup moved into generic components                        | Conditional slots and mobile layout; DOM, bounds and screenshot comparisons                                 |
+| SCSS and tokens     | Rules moved with effective cascade retained; exact existing values promoted | Compiled projections at breakpoint edges; all twenty-seven rendered pairs match                             |
+| Local reference     | Interactive shared-control/sidebar examples and catalog contracts           | Local-only interactions and keyboard operation; no live backend                                             |
+
+Cumulative review load versus main: **239 files, +15,334 / -9,421 (24,755
+lines)**. The maps for Phases 3–4f separate mechanical work from behavior changes.
+
+## Phase 4g — hub composition and shared workspace panels
+
+HostHub is now a route adapter. HostDashboard composes the workspace, summary,
+game lists and directory; GameContext composes the overview, progress and hint.
+The hub controller owns query/launch state, with named typed query functions in
+lib/hostHubQueries.ts and domain response contracts in types/hostHub.ts. Fields,
+filters, sort order, limits, preview parameters and the session-launch RPC remain
+unchanged. Queries now use the existing runApi error boundary, including its
+transport-error normalization and monitoring behavior.
+
+The hub and planning page share ContextCard, Ribbon, CoverArtwork,
+ChecklistProgress, SetupAction and HintCard. Each caller supplies its own checks,
+markers, summary and action. StatTile/IconBadge and StatusPill provide the summary
+and status UI, while ChallengeIcons owns the small challenge-symbol list. All
+shared additions have local interactive/reference examples and catalog notes.
+
+This moves 117 active legacy rules into owned SCSS, removes 115 superseded
+declarations and deletes 29 unrendered hero selectors. HostHub.css is removed.
+Existing design values are reused or promoted as exact-value tokens. Native
+list-icon selectors now target the shared Icon class, and plan-image positioning
+belongs to CoverArtwork independently of the hub wrapper. Stat elements get owned
+BEM classes and icon tones become explicit modifiers; their resulting cascade is
+checked in the rendered comparisons rather than assumed from selector spelling.
+
+The fixture backend now respects the hub's existing mutually exclusive date/status
+filters and limits. Previously it returned the same rows to upcoming and past
+queries, producing duplicate-key console errors that were also present in the
+baseline app. This is a fixture correction; no product deduplication or list-query
+behavior was changed.
+
+A separate lifecycle correction guards identity, game-list, preview and directory
+responses when the view/preview changes or the controller unmounts. Four focused
+regressions reproduced stale responses replacing the current state before the
+fix and pass afterward. This changes obsolete-request handling intentionally;
+it is distinct from the mechanically compared markup/style work.
+
+### Phase 4g verification and review map
+
+- The five added hub journeys pass on both desktop and mobile against the saved
+  pre-refactor app: date/status partitioning, platform preview, denied preview,
+  query recovery UI and failed launch. The current suite also exercises the new
+  shared-panel demo with keyboard-only actions and zero backend requests.
+- Seventy-eight compiled selector projections match across eighteen viewport
+  samples, covering both sides of every migrated breakpoint. Explicit mappings
+  account for owned stat classes, icon selectors and cover-image ownership;
+  declarations, effective values and responsive conditions are compared in full.
+- Twenty-one rendered view pairs compare normalized DOM, bounds, migrated
+  computed-style properties and byte-identical screenshots. Samples cover hub,
+  game lists, cover images/challenge icons, drafts/completed plans, empty hub,
+  read-only populated preview, planning create/build and saved views on desktop
+  and mobile, plus summary/rail breakpoint edges. Finite transitions settle before
+  measurement so the progress bar is compared at its target width.
+- Unit/component suite: 308 passing tests across 47 files, including four new
+  lifecycle regressions that failed before the obsolete-response guard.
+- All 118 current desktop/mobile browser cases are verified on the final source.
+  The combined run passed 103 cases before its runner exited with SIGTERM; a
+  separate mobile smoke run covers the remaining cases plus the two overlapping
+  smoke cases. The earlier pre-guard full run also passed all 118 cases.
+- Lint, formatting, app/Playwright TypeScript checks, production build and
+  whitespace checks pass. Oxlint remains at 47 warnings and no errors. No
+  dependencies were added; verification remains isolated from live services.
+
+This slice and the cumulative diff exceed the approximate 800-line review budget.
+
+| Slice                         | Mechanical work                                                                         | Scrutiny and evidence                                                                                                  |
+| ----------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Route/controller separation   | Route parameters, query state and presentation moved into focused modules               | Query filters/sorting/preview arguments and launch behavior; added journeys also pass on the preserved baseline        |
+| Workspace panels              | Existing card/checklist/artwork markup composed through shared presentation components  | Caller-specific markers/actions and empty/read-only states; planning/hub DOM, bounds, style and screenshot comparisons |
+| Summary and game presentation | Stat tiles, semantic icon tones, status pills and challenge icons gain owned components | Stat selector specificity and image ownership; breakpoint projections and populated list comparisons                   |
+| SCSS ownership                | Effective declarations moved; dead/superseded rules removed; existing values promoted   | Full declaration projections and twenty-one rendered view pairs                                                        |
+| Local reference and fixtures  | Shared-panel local state and corrected mocked date filtering                            | Keyboard interactions without backend access; list regressions with no duplicate cards/console errors                  |
+| Query lifecycle               | Ignore obsolete async results after view/preview changes and unmount                    | Four failing-before/passing-after race regressions; normal views retain rendered parity                                |
+
+Cumulative review load versus main: **276 files, +17,723 / -11,027 (28,750
+lines)**. Review the lifecycle correction separately from the mechanical moves.
+
+## Phase 4h — planning route, controllers and presentation
+
+HostPlanSetup now adapts route/import parameters to PlanEditor. Hydration,
+favourite persistence, cover upload, saving, challenge editing and scheduling have
+separate controllers. Named data/storage functions live in lib/hostPlanApi.ts;
+shared request/response contracts live in types/hostPlanning.ts. Pure plan/import
+models preserve stored defaults, legacy selectedTaskIds recovery, schedule phases,
+provider-specific import defaults, validation and the existing version-3 payload.
+
+The coordinator composes GameBasicsForm, PlanSidebar, PlanContext,
+PlanNavigation, VenueDetails and PlanReviewInfo with the existing feature panels.
+The same navigation component serves basics and builder stages. Context panels
+continue to use the shared workspace primitives. Catalog notes document the
+presentation APIs and connected editor boundary. Stylesheet ownership is queued
+as the next slice; expanded SCSS remains byte-identical to the saved baseline.
+
+### Separate behavior corrections
+
+Four operation regressions failed against the extracted legacy behavior and pass
+after correction: rapid save activations perform one write, favourite insertions
+are serialized per task, obsolete saves cannot navigate after unmount, and cover
+uploads cannot replace a different plan's image. Hydration guards also stop reads
+and state updates after scope cleanup. The schedule initializer now uses fresh
+state on build entry without suppressing hook dependencies; subsequent timeline
+edits remain intact.
+
+The route keys the editor by plan identity. A failing-before browser regression
+showed that opening a new plan after editing an existing plan retained the old
+form/build stage; the keyed editor resets it. Explore JSON receives runtime shape
+checks before becoming a Task, so malformed objects use the existing recovery
+message instead of injecting invalid task fields.
+
+### Phase 4h verification and review map
+
+- Six planning journeys pass on desktop and mobile against the preserved app:
+  schedule add/delete and planned-save payload, phased-task deletion, Explore
+  import, invalid-JSON recovery, community prep/performance import, and cover
+  upload/favourite persistence. Fixture handlers now explicitly support those
+  storage/favourite operations; no live backend is used.
+- Thirteen focused unit regressions cover plan compatibility/projection, provider
+  defaults, malformed imports, operation scope/locking, stale hydration and
+  one-time schedule initialization. Four operation cases failed before their
+  fixes. The route-identity browser case failed before its key was added.
+- Twenty-six rendered desktop/mobile pairs match in normalized DOM, bounds,
+  sampled computed styles and byte-identical screenshots. These cover create,
+  every builder tab, an edited plan and an imported task. A deterministic glyph
+  shift after a bold phrase exposed a changed React text boundary; preserving
+  that boundary restored screenshot equality. Normalization covers adjacent
+  React text nodes, class order and fixture server ports.
+- The full expanded SCSS output is byte-identical before/after extraction.
+- The complete unit/component suite passes: 321 tests across 51 files.
+- The complete browser suite passes in separate project runs: 66 desktop and 66
+  mobile cases, including all seven planning journeys on the final source.
+- Lint, formatting, app/Playwright TypeScript checks, production build and
+  whitespace checks pass. Oxlint remains at 47 warnings and no errors. No
+  dependencies were added; fixture traffic and verification builds stay isolated
+  from live services and Sentry uploads.
+
+This slice and the cumulative diff exceed the approximate 800-line review budget.
+
+| Slice                       | Mechanical work                                                                     | Scrutiny and evidence                                                                                                                     |
+| --------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Route and view composition  | Existing markup moved into focused presentation components                          | Props, stage/tab conditions and navigation labels; 26 DOM/style/bounds/screenshot pairs                                                   |
+| Domain models and typed API | Existing mappings, fields, filters, storage paths and payload moved out of the page | Legacy recovery and provider defaults; unit regressions and six baseline planning journeys                                                |
+| Controller boundaries       | Queries, mutations, challenge editing and scheduling separated by concern           | Existing flow/payload preservation; complete workflow suite and phase-specific regressions                                                |
+| Operation/lifecycle fixes   | Scope cleanup, synchronous write locks and editor identity reset                    | Four failing-before unit cases, stale-source tests and failing-before browser identity case; review separately from mechanical extraction |
+| Transition to owned styles  | Existing class contracts retained for the next migration slice                      | Byte-identical expanded SCSS and all 26 rendered pairs; no stylesheet changes in this slice                                               |
+
+Cumulative review load versus main: **299 files, +20,511 / -12,322 (32,833
+lines)**. Review operation/identity fixes separately from mechanical extraction.
+
+## Phase 4i — owned planning styles and shared controls
+
+Active planning styles now live in 33 owned SCSS block families. The migration
+covers 210 active selector rows, removes 117 unused selectors and drops twelve
+superseded declarations. Existing design values become exact-value tokens;
+recurring heading fragments live in tools. The small final heading-mixin cleanup
+produces byte-identical expanded SCSS. Remaining HostPlanning styles serve Explore,
+administration and live-host compatibility. In particular, `.cc-round-number`
+remains until its live consumers migrate.
+
+ContentPanel supplies common basics/builder surfaces. Shared CountBadge,
+PanelHeading, FormGrid, Explainer and ImageUpload preserve native markup and
+caller-owned persistence. Nineteen controls use shared setup Button variants;
+upload labels reuse their visual class contract. ChallengeTile,
+SelectedChallenge, TimelineItem and PlanBuilder own feature presentation. All
+new shared APIs have local styleguide examples; their controls never access the
+backend.
+
+Separate behavior correction: adding an imported main challenge to the schedule
+no longer duplicates its selected ID. A focused regression failed before the fix
+and passes afterward, retaining distinct prep/performance entries and preventing
+repeat additions. The community-import browser case asserts the saved selection.
+
+### Phase 4i verification and review map
+
+- Compiled declarations match for 164 logical selector projections across sixteen
+  viewport samples. Explicit projections account for owned classes/states,
+  shared-control resets, upload visuals and frame surface ownership.
+- Thirty-eight rendered view pairs match normalized DOM, bounds, computed styles
+  and byte-identical screenshots. They cover planning tabs, imports, edits,
+  breakpoint edges, and direct live hosting versus live hosting after planning.
+  Normalization covers intentional class mappings, adjacent React text nodes and
+  local server ports. Only the port-dependent QR subtree is masked in the four
+  live views; normalized link destinations are still compared.
+- All 322 unit/component tests pass across 51 files. All 134 browser cases pass
+  in separate desktop/mobile runs. The new local-reference case verifies keyboard
+  filtering, image chooser feedback and navigation callbacks with no API calls.
+- Lint, formatting, app/Playwright TypeScript checks, production build and diff
+  whitespace checks pass. Existing warnings remain; no dependencies or backend
+  contracts changed, and verification uses mocked services with Sentry disabled.
+
+This slice and the cumulative diff exceed the approximate 800-line review budget.
+
+| Slice                         | Mechanical work                                                        | Scrutiny and evidence                                                                       |
+| ----------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Owned SCSS                    | Existing effective declarations, BEM mappings and tokens               | Selector projections, breakpoint samples and 38 rendered pairs                              |
+| Shared controls and frames    | Button variants, six presentation primitives and common panel surfaces | Native types, upload label contract and cascade resets; styleguide and rendered comparisons |
+| Feature presentation          | Tiles, selected rows, timeline rows and builder frame                  | Callback wiring and preserved text boundaries; complete browser suite                       |
+| Imported selection correction | Avoid duplicate selected main ID                                       | Failing-before unit regression and saved browser payload; review separately                 |
+| Legacy compatibility          | Retained live round-number rule and stylesheet import                  | Direct live and after-planning views match on desktop/mobile                                |
+
+Cumulative review load recorded for Phase 4i: **352 files, +23,068 / -14,379
+(37,447 lines)**. Review its imported-selection correction separately from the
+mechanical moves.
+
+## Phase 4j — planning keyboard operation and ordering
+
+Side and secret selection move/drop handlers now update their own lists instead
+of the main selection. Drag completion clears its transient state, including
+invalid cross-list drops. Timeline movement buttons can cross an adjacent break
+or other schedule row, matching the existing drag capability; endpoint movement
+is disabled. Selected rows have task-specific move/remove names, timeline rows
+have named move/duration controls, and library filters/custom fields have explicit
+accessible names. Favourite/selection toggles expose their pressed state.
+
+The builder uses a section inside the host shell's existing main landmark.
+This is an intentional semantic correction, separate from Phase 4i parity claims.
+The standard Playwright configuration now includes hostHub/planning specs, so
+`npm run test:e2e` includes the regressions previously run via the phase config.
+
+### Phase 4j verification and review map
+
+- Four new unit regressions failed before correction: side and secret ordering,
+  plus upward/downward timeline movement across a break. They pass after the fix.
+  Selection tests also cover endpoint no-ops, preservation of unrelated lists,
+  drop ordering and rejection/cleanup of an unrelated dragged ID.
+- A keyboard-only browser journey starts at an edited plan, tabs through all
+  interactions, reorders side/secret/timeline rows, exercises search/filter state
+  and saves. It checks the resulting payload, visible native focus, disabled
+  endpoint and single main landmark on desktop/mobile. No pointer or scripted
+  focus is used to reach the controls.
+- Unit/component suite: 326 passing tests across 53 files. Lint, formatting,
+  app/Playwright TypeScript checks, production build and whitespace checks pass.
+  Verification uses mocked services; backend contracts remain unchanged.
+- All 136 browser cases pass: 68 desktop and 68 mobile on the final source.
+  The compiled planning-style projections remain equal across sixteen viewport
+  samples; this behavior slice introduces no design values or stylesheet changes.
+- Default browser discovery lists all 136 cases across four files. The environment
+  still has its documented slow unused-port readiness probe; full browser runs
+  use the isolated server with the equivalent project configuration. No server
+  reuse or environment isolation safeguards were weakened in the committed config.
+
+| Slice                    | Change needing review                                              | Evidence                                                            |
+| ------------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| Selection ordering       | Active side/secret list is updated; unrelated lists preserved      | Two failing-before hook regressions and saved keyboard payload      |
+| Timeline ordering        | Native buttons cross breaks like drag/drop                         | Two failing-before component regressions and keyboard save          |
+| Semantics and controls   | Named inputs/buttons, pressed states, disabled bounds and one main | Complete keyboard journey on desktop/mobile, including native focus |
+| Verification entry point | Default browser command includes planning/hub suites               | Expanded Playwright test discovery and full project runs            |
+
+Cumulative review load versus main: **355 files, +23,434 / -14,380 (37,814
+lines)**. The approximate 800-line review budget is exceeded; use the phase maps
+and review behavior corrections separately from mechanical migrations.
+
+## Phase 4k — lobby ownership and shared presentation
+
+The six lobby steps now compose shared Avatar, ImageWell, compact StatTile,
+ContentPanel/Field/Note lobby variants, StepProgress and Button variants.
+Avatar replaces the initial-only account component while preserving its account
+appearance. TeamChoiceCard, TeamEditor and CreateTeamForm own the feature's
+presentation; the create form is reused by both assignment and naming steps.
+Native elements, labels, file accept rules, form submission, disabled conditions
+and controller callbacks are preserved.
+
+Ninety-eight existing lobby rules move into 25 owned block families, including
+extensions to shared owners. HostLiveGame.css drops from 5,072 to 4,393 lines.
+Twenty-nine existing color values become exact-value tokens; font sizes and other
+values reuse existing tokens or derive from the pixel scale. Repeated image-cover,
+compact-input and compact-select fragments live in tools. Specific host font-reset
+and disabled-control precedence is preserved, including controls whose original
+font declarations were already overridden. Shared APIs have local reference
+examples and updated catalog notes, with no backend access.
+
+### Phase 4k verification and review map
+
+- Two new lobby journeys pass on desktop/mobile against the preserved app before
+  migration: all six solo steps, plus capacity, assignment, team creation, rename,
+  photo upload and readiness. The mock gains the existing team-capacity PATCH
+  response; no application persistence contract changes.
+- One hundred logical selector projections preserve the effective declarations
+  under explicit BEM/control mappings. Twenty-seven existing stat, field and
+  account-avatar selector/media projections retain every declaration; the field
+  exclusion uses zero specificity so existing comic variants keep their cascade.
+- Thirty-four rendered desktop/mobile pairs compare normalized DOM, bounds,
+  sampled computed styles and screenshots. Coverage includes six solo/team
+  steps, images/fallbacks, empty rosters, full teams, the hub and host login.
+  Normalization accounts for intentional class mappings/additions, adjacent text
+  nodes, equivalent font-family case and fixture origins. Port-dependent invite
+  text and QR regions are masked in screenshots; their normalized DOM, bounds,
+  styles and link targets are still compared.
+- Thirty-three screenshots were byte-identical in the full pass. One mobile
+  roster capture varied by two pixels at the unchanged session-titlebar edge;
+  repeating that pair separately produced identical screenshots and matching
+  DOM/styles/bounds. The original captures were retained during investigation.
+- The complete unit/component suite passes: 326 tests across 53 files. Lint,
+  app/Playwright TypeScript checks, build and whitespace gates pass; Oxlint remains
+  at 47 existing warnings and no errors. The default browser command discovers
+  all 142 cases across five files. Verification remains isolated from live
+  services and Sentry; no dependencies were added.
+- All 142 browser cases pass on the finished slice: 71 desktop and 71 mobile,
+  including the three new lobby/reference cases in each project.
+
+This slice and the cumulative diff exceed the approximate 800-line review budget.
+
+| Slice                        | Mechanical work                                                                      | Scrutiny and evidence                                                                                             |
+| ---------------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| Shared identity and surfaces | Account/lobby avatars, image wells, stat variants and native panel/field/note markup | Defaults and image/fallback behavior; 27 existing CSS projections and hub/login/lobby comparisons                 |
+| Owned lobby SCSS             | Existing declarations, states and values moved to owned blocks/tokens                | Host font/disabled specificity and original success priority; 100 declaration projections and rendered styles     |
+| Feature leaves               | Team choice, editor and repeated create form extracted                               | Callback arguments, native labels/form types, upload reset and disabled conditions; baseline and current journeys |
+| Progress and controls        | Data-width presentation and shared Button variants                                   | Six step values, native actions and unchanged geometry; rendered pairs plus local keyboard controls               |
+| Verification fixtures        | Existing capacity PATCH modeled; lobby specs included by default                     | Explicit request payload assertions, unexpected-traffic guard and 142 discovered cases                            |
+
+Cumulative review load versus main: **384 files, +24,954 / -15,062 (40,016
+lines)**. Use the phase review maps to separate mechanical ownership moves from
+behavior changes and inspect the original controller contracts independently.
+
+## Phase 4l — keyboard photo choosers and selection semantics
+
+Avatar and team photo inputs stay in the native tab order through the shared
+visually-hidden fragment. Their labels show a purple focus ring; contextual names
+identify the upload. Host participation and player/member selection controls
+expose aria-pressed. Player buttons use the full player name, preventing avatar
+initials from becoming part of the accessible control name. Upload callbacks,
+accept rules, storage paths and membership commands are unchanged.
+
+The existing visually-hidden utility uses the same extracted fragment. TeamEditor
+has a local keyboard photo-chooser example with filename feedback and no storage
+writes. Shared test keyboard navigation helpers now live in tests/support/keyboard.
+The mock records game-assets paths and models the existing host-avatar PATCH;
+it does not introduce an application request or schema change.
+
+### Phase 4l verification and review map
+
+- Two new journeys failed before the fix on both desktop/mobile: absent pressed
+  states and the display:none profile input. They pass afterward. The selection
+  journey checks host choice and unassigned/member selection state; it also
+  catches the previously duplicated avatar initial in player button names.
+- The full keyboard journey starts at the invite screen, tabs to both photo
+  inputs, opens the native choosers with Space, joins as host, assigns a player,
+  uploads a team image and reaches readiness. It uses no pointer clicks or
+  scripted focus. Recorded storage and player-update payloads retain their paths.
+- The local-reference browser case opens TeamEditor's native chooser by keyboard,
+  reports its filename, clears the input and verifies zero backend requests.
+- Four desktop/mobile upload-view pairs retain matching unfocused visible
+  structure, bounds, sampled computed styles and byte-identical screenshots.
+  Intentional ARIA changes and the hidden file-input boxes are outside that visual
+  comparison. Separate focused captures verify a visible three-pixel purple ring.
+- Expanded Sass comparison preserves all 929 unaffected rules in order, including
+  media conditions and every declaration. Only two input-hiding and two label
+  focus rules intentionally change. The existing visually-hidden utility retains
+  its declarations.
+- Unit/component suite: 326 passing tests across 53 files. Lint, formatting,
+  app/Playwright TypeScript checks, build and whitespace checks pass. Oxlint
+  remains at 47 warnings and no errors; no dependencies were added. The standard
+  browser configuration discovers 146 cases across five files.
+- All 146 browser cases pass: 73 desktop and 73 mobile, including the complete
+  keyboard upload/assignment path and updated local photo-chooser demo.
+
+| Slice                     | Intentional change                                          | Evidence                                                                                                   |
+| ------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Native photo controls     | Focusable clipped inputs, named upload and label focus ring | Failing-before keyboard journey, native chooser events, focus captures and unchanged unfocused screenshots |
+| Selection semantics       | Explicit pressed state and full player names                | Desktop/mobile host, unassigned-player and member state checks                                             |
+| Shared fragments          | Extract existing hiding declarations; reuse focus ring      | 929 unaffected expanded rules remain identical; four intended rule changes                                 |
+| Local reference and mocks | Filename-only demo and existing avatar/storage contracts    | Native chooser test with zero backend requests; exact mocked upload/update assertions                      |
+
+Cumulative review load versus main: **387 files, +25,309 / -15,063 (40,372
+lines)**. The full diff exceeds the approximate 800-line review budget; use the
+phase maps and review these accessibility behavior changes as a separate slice.
+
+## Phase 4m — obsolete host/player style removal
+
+The remaining legacy host/player sheets now contain 4,546 lines instead of 8,953:
+4,407 lines removed. The audit removes 734 unused selector arms and five
+unreferenced animations. HostLiveGame.css retains 391 rules and PlayerGame.css
+retains 328, including their still-used keyframe steps. Active styling ownership
+remains a subsequent migration; this slice introduces no component or controller
+changes.
+
+The reference audit inspects 385 source/index/public files and retains forty-four
+possible dynamic string prefixes. Each removed selector has a necessary positive
+class witness absent from those sources and prefixes (272 distinct witnesses).
+Classes nested inside functional pseudos are not used as absence witnesses, so
+negations and alternatives cannot create false removal evidence. External Lucide
+and Radix prefixes are conservatively protected. Selector lists are parsed into
+arms; removal never drops a sibling selector that still has a possible consumer.
+
+Unreferenced animations are checked against remaining source, CSS and Sass,
+including dynamic prefixes: cc-reward-score-in, cc-player-reward-arrive,
+cc-player-reward-pulse, cc-player-reward-win and join-bounce. The active cc-spin
+animation remains. Empty conditional blocks and obsolete consolidation/empty
+section comments are removed with the dead rules.
+
+### Phase 4m verification and review map
+
+- Every one of the 803 retained selector arms preserves its source order,
+  conditions, declaration values and priority. Expanded project SCSS is
+  byte-identical to the preserved source.
+- Forty-eight desktop/mobile view pairs match rendered DOM, bounds and sampled
+  computed styles. They cover join/rejoin, join after a host visit, four local
+  demo views, host controls/scores/participation/lobby, player game/side/scores,
+  breaks/completion, reward voting/results, final voting, private missions and
+  secret review, plus final/secret TV views.
+- Every removed-selector witness is checked in each rendered view; none can make
+  a removed selector eligible. Chromium accepts all removed selector syntax,
+  avoiding a cleanup that accidentally activates a formerly invalid selector
+  list. Normalization covers fixture origins and the baseline public-directory
+  symlink alias; origin-dependent QR/invite text is masked in screenshots while
+  its normalized DOM and styles are compared.
+- Forty-one screenshot pairs are byte-identical. Seven differ only at two pixels
+  on a rounded white-card edge. A separate control takes twelve captures of the
+  unchanged baseline and twelve of the current app: the baseline itself produces
+  two exact image variants differing at those same two pixels, and the current
+  image is an exact baseline variant. No application styles or image regions
+  were changed to suppress the variance; original captures remain available.
+- All 326 unit/component tests across 53 files and all 146 browser cases pass
+  (73 desktop and 73 mobile). Lint, formatting, app/Playwright TypeScript checks,
+  build and whitespace checks pass. Oxlint remains at 47 warnings and no errors.
+  No dependencies, backend contracts or application request paths changed;
+  verification remains mocked and Sentry uploads disabled.
+
+This deletion slice and the cumulative diff exceed the approximate 800-line
+review budget. The deletions are mechanical; the audit's conservative matching
+assumptions deserve scrutiny independently of the retained-declaration proof.
+
+| Slice                | Mechanical work                                      | Scrutiny and evidence                                                                        |
+| -------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Selector removal     | Drop only arms with absent necessary class witnesses | Literal/dynamic-prefix audit, functional-pseudo exclusion and all 48 rendered witness checks |
+| Cascade preservation | Keep every surviving arm and declaration in order    | 803 selector/condition/declaration projections and byte-identical expanded SCSS              |
+| Animation cleanup    | Drop five orphaned keyframe names                    | Source/style/prefix references checked; active spinner and remaining keyframes retained      |
+| Rendered behavior    | No application markup/controller changes             | 48 exact DOM/bounds/style comparisons and full unit/browser suites                           |
+| Screenshot limit     | Document rounded-edge capture variance               | 41 identical pairs, seven two-pixel differences and unchanged-baseline control captures      |
+
+Cumulative review load versus main: **388 files, +26,129 / -20,222 (46,351
+lines)**. Review this cleanup as mechanical deletions, then review active style
+ownership and tour behavior separately in the following slices.
+
+## Phase 4n — accessible host tours and shared host frame
+
+This phase has two review slices. The behavior slice repairs the tour before
+retiring the hidden topbar; the structural slice migrates the active host frame,
+tour trigger and control-panel surface. Both slices are verified against their respective boundaries.
+
+The shared GuidedTour uses the existing native-dialog lifecycle for keyboard
+containment, Escape and return focus. Highlighting no longer changes fixed target
+positioning. Measured placement keeps its existing offsets as tokens and cancels
+its deferred measurement on cleanup. Host tour steps now match visible targets
+for lobby, live and completed sessions, and close when the session phase changes.
+Navigation stays in the host controller; shared SessionPage/titlebar targets are
+optional presentation props.
+
+HostManagement owns its frame and palette in SCSS. ControlPanel composes the
+shared ContentPanel controls surface and heading; host and participant tour
+triggers use the shared Button session-tour variant. The obsolete topbar markup
+is removed only after confirming it is hidden in the baseline. Its sixteen
+unreferenced selector arms are removed with a positive source/dynamic-prefix
+absence audit. Legacy context aliases remain for descendants awaiting migration.
+The local Host patterns reference exercises the frame, panel, action callback
+and modal tour without mounting a connected controller or issuing backend calls.
+
+| Slice             | Purpose and mechanical work                                               | Scrutiny and proof                                                                                                                |
+| ----------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Tour behavior     | Native modal lifecycle, stable visible targets and phase-aware navigation | Keyboard-only tours through lobby/live/completed states, focus wrapping/restoration, Escape, status transition and no tour writes |
+| Shared frame      | Move effective layout and palette to HostManagement SCSS                  | Desktop/mobile DOM, bounds, computed design values and inherited CSS variables against a saved post-behavior baseline             |
+| Panel and trigger | Shared ContentPanel/ControlPanel and Button variants                      | Original declaration projections plus normalized class/DOM comparisons; verify native button resets                               |
+| Retired header    | Delete hidden markup and sixteen unreferenced selector arms               | Assert baseline display:none and zero height; preserve remaining CSS order, conditions and declarations                           |
+| Local reference   | Demonstrate shared composition with local state                           | Keyboard tour/action regression with zero backend requests                                                                        |
+
+### Phase 4n verification and review load
+
+- All 326 unit/component tests across 53 files and all 160 browser cases pass
+  (80 desktop and 80 mobile). The browser suite now includes fourteen tour cases:
+  complete keyboard tours in lobby/live/completed states, native-dialog focus,
+  local/public demos and safe closure after a session-phase transition.
+- Lint, formatting, app/Playwright TypeScript checks, production build and diff
+  whitespace checks pass. Oxlint reports 46 warnings and zero errors. Verification
+  builds disable Sentry uploads; browser traffic uses mocked services.
+- All 777 retained legacy selector arms preserve order, conditions, declaration
+  values and priority. The 1,006 unaffected expanded SCSS rule projections match
+  exactly. Three control-panel declaration sets match after selector mapping and
+  equivalent font-family quoting/case normalization; all original tour-trigger
+  declarations are retained. Native/shared button resets are checked in-browser.
+- Eighteen final desktop/mobile pairs match normalized rendered DOM, layout,
+  sampled computed styles and screenshots. They cover host controls, scores,
+  inline participation and lobby, player game/side screens, enlarged root text,
+  and focused/hovered tour triggers. Normalization permits only the intentional
+  class substitutions, fixture origins and public-symlink alias; the hidden
+  topbar is omitted only after asserting display:none and zero height. QR/invite
+  origin text is masked in screenshots and compared in normalized DOM.
+- One preliminary screenshot differed at two card-edge pixels. Twelve captures
+  each of the unchanged baseline and current host-participation screen produce
+  the same exact image. All final comparison pairs are byte-identical without
+  application changes or extra masks to suppress that variation.
+- A preliminary desktop run passed 79 cases; its avatar-error case trace showed
+  full document reloads clearing in-memory feedback. The isolated case passed.
+  After stopping the baseline server and freezing source, complete desktop and
+  mobile runs each pass all 80 cases. No application fix or weaker assertion was
+  used to hide the failure.
+
+Cumulative review load versus main: **400 files, +26,528 / -20,148 (46,676
+lines)**. This exceeds the approximate 800-line review budget. Review tour
+behavior separately from the mechanical frame/panel migration and hidden-header
+deletion, using the slice map above. No backend contracts, dependencies or live
+writes changed in this phase.
+
+## Phase 4o — shared timer and backup-flow controls
+
+HostRoundControls composes the shared TimerReadout, ControlRow timer/break wells,
+Note control copy and Button control/timer-menu variants. Replay actions use the
+labeled IconButton control-replay variant. The compact panel's stage, progress
+arrangement and full-width review placement live in its host-round-controls
+partial. Existing pause/menu glyphs are retained for parity and remain queued
+for the separate semantic-icon slice.
+
+The backup back/review/next row is now one RoundFlowControls presentation
+component used by both HostRoundControls and HostRoundOverview. It preserves the
+existing round limits, busy/reward restrictions and review labels. The overview's
+additional status action stays in its footer slot with its original handler and
+disabled conditions. No timer lifecycle, publishing, round mutation or backend
+contract moved into shared presentation.
+
+The local Session timer and flow controls reference demonstrates shared actions,
+readouts, replay/menu controls, busy/reward states and local callbacks without
+connected hooks. New browser regressions walk host timer actions by keyboard and
+assert reset/pause publication fields; the local reference verifies disabled
+states and zero backend requests.
+
+| Slice                  | Mechanical changes                                                                  | Scrutiny and proof                                                                                                                      |
+| ---------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Shared readout and row | Replace repeated timer markup with TimerReadout and timer/break ControlRow variants | Same rendered elements, labels, bounds and computed styles in idle/running/expired/break states                                         |
+| Backup actions         | Consolidate both back/review/next rows into RoundFlowControls                       | Preserve original enable/disable expressions and callbacks; optional overview status action remains supplied by its caller              |
+| Action variants        | Shared Button/Note and labeled replay IconButton                                    | Preserve native types, attributes, labels and handlers; focus/hover and keyboard regressions                                            |
+| Owned styling          | Move 28 selector arms to component partials and preserve unrelated selectors        | All moved declaration values match; 391 retained host CSS arms and 1,013 unaffected expanded SCSS projections match in order and values |
+| Local reference        | Demonstrate the shared parts with controlled state                                  | Keyboard actions, busy/reward restrictions and no backend traffic                                                                       |
+
+Twenty-six desktop/mobile pairs match normalized DOM, bounds, sampled styles and
+byte-identical screenshots. The matrix covers idle, running, expired, break,
+awarded, active reward and completed controls, the ordinary game view, focused
+and hovered action/replay buttons, and enlarged root text. Normalization is
+limited to intentional class replacements, equivalent font-family case and
+fixture-origin/public-symlink differences. QR/invite origin text is masked in
+screenshots and compared in normalized DOM. Static ticking-state comparisons
+freeze the one-second interval in both versions and seed the existing host-clock
+storage contract; separate real-clock keyboard and browser tests exercise timer
+behavior. Expanded declaration comparison normalizes equivalent font-family
+quoting/case and slash spacing in grid-column values.
+
+All 326 unit/component tests across 53 files pass. All 164 mocked browser cases
+pass: 82 desktop and 82 mobile, including the new timer keyboard and local-state
+regressions. Lint, formatting, application/Playwright TypeScript, production build
+and diff whitespace checks pass. Oxlint remains at 46 warnings and zero errors.
+No dependencies, backend contracts or live writes changed; Sentry uploads remain
+disabled for verification builds.
+
+Cumulative review load versus main: **406 files, +27,055 / -20,249 (47,304
+lines)**. This exceeds the approximate 800-line review budget. Review the shared
+backup-action extraction separately from the mechanical selector/style moves;
+the matrix above identifies behavior that deserves scrutiny and the mechanical
+proof collected.
+
+## Phase 4p — native host-dialog behavior
+
+The host round override, break-timer and upcoming-challenge editors now compose
+shared Dialog with its host variant. The native root owns modal semantics and
+the visible heading association; confirmation retains alertdialog semantics.
+Forms keep their native submission handlers. Escape, backdrop dismissal and
+return focus use the shared lifecycle, while dismissDisabled prevents closing
+during a pending write. If disabling the active control would send focus to the
+inert background, Dialog focuses its own root until controls are available.
+
+Chromium can initially focus a scrollable form container. The shared hook now
+selects the first enabled sequential control after opening, while preserving its
+existing Tab boundary handling. The local host-dialog reference demonstrates
+keyboard operation, busy-state dismissal guards and pointer backdrop dismissal
+without backend traffic.
+
+Challenge save failures previously appeared only in the page-level feedback.
+That page is inert while a native modal is open, so the challenge editor now
+renders the shared SessionFeedback inside its form and supports dismissal/retry.
+The same action error remains available to the page after closing. Both editors
+now use the parent's existing error-dismissal behavior to clear the displayed
+query/action feedback. Previously they received the combined error but cleared
+only action state, so refresh errors could not be dismissed. Two additional
+fail-before cases hold the next session read while dismissing an error, proving
+that a later successful poll cannot hide a broken dismiss action. The fixture
+now explicitly accepts the existing challenge-update contract: five typed
+fields, a matching session filter and an existing challenge ID. Unknown payloads
+and targets still fail instead of receiving generic successful mock writes.
+
+### Phase 4p verification and review map
+
+The original eight desktop/mobile regressions failed on initial focus before
+the change. Eighteen targeted cases now pass, covering focus entry, forward/reverse
+wrapping, Escape and return focus, successful timer/challenge payloads, override
+cancellation and planned-break-before-round ordering, pending-save keyboard and
+pointer guards, local-only demos, both round/start confirmation modes, in-modal
+failure/retry and independent dismissal of refresh errors.
+
+This is an intentional accessibility behavior change, not a behavior-neutral
+markup move. Eight before/after panel comparisons match panel content, layout
+and sampled computed styles, allowing only relocation of the original panel's
+modal ARIA to its native parent. The new native parent and backdrop control are
+explicit structural changes. Five initial viewport screenshots are identical;
+the two mobile form captures consistently differ at 41 and 34 rounded-border
+pixels despite equal design values and bounds. Twelve repeated captures per
+version reproduce each mobile image consistently with no shared variant, so
+these are documented native-dialog compositing differences. A preliminary
+desktop error-panel capture differs at two edge pixels, but twelve repeated
+baseline/current captures match exactly. No extra masks or application-style
+changes suppress the differences. QR/invite origin areas retain their existing
+masks; focus is aligned only for appearance comparisons. Keyboard journeys
+independently verify the actual focus behavior.
+
+The single retired backdrop selector has no necessary class consumer in the
+source/dynamic-prefix audit. All 390 retained host selector arms preserve order,
+conditions and declaration values; the player stylesheet is byte-identical.
+All 1,044 existing expanded SCSS projections match exactly. The shared Dialog
+base/open/host rules preserve all eight original backdrop declarations; native
+sizing/reset rules come from the existing shared Dialog foundation. Panel styles
+remain transitional so their later mechanical migration has a post-behavior
+baseline.
+
+| Slice                  | Change                                                  | Scrutiny and evidence                                                                             |
+| ---------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Native modality        | Three host editors compose shared Dialog                | Fail-before focus cases, keyboard containment/Escape/return, native heading/alertdialog semantics |
+| Pending operations     | Guard dismissal and retain focus with disabled controls | Deferred timer write, Tab/Escape and pointer guard, eventual save and focus return                |
+| Error recovery         | Render challenge failure inside the active modal        | Failed save/retry and query-error dismissal while the next refresh is held                        |
+| Persistence boundaries | Keep controller handlers and RPC/update contracts       | Timer payloads, challenge fields/filters, override cancellation and planned break ordering        |
+| Overlay presentation   | Shared host variant and one retired legacy selector     | Expanded declaration proof, eight panel comparisons and quantified screenshot limits above        |
+| Local reference        | Host-dialog example with controlled busy state          | Keyboard/pointer operation and zero backend requests                                              |
+
+All 326 unit/component tests across 53 files and all 182 mocked browser cases
+pass (91 desktop and 91 mobile). This includes eighteen host-dialog cases plus
+all existing shared-dialog, tour, player, planning, lobby and legacy smoke
+regressions. Lint, formatting, application/Playwright TypeScript, production build
+and diff whitespace checks pass. Oxlint now reports 44 warnings and zero errors.
+Verification disables Sentry uploads and uses mocked backend traffic only.
+
+Cumulative review load versus main: **414 files, +27,810 / -20,313 (48,123
+lines)**. This exceeds the approximate 800-line review budget. Review the native
+modal and feedback behavior separately from the mechanically preserved overlay
+styling, using the map and screenshot limits above. The remaining legacy editor
+panel styles are queued for the next mechanical slice.
+
+## Phase 4q — shared editor panels, fields and actions
+
+The three host editors now compose DialogPanel, DialogActions, Badge dialog,
+FormLabel, FormGrid dialog, and Button dialog variants. DialogPanel retains native
+form/section semantics and typed native props; it adds no wrapper elements.
+FormLabel preserves direct text/control markup, hints, checkbox layout and native
+label attributes without adding Field's label span. Both numeric editor fields
+keep their existing two-column layout on mobile. DialogNotice composes warning
+and error copy, with optional labeled dismissal through IconButton.
+
+Editor handlers, validation attributes, heading IDs and callback wiring remain in
+their existing feature/controller boundaries. No focus lifecycle, save command,
+query or round-state rule moves into these primitives. The local host-dialog
+reference demonstrates the surfaces, labels, hints, numeric fields, notices and
+explicit action styles, plus native local form submission and error dismissal.
+Its new regression verifies saved preview output and zero backend requests.
+
+Twenty-six legacy selector arms move into owned component partials. The existing
+paragraph fragment shared by panel body copy and notices is expressed once in
+dialog-copy. Panel prose excludes paragraphs owned by named child components;
+notices own their typography and modifiers without elevated specificity. Two
+white dismiss-button background declarations were already overridden by the
+modal's red tint, including on hover; their effective red-tint value is retained.
+
+### Phase 4q mechanical evidence and review map
+
+- All 364 retained host selector arms preserve order, conditions, declaration
+  values and priority. Player CSS is byte-identical. All 1,045 pre-existing
+  expanded SCSS projections match exactly; 26 moved selector sets preserve 120
+  effective declaration values and important flags. Comparison normalizes only
+  equivalent selector/font-family quoting and font-family case.
+- Fourteen final desktop/mobile comparisons match the complete native-dialog
+  DOM, including raw text nodes, layout and sampled styles. Normalization permits
+  only the intentional class substitutions/additions and fixture origin; no
+  modal ARIA or elements are omitted. States cover ordinary/start confirmation,
+  a newly blocked start, timer/challenge editors and both error views.
+- Twelve additional comparisons cover focused/hovered save and dismiss actions
+  and enlarged root text. Together the 26 comparisons match DOM and styles;
+  25 viewport screenshot pairs are byte-identical. One desktop error-panel
+  pair differs at two rounded-border pixels (410,267 and 412,267). An earlier
+  capture of unchanged current source matches the exact baseline image, while
+  another capture and twelve repeated captures show the two-pixel variant. The
+  separate control retains twelve captures per version and the original images;
+  no extra masks or design-value changes suppress the difference. Existing
+  QR/invite origin masks remain; focus is aligned only for appearance checks.
+- A newly covered start-confirmation guard passes on the saved baseline for both
+  screen sizes: if team setup becomes invalid while the dialog is open, confirm
+  becomes disabled, the blocking message appears, keyboard focus stays on the
+  available cancel path, and no start command is sent.
+
+| Slice                     | Mechanical change                                                    | Scrutiny and proof                                                             |
+| ------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Panel composition         | Shared form/section surface and explicit action row                  | Native props/types, full DOM and save/override regressions                     |
+| Labels and numeric fields | Native label/hint/checkbox primitives and dialog grid variant        | Raw markup, accessible names, two-column mobile layout and existing validation |
+| Notices and actions       | Shared notices and explicit Button/IconButton variants               | Effective source values, focus/hover, dismissal/retry and disabled states      |
+| Owned styling             | Retire 26 selector arms and register owned partials                  | Retained-cascade and expanded-SCSS projections, 26 rendered comparisons        |
+| Local reference and guard | Local submit/error demonstration and newly covered team-change guard | Mock-only keyboard journeys and baseline guard regression                      |
+
+All 326 unit/component tests across 53 files and all 186 mocked browser cases
+pass (93 desktop and 93 mobile). This includes the expanded local form/reference
+coverage and the team-change guard, plus every existing host, player, planning,
+lobby, tour and legacy smoke journey. Lint, formatting, application/Playwright
+TypeScript, production build and diff whitespace checks pass. Oxlint remains at
+44 warnings and zero errors; explicit native children/htmlFor forwarding avoids
+adding a label-association warning. Verification builds disable Sentry uploads;
+browser services remain mocked.
+
+Cumulative review load versus main: **423 files, +28,497 / -20,566 (49,063
+lines)**. This phase also exceeds the approximate 800-line review budget. Review
+the shared component contracts and local examples separately from the mechanical
+style/markup moves, then review the newly covered guard with its baseline
+result. The map above distinguishes those slices and records the rendering
+limit rather than claiming universal screenshot identity.
+
+## Phase 4r — shared session panels
+
+Host overview and invitation now compose SessionInvite, QrFrame, RoundNumber,
+RoundSelector and UpcomingChallenge. Nine host card roots use ContentPanel
+session surfaces; headings, counts, overlines and helper copy use explicit shared
+variants. Feature controllers retain queries, credentials, commands and
+navigation. Review, reward and secret mission body styles remain transitional.
+The shared round actions retain their comic appearance classes for existing
+hover behavior and own explicit normal-state styles with enough specificity to
+survive lazy legacy stylesheet loading.
+
+The local Shared session panels and invitation reference demonstrates selection,
+disabled actions, compact/stacked surfaces, headers/counts, upcoming challenge,
+previous/next/finish action variants and optional team guidance. Its keyboard
+regression checks round selection, busy states, team guidance, local copy
+feedback, native join-link attributes and zero backend requests.
+
+### Phase 4r mechanical evidence and review map
+
+- All 281 retained host selector arms preserve order, conditions and declarations,
+  with two recorded component-reference renames. Player CSS remains
+  byte-identical to the saved phase 4q checkpoint. All 1,074 expanded baseline
+  SCSS projections remain an identical ordered subsequence. Eighty-three old
+  selector arms consolidate into owned styles; overridden historical layers
+  are not claimed as identical declaration moves.
+- Twenty-four before/after comparisons match raw DOM text nodes, QR SVG markup,
+  layout, sampled computed styles and byte-identical screenshots. Four compare
+  overview/invitation at 1280px/393px with teams on/off; twelve cover reward
+  setup/open/completed, final management, selected secret review and completed
+  games at both sizes; four compare 640px/900px with teams on/off; four compare
+  focused round chips and hovered next-round controls at desktop/mobile sizes.
+- A read-only local proxy supplies the same browser origin to both versions.
+  QR codes and join links need no origin masks or normalization. Only intentional
+  component class substitutions/additions are normalized; raw text and native
+  element/attribute structures remain included. These checks caught and fixed
+  a second edit-button caller, count typography, lazy cascade precedence and
+  raw JSX text-node segmentation.
+
+| Slice                   | Purpose and mechanical changes                                         | Scrutiny and proof                                                                    |
+| ----------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Shared surfaces         | Card, heading, count and helper variants replace legacy markup classes | Native elements/attributes, ordered rule projections and all host panel states        |
+| Overview and invitation | Shared round models, QR frame, count and callbacks                     | Full QR DOM, responsive layout, team guidance, focus/hover screenshots                |
+| Round actions           | Explicit Button variants retain host comic appearance                  | Lazy legacy cascade precedence, disabled state and existing round/editor regressions  |
+| Local reference         | Pure local models and action callbacks                                 | Keyboard selection/busy/team actions, native link attributes, no backend requests     |
+| Remaining bodies        | Keep existing submission/reward/secret content rules and controllers   | Deferred to the next independently verified slice; no claim of full styling migration |
+
+All 326 unit/component tests across 53 files and all 188 mocked browser cases
+pass (94 desktop and 94 mobile). After the final preview-only addition of explicit
+round action examples, all 28 affected local/reference cases pass again.
+Application/Playwright TypeScript, lint, formatting and production build pass;
+Sentry upload credentials are explicitly disabled for the final build. Source
+and documentation remain frozen during browser comparisons and suite runs.
+
+This phase exceeds the approximate 800-line review budget. Review component
+contracts and feature adapters separately from the mechanical class/style moves,
+then review the local example and keyboard regression. Cumulative review load
+is **433 files, +29,510 / -21,072 (50,582 lines)** before the final report
+number is inserted.
+
+## Phase 4s — submission/evidence extraction checkpoint
+
+EvidenceReview and EvidenceReviewItem now render the shared image/video review
+markup for main, side and secret workflows. They accept resolved presentation
+URLs, image descriptions and metadata labels; no persistence or query function
+is passed into shared UI. Main and side workflows also compose SubmissionRow
+for identity, formatted time, status and evidence/action slots. Each feature
+keeps its existing status copy, fallback names, time formatting, approval callbacks
+and score rules.
+
+This checkpoint separates structural extraction from styling conversion.
+Existing host classes remain intentionally attached to the moved markup; all
+191 SCSS and legacy stylesheet files are byte-identical to the saved phase 4r
+baseline. The next part of this phase migrates those owned blocks into BEM SCSS,
+then continues through the remaining management bodies. The inherited native
+video caption concern is retained for its separate accessibility slice.
+
+The local Shared submission and evidence review reference exercises approve,
+reset and reject through local state. Its keyboard regression verifies the
+status/actions and zero backend requests. A new host evidence regression covers
+main pending/approved/rejected rows, side automatic approval copy, secret evidence,
+native image/video attributes and the unchanged 17-point approval payload. It
+passes on both the saved pre-extraction baseline and refactor at desktop/mobile
+sizes. The mock uses a 564-byte generated local WebM for video requests;
+its required evidence creation timestamps are checked against the existing
+frontend evidence contract. This is not a deployed schema verification.
+
+Four populated/empty desktop/mobile comparisons match complete DOM (including
+raw text nodes and QR markup), layout and sampled computed styles without class
+normalization. Both empty-state screenshots are byte-identical. Populated
+captures differ only inside native video rectangles: the final capture has 113
+changed desktop pixels and 7 mobile pixels, zero elsewhere. A prior capture of
+the same source matched the populated desktop image exactly; forcing every
+native control to paint in the viewport changes the variance. Video metadata
+and decoded frame readiness are awaited and playback stays paused at zero. No
+media controls, QR codes or image areas are masked. Exact universal screenshot
+identity is not claimed for browser-rendered video controls.
+
+| Slice                   | Change                                                       | Scrutiny and evidence                                                                   |
+| ----------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| Evidence presentation   | One collection/item implementation replaces three copies     | Main/side/secret metadata, native controls/alt/preload attributes, full DOM comparisons |
+| Submission presentation | Shared identity/status/children structure                    | Feature-owned label rules and unchanged approval payload; exact DOM/styles              |
+| Local reference         | Local approve/reset/reject state and metadata preview        | Desktop/mobile keyboard regression, disabled actions, no backend requests               |
+| Test fixtures           | Typed evidence rows and deterministic local WebM             | Baseline and current host regressions, metadata readiness; no live services             |
+| Styling boundary        | Retain current classes until separate owned-style conversion | All 191 stylesheet files byte-identical; quantified native-control screenshot limit     |
+
+All 326 unit/component tests across 53 files and all 192 mocked browser cases
+pass (96 desktop, 96 mobile). Application/Playwright TypeScript, lint, formatting
+and production build pass. Sentry uploads are disabled for the verification
+build. No source/documentation edits occur during browser jobs. The final full
+suite includes both new evidence regressions and all prior journeys.
+
+Cumulative review load at this checkpoint: **438 files, +29,883 / -21,072
+(50,955 lines)** before this report is inserted. The cumulative diff exceeds the
+approximate 800-line review budget; use the slice map above and earlier phase
+maps. The 564-byte binary fixture is explicitly reported even though the review
+script discounts binary files.
+
+## Phase 4s — owned submission/evidence styling
+
+The extracted review components now own BEM blocks in SCSS: submission-list,
+submission-row, evidence-review and evidence-review-item. SubmissionRow composes
+StatusPill's review variant; its discriminated prop contract keeps review tones
+separate from workspace tones. ControlRow review supplies the full-width action
+arrangement, including the local reference. Blocks own their elements and the
+feature adapters retain approval, scoring, status text and media resolution.
+Existing design values are promoted to tokens without intentional visual changes.
+The shared 520px breakpoint token also supplies the existing tour breakpoint;
+compiled existing rules remain unchanged.
+
+Fifty-six legacy selector arms retire. Historical unskinned/themed declarations
+consolidate to their effective host presentation; unreachable evidence metadata
+button/saved selectors retire with them. The remaining 225 host selector arms
+preserve order, conditions and declarations, with one recorded action-reference
+rename. Player CSS is byte-identical. All 1,121 existing expanded SCSS projections
+remain an identical ordered subsequence. No retired submission/evidence class
+remains in source.
+
+Eight populated/empty comparisons at 1280, 393, 520 and 640px match complete DOM,
+including raw text and QR markup, layout and sampled computed styles. Only the
+intentional class substitutions/additions are normalized. Every empty-state PNG
+and the populated 640px PNG match exactly. Other populated PNG differences are
+confined to native video rectangles: 524 pixels at 1280px, 879 at 393px and 919 at
+520px, with zero changed pixels elsewhere. Playback stays paused at zero after
+metadata/frame readiness; each native control is painted in the viewport. No
+image, QR or media area is masked, and universal native-control screenshot
+identity is not claimed.
+
+| Slice              | Mechanical changes                                                      | Scrutiny and evidence                                                                         |
+| ------------------ | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Review surfaces    | Owned list/row and media blocks replace legacy selectors                | Exact DOM/layout/styles at desktop/mobile and both responsive boundaries                      |
+| Shared variants    | Typed StatusPill review tones and ControlRow review actions             | Existing status/callback regressions, local approval/rejection and preserved action reference |
+| Tokens and cleanup | Preserve effective design values; retire obsolete metadata action rules | Ordered retained CSS, 1,121 existing SCSS projections, no remaining class consumers           |
+| Local reference    | SubmissionList and shared variants compose the existing local demo      | Complete desktop/mobile local keyboard journeys, no backend requests                          |
+
+All 326 unit/component tests across 53 files and all 192 mocked browser cases
+pass again (96 desktop and 96 mobile). Application/Playwright TypeScript, lint,
+formatting, build and diff whitespace checks pass. Verification builds disable
+Sentry uploads and all browser backend traffic remains mocked. Source and
+documentation stay frozen while browser jobs run. The cumulative diff remains
+above the approximate 800-line review budget; use this slice map alongside
+prior phase maps, and review the owned styles separately from the already
+verified structural extraction.
+
+Cumulative review load before this report: **443 files, +30,160 / -21,339
+(51,499 lines)**. The next checkpoint is saved for phase 4t.
+
+## Phase 4t — assignment presentation checkpoint
+
+AssignmentRow and AssignmentList now render private-mission assignments using
+presentation values and optional evidence children. Status precedence, scheduled
+time formatting, mission lookup and persistence remain in the feature adapter
+and existing controllers. The initial extraction is verified separately: four
+populated/empty desktop/mobile comparisons preserve complete raw DOM, layout and
+sampled styles before styling conversion.
+
+The row composes IconBadge's assignment variant, with explicit native div markup,
+caller-provided decorative illustration and aria-hidden boundary. Its prop
+contract separates illustration children from semantic-icon usage. Existing
+IconBadge consumers retain their default native span and icon behavior. The
+empty mission message now composes EmptyState session with the original inline
+layout and icon size. A local assignment example and keyboard regression toggle
+between two supplied rows and the empty message without backend access.
+
+Seventeen old selector arms retire into assignment-list/assignment-row and
+owned IconBadge/EmptyState variants. The remaining 208 host selector arms preserve
+order, conditions and declarations without reference renames; player CSS remains
+byte-identical. All 1,144 existing expanded SCSS projections remain an identical
+ordered subsequence. No retired assignment, icon-well, empty-message or management
+root class remains in source. The management root's old gap was already overridden
+by the shared stacked panel; its effective spacing is unchanged.
+
+Six styling comparisons at 1280px, 393px and the existing 700px icon breakpoint
+cover populated and empty assignment states. Complete DOM, raw text, QR markup,
+layout and sampled styles match after only intentional class normalization. All
+three empty PNGs match exactly. Populated differences are wholly inside native
+video rectangles: 888 desktop pixels, 927 mobile pixels and 962 pixels at 700px,
+with zero changed pixels elsewhere. No media or QR mask is added. A computed
+zero-width border-style mismatch in the new icon variant was corrected to preserve
+the existing solid reset; no visual value was changed to chase native controls.
+
+| Slice                 | Change                                                 | Scrutiny and evidence                                                                    |
+| --------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Structural extraction | Shared assignment row and caller-owned evidence        | Four raw DOM/layout/style comparisons before conversion; feature label rules unchanged   |
+| Owned styles          | Row/list blocks and retirement of legacy selector arms | Ordered retained CSS, all existing expanded SCSS rules and six rendered comparisons      |
+| Shared variants       | Decorative IconBadge and compact EmptyState            | Explicit native/ARIA contracts, unchanged default consumers, 700px breakpoint comparison |
+| Local reference       | Local rows/empty toggle and catalog notes              | Desktop/mobile keyboard regression and zero backend requests                             |
+
+All 326 unit/component tests across 53 files and all 194 mocked browser cases
+pass (97 desktop, 97 mobile), including connected main/side/secret evidence and
+approval contracts, local references and every prior journey. Application and
+Playwright TypeScript, lint, formatting, production build and diff whitespace
+checks pass. Verification builds disable Sentry uploads. Source and documentation
+stay frozen during browser jobs. This is a checkpoint within phase 4t; secret
+assignment/creation forms and reward/final/secret-review controls still remain.
+
+Cumulative review load before this report: **448 files, +30,442 / -21,404
+(51,846 lines)**. This remains above the approximate 800-line budget; review
+using the slice map above and the earlier maps. A final shared-opacity token
+cleanup preserves the entire compiled stylesheet byte-for-byte.
+
+## Phase 4t — mission forms checkpoint
+
+HostSecretMissions now composes controlled MissionAssignmentForm and
+MissionCreationForm components. Their choice props use minimal presentation
+records and their callbacks accept values/events. The existing controller keeps
+trimming, command defaults, sort order, immediate/future scheduling, feedback,
+reset behavior and persistence. The initial markup extraction is verified before
+styling conversion: desktop/mobile open-form comparisons match complete raw DOM,
+layout, sampled styles and byte-identical screenshots.
+
+The forms compose shared FormLabel session/session-checkbox, Disclosure session
+and Button session-send. Disclosure preserves native details/summary behavior
+and forwards native props. Session form controls retain nested native labels,
+required/min/max/length attributes and the existing busy contract: assignment
+choices/time and submit actions disable; custom creation fields remain editable.
+Owned mission-assignment and mission-creation partials handle only the forms'
+layout; shared label/disclosure/button partials own their presentation. Repeated
+43px control height and shadow alpha values use shared tokens. Historical design
+values are promoted without intentional color or appearance changes.
+
+Thirty-six legacy selector arms retire. All 172 retained host selector arms
+preserve order, conditions and declarations without reference renames. Player
+CSS is byte-identical and all 1,154 pre-existing expanded SCSS projections remain
+an identical ordered subsequence. Two stale comments describing retired sections
+are removed after verification; they have no stylesheet behavior.
+
+Ten styling comparisons match complete DOM (including raw text and QR markup),
+layout, sampled styles and byte-identical screenshots: desktop/mobile default
+open forms, both sides of the 680px breakpoint, and desktop/mobile title focus,
+checkbox focus and enabled send-button hover. Interaction comparisons include
+outline/offset, resize and flex direction. Only intentional class substitutions
+and additions are normalized. No image, QR or other area is masked. The long
+creation grid uses CSS repeat for its equivalent two flexible tracks; computed
+grid tracks and screenshots match the original. After browser verification a
+local Sass columns alias resolves unstable long-line formatting. The entire
+compiled stylesheet is byte-identical before/after that final alias cleanup,
+and the full lint/format gate and an additional formatter check pass.
+
+A new connected regression passes against both the saved pre-extraction baseline
+and final implementation on desktop/mobile. It verifies custom mission trimming,
+points/evidence/default duration/sort order payload, creation reset and selection,
+immediate assignment timestamp, local datetime-to-ISO scheduling, failed command
+retention and retry/reset. Fixed time initializes before mock auth credentials;
+the delivery selector uses its existing accessible name including hint text.
+The mock accepts only the explicit secret creation payload contract and appends
+the local result for subsequent query/selection. This proves mocked frontend
+behavior, not deployed database correctness.
+
+The local mission-form reference submits local state only. Its keyboard regression
+exercises native disclosure opening, both submit paths, disabled actions/assignment
+controls and the intentionally editable creation fields while busy. Catalog notes
+cover the feature forms and new shared variants.
+
+| Slice            | Change                                                    | Scrutiny and evidence                                                                |
+| ---------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Extraction       | Two controlled feature forms replace coordinator markup   | Separate raw DOM/style/PNG comparisons before conversion; no controller changes      |
+| Shared controls  | Native label/disclosure and explicit send variant         | Validation attributes, focus/checkbox/hover comparisons and local keyboard journeys  |
+| Owned styles     | Form layout partials, tokens and 36 retired selector arms | Retained CSS and expanded SCSS proofs, breakpoint/interaction rendering checks       |
+| Command coverage | Exact creation/assignment/schedule/retry contracts        | New regression passes on saved baseline and final desktop/mobile implementation      |
+| Local reference  | Local models, submits and busy controls                   | Zero backend requests and native details behavior; connected controllers never mount |
+
+All 326 unit/component tests across 53 files and all 198 mocked browser cases
+pass (99 desktop, 99 mobile). Application/Playwright TypeScript, lint, formatting,
+production build and diff whitespace checks pass. Sentry uploads are disabled for
+the verification build. Source/documentation remain frozen during browser jobs.
+This slice crosses the approximate 800-line review budget; review extraction,
+owned styles and command fixtures separately using the map above. Phase 4t still
+has reward, final and secret-review controls to migrate.
+
+Cumulative review load before this report: **455 files, +31,122 / -21,566
+(52,688 lines)**. Use the review map above to separate extraction, styling and
+command/test changes.
+
+## Phase 4t — shared review/presentation controls checkpoint
+
+Final and secret review now compose the same panel, title, picker, grid, count
+and action primitives: ContentPanel review-controls, Overline review, FormGrid
+review, FormLabel review and StatTile review. Native div/strong/span/label markup
+and raw text are retained. StatTile review renders label before value without a
+new wrapper. PresentationControls composes the existing session surface for TV
+actions and accepts children/native attributes only. Branches, command callbacks,
+queries and connection lifecycle remain in their feature/controller boundaries.
+
+Explicit Button review variants preserve two existing appearances: final actions
+retain comic hover/active/shadow behavior; native secret actions reset only the
+new shared Button base effects. Primary and wide modifiers retain color and grid
+placement. In particular, disconnect remains reachable under the original busy
+conditions; no blanket disabling or state-management layer is introduced.
+
+Fourteen selector arms retire into owned component partials and explicit variants.
+All 158 retained host selector arms preserve order, conditions and declarations
+without reference renames; player CSS is byte-identical. All 1,178 pre-existing
+expanded SCSS projections remain an identical ordered subsequence. No retired
+final-control or secret-TV class remains in source. Existing palette, sizes,
+font stack and opacity values are reused/promoted without intentional visual
+changes; the legacy metric font stack is preserved rather than rethemed.
+
+Twenty-four before/after comparisons match complete DOM (raw text, native
+attributes and QR markup), layout, sampled styles and byte-identical screenshots.
+Twelve cover pending/voting/results for final and secret review at desktop/mobile
+sizes; four cover connected final/secret presentation layouts; eight compare
+native/comic primary-action focus and hover. Only intentional class substitutions
+and additions are normalized. No media, QR or other area is masked. Final evidence
+is tied to an approved submission so the gallery and cast controls are populated.
+
+Six new command/picker regressions and two presentation regressions pass against
+both the saved original implementation and final implementation on desktop/mobile
+with the final fixture (sixteen baseline cases). They assert exact open/close/
+reopen payloads, picker disabling while voting, final-slide wrapping, secret-slide
+boundary disabling, evidence-navigation payloads and connection close on disconnect.
+PresentationRequest is replaced with a local EventTarget-based fake; no device
+picker or external display is opened. The fixture preserves the existing rule
+that final media requires a matching submitted/approved submission.
+
+The local reference demonstrates native/comic/primary/wide/disabled actions,
+counts, a picker, voting state and local presentation actions without backend or
+connection access. Its keyboard regression uses forward and reverse Tab with
+explicit focus assertions. The growing reference exposed the existing arbitrary
+forward-Tab test budget for reaching newly inserted earlier controls and the
+submission demo's Reject action after Reset. Those tests now follow the direct
+Shift+Tab path; they do not jump focus or relax target assertions. The first full
+run's two test-path failures are preserved separately; the final complete rerun
+passes all cases with application source unchanged.
+
+| Slice                       | Change                                                | Scrutiny and evidence                                                                      |
+| --------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Shared composition          | Existing primitives replace repeated control markup   | Complete native DOM/raw text and counts; feature branches/callbacks unchanged              |
+| Action variants             | Explicit native/comic, primary and wide presentation  | Focus/hover and connected-layout screenshots; busy/disconnect and disabled controls        |
+| Owned styles                | Retire 14 selector arms and preserve effective values | Ordered retained CSS, 1,178 existing SCSS projections, all 24 PNG pairs identical          |
+| Command/connection coverage | Pending/voting/results and slide boundaries           | Sixteen final-fixture baseline cases, final regressions and exact payload/close assertions |
+| Local reference/test paths  | Local data/state and real keyboard traversal          | Zero backend requests, forward/reverse Tab and explicit focus checks; full rerun passes    |
+
+All 326 unit/component tests across 53 files and all 216 mocked browser cases
+pass (108 desktop, 108 mobile) in the final complete run. Application/Playwright
+TypeScript, lint, formatting, production build and diff whitespace checks pass.
+Verification builds disable Sentry uploads. Source/documentation remain frozen
+while browser jobs run. This slice exceeds the approximate 800-line review
+budget; review composition, owned styles and command/test fixtures separately
+using the map above.
+
+Before the next mechanical review-body move, audit contradictory stale voting/
+result status combinations in host management against the requirement to hide
+results while voting is open. This is a separate behavior/regression slice;
+consistent pending/voting/results parity here does not prove those combinations.
+Reward bodies and remaining secret-review content still need migration.
+
+Cumulative review load before this report: **460 files, +32,238 / -21,939
+(54,177 lines)**. Use the slice map above to review composition, owned styling
+and command/test fixtures independently.
+
+## Phase 4t — contradictory voting-state privacy audit
+
+This is an intentional behavior fix, separate from the preceding presentation
+migration. The audit reproduced result leakage when independently refreshed open,
+status and completion fields disagreed. All ten new desktop browser cases failed
+before the fix. A shared final-view regression also failed because an unpublished
+leaderboard rendered with votingOpen/completed both true. Three data-hook cases
+reproduced promotion of that leaderboard despite an active voting signal; a fourth
+exposed an unchecked null gallery response leaving loading unfinished.
+
+Host final status now treats session/presentation voting-open flags or a voting
+challenge row as active before considering a stale results row. Secret review
+similarly combines its state flag and selected voting row; an active row remains
+in the option set even when its assignment is stale/approved. Management and the
+shared review panel mask result details, and the active assignment label says
+Voting in progress instead of revealing an old success/fail/points result.
+Existing status text/precedence outside an active vote lives in the feature's
+pure secretAssignmentStatus helper.
+
+Participant adapters use feature-private voting-state projections. Any known
+final flag/status masks winner/count/voter result metadata and completion; the
+shared SessionFinalRound independently guards its updated leaderboard. The data
+hook retains the raw gallery contract but does not promote a completed gallery's
+leaderboard while another voting signal is active, and it accepts a null gallery
+without throwing. Secret review masks outcome/tallies/voters/result leaderboard,
+retains precedence over reward/ordinary content with a stale outer-open flag,
+and shows a shared loading state when active review details are missing.
+Player voting actions still require the explicit RPC voting-open flag; a
+contradictory status alone gives a read-only view rather than a silent no-op.
+
+This masks unpublished candidate/outcome results; existing turnout/progress
+indicators remain. Result/leaderboard data is shown again after voting signals
+clear and published completion/results are present. No command payload, scoring
+rule, storage key, polling cadence or subscription dependency changes. This is
+frontend presentation protection, not deployed schema/policy or atomic-award
+verification. Reward's existing single-status guard remains unchanged.
+
+Five new unit regressions pass, bringing the suite to 331 tests across 53 files.
+Twenty new desktop/mobile browser cases cover host final session/presentation
+flags, host secret state/row flags and stale assignment labels, player final
+RPC/status/session signals, player secret status/takeover/missing-details states,
+read-only uncertain voting actions and post-closure restoration. The final local
+preview deliberately supplies an open vote with stale completion so the shared
+component guard remains demonstrated without backend data.
+
+All 201 SCSS/legacy stylesheet files are byte-identical to the saved checkpoint.
+No behavior-neutral DOM/screenshot claim is made for the intentionally hidden
+content and new loading state; the preceding consistent-state styling evidence
+remains recorded separately. Four early post-fix test failures were ambiguous
+closed-state vote-count selectors (summary and gallery both show the same count);
+the final assertion scopes to the gallery without removing restoration coverage.
+
+| Slice                | Behavior and scrutiny                                                      | Evidence                                                                           |
+| -------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Host projections     | Voting flags/status override stale results; active review stays selectable | Host contradictory-state cases, picker/close controls and restored results/labels  |
+| Participant adapters | Mask stale result metadata and retain secret-review precedence             | RPC/status/session cases, uncertain read-only actions and missing-details fallback |
+| Shared presentation  | Hide final leaderboard with open+completed props                           | Fail-before component regression, local stale-flag preview and closure restoration |
+| Query handling       | Skip unpublished leaderboard promotion and accept null gallery             | Three fail-before signal cases plus null-response/loading regression               |
+| Styling/commands     | Keep visual tokens and backend contracts intact                            | All 201 stylesheets byte-identical; complete prior command/connection suite passes |
+
+All 331 unit/component tests and all 236 mocked browser cases pass (118 desktop,
+118 mobile), including every prior journey. Application/Playwright TypeScript,
+lint, formatting, production build and diff whitespace checks pass. Verification
+builds disable Sentry uploads; ordinary tests use no live backend. Source and
+documentation stay frozen while browser jobs run. The cumulative review load
+remains above the approximate 800-line budget; review this behavior change
+separately from the earlier mechanical slices using the map above.
+
+Cumulative review load before this report: **469 files, +32,849 / -21,964
+(54,813 lines)**. Treat the privacy behavior fix as its own review slice; do not
+combine its intentional visibility changes with styling parity claims.
+
+## Phase 4t — shared secret-review bodies
+
+Host secret review now composes ReviewSummary, VoterList and the compact
+SessionLeaderboard/SessionRankRow variants. ContentPanel review-result owns the
+published result surface; voter rows reuse Badge vote. The host adapter retains
+assignment-specific filtering, missing-player names, score/name sorting, the
+top-eight limit, voting guards and all command callbacks. Compact rows keep the
+original native div/span/b/small markup without adding default leaderboard
+headings, avatars or actions.
+
+Extraction was verified before styling: six desktop/mobile pending, voting and
+results comparisons matched DOM, computed styles and screenshots exactly after
+normalizing only the new result-panel classes. Owned SCSS then retired thirteen
+legacy selector arms. All 145 retained host selector arms preserve their order,
+conditions and declarations; PlayerGame.css remains byte-identical. All 1,193
+existing expanded SCSS projections remain an identical ordered subsequence.
+
+After the styling move, the same six comparisons match DOM, geometry, sampled
+computed styles and PNG bytes, normalizing only intentional class changes. Four
+additional desktop/mobile success/fail comparisons with ten players also match
+exactly. Their captured DOM explicitly verifies score/name tie order, top-eight
+truncation, missing-player fallback and exclusion of another assignment's vote.
+The local review-body reference demonstrates each primitive using only local
+data; desktop/mobile browser checks confirm it makes no backend requests.
+
+The first full browser run passed 234 cases and exposed one keyboard test path
+failure per viewport: from the invitation's teams checkbox it tabbed forward
+around the expanded styleguide to an earlier Copy button, exceeding the helper's
+160-step budget. The corrected test follows three real Shift+Tab steps, asserting
+focus at the busy checkbox, native join link and Copy button before Enter. The
+budget stays unchanged; no programmatic focus shortcut was added. The new summary
+reference also uses the intended dark review-control surface for readable copy.
+
+All 331 unit/component tests and the final full 236 mocked browser cases pass
+(118 desktop, 118 mobile). Application and Playwright TypeScript, lint, formatting,
+production build and whitespace checks pass. Verification builds disable Sentry
+uploads. Source and docs stayed frozen during browser runs. These checks preserve
+frontend behavior; they do not establish deployed database correctness.
+
+| Slice                               | Purpose and scrutiny                                                                                           | Mechanical evidence                                                                                                                  |
+| ----------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Presentation extraction             | Shared summary, voter rows and compact ranks; keep domain projection in feature                                | Six pre-styling DOM/style/PNG matches                                                                                                |
+| Owned styling                       | Result panel, summary, voter list/badges and compact row modifiers; reset inherited default leaderboard styles | Thirteen retired arms, 145 unchanged retained arms, 1,193 unchanged ordered SCSS projections; ten post-styling DOM/style/PNG matches |
+| Local reference and regression path | Backend-free examples; direct reverse keyboard path to existing invitation action                              | Desktop/mobile local checks; complete 236-case final browser run                                                                     |
+
+Cumulative review load before this report: **478 files, +33,106 / -21,992
+(55,098 lines)**. This exceeds the approximate 800-line review budget; use the map
+above to review extraction, styling and reference/test changes separately from
+prior privacy behavior fixes. The full refactor remains active.
+
+## Phase 4u — reward presentation extraction
+
+HostRewardRound now composes controlled RewardSetupForm and RewardAwardControls.
+Setup retains challenge-derived points, allowed methods, team availability,
+required selection and native number bounds. Manual award controls retain
+instructions, selected player/team candidates, editable final points and action
+states. The existing useHostRewards hook still owns all persistence, confirmation,
+feedback, locking and refresh behavior. No hooks, command modules or other app
+source changed; only the reward parent and its two extracted views differ from
+the saved checkpoint. The parent is now 297 lines.
+
+Eight new mocked cases per viewport were established against the original
+implementation before extracting markup. They cover all three start methods,
+challenge-derived points using a deliberately different challenge value, team
+option availability, edited start points, both manual methods with player/team
+selection, cancellation of confirmation without a write, confirmed edited-point
+payloads and release of a completed round. Candidate actions and confirmations
+are exercised by keyboard. Early harness corrections used the existing Review
+label, scoped its duplicate to Host controls, and checked the native option's
+disabled property directly. No application behavior was changed to satisfy them.
+
+Eighteen desktop/mobile comparisons cover all three setup methods, open voting,
+both manual methods for players and teams with a selected candidate/edited points,
+and a completed reward. Raw rendered DOM, geometry, sampled computed styles and
+PNG bytes match exactly; no class normalization is needed. All 203 SCSS and legacy
+CSS files remain byte-identical. A temporary comparison-helper module-cache
+collision was corrected before the complete successful run.
+
+All 331 unit/component tests and all 252 mocked browser cases pass (126 desktop,
+126 mobile). Application and Playwright TypeScript, lint, formatting, production
+build and whitespace checks pass. Source and docs stayed frozen during browser
+runs. Verification uses no live backend and builds disable Sentry uploads.
+
+Existing finding, left unchanged outside this presentation slice: manual award
+confirmation copy interpolates the round's configured points even after final
+points are edited; the command correctly sends the edited value. A separate
+behavior change would need to align that copy and explicitly test it.
+
+| Slice                   | Purpose and scrutiny                                                                                                | Evidence                                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Reward regressions      | Start/award/release contracts, native controls and cancelled confirmation                                           | Sixteen new desktop/mobile cases pass before and after extraction                                 |
+| Presentation extraction | Move setup and manual award markup into named feature components; preserve parent composition and controlled values | Eighteen raw DOM/style/PNG matches; every other app source file and all 203 stylesheets unchanged |
+| Full verification       | Preserve shared host/player, planning, lobby, timer, dialog, tour and privacy journeys                              | 331 unit/component tests; 252 mocked browser cases; TypeScript, lint and build                    |
+
+Cumulative review load before this report: **482 files, +33,650 / -22,141
+(55,791 lines)**. The cumulative diff remains above the approximate 800-line
+budget; review regression additions independently from the mechanical markup
+extraction. Owned reward SCSS is the next slice, not part of this parity claim.
+
+## Phase 4u — reward shared primitives and owned styling
+
+Reward setup and manual awards now compose shared FormLabel reward/award-points,
+ControlRow reward and Explainer reward variants. RoundSummary owns the method
+header's arrangement and receives presentation slots for IconBadge method and
+StatusPill reward. CandidateList groups the existing SessionCandidate rows.
+RewardSetupForm retains native form coordination; reward-setup and reward-review
+owned blocks contain only their layout and content arrangement. New tokens
+promote the existing colors, sizes and breakpoint without intentional redesign.
+
+Forty-one legacy selector arms were retired, including the reward arm of a mixed
+review/action selector. The 104 retained host selector arms keep the same order,
+conditions and declarations. PlayerGame.css is byte-identical; all 1,206 previous
+expanded SCSS projections remain an identical ordered subsequence. Shared
+variants explicitly reset inherited defaults such as status text transform,
+method-badge sizing and instruction-panel spacing rather than borrowing another
+block's elements or leaving route overrides.
+
+Eighteen desktop/mobile setup, voting, player/team award and completed-state
+comparisons match rendered DOM, geometry, sampled computed styles and PNG bytes
+exactly after only intentional class normalization. Eight more comparisons cover
+setup/manual action focus and hover, including outlines; all match exactly.
+The final comparison helper preserves unrelated component classes and includes
+the explicit open-status class rename. No query, command, score, timer or
+subscription behavior changes. The existing overlay and close-button classes
+remain for the separate modal behavior slice.
+
+Local reward primitives demonstrate all method tones, open/completed sentence-
+case statuses, native disabled fields/actions, selected disabled candidates and
+read-only candidates. Desktop/mobile checks confirm native bounds/disabled states,
+52px method badges and zero backend requests. The example was visually inspected.
+Existing low-contrast colors remain unchanged: white on the points-label surface
+(#faf9ff) is approximately 1.05:1; instruction copy (#625d71) on #352186 is
+approximately 1.94:1. These are recorded for a separate accessibility/design
+change, not hidden by a behavior-neutral parity claim.
+
+All 331 unit/component tests and all 252 mocked browser cases pass (126 desktop,
+126 mobile), including every reward command regression. Application/Playwright
+TypeScript, lint, formatting, production build and whitespace checks pass.
+Verification builds disable Sentry uploads and tests do not use a live backend.
+Source and docs stayed frozen while browser jobs ran.
+
+| Slice             | Purpose and scrutiny                                                                                             | Mechanical evidence                                                                           |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Shared primitives | Native form labels, action rows, instructions, method/status markers, summary and candidate grouping             | Eighteen state comparisons plus eight focus/hover DOM/style/PNG matches                       |
+| Owned SCSS        | Move effective reward styling into tokens and owned partials; preserve inherited defaults and 650px/520px reflow | Forty-one retired arms, 104 unchanged retained arms, 1,206 unchanged ordered SCSS projections |
+| Local reference   | Demonstrate native disabled/read-only states without connected controllers                                       | Desktop/mobile native-state/dimension checks, visual inspection and zero backend requests     |
+| Existing journeys | Retain host/player coordination and reward command behavior                                                      | Full 331-unit and 252-browser suites; lint, TypeScript and production build                   |
+
+Cumulative review load before this report: **489 files, +33,993 / -22,217
+(56,210 lines)**. Reviewer pressure remains well above the approximate 800-line
+budget; review this styling slice separately from extraction and from later modal
+or contrast behavior changes using the map above. The full refactor stays active.
+
+## Phase 4v — reward modal focus and feedback lifecycle
+
+Reward overlays now compose the existing shared native Dialog. Opening focuses
+the close control; forward/reverse Tab stays inside; Escape, close and backdrop
+dismissal restore the opener without issuing a reward command. During start or
+award writes, close/backdrop/Escape dismissal is blocked and focus remains in the
+modal even when all controls disable. The host coordinator supplies one feedback
+slot: errors/notices render inside the open modal, then return to ordinary page
+feedback when it closes. Dismiss/retry actions stay reachable without waiting for
+a poll. Inline reward content retains its ordinary page behavior.
+
+Four initial desktop regressions failed before this change: focus stayed outside,
+close remained enabled during start/award writes, and command errors were absent
+from the modal. A further real-shaped mocked release refreshed the round to
+released, removed Continue reward flow and left focus on BODY. Both release and
+cancel regressions reproduced that case after the initial native-dialog fix.
+useNavigationFocus now attaches to SessionNavigation through an optional native
+ref. After successful release/cancel reloads, it waits for the commit and focuses
+the active navigation item only if focus fell back to the document. Existing
+control focus is preserved; detached refs are ignored and pending frames cancel
+on unmount. No command payload or write ordering changed. The local session
+reference demonstrates removal of a temporary host view and recovery to Game.
+
+Six new cases per viewport cover keyboard containment, close/Escape/backdrop
+restoration, pending start/award writes, reachable error dismissal/retry/notice
+feedback and release/cancel removal of the original opener. Original reward
+payload/selection regressions remain intact. Pending/retry fixtures were given
+explicit success responses after the harness correctly rejected unconfigured
+RPCs; application behavior was not changed for that correction.
+
+All 207 SCSS/legacy stylesheets, persistence modules and legacy game hooks are
+byte-identical to the saved styling checkpoint. Eighteen desktop/mobile panel
+comparisons match viewport geometry, inner DOM and sampled computed styles,
+excluding only the three root dialog attributes intentionally moved to the new
+native dialog wrapper. This is an intentional interaction/outer-DOM change, so
+there is no claim of whole-page DOM parity. All nine desktop panel PNGs and the
+mobile voting PNG match exactly. Mobile setup changes 46 pixels by one channel
+level; manual-award frame pixels differ by up to 53, with at most one level in a
+24px content inset; completed-state differences affect 47 pixels by at most four.
+Both manual-award images were visually inspected. These bounded raster/frame
+paint differences accompany native top-layer composition; exact mobile PNG parity
+is not claimed. No color, token, breakpoint or stylesheet was changed to hide them.
+
+A final unit run exposed an existing asynchronous join-test race: it awaited
+credential storage and immediately asserted routing. The assertion now waits for
+the route outcome itself; production join code is unchanged. All 331 unit tests
+across 53 files pass. All final 264 mocked browser cases pass (132 desktop,
+132 mobile), alongside application/Playwright TypeScript, lint, formatting,
+production build and whitespace checks. One earlier desktop process and the
+saved-baseline server terminated with SIGTERM; their handles were confirmed
+terminal before restarting. Final complete runs and comparisons use separate logs.
+Source and docs stayed frozen during browser jobs. Builds disable Sentry uploads;
+tests do not use a live backend.
+
+| Slice                    | Behavior and scrutiny                                                                       | Evidence                                                                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Native modal composition | Focus containment, inert background, dismissal and pending-write protection                 | Four fail-before cases; complete desktop/mobile modal cases and all prior reward commands                                               |
+| Feedback coordination    | Render and dismiss command/query feedback in the accessible modal, preserve inline feedback | Failed-command retry with identical payload; accessible in-modal error and notice actions                                               |
+| Return-focus lifecycle   | Recover when release/cancel refresh removes the opener without stealing other focus         | Two additional fail-before cases, both viewports; local backend-free preview recovery                                                   |
+| Styling boundary         | Keep existing panel appearance; accept documented native frame raster differences           | All 207 stylesheets unchanged; eighteen exact geometry/inner-DOM/computed-style comparisons; bounded PNG analysis and visual inspection |
+| Test synchronization     | Await actual join route outcome                                                             | Final 331-unit, 264-browser, TypeScript/lint/build gates                                                                                |
+
+Cumulative review load before this report: **493 files, +34,370 / -22,224
+(56,594 lines)**. Reviewer pressure remains above the approximate 800-line budget.
+Review native interaction and focus/feedback coordination separately from the
+preceding mechanical styling slice, using the map above. Existing reward contrast
+and confirmation-copy findings remain separate and unchanged.
+
+## Phase 4w — owned overlay frame and close-action styling
+
+The last reward-overlay CSS now belongs to shared presentation: ContentPanel
+overlay owns the centered/scrolled frame and scrim/shadow geometry; PanelHeading
+dismissible reserves room for the close action; Button overlay-dismiss retains
+the existing native text close mark, accessible label and disabled/focus states.
+The visual props add no modal lifecycle behavior. HostRewardRound still composes
+the existing Dialog and retains all previously verified feedback and return-focus
+coordination. Existing values became tokens; no intentional theme change occurred.
+The owned overlay modifier follows the session surface in its component partial,
+so the former important declarations are unnecessary.
+
+Three legacy selector arms were retired. The other 101 host selector arms keep
+their order, conditions and declarations. PlayerGame.css remains byte-identical;
+all 1,244 existing expanded SCSS projections remain an identical ordered
+subsequence. New partial registration was unnecessary because these are variants
+of existing owned components.
+
+Eighteen desktop/mobile reward-state comparisons match full rendered main DOM,
+geometry, sampled computed styles (including outline and transition properties)
+and PNG bytes exactly after only the explicit class renames/additions are
+normalized. Six additional comparisons cover close-button focus, hover and
+pending-write disabled states on both widths; these also match exactly. The
+baseline already uses the native Dialog, so the prior intentional top-layer paint
+differences do not apply to this styling comparison.
+
+The shared-overlay styleguide example uses local state, native fields/buttons
+and Dialog; it never mounts connected controllers. Its two new desktop/mobile
+cases verify local focus containment, guarded busy dismissal and restoration to
+the opener with zero backend requests. Shared component catalog notes describe
+the distinction between frame/layout props and modal behavior.
+
+All 331 unit/component tests and all 266 mocked browser cases pass (133 desktop,
+133 mobile), including every prior reward/modal/payload/privacy journey.
+Application/Playwright TypeScript, lint, formatting, production build and
+whitespace checks pass. Verification builds disable Sentry uploads; tests use no
+live backend. Source and documentation stayed frozen during browser jobs.
+
+| Slice                                 | Purpose and scrutiny                                                                                       | Evidence                                                                                  |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Shared frame/header/button            | Replace legacy override classes with explicit presentation props/variants; preserve native dialog behavior | Eighteen state plus six close-interaction DOM/style/PNG matches                           |
+| Owned SCSS and tokens                 | Preserve frame geometry and native button effects without important overrides                              | Three retired arms, 101 unchanged retained arms, 1,244 unchanged ordered SCSS projections |
+| Local reference and full verification | Keep modal busy/focus behavior backend-free and retain existing journeys                                   | Two new local cases; complete 331-unit/266-browser, TypeScript/lint/build gates           |
+
+Cumulative review load before this report: **494 files, +34,630 / -22,263
+(56,893 lines)**. Reviewer pressure remains above the approximate 800-line budget.
+Review this mechanical styling slice separately from the preceding modal behavior
+fix, using the map above. The full refactor remains active.
+
+## Phase 4x — shared upcoming stage and round-plan extraction
+
+HostSession now composes shared StagePreview and RoundPlan. A feature-private
+upcomingStageModel retains next-round availability, active-break precedence,
+stage copy, resume-round fallback and the existing challenge illustration mapping.
+RoundPlan composes detailed RoundSelector; both detailed choices and existing chip
+choices use RoundChoice. Shared views receive presentation records/capabilities
+and callbacks, never backend, route or storage access. The feature still guards
+live selection and invokes the original autoplay/round command path. HostSession
+is now 1,216 lines; its timer, polling and command controllers are unchanged.
+
+Six new production cases per viewport passed against the original presentation
+before extraction. They cover forward/backward selection, selected/disabled state,
+autoplay confirmation and cancellation, planned-break-before-round write order,
+active-break copy/edit-action precedence and completed read-only state. The
+selection cases additionally hold the command pending, verify both choices disable
+and confirm Enter cannot issue a duplicate command; those strengthened cases also
+passed against the original baseline. An initial active-break fixture seeded only
+the server row; it was corrected to seed the existing host clock's browser-storage
+hydration source as well. No application timer behavior changed for the fixture.
+
+Twelve desktop/mobile normal, planned-break, active-break, completed, last-round
+and autoplay comparisons match raw rendered main DOM, geometry, sampled computed
+styles and PNG bytes exactly, with no class normalization. Two more pending-write
+comparisons also match exactly. Deterministic clock installation prevents ticking
+from contaminating those render comparisons; real command/timer behavior remains
+covered by browser and unit regressions. All 207 stylesheets, the host timer hook,
+session data/polling hook and round command boundary are byte-identical to the
+saved checkpoint. Legacy classes remain deliberately for the separate styling
+slice, rather than claiming extraction also completed the SCSS migration.
+
+The backend-free local stage/plan reference demonstrates selection, read-only
+state, highlighted break presentation and stage callbacks. Its two viewport cases
+assert zero backend requests. The first full run exposed two styleguide dialog
+paths per viewport exceeding the helper's 160 forward-Tab budget after the new
+examples expanded the page. The helper now accepts an explicit reverse direction;
+the two cases assert initial document focus and use native Shift+Tab to the opener.
+The budget remains 160, no focus is assigned programmatically, and the complete
+keyboard interaction still runs. Both corrected cases pass on both widths.
+A locator expression was also simplified after a first formatting pass produced
+a chain that Prettier changed on its next check.
+
+All 331 unit/component tests across 53 files pass, along with lint, formatting,
+application/Playwright TypeScript, production build and whitespace checks. The
+final desktop run passes 140 cases. The interrupted mobile run lost its terminal
+handle before its final summary; a subsequent mobile attempt lost its frontend
+server after 17 cases and failed with connection refusals. After confirming no
+listener remained, the final mobile verification ran with its dummy-config server
+owned and monitored by the same process, stopping immediately on server failure.
+That complete run passes all 140 mobile cases: 280 browser cases in total. Source
+and docs stayed frozen during browser runs. Verification builds disable Sentry
+uploads, and ordinary tests never use a live backend.
+
+| Slice                                      | Purpose and scrutiny                                                                                                | Evidence                                                                                                           |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| Feature projection and shared presentation | Keep stage precedence/copy and command coordination in the feature; share stage, plan and both round-option layouts | Fourteen exact raw DOM/style/PNG comparisons; unchanged timer/query/command boundaries and all 207 stylesheets     |
+| Production regressions                     | Preserve forward/backward, autoplay, planned-break, active-break, completed and pending-write contracts             | Twelve new viewport cases established before extraction; strengthened pending cases also pass against the baseline |
+| Local reference and keyboard paths         | Keep examples backend-free; navigate expanded references through native keyboard paths                              | Two new local cases; corrected reverse-Tab journeys with unchanged budget; final full 280-case browser coverage    |
+
+Cumulative review load before this report: **501 files, +35,275 / -22,263
+(57,538 lines)**. Reviewer pressure remains above the approximate 800-line budget.
+Use the map above to review regression additions separately from the mechanical
+extraction and upcoming styling conversion. The full refactor remains active.
+
+## Phase 4y — owned stage and detailed round styling
+
+StagePreview, detailed RoundSelector and RoundChoice now own their BEM SCSS.
+Stage labels and illustrations compose Badge/IconBadge variants; round numbers
+compose CountBadge and detailed choices use the shared native Button. Existing
+legacy design values were promoted or derived without redesign. Feature stage
+projection, callbacks, incoming order, timer/polling and command boundaries are
+unchanged. The local stage/plan example exercises the migrated primitives and
+its catalog notes describe their owned styling.
+
+Verification completed with source and documentation frozen during browser jobs:
+
+- Lint, strict TypeScript/production build and Playwright type checks pass;
+  Sentry uploads were disabled. All **331 unit/component tests** pass.
+- The full mocked suite passes **280 browser cases**: 140 desktop and 140 mobile.
+- **22 exact DOM, geometry, computed-style and PNG comparisons** pass: twelve
+  state/viewport combinations, two pending-write combinations and eight focused
+  or hovered combinations. All standard computed properties inside migrated
+  subtrees were compared; only intentional class renames were normalized.
+- The comparison caught a missing selected-row outline, which was restored before
+  the final passing comparisons. Focus, hover and selected-disabled appearance
+  are included in the evidence rather than inferred from default screenshots.
+- CSS parsing confirms **37 retired legacy selector arms**, **64 retained arms**
+  with identical order, conditions and declarations, byte-identical PlayerGame
+  CSS, and **1,247 previous expanded SCSS projections** retained unchanged and
+  in order. Browser comparisons establish effective cascade parity.
+
+| Review slice                 | Purpose / scrutiny                                                        | Mechanical proof                                                           |
+| ---------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Shared stage and round views | Verify native element/attribute preservation and variant composition      | Exact DOM and all standard computed properties within migrated subtrees    |
+| Owned styles and tokens      | Preserve legacy palette, selected outline, spacing and interaction states | CSS projections plus 22 exact viewport/state PNG comparisons               |
+| Feature boundaries           | Keep models, timers, polling and write ordering outside presentation      | Unchanged feature controllers; 331 unit and 280 mocked browser regressions |
+
+Cumulative review load before this report: **503 files, +35,361 / -22,355
+(57,716 lines)**. Reviewer pressure remains above the approximate 800-line budget;
+review this mechanical styling slice separately from earlier extraction and
+behavior changes. This is a verified checkpoint, not full-refactor completion.
+
+## Phase 4z — shared panel layout
+
+The host controls invitation and round overview now compose PanelGrid. This
+presentation-only native div accepts ordinary attributes and children. Its BEM
+partial owns the existing wider-first-column layout, 16px gap, start alignment
+and 900px stacking breakpoint; the existing 255px side-column minimum was
+promoted unchanged. No reads, timers, commands, panel order or child components
+moved. The local host-frame example now demonstrates two panels and catalog
+notes describe the layout contract.
+
+The five overlapping legacy grid selector arms were consolidated into the owned
+block. The remaining **59 HostLiveGame selector arms** retain their exact order,
+conditions and declarations. PlayerGame CSS is byte-identical, and all **1,271
+previous expanded SCSS projections** remain unchanged in order.
+
+Verification:
+
+- Lint, formatting, strict TypeScript/production build and all **331 unit tests**
+  pass. Verification builds disable Sentry uploads.
+- **Twelve exact before/after DOM, geometry, computed-style and PNG comparisons**
+  pass. Normal layout was compared at 1280, 901, 900, 850, 640 and 393px; planned
+  break, active break and completed states were compared at 1280 and 393px.
+  Only the grid class rename was normalized; all standard computed properties
+  inside the migrated grid and its descendants were checked.
+- **28 affected browser regressions** pass: fourteen per viewport, covering round
+  commands, pending-write locking, break/read-only states, local examples and
+  native keyboard tours. The preceding stage/round checkpoint also passed the
+  full 280-case browser suite. This slice did not rerun unrelated journeys.
+- Source and documentation remained frozen during browser jobs. All backend
+  interactions used deterministic mocks; no live writes or deployments occurred.
+
+| Review slice                   | Purpose / scrutiny                                              | Proof                                                                                              |
+| ------------------------------ | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| PanelGrid and host composition | Preserve the div, child order and native attributes             | Twelve exact rendered comparisons; feature controller code unchanged                               |
+| Owned grid styles              | Consolidate the effective cascade without moving the breakpoint | Six normal widths including 901/900px, six phase comparisons, retained CSS projections             |
+| Local reference                | Demonstrate two-panel composition with local controls/context   | Existing full keyboard tour and action journey passes on desktop/mobile with zero backend requests |
+
+Cumulative review load before this report: **505 files, +35,474 / -22,370
+(57,844 lines)**. Reviewer pressure remains far above the approximate 800-line
+budget. Review the small layout consolidation separately from the earlier architectural extraction,
+shared styling and intentional behavior changes. The full refactor stays active.
+
+## Phase 5a — retire obsolete host compatibility selectors
+
+Removed thirty obsolete selector arms and stale commentary from HostLiveGame.css,
+reducing it from 291 to 84 lines. The remaining twenty-nine active selector arms
+retain their exact order, conditions and declarations. The stylesheet still owns
+transitional frame focus/motion and comic control overrides; this slice does not
+claim that host styling migration is complete.
+
+The caller/composition audit distinguished old classes from active equivalents:
+
+- The live route composes HostSession through HostGuard's Outlet and the shared
+  SessionPage. It does not nest HostManagement inside HostShell/HostWorkspace.
+  The old `.host-portal--app:has(...)` layout/header/navigation overrides therefore
+  describe the retired wrapper composition. Local host-shell examples contain
+  local workspace content; host-frame examples are separate session previews.
+- Exact old avatar/team classes have no TSX callers. Current shared Avatar and
+  team presentation retain their owned classes. Similar longer player class
+  names are separate selectors and were not removed.
+- Host alerts remain used in login/planning/workspace routes, outside the live
+  host frame. Their global styles stay intact; only obsolete live-frame
+  descendant overrides were retired. Live host feedback uses SessionFeedback.
+- Legacy player header/profile/titlebar classes remain in PlayerDemo, outside
+  HostManagement. Their player styles remain intact; the obsolete host-frame
+  descendant overrides were retired.
+
+Mechanical verification:
+
+- All **671 other source, style and test files** are byte-identical to the
+  preceding checkpoint. PlayerGame CSS is byte-identical; all **1,273 expanded
+  SCSS projections** are exactly identical. No runtime source, payload, timer,
+  query, subscription or command changed in this cleanup.
+- **24 exact DOM, geometry, all-standard-computed-property and PNG comparisons**
+  pass: twelve live-state/width combinations and each of six lobby steps at
+  1280/393px. The live comparisons include 901/900px stacking boundaries, planned
+  and active breaks, and completed sessions. Every retired selector is also
+  asserted to match zero elements throughout these rendered cases.
+- The full mocked suite passes **280 browser cases**: 140 desktop and 140 mobile.
+  All **331 unit/component tests**, lint/formatting, strict TypeScript build and
+  Playwright type checks pass. Sentry uploads were disabled; no live backend
+  writes, database changes or deployment occurred.
+- Source and documentation were frozen during browser jobs; monitored server
+  ownership ended cleanly when both projects completed.
+
+| Review slice                     | Purpose / scrutiny                                                                 | Proof                                                                                                           |
+| -------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Obsolete wrapper selectors       | Verify HostGuard/SessionPage composition and separate workspace/reference wrappers | Caller audit, zero matches in 24 rendered cases and full route/browser regressions                              |
+| Avatar/team/header/alert aliases | Distinguish exact retired descendants from active player/workspace classes         | Source/composition audit, byte-identical active styles and exact rendered comparisons                           |
+| Retained frame rules             | Preserve active buttons, focus and reduced-motion behavior for the next migration  | Identical retained selector declarations/order/conditions, exact SCSS projections and 280 passing browser cases |
+
+Cumulative review load before this report: **505 files, +35,331 / -22,433
+(57,764 lines)**. Reviewer pressure remains above the approximate 800-line budget;
+review the deletion/caller audit separately from PanelGrid and earlier extraction
+or intentional behavior slices. Full-refactor completion remains unproven.
+
+## Phase 5b — retire the live-host stylesheet
+
+HostLiveGame.css and its import are removed. The final twenty-nine selector arms
+now resolve through owned SCSS or were retired with obsolete context. Host frame
+focus and reduced-motion rules live in HostManagement's block; HTML/body host
+surface rules live in the global layer. Existing values were promoted unchanged
+into tokens. The intentionally retained reduced-motion important declarations
+preserve the original behavior.
+
+Button session-action, session-secondary and session-ghost explicitly own the
+live pink/ghost appearances. Session-send composes the action appearance; round
+controls preserve their distinct base/hover/active shadows. Shared SessionInvite
+and feature reward/submission/mission views select these appearances directly.
+The matching local references and catalog notes are updated, including native
+button/link semantics and disabled examples. A first comparison caught the two
+invitation controls still using the old appearance variants; they were migrated
+before the final passing comparisons.
+
+Removed the three old frame classes, thirteen unused palette aliases, three
+unused palette tokens, the superseded reward-row context override and an
+unreachable nested-workspace mobile rule. The `--lime` alias still has a live
+consumer and is retained. Secret-review cards continue to use the existing
+stacked ContentPanel gap; their overridden legacy gap/class was removed.
+HostPortal.css, HostPlanning.css, PlayerGame.css and remaining utility consumers
+are separate migration work; this does not claim whole-app completion.
+
+Mechanical evidence and verification:
+
+- **1,270 prior expanded SCSS projections** remain unchanged and in order.
+  Three specific context/palette rows were retired or replaced. All ordinary
+  HostManagement content declarations are identical; only thirteen custom-property
+  definitions were removed from that rule. PlayerGame CSS is byte-identical.
+- **72 backend boundary, model and feature-controller modules** are byte-identical.
+  Runtime source changes select presentation variants/classes and remove the
+  retired stylesheet import; RPCs, persistence, polling and timers are unchanged.
+- **82 exact rendered comparisons** pass, checking DOM, geometry, standard
+  computed properties and PNG bytes in their stated scopes. Intentional class
+  additions/removals are normalized; retired custom-property definitions are
+  outside standard-computed-property parity claims.
+- The full mocked suite passes **280 browser cases**: 140 desktop and 140 mobile.
+  All **331 unit/component tests**, lint/formatting, strict TypeScript production
+  build and Playwright type checks pass. Sentry uploads were disabled.
+- Source/documentation stayed frozen during browser jobs. Owned servers ended
+  cleanly. No live backend writes, schema changes or deployment occurred.
+
+| Review slice                         | Purpose / scrutiny                                                                | Proof                                                                                                                                   |
+| ------------------------------------ | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Frame, surface and class retirement  | Preserve native focus, motion and global load-order behavior                      | 24 full live/lobby comparisons; four additional full comparisons include all standard HTML/body/root properties and geometry            |
+| Explicit shared button appearances   | Preserve palette, native semantics, base/hover/active shadows and caller states   | 18 full reward-state comparisons; twelve modal-panel focus/hover/active comparisons; existing command and pending-write regressions     |
+| Native controls and reduced motion   | Preserve invitation/round interactions, field focus and motion preferences        | 24 target-control/frame comparisons: focus, hover, active, keyboard field focus, mouse checkbox focus and reduced motion at both widths |
+| Local reference / feature boundaries | Demonstrate shared appearances with local state; keep backend work in controllers | Updated local examples/catalog, backend-free browser journeys, 72 byte-identical modules and complete 280-case regression suite         |
+
+Cumulative review load before this report: **506 files, +35,409 / -22,458
+(57,867 lines)**. Reviewer pressure remains above the approximate 800-line budget.
+Review this frame/button styling slice separately from earlier controller
+extraction and intentional behavior changes using the map above.
+
+## Phase 5c — shared team choices and host/player name form
+
+TeamNameForm now owns the controlled team-name input/native form used by the
+participant picker and both host lobby team-creation entry points. Its shared
+input retains the existing accessible name and 40-character limit. Callers own
+placeholder projection, the submit control, native button type, busy state,
+trimming and commands. The participant input remains editable during pending
+operations, matching the existing contract.
+
+ChoiceOption receives label/description, visual selected state, native button
+attributes and callbacks. ParticipantTeams retains capacity, membership and
+status-copy projection. The host CreateTeamForm adapter retains the team-count
+placeholder and lobby button. No query, storage, timer or command moved into
+shared presentation. Local references demonstrate both form variants and choice
+states without mounting connected controllers.
+
+This is the independently verified extraction checkpoint. Existing legacy
+classes/styles remain; their owned SCSS conversion is queued next. Accessibility
+behavior changes remain separate.
+
+Verification:
+
+- **Eight production browser regressions** were established against the original
+  UI before extraction. They cover selected/full capacity, pending action locks,
+  failed selection without a success refresh, creation trimming/failure retry,
+  native input bounds, exact token/join-code/team payloads and live selection
+  returning to the shared challenge.
+- Two additional local-reference cases verify selection, creation, busy controls
+  and both form variants with zero backend requests. The final strengthened
+  journey walks from the start using native Tab/Shift+Tab, typing, Space and
+  Enter; it passes on both viewports. The checkbox above the form is reached
+  with native reverse Tab; the existing helper budget is unchanged.
+- **Fourteen exact raw DOM, geometry, all-standard-computed-style and PNG
+  comparisons** pass without class renames: ten player state/viewport cases
+  (lobby, unassigned live, pending choice, pending creation and creation error)
+  and four host cases (both team-form lobby steps at 1280/393px).
+- All **210 stylesheet files** are byte-identical, with the same file set.
+  **72 backend boundary, model and feature-controller modules** are byte-identical.
+- The full suite passes **290 mocked browser cases**: 145 desktop and 145 mobile.
+  The final keyboard-only reference strengthening was then rerun on both
+  viewports; production source was unchanged. All **331 unit/component tests**,
+  lint/formatting, strict TypeScript production build and Playwright type checks
+  pass. Verification builds disable Sentry uploads.
+- Source/documentation were frozen during browser jobs. All traffic used mocks;
+  no live backend writes, deployment or schema changes occurred.
+
+| Review slice                      | Purpose / scrutiny                                                                            | Proof                                                                                                        |
+| --------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Regression fixtures and journeys  | Preserve team RPC arguments, capacity, locks, error recovery and refresh behavior             | Eight passing viewport cases against the original UI and after extraction; complete mocked suite             |
+| Shared choice and form extraction | Reuse the native form across host/player and keep domain decisions in feature adapters        | Fourteen exact raw render comparisons; all 210 stylesheet files and 72 controller/boundary modules unchanged |
+| Local references                  | Demonstrate selected/full/busy choices and both controlled forms without backend reads/writes | Two full native-keyboard journeys after strengthening; zero backend requests                                 |
+
+The comparisons also confirmed an existing invisible team heading: white text
+on a white card, with no shadow (contrast 1:1). It is recorded with the two
+existing reward contrast findings for a separate accessibility slice. A
+review-only proposal uses existing palette colors: team heading inherits
+`#17102c` (18.31:1), award-points label uses `#23166e` on its existing pale
+surface (14.21:1), and reward instruction copy uses white on its existing purple
+surface (12.26:1). The latter two current ratios are 1.05:1 and 1.94:1.
+Approval was requested under AGENTS.md's design-change rule and remains pending
+at this checkpoint. No production colors changed. Proposal screenshots and
+measurements are in `/tmp/chaos-crawl-contrast-review/` for this session.
+
+Cumulative review load before this report: **511 files, +35,940 / -22,458
+(58,398 lines)**. Reviewer pressure remains above the approximate 800-line budget.
+Review regression additions, the raw markup extraction and local references as
+separate slices using the map above.
+
+## Phase 5d — owned team styling and shared primitives
+
+Participant team selection now composes ContentPanel, PanelHeading, Overline and
+CountBadge choice variants, spaced CandidateList and shared Button team-create.
+ChoiceOption owns its BEM block and composes Avatar through a choice variant
+that preserves the legacy 37px initial marker. TeamNameForm's owned block supplies lobby and participant
+variants; the prior team-create-form partial is retired. Local team references
+compose these same primitives and the catalog documents their contracts.
+
+The player card, selected/full choices, native input and submit control retain
+their existing appearance. Existing colors/font values were promoted or reused;
+there is no palette redesign. The old heading contrast defect remains pending
+its separate approval request. Capacity, membership, trimming, busy behavior,
+placeholder projection, callbacks and commands remain with the existing callers.
+
+Removed **17 migrated PlayerGame selector arms** while retaining **341** with
+identical order, conditions and declarations. Generic player heading, eyebrow
+and count rules retain their other callers and were not retired in this slice.
+The other four legacy stylesheets are byte-identical. All **1,300 previous
+expanded SCSS projections** remain unchanged in order after the two explicit
+lobby form selector renames. Both feature coordinators, the host team-form adapter
+and **72 backend/model/controller modules** are byte-identical.
+
+The boundary comparison caught an implementation error before completion: the
+new styles initially used the project's 520px small-screen token, but the original
+team rules switch at **480px**. The migration now promotes that original value
+to the player compact breakpoint. Both the actual 480/481px boundary and the
+520/521px pair were checked after correction; the full state comparisons were
+rerun against the corrected source.
+
+Verification completed with source/documentation frozen during browser jobs:
+
+- **42 exact render comparisons** pass. Fourteen full-page cases cover player
+  lobby/live, pending choice/creation, creation errors and both host lobby form
+  steps at desktop/mobile widths. Four more full-page cases check 480, 481, 520
+  and 521px. Twenty-four control cases cover selected/unselected/full choices,
+  enabled/disabled submit controls and native inputs through focus, hover,
+  keyboard-active and mouse-focus states at 1280/393px.
+- Comparisons check native DOM/attribute/text values, geometry, every standard
+  computed property in the captured subtree and exact PNG bytes. Only the explicit
+  class additions/renames are normalized; the property/state checks are not
+  inferred from default screenshots.
+- The complete mocked suite passes **290 browser cases**: 145 desktop and 145
+  mobile. All **331 unit/component tests**, lint/formatting, strict TypeScript
+  production build and Playwright type checks pass. Sentry uploads were disabled.
+- No live backend writes, schema changes, deployment or new dependencies occurred.
+  Owned test servers ended cleanly after both browser projects completed.
+
+| Review slice                      | Purpose / scrutiny                                                                                             | Proof                                                                                                                   |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Team view composition             | Share panels, typography/counts, avatar, candidate layout and submit control while callers retain domain rules | Fourteen exact state/form render comparisons, unchanged coordinators/controllers and team command regressions           |
+| Owned form/choice styles          | Retire legacy selectors and preserve host/player form variants                                                 | Retained selector manifest, 1,300 unchanged expanded projections and exact renders                                      |
+| Responsive and interaction states | Preserve the original compact boundary and native control behavior                                             | Four boundary cases plus 24 exact focus/hover/active/disabled/input cases; full keyboard journeys in the 290-case suite |
+| Local contract                    | Show new shared variants with local state only                                                                 | Updated examples/catalog; backend-free selection/creation/busy tests on both viewports                                  |
+
+Cumulative review load before this report: **512 files, +36,237 / -22,543
+(58,780 lines)**. Reviewer pressure remains above the approximate 800-line budget;
+review this styling/composition slice separately from the prior raw extraction
+and regression additions. Use the map above to distinguish mechanical CSS work
+from control/responsive behavior that deserves scrutiny.
+
+## Phase 5e — private-mission native dialog and regressions
+
+PrivateMissionDialog now composes the shared native Dialog with its visible
+heading and description linked by ID. Play remains the only acknowledgement:
+Escape and backdrop clicks cannot accept or dismiss a mission. The participant
+controller still owns ordering, phase visibility, acknowledgement and the
+separate seen/dismissed storage keys. The local styleguide example uses state
+only and demonstrates native keyboard acceptance and opener restoration.
+
+This is an intentional accessibility behavior slice. The browser top layer now
+inerts the page and dims/covers its navigation; the old fixed overlay allowed
+navigation to paint above the backdrop. Initial focus goes to Play, Tab stays
+inside, and unmounting for secret review closes the dialog without acknowledging
+it. An already-open player tour regains focus after Play. Neither production
+styles nor backend/controller behavior changed in this slice.
+
+Verification:
+
+- The complete mocked suite passes **310 browser cases**, 155 desktop and 155
+  mobile. All **331 unit/component tests**, lint/formatting, strict TypeScript
+  production build and Playwright type checks pass. Verification builds disabled
+  Sentry uploads; no live backend writes or schema changes occurred. Both owned
+  browser projects and their test server terminated cleanly.
+- Seven functional cases per viewport passed against the original announcement
+  before the modal move. Ten cases per viewport now cover multiple missions,
+  explicit acceptance, reload/navigation, unavailable or malformed storage,
+  reward/review precedence, completed-card dismissal, native focus/text selection,
+  tour stacking and the local styleguide.
+- All 211 stylesheet files and both host/player coordinators remain byte-identical
+  to the prior checkpoint. The 34 existing .ts files under host-live/session-player
+  also remain byte-identical.
+- Ten desktop/mobile panel comparisons cover focus, hover, keyboard-active,
+  long-copy and zero-point cases. Inner native markup matches after normalizing
+  only the four ARIA attributes moved to the dialog. Geometry matches. Computed
+  styles match except the verified Chromium user-agent user-select reset from
+  auto to text; physical selection remains tested.
+- Nine panel PNG pairs are byte-identical. The mobile keyboard-active pair has
+  56 differing rounded-corner pixels (maximum channel delta 16), with no changes
+  outside the corner paint band. Full viewport screenshots intentionally differ
+  because native modality now covers/inerts the navigation. This is not a claim
+  of full viewport visual parity.
+
+| Review slice                | Scrutiny                                                                                       | Proof                                                                              |
+| --------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Receipt and acknowledgement | Ordering, persistence failures, phase precedence and separate dismissal                        | Original-before-move regressions and mocked production journeys                    |
+| Native dialog integration   | Focus containment, inert page, explicit acceptance, phase cleanup and stacked-tour restoration | Desktop/mobile keyboard and selection journeys; unchanged controllers              |
+| Panel appearance            | Existing body and interaction geometry                                                         | Ten computed/DOM comparisons, nine exact PNGs and bounded corner raster difference |
+| Local contract              | No storage or backend work in the example                                                      | Controlled local example and intercepted-network assertions                        |
+
+Cumulative review load before the final report note: **515 files, +36,914 /
+-22,543 (59,457 lines)**. This exceeds the approximate 800-line review budget.
+Review the receipt regressions, native accessibility behavior and local example
+as separate slices using the map above; the retained styling is unchanged.
+
+The next slice moves the retained announcement body/frame classes into owned
+SCSS and shared presentation primitives. Preserve the explicit Play contract and
+native modal lifecycle; do not combine this with the pending contrast redesign.
+
+## Phase 5f — owned announcement styling and shared reveal primitives
+
+PrivateMissionDialog now composes reveal variants of Dialog, DialogPanel,
+PanelHeading, Badge, IconBadge, Overline and Button. Native tags, heading and
+description IDs, copy and explicit Play callbacks are retained. The controlled
+local example and component catalog document the variants without connecting
+to backend or storage. Nineteen announcement rules were retired from
+PlayerGame.css; no announcement classes remain in production markup.
+
+The existing scrim and points colors, width and text-outline measurements are
+promoted to project tokens without a palette change. The small outlined display
+type fragment is shared by the label and heading; component declarations remain
+in their owned partials. Query, timer, submission, storage and phase coordination
+remain in the existing feature controllers.
+
+Verification completed with source/documentation frozen during browser jobs:
+**310 browser cases** pass (155 desktop and 155 mobile), alongside all **331
+unit/component tests**, lint/formatting, the strict TypeScript production build
+and Playwright type checks. Sentry uploads were disabled. No live backend writes,
+new dependencies, schema changes or deployment occurred.
+
+Mechanical evidence:
+
+- All 322 retained player selector arms preserve their order, conditions and
+  declarations. The other four legacy stylesheet sources are byte-identical.
+  All 1,319 prior expanded SCSS rule projections remain an identical ordered
+  subsequence; new rules are restricted to explicit reveal variants.
+- Ten desktop/mobile render comparisons cover focus, hover, keyboard-active,
+  long copy and zero points at 1280/393px. They compare the entire native dialog:
+  DOM/attributes after seven explicit class replacements, all geometry, every
+  standard computed property, byte-exact panel PNGs and byte-exact viewport PNGs.
+  No native selection reset, ARIA or style normalization is needed in this slice.
+- Four additional inline-host comparisons cover focus and keyboard-active states
+  at both widths. Their final captures match DOM, geometry, computed styles and
+  both PNGs exactly. An earlier desktop-active capture differed only in 53 panel
+  and 57 viewport pixels, all within rounded panel/focus-outline corners, with
+  maximum channel differences of 16 and 14 respectively. Repeating with unchanged
+  source yielded exact PNGs; record this bounded raster variability rather than
+  claiming every host capture was byte-identical.
+- Both session coordinators remain byte-identical to the native-dialog checkpoint.
+
+| Review slice       | Scrutiny                                                    | Proof                                                           |
+| ------------------ | ----------------------------------------------------------- | --------------------------------------------------------------- |
+| Shared composition | Native tags, callback wiring and explicit variant selection | Normalized full-dialog DOM and command/keyboard regressions     |
+| Owned SCSS         | Cascade, token values and responsive/interaction states     | Retained selector/rule projections and exact render comparisons |
+| Local contract     | Presentation-only examples and accurate component notes     | Backend-free preview regression and catalog updates             |
+
+This source slice changes 24 files, +191/-189 raw lines before documentation.
+Review the shared variant declarations separately from the native-dialog behavior
+slice above; callbacks, storage and phase coordination are unchanged here.
+
+Cumulative review load before this final report note: **516 files, +37,528 /
+-23,103 (60,631 lines)**. Reviewer pressure remains above the approximate
+800-line budget. The phase map separates mechanical styles, shared composition
+and the previously verified native accessibility behavior.
+
+## Phase 5g — join/rejoin regressions and controlled access views
+
+Join now adapts URL code/entry mode and the successful redirect to PlayerAccess.
+usePlayerAccess owns form steps, values, validation, pending state, feedback and
+credential storage. PlayerAccessView and PlayerDetailsFields are controlled
+presentation; shared GameCodeInput owns the six-digit native input and decorative
+cells. The local reference uses its own state and never mounts the connected
+controller. Its section root avoids nesting a main landmark in the styleguide.
+
+The typed SDK access function in lib/playerAccess.ts preserves the original RPC
+payload and SDK error objects. The existing feedback distinguishes Error instances
+from plain database errors, so normalization is deliberately outside this neutral
+extraction. Its JoinResult is a frontend consumption contract, not a generated or
+verified deployed schema. The original broad component assertion is removed.
+
+Verification completed with source/documentation frozen during browser jobs:
+**330 mocked browser cases** pass, 165 desktop and 165 mobile, alongside all
+**331 unit/component tests**, lint/formatting, strict TypeScript production build
+and Playwright type checks. The interrupted run exposed the keyboard helper cap;
+its correction was followed by a clean full run. Sentry uploads were disabled;
+no live backend writes, schema changes, new dependencies or deployments occurred.
+
+Evidence:
+
+- Nine production journeys passed on desktop/mobile before extraction, covering
+  URL/input filtering, native bounds and Back retention, trimmed payloads, isolated
+  V2 credentials, replaced history/welcomeBack state, name-free rejoin, failed
+  retries/mode changes, pending editable fields, incomplete responses, storage
+  failure and query-code hydration with entry-only mode selection.
+- Those nine cases plus the backend-free local form reference pass after extraction
+  on both viewports. The local test uses native keyboard traversal/acceptance,
+  toggles pending state and checks that no credentials or backend requests exist.
+- The full run exposed the keyboard helper's fixed 160-Tab cap after adding a
+  styleguide example. Its bound now derives from the page's potential controls;
+  it still traverses native Tab/Shift+Tab and verifies the requested focus target.
+  The previously failing local review journey passes on both viewports. No
+  scripted focus, disabled checks or suppressed assertions were introduced.
+- All 212 stylesheet files are byte-identical to the prior checkpoint. Twenty
+  raw render comparisons at 1280/393px cover empty/filled code, empty/valid join
+  details, rejoin code/details, failed/pending submission and explicit hover/active
+  states. Native DOM, attributes, input values, geometry and every standard
+  computed property match without class or attribute normalization.
+- Sixteen final viewport PNG pairs are byte-identical. The four error/active pairs
+  differ by 4–5 pixels each, maximum channel delta 3, in narrow field/control edge
+  regions. The raw differences are retained; this is not a claim that every PNG
+  was byte-identical. The baseline assets were copied rather than symlinked so
+  Vite development URLs match without normalizing the rendered markup.
+
+| Review slice                     | Purpose / scrutiny                                                             | Evidence                                                                    |
+| -------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| Regression additions             | Native validation, payload/storage/history contracts, pending/failure recovery | Original-route baseline and post-extraction desktop/mobile journeys         |
+| Route/controller separation      | Entry-only mode, query code hydration, storage and successful redirect         | Raw rendered DOM parity and unchanged payload/feedback assertions           |
+| Controlled presentation          | Native tags, labels, IDs, values and callbacks                                 | Twenty DOM/computed comparisons and recorded screenshot deltas              |
+| SDK boundary and local reference | Preserve SDK error semantics; never connect local demos                        | Failed/incomplete/storage regressions and zero-network/local-storage checks |
+
+The source slice is 14 files, +888/-270 raw lines before configuration and
+report changes, above the approximate 800-line review budget. Review the regression
+additions separately from the mechanical component moves and access typing.
+The broader cumulative refactor remains substantially above that budget.
+
+The original pending-join completion remains for a separate lifecycle slice:
+late responses can still complete storage/navigation after the user leaves or
+changes the target code. Add regression coverage for that behavior before fixing
+it; do not claim this neutral extraction solved cancellation or stale commands.
+Follow with owned join styles and the remaining player demo/V2/legacy migration.
+
+Cumulative review load before this final report note: **527 files, +38,467 /
+-23,368 (61,835 lines)**. Reviewer pressure remains high. Use the phase maps to
+review regressions, structural extraction, styling and intentional accessibility
+behavior separately. The local checkpoint preserves the verified state; it does
+not mark the full refactor complete.
+
+## Queued phases for the full refactor
+
+Continue with separately tested pending-join lifecycle handling: prevent a late
+response from storing credentials or navigating after leaving the feature or
+changing its target code. Preserve the existing pending/editable-field contract
+and RPC payload. The route/controller/presentation extraction is verified.
+Then migrate owned join styles and shared form/control appearances, followed by
+local player demo reuse and remaining player UI. Preserve the verified mission
+reveal's explicit Play acceptance, storage keys and reward/review precedence.
+Preserve conditional visibility and query,
+subscription and timer boundaries. The three recorded contrast changes still
+await the existing design input request; do not treat automatic goal continuation
+as approval. Then continue through
+remaining player/join/demo and shared host/remaining V2 migration. HostPortal and
+HostPlanning utilities, including the now-unreferenced legacy cc-round-number
+selector, still need caller audits and owned-style migration/cleanup. Preserve
+the shared host/player visual base. Keep the recorded reward contrast and
+confirmation-copy findings in separate tested behavior/design slices.
+Preserve controller boundaries and verify each affected state before retiring
+its legacy rules.
+Continue through remaining
+player/join/demo styles
+and V2 route composition, preserving effective order and rendered behavior.
+Follow with remaining V2/legacy utility migration, remove obsolete CSS/Tailwind
+tooling after its final consumer is gone, and finish the remaining tested
+accessibility/lifecycle findings. Run the final desloppify audit and address
+findings within the full refactor scope.
+
+Mocked tests cannot verify deployed Supabase policy, schema or atomic scoring.
+Keep those backend claims separate from frontend refactor completion and use only
+an explicitly configured disposable backend for any live verification.

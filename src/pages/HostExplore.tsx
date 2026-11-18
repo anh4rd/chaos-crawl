@@ -1,3 +1,4 @@
+import Button from "../components/ui/Button";
 import {
   useCallback,
   useEffect,
@@ -6,7 +7,7 @@ import {
   type FormEvent,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import HostShell from "../components/host/HostShell";
+import HostWorkspace from "../features/host-workspace/HostWorkspace";
 import Icon from "../components/ui/Icon";
 import { supabase } from "../lib/sessionSupabase";
 import "../styles/HostPortal.css";
@@ -1053,7 +1054,7 @@ export default function HostExplore() {
         : visibleRoutes.length;
 
   return (
-    <HostShell
+    <HostWorkspace
       title="Explore the library"
       subtitle="Browse ideas, save inspiration and contribute challenges to the shared catalogue."
       showCreate
@@ -1127,9 +1128,10 @@ export default function HostExplore() {
                   </small>
                 </div>
                 <div className="host-community-review-actions">
-                  <button
+                  <Button
                     type="button"
-                    className="host-button host-button--lime"
+                    variant="comic-lime"
+                    fullWidth={false}
                     disabled={reviewingId === submission.id}
                     onClick={() =>
                       void reviewSubmission(submission, "approved")
@@ -1137,17 +1139,18 @@ export default function HostExplore() {
                   >
                     <Icon name="check-circle2" className="icon--size-15" />{" "}
                     Approve
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
-                    className="host-button host-button--secondary"
+                    variant="comic-secondary"
+                    fullWidth={false}
                     disabled={reviewingId === submission.id}
                     onClick={() =>
                       void reviewSubmission(submission, "rejected")
                     }
                   >
                     <Icon name="x-circle" className="icon--size-15" /> Reject
-                  </button>
+                  </Button>
                 </div>
               </article>
             ))}
@@ -1258,13 +1261,14 @@ export default function HostExplore() {
               {itemCount} {itemCount === 1 ? "result" : "results"}
             </span>
             {tab === "tasks" && (
-              <button
+              <Button
                 type="button"
-                className="host-button host-button--primary"
+                variant="comic-primary"
+                fullWidth={false}
                 onClick={() => setShowCreateChallenge(true)}
               >
                 <Icon name="plus" className="icon--size-16" /> Create challenge
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -1354,42 +1358,46 @@ export default function HostExplore() {
                   </div>
                   {isPlatformAdmin && communitySubmission && (
                     <div className="host-community-review-actions host-explore-admin-actions">
-                      <button
+                      <Button
                         type="button"
-                        className="host-button host-button--secondary"
+                        variant="comic-secondary"
+                        fullWidth={false}
                         onClick={() =>
                           editCommunityChallenge(communitySubmission)
                         }
                       >
                         Edit challenge
-                      </button>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
-                        className="host-button host-button--secondary"
+                        variant="comic-secondary"
+                        fullWidth={false}
                         disabled={reviewingId === communitySubmission.id}
                         onClick={() =>
                           void deleteCommunityChallenge(communitySubmission)
                         }
                       >
                         Delete
-                      </button>
+                      </Button>
                     </div>
                   )}
                   <div className="host-explore-use-options">
-                    <button
+                    <Button
                       type="button"
-                      className="host-button host-button--primary"
+                      variant="comic-primary"
+                      fullWidth={false}
                       onClick={() => addTaskToPlan(task, "main")}
                     >
                       <PlusIcon /> Add as main
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
-                      className="host-button host-button--secondary"
+                      variant="comic-secondary"
+                      fullWidth={false}
                       onClick={() => addTaskToPlan(task, "side")}
                     >
                       <PlusIcon /> Add as side
-                    </button>
+                    </Button>
                   </div>
                 </article>
               );
@@ -1488,14 +1496,16 @@ export default function HostExplore() {
                       ))}
                     </ul>
                   </details>
-                  <button
+                  <Button
                     type="button"
-                    className="host-button host-button--primary host-explore-use"
+                    variant="comic-primary"
+                    fullWidth={false}
+                    className="host-explore-use"
                     onClick={() => selectLocationIdea(location)}
                   >
                     Use this venue idea{" "}
                     <Icon name="arrow-right" className="icon--size-15" />
-                  </button>
+                  </Button>
                 </article>
               );
             })}
@@ -1583,9 +1593,11 @@ export default function HostExplore() {
                       <p>{route.note}</p>
                     </div>
                   )}
-                  <button
+                  <Button
                     type="button"
-                    className="host-button host-button--secondary host-explore-use"
+                    variant="comic-secondary"
+                    fullWidth={false}
+                    className="host-explore-use"
                     onClick={() =>
                       void toggleFavourite("route", route.id, route)
                     }
@@ -1601,7 +1613,7 @@ export default function HostExplore() {
                         route
                       </>
                     )}
-                  </button>
+                  </Button>
                 </article>
               );
             })}
@@ -1613,16 +1625,17 @@ export default function HostExplore() {
             <Icon name="search" className="icon--size-24" />
             <h3>No matches</h3>
             <p>Try a different search or clear your filters.</p>
-            <button
+            <Button
               type="button"
-              className="host-button host-button--secondary"
+              variant="comic-secondary"
+              fullWidth={false}
               onClick={() => {
                 setSearch("");
                 setCategory("all");
               }}
             >
               Clear filters
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -1849,19 +1862,21 @@ export default function HostExplore() {
                 </div>
               )}
               <div className="host-community-modal-actions">
-                <button
+                <Button
                   type="button"
-                  className="host-button host-button--secondary"
+                  variant="comic-secondary"
+                  fullWidth={false}
                   onClick={() => {
                     setShowCreateChallenge(false);
                     setEditingSubmission(null);
                   }}
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  className="host-button host-button--primary"
+                  variant="comic-primary"
+                  fullWidth={false}
                   disabled={submittingChallenge}
                 >
                   {submittingChallenge ? (
@@ -1881,13 +1896,13 @@ export default function HostExplore() {
                       review
                     </>
                   )}
-                </button>
+                </Button>
               </div>
             </form>
           </section>
         </div>
       )}
-    </HostShell>
+    </HostWorkspace>
   );
 }
 

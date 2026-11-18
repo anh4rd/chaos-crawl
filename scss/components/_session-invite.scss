@@ -1,0 +1,51 @@
+@use "../variables/colors";
+@use "../variables/effects";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.session-invite {
+  .host-management & {
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    order: 2;
+  }
+  &::before {
+    content: "";
+    position: absolute;
+    top: layout.$invite-accent-top;
+    right: layout.$invite-accent-right;
+    width: layout.$invite-accent-size;
+    height: layout.$invite-accent-size;
+    border-radius: 50%;
+    background: rgba(colors.$pink, effects.$invite-accent-opacity);
+    pointer-events: none;
+  }
+  .host-management & > p {
+    margin: 0 auto layout.$pixel-unit * 4;
+    max-width: layout.$invite-copy-width;
+    color: colors.$plan-summary-text;
+    font-size: fonts.$size-small;
+    line-height: 1.5;
+  }
+  &__actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: layout.$pixel-unit * 2;
+  }
+  &__count {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: layout.$pixel-unit * 2;
+    margin-top: layout.$pixel-unit * 4.25;
+    padding-top: layout.$pixel-unit * 3.5;
+    border-top: layout.$pixel-unit * 0.25 solid
+      rgba(colors.$white, effects.$invite-count-border-opacity);
+    color: colors.$accent-soft;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-action;
+  }
+}

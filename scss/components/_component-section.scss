@@ -1,0 +1,44 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.component-section {
+  scroll-margin-top: (layout.$pixel-unit * 6);
+  margin-top: (layout.$pixel-unit * 16);
+  &__heading {
+    display: flex;
+    align-items: flex-start;
+    gap: (layout.$pixel-unit * 3.75);
+    margin-bottom: (layout.$pixel-unit * 6);
+  }
+  &__number {
+    display: grid;
+    place-items: center;
+    width: (layout.$pixel-unit * 9);
+    height: (layout.$pixel-unit * 9);
+    flex: 0 0 (layout.$pixel-unit * 9);
+    border: (layout.$pixel-unit * 0.375) solid var(--black);
+    border-radius: (layout.$pixel-unit * 2.5);
+    background: colors.$accent-soft;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-action;
+    box-shadow: (layout.$pixel-unit * 0.5) (layout.$pixel-unit * 0.5) 0
+      var(--black);
+  }
+  &__title {
+    font-size: fonts.$size-section-heading;
+    margin: 0 0 (layout.$pixel-unit * 2);
+    @media (max-width: layout.$reference-mobile-breakpoint) {
+      font-size: fonts.$size-compact-section-heading;
+    }
+  }
+  &__description {
+    color: colors.$reference-muted;
+    margin: 0;
+    max-width: layout.$reference-description-width;
+    font-size: fonts.$size-body;
+  }
+  @media (max-width: layout.$reference-mobile-breakpoint) {
+    margin-top: (layout.$pixel-unit * 10.5);
+  }
+}

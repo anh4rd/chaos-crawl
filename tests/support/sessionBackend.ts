@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { expect, type Page } from "@playwright/test";
 
 export const sessionCode = "123456";
@@ -31,10 +33,10 @@ export function sessionFixture() {
   const player = {
     id: "test-player",
     name: "Pat",
-    avatar_url: null,
+    avatar_url: null as string | null,
     score: 20,
-    team_id: null,
-    team_name: null,
+    team_id: null as string | null,
+    team_name: null as string | null,
     joined_at: timestamp,
     last_seen_at: timestamp,
   };
@@ -247,10 +249,66 @@ export async function installSessionBackend(
       url.pathname.startsWith("/storage/v1/object/public/session-evidence/") &&
       request.method() === "GET"
     ) {
+      if (url.pathname.endsWith(".webm")) {
+        await route.fulfill({
+          contentType: "video/webm",
+          body: readFileSync(resolve("tests/support/fixtures/review.webm")),
+        });
+        return;
+      }
       await route.fulfill({
         contentType: "image/svg+xml",
         body: '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="purple"/></svg>',
       });
+      return;
+    }
+    if (
+      url.pathname.startsWith("/storage/v1/object/game-assets/") &&
+      request.method() === "POST"
+    ) {
+      requests.push({
+        name: "storage:game-assets",
+        method: "POST",
+        body: { path: url.pathname },
+      });
+      await respond(
+        failures.has("storage:game-assets")
+          ? { message: "Fixture storage failed" }
+          : { Key: url.pathname },
+        failures.has("storage:game-assets") ? 400 : 200,
+      );
+      return;
+    }
+    if (
+      url.pathname.startsWith("/storage/v1/object/public/game-assets/") &&
+      request.method() === "GET"
+    ) {
+      await route.fulfill({
+        contentType: "image/svg+xml",
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="purple"/></svg>',
+      });
+      return;
+    }
+    if (name === "host_favourites" && request.method() === "POST") {
+      const favourite = {
+        id: `fav-${body.item_id}`,
+        item_type: body.item_type,
+        item_id: body.item_id,
+      };
+      rows.host_favourites = [...(rows.host_favourites ?? []), favourite];
+      await respond(favourite, 201);
+      return;
+    }
+    if (name === "host_favourites" && request.method() === "DELETE") {
+      const id = url.searchParams.get("id");
+      rows.host_favourites = (rows.host_favourites ?? []).filter(
+        (row) =>
+          typeof row !== "object" ||
+          row === null ||
+          !("id" in row) ||
+          `eq.${row.id}` !== id,
+      );
+      await respond(null);
       return;
     }
     if (name === "cc_host_join_as_player") {
@@ -296,6 +354,20 @@ export async function installSessionBackend(
         "cc_player_cast_secret_review_vote",
       ].includes(name)
     ) {
+      await respond(null);
+      return;
+    }
+    if (name === "cc_host_set_game_session_round") {
+      fixture.session.current_round_number = body.p_round_number;
+      await respond(null);
+      return;
+    }
+    if (
+      name === "cc_host_start_game_session" ||
+      name === "cc_host_complete_game_session"
+    ) {
+      fixture.session.status =
+        name === "cc_host_start_game_session" ? "live" : "completed";
       await respond(null);
       return;
     }
@@ -400,7 +472,33 @@ export async function installSessionBackend(
     };
     if (url.pathname.startsWith("/rest/v1/") && Object.hasOwn(tables, name)) {
       if (request.method() === "GET") {
-        const rows = tables[name];
+        let rows = tables[name];
+        if (name === "host_games" && url.searchParams.has("or")) {
+          const query = url.searchParams.get("or") ?? "";
+          const dateKey = query.match(
+            /event_date\.(?:lt|gte)\.(\d{4}-\d{2}-\d{2})/,
+          )?.[1];
+          if (!dateKey)
+            throw new Error(`Unexpected host game date filter: ${query}`);
+          const past = query.includes("status.eq.completed");
+          rows = rows.filter((row) => {
+            if (
+              typeof row !== "object" ||
+              row === null ||
+              !("status" in row) ||
+              !("event_date" in row)
+            )
+              return false;
+            const date =
+              typeof row.event_date === "string" ? row.event_date : null;
+            return past
+              ? row.status === "completed" || (date !== null && date < dateKey)
+              : row.status !== "completed" &&
+                  (date === null || date >= dateKey);
+          });
+          const limit = url.searchParams.get("limit");
+          if (limit) rows = rows.slice(0, Number(limit));
+        }
         await respond(
           request.headers().accept?.includes("vnd.pgrst.object")
             ? (rows[0] ?? null)
@@ -409,11 +507,117 @@ export async function installSessionBackend(
         return;
       }
       if (
+        name === "cc_game_session_challenges" &&
+        request.method() === "POST" &&
+        body?.session_id === fixture.session.id &&
+        body?.kind === "secret" &&
+        body?.round_number === null &&
+        typeof body?.title === "string" &&
+        typeof body?.description === "string" &&
+        typeof body?.points === "number" &&
+        typeof body?.duration_minutes === "number" &&
+        typeof body?.sort_order === "number" &&
+        typeof body?.allow_photo_upload === "boolean" &&
+        Object.keys(body).sort().join(",") ===
+          "allow_photo_upload,description,duration_minutes,kind,points,round_number,session_id,sort_order,title"
+      ) {
+        const id = `custom-secret-${fixture.challenges.length}`;
+        fixture.challenges.push({ ...fixture.challenges[0], ...body, id });
+        await respond({ id }, 201);
+        return;
+      }
+      if (
+        name === "cc_game_session_challenges" &&
+        request.method() === "PATCH" &&
+        url.searchParams.get("session_id") === `eq.${fixture.session.id}` &&
+        typeof body?.title === "string" &&
+        typeof body?.description === "string" &&
+        typeof body?.duration_minutes === "number" &&
+        typeof body?.points === "number" &&
+        typeof body?.allow_photo_upload === "boolean" &&
+        Object.keys(body).sort().join(",") ===
+          "allow_photo_upload,description,duration_minutes,points,title"
+      ) {
+        const challenge = fixture.challenges.find(
+          (item) => `eq.${item.id}` === url.searchParams.get("id"),
+        );
+        if (challenge) {
+          Object.assign(challenge, {
+            title: body.title,
+            description: body.description,
+            duration_minutes: body.duration_minutes,
+            points: body.points,
+            allow_photo_upload: body.allow_photo_upload,
+          });
+          await respond(null);
+          return;
+        }
+      }
+      if (
+        name === "cc_game_sessions" &&
+        request.method() === "PATCH" &&
+        typeof body?.team_size === "number"
+      ) {
+        fixture.session.team_size = body.team_size;
+        await respond(null);
+        return;
+      }
+      if (
         name === "cc_game_sessions" &&
         request.method() === "PATCH" &&
         typeof body?.host_participates === "boolean"
       ) {
         fixture.session.host_participates = body.host_participates;
+        await respond(null);
+        return;
+      }
+      if (
+        name === "cc_game_session_players" &&
+        request.method() === "PATCH" &&
+        typeof body?.avatar_url === "string"
+      ) {
+        const target =
+          url.searchParams.get("id") === "eq.host-player"
+            ? hostPlayer
+            : fixture.player;
+        target.avatar_url = body.avatar_url;
+        await respond(null);
+        return;
+      }
+      if (
+        name === "cc_game_session_players" &&
+        request.method() === "PATCH" &&
+        Object.hasOwn(body, "team_id")
+      ) {
+        const target =
+          url.searchParams.get("id") === "eq.host-player"
+            ? hostPlayer
+            : fixture.player;
+        target.team_id = body.team_id;
+        await respond(null);
+        return;
+      }
+      if (name === "cc_game_session_teams" && request.method() === "POST") {
+        rows.cc_game_session_teams = [
+          ...(rows.cc_game_session_teams ?? []),
+          {
+            id: `team-${(rows.cc_game_session_teams ?? []).length}`,
+            name: body.name,
+            created_at: timestamp,
+          },
+        ];
+        await respond(null, 201);
+        return;
+      }
+      if (name === "cc_game_session_teams" && request.method() === "PATCH") {
+        for (const row of rows.cc_game_session_teams ?? [])
+          if (
+            typeof row === "object" &&
+            row !== null &&
+            "id" in row &&
+            `eq.${row.id}` === url.searchParams.get("id")
+          )
+            Object.assign(row, { name: body.name });
         await respond(null);
         return;
       }

@@ -1,0 +1,24 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.ribbon {
+  width: max-content;
+  max-width: 100%;
+  border: (layout.$pixel-unit * 0.5) solid colors.$comic-ink;
+  display: inline-block;
+  background: var(--cc-lime);
+  color: var(--cc-ink);
+  font-weight: fonts.$weight-heavy;
+  font-style: italic;
+  font-size: fonts.$size-ribbon;
+  padding: (layout.$pixel-unit * 1.75) (layout.$pixel-unit * 3);
+  border-radius: (layout.$pixel-unit * 2);
+  transform: rotate(-2deg);
+  margin: 0 0 (layout.$pixel-unit * 3.5);
+  box-shadow: (layout.$pixel-unit * 0.5) (layout.$pixel-unit * 0.5) 0
+    var(--cc-lime);
+  .game-overview & {
+    grid-column: 1/-1;
+  }
+}

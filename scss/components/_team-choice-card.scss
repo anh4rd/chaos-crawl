@@ -1,0 +1,65 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+@use "../variables/effects";
+
+.team-choice-card {
+  display: grid;
+  gap: (layout.$pixel-unit * 2);
+  padding: (layout.$pixel-unit * 2.5);
+  border: (layout.$pixel-unit * 0.375) solid colors.$session-frame-ink;
+  border-radius: (layout.$pixel-unit * 3.75);
+  background: linear-gradient(
+    motion.$angle-team-gradient,
+    colors.$team-choice-card-surface,
+    colors.$status-draft-surface
+  );
+  box-shadow: 0 (layout.$pixel-unit * 0.5) 0 colors.$session-frame-ink;
+  &:nth-child(3n + 2) {
+    background: linear-gradient(
+      motion.$angle-team-gradient,
+      colors.$timeline-final-surface,
+      colors.$team-choice-card-surface-2
+    );
+  }
+  &:nth-child(3n) {
+    background: linear-gradient(
+      motion.$angle-team-gradient,
+      colors.$team-choice-card-surface-3,
+      colors.$team-choice-card-surface-4
+    );
+  }
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 1.75);
+  }
+  &__identity {
+    display: flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 1.75);
+  }
+  &__header {
+    justify-content: space-between;
+  }
+  &__identity {
+    min-width: 0;
+  }
+  &__name {
+    overflow: hidden;
+    color: colors.$session-text;
+    font-family: fonts.$family-display;
+    font-size: fonts.$size-body;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  &__count {
+    padding: (layout.$pixel-unit * 1) (layout.$pixel-unit * 1.75);
+    border-radius: layout.$badge-radius;
+    color: colors.$white;
+    background: colors.$purple;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-heavy;
+  }
+}
