@@ -4472,3 +4472,29 @@ Review map: preserved native reset/license and theme defaults; stylesheet/plugin
 entry retirement; package/lock removal; current guidance/catalogue contracts;
 comment-only runtime geometry notes. Scrutinize reset/cascade ownership and final
 package changes; the66state comparison mechanically proves current appearance.
+
+## Closing audit and legacy review protection
+
+The fresh repository-wide scan and20 isolated blind review batches completed.
+The first scan's npx duplication detector failed; a complete rerun used the
+already cached jscpd executable (no dependencies added). All20 review batches
+imported successfully. Its automatic follow-up scan correctly refused an active
+queue; no partial rerun is claimed. Triage consolidated23 current review findings
+into bounded area clusters. Duplicate type/timer/unused-launch findings share
+repairs. The flat-directory concern is accepted explicitly: existing named
+workflow controllers already express boundaries; moving files solely for a count
+would not fix the actual timer ownership problem. External backend policy/live
+journey obligations remain unresolved, never marked frontend-proven. The triage
+organizer's unavailable python command was rerun with python3; validation and
+explicit decision ledger are complete before implementation.
+
+The existing /challenge-review route now uses HostGuard alongside the admin
+routes. Anonymous navigation cannot mount award reads/controls; signing out
+unmounts review. Authenticated query parameters, award drafts, evidence and exact
+award commands remain. Two new unit cases and desktop/mobile browser cases fail
+before repair. The isolated slice passes577units, strict app/browser types,
+full lint, production build and8affected browser cases. This is frontend route
+protection, not evidence of deployed legacy database authorization.
+Evidence: /tmp/legacy-review-auth-{unit-red-complete,browser-red,allunit,types,
+pwtypes,lint,build,browser-green}.log. Review the guard membership and the updated
+anonymous smoke expectation; active authenticated workflows are unchanged.

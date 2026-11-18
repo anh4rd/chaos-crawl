@@ -1,5 +1,6 @@
 import { Profiler, useEffect } from "react";
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -15,6 +16,23 @@ import type {
   Team,
   Vote,
 } from "../types/database";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
+
+const authMock = vi.hoisted(() => {
+  const state: {
+    session: Session | null;
+    listener:
+      ((event: AuthChangeEvent, session: Session | null) => void) | null;
+  } = { session: null, listener: null };
+  return {
+    state,
+    getSession: vi.fn(async () => ({
+      data: { session: state.session },
+      error: null,
+    })),
+    unsubscribe: vi.fn(),
+  };
+});
 
 const mock = vi.hoisted(() => ({
   game: null as GameState | null,
@@ -120,7 +138,22 @@ vi.mock("../lib/voteApi", () => ({
   getMyVote: mock.getMyVote,
   castVote: mock.castVote,
 }));
-vi.mock("../lib/supabase", () => ({ supabase: { from: mock.from } }));
+vi.mock("../lib/supabase", () => ({
+  supabase: {
+    from: mock.from,
+    auth: {
+      getSession: authMock.getSession,
+      onAuthStateChange: (
+        listener: (event: AuthChangeEvent, session: Session | null) => void,
+      ) => {
+        authMock.state.listener = listener;
+        return {
+          data: { subscription: { unsubscribe: authMock.unsubscribe } },
+        };
+      },
+    },
+  },
+}));
 
 import VotePage from "./Vote";
 import VoteResults from "./VoteResults";
@@ -190,6 +223,20 @@ function resultCard(name: string) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  authMock.state.listener = null;
+  authMock.state.session = {
+    access_token: "test-host-token",
+    refresh_token: "test-host-refresh",
+    expires_in: 3600,
+    token_type: "bearer",
+    user: {
+      id: "host-a",
+      aud: "authenticated",
+      app_metadata: {},
+      user_metadata: {},
+      created_at: "2030-01-01",
+    },
+  };
   mock.active.clear();
   mock.playerId = "p1";
   mock.sessionError = null;
@@ -501,19 +548,41 @@ describe("Admin tab ownership", () => {
   });
 });
 
+function mockEmptyReview() {
+  const query = {
+    select: vi.fn(),
+    eq: vi.fn(),
+    order: vi.fn(),
+    abortSignal: vi.fn(),
+    then: (resolve: (value: unknown) => unknown) =>
+      Promise.resolve({ data: [], error: null }).then(resolve),
+  };
+  for (const name of ["select", "eq", "order", "abortSignal"] as const)
+    query[name].mockReturnValue(query);
+  mock.from.mockReturnValue(query);
+  return query;
+}
+
 describe("App route registration", () => {
+  it("does not mount challenge review queries before host authentication", async () => {
+    authMock.state.session = null;
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/challenge-review?type=side&id=42&title=Private%20review",
+        ]}
+      >
+        <App />
+      </MemoryRouter>,
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Welcome back." }),
+    ).toBeTruthy();
+    expect(mock.from).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: "Award Points" })).toBeNull();
+  });
   it("loads the actual challenge review route and its query parameters", async () => {
-    const query = {
-      select: vi.fn(),
-      eq: vi.fn(),
-      order: vi.fn(),
-      abortSignal: vi.fn(),
-      then: (resolve: (value: unknown) => unknown) =>
-        Promise.resolve({ data: [], error: null }).then(resolve),
-    };
-    for (const name of ["select", "eq", "order", "abortSignal"] as const)
-      query[name].mockReturnValue(query);
-    mock.from.mockReturnValue(query);
+    const query = mockEmptyReview();
     render(
       <MemoryRouter
         initialEntries={[
@@ -531,6 +600,33 @@ describe("App route registration", () => {
     ).toBeTruthy();
     expect(query.eq).toHaveBeenCalledWith("challenge_type", "side");
     expect(query.eq).toHaveBeenCalledWith("challenge_id", "42");
+  });
+  it("unmounts authenticated review when its host signs out", async () => {
+    mockEmptyReview();
+    render(
+      <MemoryRouter
+        initialEntries={[
+          "/challenge-review?type=side&id=42&title=Private%20review",
+        ]}
+      >
+        <App />
+      </MemoryRouter>,
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Private review" }),
+    ).toBeTruthy();
+    const listener = authMock.state.listener;
+    expect(listener).not.toBeNull();
+    if (!listener)
+      throw new Error("Protected review must subscribe to host authentication");
+    authMock.state.session = null;
+    act(() => listener("SIGNED_OUT", null));
+    expect(
+      await screen.findByRole("heading", { name: "Welcome back." }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("heading", { name: "Private review" }),
+    ).toBeNull();
   });
   it("gives unmatched routes a usable joining form", async () => {
     render(

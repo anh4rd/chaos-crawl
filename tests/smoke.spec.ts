@@ -148,7 +148,7 @@ for (const [path, heading] of [
   ["/final-slideshow/test-session", "Slideshow is waiting"],
   ["/secret-slideshow/test-session", "Slideshow is waiting"],
   ["/slideshow?host=true", "Anna's Chaos Crawl"],
-  ["/challenge-review?type=main&id=1&title=Dance", "Dance"],
+  ["/challenge-review?type=main&id=1&title=Dance", "Welcome back."],
 ] as const) {
   test(`renders ${path} through HashRouter`, async ({ page }) => {
     const errors: string[] = [];

@@ -50,7 +50,6 @@ export default function App() {
         <Route path="/demo/player" element={<PlayerDemo />} />
         <Route path="/styleguide" element={<Styleguide />} />
         <Route path="/legacy/join" element={<LegacyJoin />} />
-        <Route path="/challenge-review" element={<ChallengeReview />} />
         <Route path="/game" element={<Game />} />
         <Route path="/play/:joinCode" element={<SessionPlayerGame />} />
         <Route path="/play/:joinCode/:page" element={<SessionPlayerGame />} />
@@ -70,6 +69,7 @@ export default function App() {
         {/* Host authentication is separate from the player join flow. */}
         <Route path="/host/login" element={<HostLogin />} />
         <Route element={<HostGuard />}>
+          <Route path="/challenge-review" element={<ChallengeReview />} />
           <Route path="/admin-legacy" element={<LegacyAdmin />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/host/live/:sessionId" element={<HostLiveSession />} />
