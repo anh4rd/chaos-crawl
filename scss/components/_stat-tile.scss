@@ -119,3 +119,29 @@
     }
   }
 }
+
+.stat-tile {
+  &--legacy {
+    border-radius: layout.$radius-lg;
+    background-color: colors.$legacy-stat-surface;
+    padding: layout.$spacing-unit * 3;
+    .stat-tile__label {
+      font-size: fonts.$size-legacy-caption;
+      line-height: fonts.$line-height-legacy-caption;
+      text-transform: uppercase;
+      color: colors.$unavailable-upload-copy;
+    }
+    .stat-tile__value {
+      margin-top: layout.$spacing-unit;
+      font-weight: fonts.$weight-bold;
+    }
+  }
+  &--legacy-score {
+    .stat-tile__value {
+      font-size: fonts.$size-legacy-large;
+      line-height: fonts.$line-height-legacy-large;
+      font-weight: fonts.$weight-action;
+      color: colors.$legacy-yellow;
+    }
+  }
+}

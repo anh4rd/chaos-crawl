@@ -27,7 +27,7 @@ export default function ChallengeActions({
   const busy =
     participation.uploadingKey !== null || participation.completingKey !== null;
   return (
-    <div className="mt-4 flex flex-wrap gap-2">
+    <div className="challenge-actions">
       <Button
         type="button"
         disabled={busy}

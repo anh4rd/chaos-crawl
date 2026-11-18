@@ -1,0 +1,41 @@
+@use "../tools/legacy-type";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/colors";
+@use "../variables/effects";
+
+.score-history {
+  border-radius: layout.$spacing-unit * 3;
+  border: layout.$toggle-border-width solid
+    color-mix(in oklab, colors.$input-border 50%, transparent);
+  background-color: color-mix(in oklab, colors.$black 40%, transparent);
+  padding: layout.$spacing-unit * 3;
+  &__row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: layout.$spacing-unit * 3;
+  }
+  &__title {
+    @include legacy-type.bold;
+  }
+  &__type {
+    margin-top: layout.$spacing-unit * 1;
+    @include legacy-type.caption;
+    text-transform: uppercase;
+    opacity: effects.$session-ghost-border-opacity;
+  }
+  &__reason {
+    margin-top: layout.$spacing-unit * 2;
+    @include legacy-type.small;
+  }
+  &__date {
+    margin-top: layout.$spacing-unit * 2;
+    @include legacy-type.caption;
+    opacity: effects.$setup-disabled-opacity;
+  }
+  &__points {
+    font-size: fonts.$size-legacy-emphasis;
+    line-height: fonts.$line-height-legacy-emphasis;
+  }
+}

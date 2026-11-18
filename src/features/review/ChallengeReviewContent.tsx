@@ -57,7 +57,7 @@ export default function ChallengeReviewContent({
       </Card>
     );
   return (
-    <div className="space-y-4">
+    <div className="completion-list">
       {review.completions.map((completion) => (
         <SubmissionCard
           key={completion.id}

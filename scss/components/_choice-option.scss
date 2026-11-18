@@ -42,3 +42,34 @@
     color: colors.$purple;
   }
 }
+
+.choice-option {
+  &--ballot {
+    display: inline-block;
+    align-items: normal;
+    gap: normal;
+    border: layout.$border-control solid colors.$input-border;
+    border-radius: layout.$radius-lg;
+    background: color-mix(in oklab, colors.$black 80%, transparent);
+    padding: layout.$spacing-unit * 4;
+    color: inherit;
+    cursor: default;
+    &:disabled {
+      opacity: 1;
+      cursor: default;
+    }
+  }
+  &--ballot#{&}--selected {
+    border-color: colors.$legacy-yellow;
+    background: colors.$input-border;
+  }
+  &__label {
+    font-size: fonts.$size-legacy-emphasis;
+    line-height: fonts.$line-height-legacy-emphasis;
+    font-weight: fonts.$weight-bold;
+  }
+  &__description {
+    font-size: fonts.$size-legacy-small;
+    line-height: fonts.$line-height-legacy-small;
+  }
+}

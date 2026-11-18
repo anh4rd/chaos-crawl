@@ -1,3 +1,4 @@
+import PageFrame from "../components/ui/PageFrame";
 import { useEffect } from "react";
 
 import { useNavigate } from "react-router-dom";
@@ -52,9 +53,9 @@ export default function VoteResults() {
     [playersQuery, teamsQuery, votesQuery].some((query) => query.loading)
   ) {
     return (
-      <main className="mx-auto min-h-screen max-w-md p-6">
+      <PageFrame variant="content">
         <p>Loading results...</p>
-      </main>
+      </PageFrame>
     );
   }
 

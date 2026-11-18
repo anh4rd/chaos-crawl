@@ -9,11 +9,21 @@ export default function StatTile({
   variant = "default",
 }: {
   icon?: IconName;
-  variant?: "default" | "compact" | "review" | "summary";
+  variant?:
+    "default" | "compact" | "review" | "summary" | "legacy" | "legacy-score";
   tone?: "lime" | "violet" | "pink";
   value: ReactNode;
   label: string;
 }) {
+  if (variant === "legacy" || variant === "legacy-score")
+    return (
+      <div
+        className={`stat-tile stat-tile--legacy${variant === "legacy-score" ? " stat-tile--legacy-score" : ""}`}
+      >
+        <p className="stat-tile__label">{label}</p>
+        <p className="stat-tile__value">{value}</p>
+      </div>
+    );
   if (variant === "summary")
     return (
       <article className="stat-tile stat-tile--summary">

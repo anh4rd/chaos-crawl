@@ -1,0 +1,13 @@
+@use "../variables/fonts";
+
+@mixin bold {
+  font-weight: fonts.$weight-bold;
+}
+@mixin small {
+  font-size: fonts.$size-legacy-small;
+  line-height: fonts.$line-height-legacy-small;
+}
+@mixin caption {
+  font-size: fonts.$size-legacy-caption;
+  line-height: fonts.$line-height-legacy-caption;
+}

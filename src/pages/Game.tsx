@@ -1,3 +1,5 @@
+import PlayerRecovery from "../features/game/PlayerRecovery";
+import BrandArtwork from "../components/ui/BrandArtwork";
 import PageFrame from "../components/ui/PageFrame";
 import { useEffect } from "react";
 import { GameStatus } from "../features/game/GameStatus";
@@ -87,18 +89,7 @@ export default function Game() {
   }
 
   if (!currentPlayer)
-    return (
-      <PageFrame variant="compact">
-        <h1 className="text-2xl font-bold">Join the game to take part</h1>
-        <p>
-          Your player session was not found. Join again to save challenge
-          completions and uploads.
-        </p>
-        <Button type="button" onClick={() => navigate("/legacy/join")}>
-          Join Game
-        </Button>
-      </PageFrame>
-    );
+    return <PlayerRecovery onJoin={() => navigate("/legacy/join")} />;
 
   const teamScore = currentPlayer?.team
     ? (buildLeaderboards(players, scoresQuery.data).teams.find(
@@ -113,20 +104,16 @@ export default function Game() {
     challenges.find((challenge) => challenge.title === game.current_challenge);
 
   return (
-    <PageFrame>
+    <PageFrame className="game-page">
       <header>
-        <img
-          src={`${import.meta.env.BASE_URL}Title.png`}
-          alt="Anna's Chaos Crawl"
-          className="mx-auto mb-4 w-full"
-        />
+        <BrandArtwork />
       </header>
 
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*,video/*"
-        className="hidden"
+        className="game-page__file"
         onChange={handleFileSelected}
       />
 
@@ -148,7 +135,7 @@ export default function Game() {
         participation={participation}
       />
 
-      <div className="space-y-3">
+      <div className="game-page__navigation">
         <Button
           type="button"
           onClick={() => {

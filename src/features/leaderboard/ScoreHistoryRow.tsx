@@ -4,25 +4,25 @@ export function ScoreHistoryRow({ event }: { event: ScoreEvent }) {
   const awardedDate = event.awarded_at ? new Date(event.awarded_at) : null;
 
   return (
-    <div className="rounded-xl border border-pink-500/50 bg-black/40 p-3">
-      <div className="flex items-start justify-between gap-3">
+    <div className="score-history">
+      <div className="score-history__row">
         <div>
-          <h3 className="font-bold">{event.challenge_title}</h3>
+          <h3 className="score-history__title">{event.challenge_title}</h3>
 
-          <p className="mt-1 text-xs uppercase opacity-70">
-            {event.challenge_type}
-          </p>
+          <p className="score-history__type">{event.challenge_type}</p>
 
-          {event.reason && <p className="mt-2 text-sm">{event.reason}</p>}
+          {event.reason && (
+            <p className="score-history__reason">{event.reason}</p>
+          )}
 
           {awardedDate && (
-            <p className="mt-2 text-xs opacity-50">
+            <p className="score-history__date">
               {awardedDate.toLocaleString()}
             </p>
           )}
         </div>
 
-        <strong className="text-xl">
+        <strong className="score-history__points">
           {event.points > 0 ? "+" : ""}
 
           {event.points}

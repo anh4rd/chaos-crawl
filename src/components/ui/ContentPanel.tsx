@@ -28,7 +28,8 @@ export default function ContentPanel({
     | "moderation-item"
     | "table"
     | "notice"
-    | "record";
+    | "record"
+    | "challenge";
   stacked?: boolean;
   overlay?: boolean;
   compact?: boolean;

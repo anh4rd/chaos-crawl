@@ -1,0 +1,56 @@
+@use "../tools/legacy-type";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/colors";
+@use "../variables/effects";
+
+.submission-card {
+  &__title {
+    @include legacy-type.bold;
+  }
+  &__team {
+    margin-top: layout.$spacing-unit * 1;
+  }
+  &__media {
+    margin-top: layout.$spacing-unit * 4;
+    overflow: hidden;
+    border-radius: layout.$radius-lg;
+  }
+  &__evidence {
+    width: 100%;
+  }
+  &__empty {
+    margin-top: layout.$spacing-unit * 4;
+    @include legacy-type.small;
+  }
+  &__field {
+    margin-top: layout.$spacing-unit * 4;
+  }
+  &__label {
+    @include legacy-type.small;
+    @include legacy-type.bold;
+  }
+  &__input {
+    margin-top: layout.$spacing-unit * 2;
+    width: 100%;
+    border-radius: layout.$spacing-unit * 3;
+    border: layout.$session-border-width solid colors.$input-border;
+    background-color: colors.$black;
+    padding: layout.$spacing-unit * 3;
+    color: colors.$white;
+  }
+  &__recipient {
+    margin-top: layout.$spacing-unit * 3;
+    display: block;
+  }
+  &__select {
+    margin-left: layout.$spacing-unit * 2;
+    border-radius: layout.$spacing-unit;
+    background-color: colors.$black;
+    padding: layout.$spacing-unit * 2;
+    color: colors.$white;
+  }
+  &__feedback {
+    margin-top: layout.$spacing-unit * 3;
+  }
+}

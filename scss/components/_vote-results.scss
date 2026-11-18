@@ -1,0 +1,27 @@
+@use "../tools/legacy-type";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/colors";
+@use "../variables/effects";
+
+.vote-results {
+  &__list {
+    > :where(:not(:last-child)) {
+      margin-block-start: 0;
+      margin-block-end: layout.$spacing-unit * 3;
+    }
+  }
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  &__rank {
+    margin-right: layout.$spacing-unit * 3;
+  }
+  &__total {
+    font-size: fonts.$size-legacy-large;
+    line-height: fonts.$line-height-legacy-large;
+    @include legacy-type.bold;
+  }
+}

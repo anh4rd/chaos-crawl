@@ -11,12 +11,14 @@
 .page-frame {
   &--stack,
   &--compact,
-  &--loading {
+  &--loading,
+  &--content {
     padding: layout.$spacing-unit * 6;
   }
 
   &--stack,
-  &--compact {
+  &--compact,
+  &--content {
     margin-inline: auto;
     min-height: 100vh;
     max-width: layout.$content-width;
@@ -28,5 +30,15 @@
 
   &--compact {
     @include stack-spacing(layout.$spacing-unit * 4);
+  }
+}
+
+.page-frame {
+  &--suspense {
+    display: flex;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    padding: layout.$spacing-unit * 6;
   }
 }

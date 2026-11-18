@@ -1,3 +1,4 @@
+import BrandArtwork from "../../components/ui/BrandArtwork";
 import type { FormEventHandler } from "react";
 import PageFrame from "../../components/ui/PageFrame";
 import Card from "../../components/ui/Card";
@@ -24,16 +25,12 @@ export default function LegacyJoinView({
   return (
     <PageFrame as={contentAs}>
       <header>
-        <img
-          src={`${import.meta.env.BASE_URL}Title.png`}
-          alt="Anna's Chaos Crawl"
-          className="mx-auto mb-4 w-full"
-        />
+        <BrandArtwork />
       </header>
-      <Card>
-        <h1 className="mb-4 text-3xl font-bold">Join the Chaos</h1>
+      <Card className="join-form">
+        <h1 className="join-form__title">Join the Chaos</h1>
         <form onSubmit={onSubmit} aria-busy={joining} noValidate>
-          <label htmlFor="player-name" className="mb-2 block font-bold">
+          <label htmlFor="player-name" className="join-form__label">
             Your name
           </label>
           <Input
@@ -49,11 +46,11 @@ export default function LegacyJoinView({
             onChange={(event) => onNameChange(event.target.value)}
           />
           {error && (
-            <p id="join-error" role="alert" className="mt-3">
+            <p id="join-error" role="alert" className="join-form__feedback">
               {error}
             </p>
           )}
-          <div className="mt-4">
+          <div className="join-form__actions">
             <Button type="submit" disabled={joining}>
               {joining ? "Joining..." : error ? "Try again" : "Join Game"}
             </Button>

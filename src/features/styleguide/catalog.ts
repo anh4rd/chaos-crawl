@@ -1,22 +1,46 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
+  ChallengeReviewHeader: {
+    usage:
+      "Controlled legacy review heading accepting a challenge presentation or a supplied invalid-parameter message.",
+    dependencies:
+      "Card and owned review-heading SCSS; parsing, route parameters and review queries stay in its route adapter.",
+  },
+  PlayerRecovery: {
+    usage:
+      "Controlled legacy missing-player recovery with a supplied join callback. Keeps the compact native page and original copy.",
+    dependencies:
+      "PageFrame, Button and owned player-recovery SCSS; no credential reads, navigation or queries.",
+  },
+  ScreenIntro: {
+    usage:
+      "Shared title-and-copy card for legacy leaderboard and published vote results. Local legacy player screens supplies local copy.",
+    dependencies:
+      "Card and owned screen-intro SCSS; retains the native heading cascade and does not select result publication.",
+  },
+  BrandArtwork: {
+    usage:
+      "Shared native title image for legacy join and gameplay. Local legacy player screens demonstrates it through the controlled join view.",
+    dependencies:
+      "Existing Title.png and the application base path; owned brand-artwork SCSS. No routing or state.",
+  },
   LegacyJoinView: {
     usage:
       "Controlled legacy join form; accepts name, busy/locked state, feedback and callbacks. Local legacy player screens uses a div frame and local state.",
     dependencies:
-      "PageFrame, Card, Input and Button. No route, storage, auth or player creation.",
+      "PageFrame, Card, Input, Button and shared BrandArtwork with owned join-form SCSS. No route, storage, auth or player creation.",
   },
   BallotView: {
     usage:
       "Controlled legacy player/team ballot, checking/cast/rejoin states and supplied callbacks. Local legacy player screens never mounts the connected Ballot controller.",
     dependencies:
-      "PageFrame, Card, Button and explicit presentation state. No queries, credential storage or navigation.",
+      "PageFrame, Card, Button, ChoiceOption ballot and owned ballot SCSS with explicit presentation state. No queries, credential storage or navigation.",
   },
   VoteResultsView: {
     usage:
       "Controlled legacy published result list, preserving caller order and totals. Local legacy player screens supplies sample results.",
     dependencies:
-      "PageFrame and Card. The connected route guards voting/publication before passing results; this view never chooses publication policy.",
+      "PageFrame, shared ScreenIntro, Card and owned vote-results SCSS. The connected route guards voting/publication before passing results; this view never chooses publication policy.",
   },
   SubmissionCardView: {
     usage:
@@ -181,7 +205,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   PageFrame: {
     usage:
-      "Shared native main/div frame for legacy join, gameplay and leaderboard. Native attributes and caller classes pass through; Shared legacy page frame uses div to avoid a nested main and never mounts connected routes.",
+      "Shared native main/div frame for legacy join, gameplay and leaderboard. Native attributes and caller classes pass through; Shared legacy page frame uses div to avoid a nested main and never mounts connected routes. Content supplies width/minimum-height/padding without child spacing for legacy result loading.",
     dependencies:
       "Page-frame BEM identity. Stack/compact/loading variants own legacy page width, viewport minimum, rem padding and child spacing; bare preserves unstyled local composition. No routing, data, storage or coordination.",
   },
@@ -412,7 +436,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
 
   ChoiceOption: {
     usage:
-      "Native choice button with supplied label, description, selected/disabled state and click callback. The local team choices reference demonstrates selected, full and busy records.",
+      "Native choice button with supplied label, description, selected/disabled state and click callback. The local team choices reference demonstrates selected, full and busy records. Ballot variant retains the native legacy div label/optional description, selection, keyboard and disabled contracts; shown in Local legacy player screens.",
     dependencies:
       "Owned choice-option SCSS and Avatar choice variant; caller owns capacity, membership and persistence.",
   },
@@ -656,7 +680,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   StatTile: {
     usage:
-      "Summary preserves native article, semantic icon, strong value and span label in Local platform admin; the caller owns totals and formatting. Review variant renders label before value in a compact vote-count well; shown in Shared review and presentation controls. Compact variant shows only number/label with div/strong/span markup; default variant retains its icon tile. Number/content and label paired with IconBadge; accepts icon, tone, value and label. Host patterns demonstrate all three tones.",
+      "Summary preserves native article, semantic icon, strong value and span label in Local platform admin; the caller owns totals and formatting. Review variant renders label before value in a compact vote-count well; shown in Shared review and presentation controls. Compact variant shows only number/label with div/strong/span markup; default variant retains its icon tile. Number/content and label paired with IconBadge; accepts icon, tone, value and label. Host patterns demonstrate all three tones. Legacy/legacy-score variants retain native div/p statistics in the local GameStatus reference.",
     dependencies:
       "SCSS .stat-tile; surrounding stat-grid controls arrangement.",
   },

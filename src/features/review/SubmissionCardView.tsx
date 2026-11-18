@@ -26,35 +26,37 @@ export default function SubmissionCardView({
 }: SubmissionCardViewProps) {
   const inputId = `points-${completion.id}`;
   return (
-    <Card>
-      <h2 className="text-2xl font-bold">{player?.name ?? "Unknown player"}</h2>
-      {player?.team && <p className="mt-1">{player.team}</p>}
+    <Card className="submission-card">
+      <h2 className="submission-card__title">
+        {player?.name ?? "Unknown player"}
+      </h2>
+      {player?.team && <p className="submission-card__team">{player.team}</p>}
       {media ? (
-        <div className="mt-4 overflow-hidden rounded-2xl">
+        <div className="submission-card__media">
           {media.media_type === "video" ? (
             <video
               src={media.image_url}
               controls
               playsInline
-              className="w-full"
+              className="submission-card__evidence"
             />
           ) : (
             <img
               src={media.image_url}
               alt="Challenge submission"
-              className="w-full"
+              className="submission-card__evidence"
             />
           )}
         </div>
       ) : (
-        <p className="mt-4 text-sm">
+        <p className="submission-card__empty">
           {completion.photo_id === null
             ? "Completed without media."
             : "Submission media is unavailable."}
         </p>
       )}
-      <div className="mt-4">
-        <label htmlFor={inputId} className="text-sm font-bold">
+      <div className="submission-card__field">
+        <label htmlFor={inputId} className="submission-card__label">
           Points to award {player ? `to ${player.name}` : ""}
         </label>
         <input
@@ -64,10 +66,10 @@ export default function SubmissionCardView({
           disabled={award.awarding}
           onChange={(event) => award.setPoints(event.target.value)}
           placeholder="e.g. 10"
-          className="mt-2 w-full rounded-xl border-2 border-pink-500 bg-black p-3 text-white"
+          className="submission-card__input"
         />
       </div>
-      <label className="mt-3 block">
+      <label className="submission-card__recipient">
         Award to
         <select
           value={award.recipient}
@@ -77,23 +79,23 @@ export default function SubmissionCardView({
               event.target.value === "team" ? "team" : "player",
             )
           }
-          className="ml-2 rounded bg-black p-2 text-white"
+          className="submission-card__select"
         >
           <option value="player">Player</option>
           {player?.team && <option value="team">Team {player.team}</option>}
         </select>
       </label>
       {award.error && (
-        <p role="alert" className="mt-3">
+        <p role="alert" className="submission-card__feedback">
           {award.error}
         </p>
       )}
       {award.notice && (
-        <p role="status" className="mt-3">
+        <p role="status" className="submission-card__feedback">
           {award.notice}
         </p>
       )}
-      <div className="mt-4">
+      <div className="submission-card__field">
         <Button
           type="button"
           disabled={award.awarding || !player}

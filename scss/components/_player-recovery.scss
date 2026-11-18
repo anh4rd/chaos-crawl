@@ -1,0 +1,6 @@
+@use "../tools/legacy-type";
+.player-recovery {
+  &__title {
+    @include legacy-type.bold;
+  }
+}

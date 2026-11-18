@@ -14,17 +14,15 @@ export default function SideChallenges({
     (challenge) => !participation.hasCompleted("side", challenge.id),
   );
   return (
-    <Card>
-      <h2 className="text-2xl font-bold">Chaos Bingo</h2>
-      <p className="mt-2 text-sm text-zinc-400">
-        Complete these throughout the crawl.
-      </p>
+    <Card className="bingo-list">
+      <h2 className="bingo-list__title">Chaos Bingo</h2>
+      <p className="bingo-list__copy">Complete these throughout the crawl.</p>
       {available.length === 0 ? (
-        <p className="mt-4 text-green-400">
+        <p className="bingo-list__completed">
           ✓ You completed all Chaos Bingo challenges.
         </p>
       ) : (
-        <div className="mt-4 grid grid-cols-1 gap-4">
+        <div className="bingo-list__items">
           {available.map((challenge) => (
             <BingoChallengeCard
               key={challenge.id}

@@ -294,3 +294,12 @@
     margin: layout.$pixel-unit * 2.5 0;
   }
 }
+
+.content-panel {
+  &--challenge {
+    border-radius: layout.$radius-lg;
+    border: layout.$session-border-width solid colors.$input-border;
+    background-color: color-mix(in oklab, colors.$black 70%, transparent);
+    padding: layout.$spacing-unit * 4;
+  }
+}

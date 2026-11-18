@@ -14,11 +14,15 @@ export function LeaderboardCard({
   onToggle: () => void;
 }) {
   return (
-    <Card>
-      <button type="button" onClick={onToggle} className="w-full text-left">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">
+    <Card className="leaderboard-card">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="leaderboard-card__toggle"
+      >
+        <div className="leaderboard-card__summary">
+          <div className="leaderboard-card__identity">
+            <span className="leaderboard-card__rank">
               {index === 0
                 ? "👑"
                 : index === 1
@@ -29,19 +33,19 @@ export function LeaderboardCard({
             </span>
 
             <div>
-              <h2 className="text-xl font-bold">{entry.name}</h2>
+              <h2 className="leaderboard-card__name">{entry.name}</h2>
 
-              <p className="text-sm opacity-70">
+              <p className="leaderboard-card__hint">
                 {entry.events.length} award
                 {entry.events.length === 1 ? "" : "s"}
               </p>
             </div>
           </div>
 
-          <div className="text-right">
-            <div className="text-3xl font-bold">{entry.score}</div>
+          <div className="leaderboard-card__score">
+            <div className="leaderboard-card__total">{entry.score}</div>
 
-            <div className="text-xs opacity-70">points</div>
+            <div className="leaderboard-card__unit">points</div>
           </div>
         </div>
       </button>
@@ -49,9 +53,9 @@ export function LeaderboardCard({
       {/* SCORE HISTORY */}
 
       {expanded && (
-        <div className="mt-4 space-y-3 border-t border-white/20 pt-4">
+        <div className="leaderboard-card__history">
           {entry.events.length === 0 ? (
-            <p className="text-sm opacity-70">No points awarded yet.</p>
+            <p className="leaderboard-card__hint">No points awarded yet.</p>
           ) : (
             entry.events.map((event) => (
               <ScoreHistoryRow key={event.id} event={event} />

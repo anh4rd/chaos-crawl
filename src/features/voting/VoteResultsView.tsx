@@ -1,4 +1,5 @@
 import PageFrame from "../../components/ui/PageFrame";
+import ScreenIntro from "../../components/ui/ScreenIntro";
 import Card from "../../components/ui/Card";
 import type { VoteResult } from "../../lib/voteResults";
 
@@ -13,24 +14,22 @@ export default function VoteResultsView({
 }) {
   return (
     <PageFrame as={contentAs}>
-      <Card>
-        <h1 className="text-4xl font-bold">Voting Results</h1>
+      <ScreenIntro title="Voting Results" description={challenge} />
 
-        <p className="mt-3">{challenge}</p>
-      </Card>
-
-      <ol className="space-y-3">
+      <ol className="vote-results__list">
         {results.map((result, index) => (
           <li key={result.id}>
             <Card>
-              <div className="flex items-center justify-between">
+              <div className="vote-results__row">
                 <div>
-                  <span className="mr-3">{index === 0 ? "👑" : ""}</span>
+                  <span className="vote-results__rank">
+                    {index === 0 ? "👑" : ""}
+                  </span>
 
                   <strong>{result.name}</strong>
                 </div>
 
-                <div className="text-2xl font-bold">{result.votes}</div>
+                <div className="vote-results__total">{result.votes}</div>
               </div>
             </Card>
           </li>

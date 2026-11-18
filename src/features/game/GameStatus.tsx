@@ -1,3 +1,4 @@
+import StatTile from "../../components/ui/StatTile";
 import Card from "../../components/ui/Card";
 import type { GameState, Player } from "../../types/database";
 import ScheduledCountdown from "../ScheduledCountdown";
@@ -12,36 +13,27 @@ export function GameStatus({
   teamScore: number | null;
 }) {
   return (
-    <Card>
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-400">
-        Now
-      </p>
+    <Card className="game-status">
+      <p className="game-status__kicker">Now</p>
 
-      <h2 className="mt-2 text-4xl font-black leading-none">
-        {game.current_pub}
-      </h2>
+      <h2 className="game-status__title">{game.current_pub}</h2>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-zinc-900 p-3">
-          <p className="text-xs uppercase text-zinc-400">Your team</p>
-
-          <p className="mt-1 font-bold">
-            {currentPlayer?.team ?? "Waiting..."}
-          </p>
-        </div>
-
-        <div className="rounded-2xl bg-zinc-900 p-3">
-          <p className="text-xs uppercase text-zinc-400">Team score</p>
-
-          <p className="mt-1 text-2xl font-black text-yellow-400">
-            {teamScore ?? "—"}
-          </p>
-        </div>
+      <div className="game-status__statistics">
+        <StatTile
+          variant="legacy"
+          label="Your team"
+          value={currentPlayer.team ?? "Waiting..."}
+        />
+        <StatTile
+          variant="legacy-score"
+          label="Team score"
+          value={teamScore ?? "—"}
+        />
       </div>
 
       {game.scheduled_reveal_at && (
-        <div className="mt-3 rounded-2xl border border-pink-500/60 bg-pink-950/30 p-3">
-          <p className="text-xs font-bold uppercase text-pink-300">
+        <div className="game-status__scheduled">
+          <p className="game-status__countdown">
             Next challenge in{" "}
             <ScheduledCountdown targetTime={game.scheduled_reveal_at} />
           </p>

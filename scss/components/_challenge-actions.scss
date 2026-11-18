@@ -1,0 +1,12 @@
+@use "../tools/legacy-type";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/colors";
+@use "../variables/effects";
+
+.challenge-actions {
+  margin-top: layout.$spacing-unit * 4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: layout.$spacing-unit * 2;
+}

@@ -1,0 +1,12 @@
+@use "../variables/layout";
+.game-page {
+  &__file {
+    display: none;
+  }
+  &__navigation {
+    > :where(:not(:last-child)) {
+      margin-block-start: 0;
+      margin-block-end: layout.$spacing-unit * 3;
+    }
+  }
+}

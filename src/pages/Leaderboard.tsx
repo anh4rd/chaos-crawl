@@ -1,3 +1,4 @@
+import ScreenIntro from "../components/ui/ScreenIntro";
 import PageFrame from "../components/ui/PageFrame";
 import { useMemo, useState } from "react";
 import { LeaderboardCard } from "../features/leaderboard/LeaderboardCard";
@@ -44,16 +45,13 @@ export default function Leaderboard() {
     return <DataError error={failed.error} retry={failed.reload} />;
 
   return (
-    <PageFrame>
-      <Card>
-        <h1 className="text-4xl font-bold">Leaderboard</h1>
+    <PageFrame className="leaderboard-page">
+      <ScreenIntro
+        title="Leaderboard"
+        description="Tap a player or team to see where their points came from."
+      />
 
-        <p className="mt-3">
-          Tap a player or team to see where their points came from.
-        </p>
-      </Card>
-
-      <div className="grid grid-cols-2 gap-3">
+      <div className="leaderboard-page__tabs">
         <Button
           type="button"
           onClick={() => {
@@ -84,7 +82,7 @@ export default function Leaderboard() {
           <p>No players or teams yet.</p>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="leaderboard-page__entries">
           {leaderboard.map((entry, index) => (
             <LeaderboardCard
               key={entry.id}

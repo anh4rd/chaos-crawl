@@ -1,3 +1,7 @@
+import ScreenIntro from "../../components/ui/ScreenIntro";
+import { GameStatus } from "../game/GameStatus";
+import SubmissionCardView from "../review/SubmissionCardView";
+import { demoGame } from "./demoGame";
 import { useState } from "react";
 import LegacyJoinView from "../legacy-player/LegacyJoinView";
 import BallotView from "../voting/BallotView";
@@ -5,9 +9,12 @@ import VoteResultsView from "../voting/VoteResultsView";
 import Note from "../../components/ui/Note";
 import { Example } from "./Example";
 
-const players = [{ id: "local-player", name: "Pat", team: "Ducks", score: 0 }];
+const player = { id: "local-player", name: "Pat", team: "Ducks", score: 0 };
+const players = [player];
 
 export default function LegacyPlayerExample() {
+  const [points, setPoints] = useState("");
+  const [recipient, setRecipient] = useState<"player" | "team">("player");
   const [name, setName] = useState("");
   const [joinError, setJoinError] = useState<string | null>(null);
   const [notice, setNotice] = useState("");
@@ -22,6 +29,37 @@ export default function LegacyPlayerExample() {
         '<LegacyJoinView contentAs="div" {...controlledJoin} />\n<BallotView contentAs="div" {...controlledBallot} />\n<VoteResultsView contentAs="div" challenge="Best entrance" results={localResults} />'
       }
     >
+      <ScreenIntro
+        title="Legacy player surfaces"
+        description="Local examples of the shared introduction, team statistics and award fields."
+      />
+      <GameStatus game={demoGame} currentPlayer={player} teamScore={12} />
+      <SubmissionCardView
+        completion={{
+          id: "local-completion",
+          player_id: player.id,
+          challenge_type: "side",
+          challenge_id: "sample",
+          points: 3,
+          photo_id: null,
+          completed_at: "2020-01-01T12:00:00Z",
+        }}
+        player={player}
+        media={undefined}
+        award={{
+          points,
+          setPoints,
+          recipient,
+          setRecipient,
+          awarding: false,
+          error: null,
+          notice: null,
+          award: async () =>
+            setNotice(
+              `Local ${recipient} award selected: ${points || "0"} points.`,
+            ),
+        }}
+      />
       <LegacyJoinView
         contentAs="div"
         name={name}

@@ -1,3 +1,4 @@
+import ContentPanel from "../../components/ui/ContentPanel";
 import type { SideChallenge } from "../../types/database";
 import ChallengeActions, {
   type ChallengeParticipation,
@@ -11,14 +12,12 @@ export default function BingoChallengeCard({
   participation: ChallengeParticipation;
 }) {
   return (
-    <div className="rounded-2xl border-2 border-pink-500 bg-black/70 p-4">
-      <div className="flex items-start justify-between gap-4">
+    <ContentPanel as="div" variant="challenge" className="bingo-card">
+      <div className="bingo-card__header">
         <div>
-          <h3 className="font-bold">{challenge.title}</h3>
+          <h3 className="bingo-card__title">{challenge.title}</h3>
           {challenge.description && (
-            <p className="mt-2 text-sm text-zinc-300">
-              {challenge.description}
-            </p>
+            <p className="bingo-card__description">{challenge.description}</p>
           )}
         </div>
         <strong>+{challenge.points}</strong>
@@ -33,6 +32,6 @@ export default function BingoChallengeCard({
         allowMedia={true}
         participation={participation}
       />
-    </div>
+    </ContentPanel>
   );
 }

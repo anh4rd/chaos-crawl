@@ -1,0 +1,7 @@
+@use "../variables/layout";
+
+.brand-artwork {
+  width: 100%;
+  margin-inline: auto;
+  margin-bottom: layout.$spacing-unit * 4;
+}

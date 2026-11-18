@@ -1,0 +1,18 @@
+@use "../tools/legacy-type";
+@use "../variables/layout";
+.review-heading {
+  &__kicker {
+    @include legacy-type.small;
+    text-transform: uppercase;
+  }
+  &__title {
+    @include legacy-type.bold;
+  }
+  &__type {
+    margin-top: layout.$spacing-unit * 2;
+    @include legacy-type.small;
+  }
+  &__error {
+    margin-top: layout.$spacing-unit * 3;
+  }
+}

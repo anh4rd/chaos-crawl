@@ -3985,46 +3985,26 @@ Evidence: `/tmp/admin-focus-comparison.log` and `/tmp/admin-focus-comparisons.js
 
 ## Remaining finish milestones
 
-1. **Close V2/platform presentation:** finish remaining platform frame/table/inspector
-   shared/owned styles; finish player-specific styling and recorded accessibility
-   defects. Shared host/player session architecture is already delivered.
-2. **Finish legacy host:** thin the remaining Admin coordinator, complete Live and
-   Players views, move persistence/teams reads to focused typed boundaries, then
-   migrate owned styles and separately tested action/lifecycle defects.
-3. **Finish legacy players and TV:** gameplay/status/challenges, voting/results,
-   review, leaderboard and legacy slideshow must lose remaining utility styling
-   and route-local persistence. Keep legacy routes/storage/scoring contracts.
-4. **Retire and audit:** remove obsolete legacy CSS and final Tailwind consumers,
-   update migration exceptions, run the complete mocked suite plus required gates,
-   then the requested desloppify audit and address findings before final verification.
+1. **Close active presentation migrations:** legacy host console styling is
+   verified; legacy player styling has completed its 44-state comparison and
+   shared-default checks; legacy admin styling and residual session helpers are
+   finishing their own proofs/integration. Platform admin, TV and PlayerDemo
+   presentation are committed. Host/player session architecture is delivered.
+2. **Retire transitional styling:** finish the global/host furniture migration,
+   replace the final active CSS imports and preserve effective native resets
+   before removing Tailwind and its plugin/dependencies. Keep exact cascade order.
+3. **Close verified behavior defects:** separately tested accessibility/focus
+   repairs follow neutral slices. Do not mix new design, fabricated captions or
+   backend contracts into structural/styling changes.
+4. **Final audit:** reconcile migration exceptions and references, run the complete
+   mocked desktop/mobile suite, lint, strict types, build and review load; then run
+   the requested desloppify audit, address findings and perform final verification.
 
-PlayerDemo appearance and the three contrast decisions still await the existing
-user input; they do not block independent migration. No new features or optional
-cosmetic redesign belong in these finish milestones. Work is grouped by completed
-subsystem, with independently reviewable behavior/styling slices inside it.
-
-## Queued phases for the full refactor
-
-Next: TV owned styles, platform accessibility/shared styles and legacy host layering. Catalogue cards, shell, filters, review/history and contribution bodies now
-compose shared primitives with owned SCSS; their thin route, controllers and
-controlled views are verified. Continue separately tested lifecycle fixes and owned styling. Keep styling and intentional behavior fixes in
-separate verified slices. Continue remaining host utilities/admin and V2 player/
-slideshow presentation, then legacy workflows and obsolete CSS/Tailwind retirement
-once their final consumers migrate. Preserve the shared host/player session base,
-role-specific controls, route contracts, privacy and external-system lifecycles.
-
-PlayerDemo already has local regressions and controller/view separation. Its
-shared-layout conversion awaits the user's explicit visual choice; preserve the
-old view and seven tour targets meanwhile. The three contrast changes likewise
-await their existing design-input request. Continue independent migration without
-inferring approval from goal continuation. Continue the recorded accessibility/lifecycle findings in separate tested behavior
-slices; the reward confirmation mismatch is resolved in phase 5z.
-
-Finally run all required checks and the complete mocked desktop/mobile browser
-suite, then the requested desloppify audit and address findings within the full
-refactor scope. Mocked tests cannot verify deployed Supabase policy, schema or
-atomic scoring. Use only an explicitly configured disposable backend for any
-separately authorized live verification.
+The existing PlayerDemo layout choice and contrast questions still await user
+input. Current appearance is preserved while independent work proceeds. Native
+media lacks a supplied caption/transcript contract; no fake content or new upload
+feature is authorized by this migration. Live backend schema/policy/atomic awards
+are not proven by mocked frontend tests.
 
 ## Legacy voting privacy and recovery
 
@@ -4227,3 +4207,48 @@ markup moves (28-state exact proof), focused controller extraction, exact team
 SDK boundary (payload/error scrutiny) and browser fixtures/contracts separately.
 The working-tree review command also includes unfinished host/player/status and
 admin styles; it is not evidence that those slices are complete.
+
+## Legacy player owned presentation
+
+Legacy join, gameplay/status/main and bingo challenges, voting/results, review
+and leaderboard now use owned BEM SCSS instead of utility styling. Shared
+BrandArtwork and ScreenIntro remove repeated page furniture; ChoiceOption ballot
+retains native option markup, StatTile legacy variants share the statistics,
+ContentPanel challenge shares the bingo/admin shell, and PageFrame content owns
+result-loading geometry. Controlled ChallengeReviewHeader and PlayerRecovery
+keep route parsing/navigation out of presentation. Existing labels, values,
+keyboard actions, native form/media attributes and privacy/score contracts remain.
+
+Forty-four desktop/mobile states have exact class-normalized native DOM/text,
+all computed styles, rectangles, focus and ordered write payloads. This includes
+loading/rejoin/missing-player/invalid-review branches. Forty-two screenshots are
+pixel-exact; mobile Players has 23 edge pixels with maximum channel delta one,
+and desktop Players has seven glyph-edge pixels with maximum delta 15. Both
+were inspected; no image tolerance is used. The first history comparison caught
+unpainted side-border colors previously set by Tailwind; all four are retained.
+The final shared bingo shell additionally passes both game-state comparisons.
+
+All 1,630 prior compiled SCSS selector/condition/declaration projections and
+208 existing shared native markup contracts remain exact. Local examples now
+show shared introduction/statistics/award fields and the native content frame,
+without backend access. Existing low contrast and media-caption limitations are
+preserved for the separately authorized/verified follow-ups, never suppressed.
+Evidence: `/tmp/legacy-player-owned-v2-*`, `/tmp/legacy-player-owned-final-*`,
+`/tmp/chaos-legacy-player-owned-final` with explicit per-file overlay provenance.
+
+Review map: shared primitive variants and defaults; existing-value token/type
+fragments; mechanical owned BEM conversion by component; controlled recovery and
+review header extraction; local references/catalog. Native media/labels and the
+initial query/error branches deserve scrutiny; the full rendered comparison
+supports the neutral changes. Full integration gates and review-load figures
+are recorded at commit. Remaining historical completed parity JSON archive now
+also includes 67 verified files (102.1 MiB to 2.6 MiB), with restoration/SHA journal
+in `/tmp/historical-parity-json-archive.jsonl`; active proof files were retained.
+
+Final legacy-player styling gates pass: 531 integrated units, all 32 mocked
+browser journeys, forced app/browser types, full lint and upload-disabled build.
+The source-only scope at final review checkpoint is 57 files, +973/-233 = 1,206
+relevant lines, above the nudge; the shared/default, component conversion,
+controlled extraction and reference slices above form its review map. The full
+working-tree review command reports 6,765 lines across 198 files because it also
+includes independent unfinished milestones; it does not measure this slice alone.

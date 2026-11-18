@@ -1,3 +1,4 @@
+import ChoiceOption from "../../components/ui/ChoiceOption";
 import PageFrame from "../../components/ui/PageFrame";
 import Button from "../../components/ui/Button";
 import Card from "../../components/ui/Card";
@@ -45,11 +46,11 @@ export default function BallotView({
           description: player.team ?? "Unassigned",
         }));
   return (
-    <PageFrame as={contentAs}>
+    <PageFrame as={contentAs} className="ballot">
       {ballot.sessionInvalid ? (
         <Card>
-          <h1 className="text-4xl font-bold">Rejoin Needed</h1>
-          <p className="mt-4">
+          <h1 className="ballot__title">Rejoin Needed</h1>
+          <p className="ballot__copy">
             Your saved player session no longer matches a player in the game.
           </p>
           <Button
@@ -63,38 +64,37 @@ export default function BallotView({
         </Card>
       ) : ballot.hasVoted ? (
         <Card>
-          <h1 className="text-4xl font-bold">Vote Cast!</h1>
-          <p className="mt-4">Your vote for {challenge} is locked in.</p>
-          <p className="mt-4 text-sm text-zinc-400">
+          <h1 className="ballot__title">Vote Cast!</h1>
+          <p className="ballot__copy">
+            Your vote for {challenge} is locked in.
+          </p>
+          <p className="ballot__waiting">
             Waiting for the host to close voting...
           </p>
         </Card>
       ) : (
         <>
-          <header className="text-center">
-            <h1 className="text-4xl font-bold">Vote!</h1>
-            <p className="mt-2">{challenge}</p>
-            <p className="mt-2 text-sm">Choose the winning {target}.</p>
+          <header className="ballot__header">
+            <h1 className="ballot__title">Vote!</h1>
+            <p className="ballot__challenge">{challenge}</p>
+            <p className="ballot__instructions">Choose the winning {target}.</p>
           </header>
           {ballot.hasVoted === null ? (
             <p>Checking your vote...</p>
           ) : (
             <>
-              <div className="space-y-3">
+              <div className="ballot__options">
                 {options.map((option) => (
-                  <button
+                  <ChoiceOption
                     key={option.id}
-                    type="button"
+                    variant="ballot"
+                    label={option.name}
+                    description={option.description}
+                    selected={selection === option.id}
                     aria-pressed={selection === option.id}
                     disabled={ballot.submitting}
                     onClick={() => setSelection(option.id)}
-                    className={`w-full rounded-2xl border-4 p-4 text-left ${selection === option.id ? "border-yellow-400 bg-pink-500" : "border-pink-500 bg-black/80"}`}
-                  >
-                    <div className="text-xl font-bold">{option.name}</div>
-                    {option.description && (
-                      <div className="text-sm">{option.description}</div>
-                    )}
-                  </button>
+                  />
                 ))}
               </div>
               <Button
