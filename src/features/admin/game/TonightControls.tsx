@@ -1,3 +1,4 @@
+import { useId } from "react";
 import PanelGrid from "../../../components/ui/PanelGrid";
 import ContentPanel from "../../../components/ui/ContentPanel";
 import FormLabel from "../../../components/ui/FormLabel";
@@ -43,6 +44,7 @@ export default function TonightControls({
   startSlideshow,
   stopSlideshow,
 }: TonightControlsProps) {
+  const minutesId = useId();
   return (
     <>
       <Card>
@@ -84,9 +86,12 @@ export default function TonightControls({
           Background tabs may reveal late.
         </Note>
 
-        <FormLabel variant="plain-strong">Reveal in minutes</FormLabel>
+        <FormLabel variant="plain-strong" htmlFor={minutesId}>
+          Reveal in minutes
+        </FormLabel>
 
         <Input
+          id={minutesId}
           value={scheduleMinutes}
           onChange={(event) => setScheduleMinutes(event.target.value)}
         />

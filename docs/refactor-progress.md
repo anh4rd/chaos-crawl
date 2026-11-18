@@ -4340,3 +4340,26 @@ Review focus recovery conditions and intended ARIA changes. No palette changes,
 new dependencies or persistence behavior are included. Evidence:
 /tmp/shared-a11y-finishing-handoff.md, /tmp/leaderboard-aria-pixels.json,
 /tmp/finishing-a11y-{unit,browser,types,pwtypes,lint,build}.log.
+
+## Legacy administrator native labels
+
+Existing pub/challenge/minutes/player controls now associate their visible text
+with native controls. Team name and Vote for add the two approved visible labels.
+Their flow shifts32px and28px respectively; fonts, colors, bounds, placeholders,
+callbacks and native control types remain. Twelve before/after comparisons retain
+control geometry/styles and command contracts; eight unaffected views are
+pixel-exact. Five component and four browser regressions fail before the repair.
+The isolated integrated label tree passes546units, forced app/browser types,
+full lint and production build. Browser outcome is recorded below on completion.
+Evidence: /tmp/legacy-admin-behavior-handoff.md and
+/tmp/legacy-admin-label-comparisons.json. This behavior slice is separate from
+both neutral styling and the subsequent async lifecycle guards.
+
+The prior accessibility checkpoint's source delta was16files,+781/-7;
+the review command also included unfinished independent styling work and reported
+105files,+3474/-738=4212lines. Use its four-part review map above rather than
+interpreting that combined number as a single small patch.
+
+All20 isolated integrated label browser cases pass at393/1280. The label slice
+contains seven source/test files,+321/-6 before this evidence note; review native
+associations and the two intended visible-label flow changes.

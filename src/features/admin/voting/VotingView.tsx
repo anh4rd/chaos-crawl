@@ -1,3 +1,5 @@
+import { useId } from "react";
+import FormLabel from "../../../components/ui/FormLabel";
 import ContentPanel from "../../../components/ui/ContentPanel";
 import PanelGrid from "../../../components/ui/PanelGrid";
 import NativeSelect from "../../../components/ui/NativeSelect";
@@ -31,6 +33,7 @@ export default function VotingView({
   onCloseResults: () => Promise<void>;
   onNavigate: (path: string) => void;
 }) {
+  const targetId = useId();
   return (
     <>
       {game ? (
@@ -42,10 +45,14 @@ export default function VotingView({
               Current challenge: {game.current_challenge}
             </Note>
 
+            <FormLabel variant="plain-spaced" htmlFor={targetId}>
+              Vote for
+            </FormLabel>
             <NativeSelect
+              id={targetId}
               value={game.voting_target ?? "player"}
               onChange={(event) => onTarget(event.target.value)}
-              spacing="wide"
+              spacing="close"
             >
               <option value="player">Vote for Player</option>
 

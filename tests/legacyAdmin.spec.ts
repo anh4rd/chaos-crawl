@@ -518,3 +518,128 @@ test("local legacy administration exercises native forms, chooser, recovery and 
   await expect(page).toHaveURL(/#\/styleguide$/);
   expect(requests).toEqual([]);
 });
+
+test("legacy visible labels focus their native controls and retain control typography and commands", async ({
+  page,
+}) => {
+  const { writes, awards, rosterWrites } = await installAdmin(page);
+  await page.clock.setFixedTime(new Date("2026-11-17T12:00:00Z"));
+  await openAdmin(page);
+  await page.locator("label").filter({ hasText: /^Pub$/ }).click();
+  await expect(
+    page.getByRole("combobox", { name: "Pub", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("combobox", { name: "Challenge", exact: true }),
+  ).toBeFocused();
+  await tab(page, "🌙 Tonight");
+  await page
+    .locator("label")
+    .filter({ hasText: /^Reveal in minutes$/ })
+    .click();
+  const minutes = page.getByRole("textbox", { name: "Reveal in minutes" });
+  await expect(minutes).toBeFocused();
+  expect(
+    await minutes.evaluate((element) =>
+      element instanceof HTMLInputElement ? element.type : null,
+    ),
+  ).toBe("text");
+  await minutes.fill("005.5");
+  await expect(minutes).toHaveValue("005.5");
+  await tab(page, "🏁 Teams");
+  await page
+    .locator("label")
+    .filter({ hasText: /^Team name$/ })
+    .click();
+  const name = page.getByRole("textbox", { name: "Team name", exact: true });
+  await expect(name).toBeFocused();
+  await expect(name).toHaveCSS("font-size", "16px");
+  await name.fill("  Geese  ");
+  await page.locator("label").filter({ hasText: /^Pat$/ }).click();
+  await expect(
+    page.getByRole("combobox", { name: "Team for Pat" }),
+  ).toBeFocused();
+  await tab(page, "🎯 Challenges");
+  await page
+    .locator("label")
+    .filter({ hasText: /^Play as a Player$/ })
+    .click();
+  await expect(
+    page.getByRole("combobox", { name: "Play as player" }),
+  ).toBeFocused();
+  await tab(page, "🗳️ Voting");
+  await page
+    .locator("label")
+    .filter({ hasText: /^Vote for$/ })
+    .click();
+  const target = page.getByRole("combobox", { name: "Vote for", exact: true });
+  await expect(target).toBeFocused();
+  await expect(target).toHaveCSS("font-size", "16px");
+  await target.selectOption("team");
+  await expect.poll(() => writes.length).toBe(1);
+  expect(writes[0]?.body).toEqual({
+    voting_target: "team",
+    updated_at: "2026-11-17T12:00:00.000Z",
+  });
+  expect(rosterWrites).toEqual([]);
+  expect(awards).toEqual([]);
+});
+
+test("local administration labels activate native fields without duplicate IDs or backend access", async ({
+  page,
+}) => {
+  const backend: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("supabase.co")) backend.push(request.url());
+  });
+  await page.goto("#/styleguide");
+  const reference = page.getByRole("region", {
+    name: "Local legacy administration reference",
+  });
+  await reference
+    .getByRole("button", { name: "🏁 Teams", exact: true })
+    .press("Enter");
+  await expect(
+    reference.locator("label").filter({ hasText: /^Team name$/ }),
+  ).toBeVisible();
+  await reference
+    .locator("label")
+    .filter({ hasText: /^Team name$/ })
+    .click();
+  await expect(
+    reference.getByRole("textbox", { name: "Team name", exact: true }),
+  ).toBeFocused();
+  await reference
+    .locator("label")
+    .filter({ hasText: /^Robin$/ })
+    .click();
+  await expect(
+    reference.getByRole("combobox", { name: "Team for Robin" }),
+  ).toBeFocused();
+  await reference
+    .getByRole("button", { name: "🗳️ Voting", exact: true })
+    .press("Enter");
+  await reference
+    .locator("label")
+    .filter({ hasText: /^Vote for$/ })
+    .click();
+  await expect(
+    reference.getByRole("combobox", { name: "Vote for", exact: true }),
+  ).toBeFocused();
+  const fieldIds = await reference
+    .locator("input[id], select[id]")
+    .evaluateAll((elements) => elements.map((element) => element.id));
+  for (const id of fieldIds) {
+    expect(
+      await page
+        .locator("[id]")
+        .evaluateAll(
+          (elements, expected) =>
+            elements.filter((element) => element.id === expected).length,
+          id,
+        ),
+    ).toBe(1);
+  }
+  expect(backend).toEqual([]);
+});

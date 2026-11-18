@@ -1,3 +1,4 @@
+import { useId } from "react";
 import ControlRow from "../../../components/ui/ControlRow";
 import NativeSelect from "../../../components/ui/NativeSelect";
 import FormLabel from "../../../components/ui/FormLabel";
@@ -31,6 +32,9 @@ export default function LiveGameSelection({
   goLive,
   navigate,
 }: LiveGameSelectionProps) {
+  const fieldId = useId();
+  const pubId = `${fieldId}-pub`;
+  const challengeId = `${fieldId}-challenge`;
   const activeChallenge =
     challenges.find(
       (challenge) => String(challenge.id) === String(game.current_challenge_id),
@@ -40,9 +44,12 @@ export default function LiveGameSelection({
     <Card>
       <DisplayHeading variant="plain-compact">Change Live Game</DisplayHeading>
 
-      <FormLabel variant="plain-spaced">Pub</FormLabel>
+      <FormLabel variant="plain-spaced" htmlFor={pubId}>
+        Pub
+      </FormLabel>
 
       <NativeSelect
+        id={pubId}
         value={selectedPub}
         onChange={(event) => {
           const pubName = event.target.value;
@@ -64,9 +71,12 @@ export default function LiveGameSelection({
         ))}
       </NativeSelect>
 
-      <FormLabel variant="plain-spaced">Challenge</FormLabel>
+      <FormLabel variant="plain-spaced" htmlFor={challengeId}>
+        Challenge
+      </FormLabel>
 
       <NativeSelect
+        id={challengeId}
         value={selectedChallenge}
         onChange={(event) => setSelectedChallenge(event.target.value)}
         spacing="close"

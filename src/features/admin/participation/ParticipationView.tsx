@@ -2,7 +2,7 @@ import PanelGrid from "../../../components/ui/PanelGrid";
 import NativeSelect from "../../../components/ui/NativeSelect";
 import Note from "../../../components/ui/Note";
 import DisplayHeading from "../../../components/ui/DisplayHeading";
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import Card from "../../../components/ui/Card";
 export default function ParticipationView({
   gameAvailable,
@@ -25,6 +25,7 @@ export default function ParticipationView({
   upload: ReactNode;
   children: ReactNode;
 }) {
+  const playerFieldId = useId();
   return (
     <>
       {gameAvailable ? (
@@ -33,12 +34,13 @@ export default function ParticipationView({
           {upload}
           <Card>
             <DisplayHeading variant="plain-compact">
-              Play as a Player
+              <label htmlFor={playerFieldId}>Play as a Player</label>
             </DisplayHeading>
             <Note variant="description">
               Choose your joined player account to take part as host.
             </Note>
             <NativeSelect
+              id={playerFieldId}
               aria-label="Play as player"
               value={playerId}
               onChange={(event) => onPlayer(event.target.value)}

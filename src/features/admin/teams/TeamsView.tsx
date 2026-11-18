@@ -1,3 +1,5 @@
+import { useId } from "react";
+import FormLabel from "../../../components/ui/FormLabel";
 import NativeSelect from "../../../components/ui/NativeSelect";
 import ContentPanel from "../../../components/ui/ContentPanel";
 import Badge from "../../../components/ui/Badge";
@@ -33,13 +35,19 @@ export default function TeamsView({
   onCreateTeam: () => Promise<void>;
   onAssignTeam: (id: string, team: string) => Promise<void>;
 }) {
+  const fieldId = useId();
+  const nameId = `${fieldId}-team`;
   return (
     <>
       <Card>
         <DisplayHeading variant="plain">Create Teams</DisplayHeading>
 
         <PanelGrid variant="feed-tight">
+          <FormLabel variant="plain" htmlFor={nameId}>
+            Team name
+          </FormLabel>
           <Input
+            id={nameId}
             placeholder="Team name..."
             value={newTeamName}
             onChange={(event) => onNewTeamName(event.target.value)}
@@ -67,9 +75,14 @@ export default function TeamsView({
         <PanelGrid variant="feed">
           {players.map((player) => (
             <ContentPanel key={player.id} as="div" variant="ledger">
-              <strong>{player.name}</strong>
+              <label
+                htmlFor={`${fieldId}-player-${encodeURIComponent(player.id)}`}
+              >
+                <strong>{player.name}</strong>
+              </label>
 
               <NativeSelect
+                id={`${fieldId}-player-${encodeURIComponent(player.id)}`}
                 value={player.team ?? ""}
                 aria-label={`Team for ${player.name}`}
                 disabled={assigningPlayerIds.has(player.id)}
