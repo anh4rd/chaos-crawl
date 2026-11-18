@@ -12,6 +12,7 @@ import { useTeams } from "../game/hooks/useTeams";
 import { useVotes } from "../game/hooks/useVotes";
 import { tallyPlayerVotes, tallyTeamVotes } from "../lib/voteResults";
 import DataError from "../components/ui/DataError";
+import LoadingScreen from "../components/ui/LoadingScreen";
 
 export default function VoteResults() {
   const gameQuery = useGameState();
@@ -24,24 +25,28 @@ export default function VoteResults() {
   const { data: votes } = votesQuery;
   const navigate = useNavigate();
 
-  // Host closed results:
-  // send everyone back to game
   useEffect(() => {
     if (!game) {
       return;
     }
 
-    if (game.show_vote_results !== true) {
+    if (game.voting_open) {
+      navigate("/vote", { replace: true });
+    } else if (game.show_vote_results !== true) {
       navigate("/game", {
         replace: true,
       });
     }
   }, [game, navigate]);
 
+  if (game && (game.voting_open || game.show_vote_results !== true))
+    return <LoadingScreen>Waiting for published results…</LoadingScreen>;
+
   const failed = [gameQuery, playersQuery, teamsQuery, votesQuery].find(
     (query) => query.error,
   );
-  if (failed) return <DataError error={failed.error!} retry={failed.reload} />;
+  if (failed?.error)
+    return <DataError error={failed.error} retry={failed.reload} />;
   if (
     !game ||
     [playersQuery, teamsQuery, votesQuery].some((query) => query.loading)

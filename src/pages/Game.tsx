@@ -53,10 +53,10 @@ export default function Game() {
     completions,
   );
   const { fileInputRef, handleFileSelected } = participation;
-  const screenRoute = game?.show_vote_results
-    ? "/vote-results"
-    : game?.voting_open
-      ? "/vote"
+  const screenRoute = game?.voting_open
+    ? "/vote"
+    : game?.show_vote_results
+      ? "/vote-results"
       : game?.slideshow_open
         ? "/slideshow"
         : null;

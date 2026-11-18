@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { Profiler, useEffect } from "react";
 import {
   cleanup,
   fireEvent,
@@ -231,6 +231,25 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("Vote route", () => {
+  it("returns a missing legacy voter to legacy join rather than V2 access", async () => {
+    mock.playerId = null;
+    render(pageTree(<VotePage />));
+    await screen.findByRole("heading", { name: "Rejoin Needed" });
+    fireEvent.click(screen.getByRole("button", { name: "Rejoin Game" }));
+    expect(screen.getByLabelText("Location").textContent).toBe("/legacy/join");
+  });
+
+  it("keeps the ballot available while a stale result flag disagrees with open voting", async () => {
+    if (!mock.game) throw new Error("Expected fixture game");
+    mock.game = { ...mock.game, voting_open: true, show_vote_results: true };
+    render(pageTree(<VotePage />));
+    await screen.findByRole("button", { name: "Cast Vote" });
+    expect(screen.queryByLabelText("Location")).toBeNull();
+    expect(
+      screen.queryByRole("heading", { name: "Voting Results" }),
+    ).toBeNull();
+  });
+
   it.each([
     [true, false, "", "/vote-results"],
     [false, false, "", "/game"],
@@ -308,6 +327,25 @@ describe("Vote route", () => {
 });
 
 describe("VoteResults page", () => {
+  it("never commits result details while voting is open, even with a stale publish flag", () => {
+    if (!mock.game) throw new Error("Expected fixture game");
+    mock.game = { ...mock.game, voting_open: true, show_vote_results: true };
+    mock.votes = [vote("unpublished", "p2", null)];
+    const committed: string[] = [];
+    render(
+      <Profiler
+        id="results-privacy"
+        onRender={() => committed.push(document.body.textContent ?? "")}
+      >
+        {pageTree(<VoteResults />)}
+      </Profiler>,
+    );
+    expect(committed.every((text) => !text.includes("Voting Results"))).toBe(
+      true,
+    );
+    expect(screen.getByLabelText("Location").textContent).toBe("/vote");
+  });
+
   beforeEach(() => {
     mock.game = { ...mock.game!, show_vote_results: true, voting_open: false };
   });

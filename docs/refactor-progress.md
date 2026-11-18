@@ -4025,3 +4025,26 @@ suite, then the requested desloppify audit and address findings within the full
 refactor scope. Mocked tests cannot verify deployed Supabase policy, schema or
 atomic scoring. Use only an explicitly configured disposable backend for any
 separately authorized live verification.
+
+## Legacy voting privacy and recovery
+
+Open voting now takes precedence over a stale results-publication flag in Game,
+Vote and VoteResults. The results route guards its render before navigation, so
+unpublished rankings cannot appear for one React commit. Once voting closes,
+published results become available again. A missing legacy voter returns to
+`/legacy/join`; unrelated V2 participation credentials remain intact. This is an
+explicit behavior repair, separate from the following presentation extraction.
+
+The privacy/recovery checkpoint passes 47 focused unit regressions, ten mocked
+desktop/mobile browser cases, full lint, forced strict TypeScript, browser types
+and an upload-disabled production build. The before checkpoint fails the new
+privacy and recovery cases. A React Profiler regression checks every committed
+render for leaked result content. Evidence is in `/tmp/legacy-vote-privacy-*`,
+`/tmp/legacy-vote-recovery-*` and `/tmp/legacy-routing-*`; the tested source is
+`/tmp/chaos-legacy-player-routing-after`. No host payload or backend contract changes.
+
+Historical completed parity JSON has been archived losslessly to reclaim disk:
+200 files, 3,743.2 MiB original, 314.1 MiB compressed, 3,429.1 MiB reclaimed.
+Each decompressed SHA was verified before removal; restoration paths and hashes
+are recorded in `/tmp/historical-parity-json-archive.jsonl`. Screenshots and proof
+scripts were retained. This does not replace any pending verification.

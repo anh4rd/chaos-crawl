@@ -32,6 +32,7 @@ export default defineConfig({
     "**/legacyHostChallenges.spec.ts",
     "**/legacyHostScores.spec.ts",
     "**/legacyPages.spec.ts",
+    "**/legacyVotingPrivacy.spec.ts",
     "**/superAdmin.spec.ts",
     "**/sessionSlideshow.spec.ts",
   ],

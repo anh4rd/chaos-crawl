@@ -287,7 +287,7 @@ describe("player game page", () => {
     render(<Game />);
     expect(mocks.navigate).toHaveBeenCalledWith(path, { replace: true });
   });
-  it("picks results once if conflicting screen flags arrive together", () => {
+  it("keeps voting ahead of stale results when screen flags conflict", () => {
     mocks.game.data = {
       ...mocks.game.data!,
       slideshow_open: true,
@@ -295,7 +295,7 @@ describe("player game page", () => {
       show_vote_results: true,
     };
     render(<Game />);
-    expect(mocks.navigate).toHaveBeenCalledExactlyOnceWith("/vote-results", {
+    expect(mocks.navigate).toHaveBeenCalledExactlyOnceWith("/vote", {
       replace: true,
     });
   });

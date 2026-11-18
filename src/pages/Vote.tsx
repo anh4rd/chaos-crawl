@@ -20,6 +20,7 @@ export default function Vote() {
 
   useEffect(() => {
     if (!game || session.error) return;
+    if (game.voting_open) return;
     if (game.show_vote_results) navigate("/vote-results", { replace: true });
     else if (!game.voting_open)
       navigate(fromAdmin ? "/admin" : "/game", { replace: true });
@@ -28,7 +29,8 @@ export default function Vote() {
   if (session.error)
     return <DataError error={session.error} retry={session.reload} />;
   const failed = [gameQuery, players, teams].find((query) => query.error);
-  if (failed) return <DataError error={failed.error!} retry={failed.reload} />;
+  if (failed?.error)
+    return <DataError error={failed.error} retry={failed.reload} />;
   if (!game || players.loading || teams.loading)
     return (
       <main className="p-6">

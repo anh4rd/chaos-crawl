@@ -44,7 +44,7 @@ export default function Ballot({
             type="button"
             onClick={() => {
               clearPlayerId();
-              navigate("/", { replace: true });
+              navigate("/legacy/join", { replace: true });
             }}
           >
             Rejoin Game
