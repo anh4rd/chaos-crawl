@@ -2850,10 +2850,68 @@ Review it separately from the upcoming route extraction:
 Continue with catalogue contracts/data and focused persistence/controller/view
 boundaries, preserving this baseline before separately migrating styling.
 
+## Phase 5n — HostExplore catalogue and draft models
+
+Built-in task/location/route records and tag choices now live in the feature's
+catalogue module. Feature-only types stay in features/host-explore/types.ts;
+inferred community/favourite consumption contracts live in types/hostExplore.ts
+for the upcoming persistence boundary. No deployed schema or authorization claim
+is implied by those interfaces.
+
+catalogueModel owns approved-challenge projection, ordered tab categories and
+unsorted search/category filtering. challengeDraft owns independent fresh drafts,
+persisted editor hydration and the existing bounded command payload. Public and
+editor defaults remain distinct: optional public zero durations become absent,
+editor zeros remain, public tags have no editor cap, editor tags cap at eight,
+and their missing-tag defaults differ. Existing selected-tag insertion order is
+preserved. Explicit return contracts replace the moved literal/type assertions.
+The route still owns its original queries, commands and presentation pending the
+next focused slices; this checkpoint does not claim those layers are complete.
+
+Verification with source/documentation frozen throughout browser jobs:
+
+- All **354 unit/component tests** pass, including eight new domain regressions
+  for publication visibility/order, zero/default distinctions, tag hydration,
+  independent drafts, numeric bounds and searches across catalogue fields.
+- Lint/formatting, strict production build and Playwright type checks pass.
+  Verification builds disabled Sentry uploads. All **18 affected desktop/mobile
+  browser cases** pass again after extraction, including writes and imports.
+- **24 desktop/mobile render comparisons** cover the full catalogue, search,
+  categories/no matches, locations/details, routes/outlines, create/edit forms,
+  moderation queue and favourites errors. Raw DOM/attributes, geometry, every
+  standard computed property and viewport PNGs match exactly, with no class
+  normalization, masks or ignored regions.
+- Mechanical comparison against the captured route proves every built-in record
+  and tag choice identical. **561 filter comparisons**, **30 editor projections**
+  and **40 bounded payload comparisons** match original expressions, preserving
+  full values/order, undefined and NaN distinctions. Initial draft values match.
+- Route JSX and its existing PlusIcon remain byte-identical. The entire route
+  coordinator AST matches after normalizing only six extracted initializers,
+  payload projection, two draft calls and equivalent favourite type spelling.
+  All five memo dependency arrays remain byte-identical; persistence payloads,
+  ordering and feedback logic remain in the original coordinator.
+- All **221 stylesheet files** remain byte-identical. No new dependency, live
+  backend write, migration or deployment occurred. The complete final browser
+  run and desloppify audit remain outstanding for the full refactor goal.
+
+This slice exceeds the approximate 800-line review budget, mostly because data
+and existing rules moved between files. Review it in these slices:
+
+| Review slice            | What changed / scrutiny                                                            | Mechanical evidence                                                     |
+| ----------------------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Catalogue and contracts | Static records moved; distinguish feature types from inferred database consumption | Complete record/order comparison and strict build                       |
+| Public/editor models    | Preserve approval guard, fallback/zero/tag rules and payload bounds                | Original-expression comparisons plus eight domain regressions           |
+| Route wiring            | Replace inline projections/defaults with named model calls; retain coordination    | Coordinator AST, unchanged dependency arrays and eighteen browser cases |
+| Presentation            | No markup or styling conversion in this checkpoint                                 | Byte-identical JSX/styles; twenty-four exact DOM/style/PNG pairs        |
+
+Continue with typed persistence commands/queries, then focused controllers and
+controlled views. Keep lifecycle/error-behavior fixes and styling migration in
+separate explicitly verified slices.
+
 ## Queued phases for the full refactor
 
-Next: HostExplore regressions, then focused catalogue models, typed persistence,
-controllers and controlled views. Keep styling and intentional behavior fixes in
+Next: typed HostExplore persistence, then focused controllers and controlled
+views. The catalogue models and regression baseline are verified. Keep styling and intentional behavior fixes in
 separate verified slices. Continue remaining host utilities/admin and V2 player/
 slideshow presentation, then legacy workflows and obsolete CSS/Tailwind retirement
 once their final consumers migrate. Preserve the shared host/player session base,

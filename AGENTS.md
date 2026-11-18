@@ -138,6 +138,16 @@ only. Preserve the 850px collection breakpoint and mobile icon dimensions.
 Do not restore retired saved-item selectors or tie button appearance to a route
 class; keep retained host CSS only for its remaining consumers.
 
+HostExplore's built-in records and tag choices live in features/host-explore/
+catalogue.ts; feature presentation/draft types stay there, while inferred saved/
+community persistence shapes live in types/hostExplore.ts. catalogueModel owns
+approved-only public projection, tab categories and unsorted filtering.
+challengeDraft keeps editor defaults/hydration and bounded command payloads
+separate: public zero prep/performance values become absent, editor zeros remain,
+and public/editor tag defaults and limits differ. Preserve those contracts and
+selection order. Route-local queries, commands and markup remain migration
+exceptions until their focused controller/view slice; do not expand them.
+
 Supabase auth is shared by the legacy and session clients. Legacy player IDs and V2 session-player credentials use different storage keys and are not interchangeable. Preserve RPC payloads, storage paths, query ordering, score semantics, subscription cleanup, timer behavior, error handling, and route/query parameters. Client storage is not an authorization boundary; policies and atomic awards require server enforcement.
 
 `HostLogin` composes `features/host-access/HostAccess`. Its focused hook owns credentials, initial session recovery, command feedback and redirects through the typed SDK functions in `lib/hostAuth.ts`. `HostAccessForm` receives controlled values and callbacks; shared `BrandLink` and `InputIcon` remain presentation-only. The host header and login use the same host wordmark variant.
