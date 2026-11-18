@@ -12,13 +12,13 @@ export default function GameTable({
       <table className="sa-table">
         <thead>
           <tr>
-            <th>Game</th>
-            <th>Host</th>
-            <th>Status</th>
-            <th>Players</th>
-            <th>Sessions</th>
-            <th>Date</th>
-            <th />
+            <th scope="col">Game</th>
+            <th scope="col">Host</th>
+            <th scope="col">Status</th>
+            <th scope="col">Players</th>
+            <th scope="col">Sessions</th>
+            <th scope="col">Date</th>
+            <th scope="col">Actions</th>
           </tr>
         </thead>
         <tbody>

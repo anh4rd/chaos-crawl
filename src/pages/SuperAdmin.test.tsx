@@ -250,3 +250,41 @@ it("a new inspection clears earlier list feedback while retaining the loaded col
   expect(screen.queryByText("List unavailable")).toBeNull();
   expect(screen.getAllByRole("row")).toHaveLength(4);
 });
+
+it("exposes visible native labels for platform search and status", async () => {
+  renderPage();
+  await screen.findByText("Garden chaos");
+  const search = screen.getByRole<HTMLInputElement>("textbox", {
+    name: "Search games",
+  });
+  const status = screen.getByRole<HTMLSelectElement>("combobox", {
+    name: "Status",
+  });
+  expect(search.labels?.[0]?.textContent).toContain("Search games");
+  expect(status.labels?.[0]?.textContent).toContain("Status");
+  expect(search.placeholder).toBe("Search game or host email");
+  fireEvent.change(search, { target: { value: "ANNA@" } });
+  expect(screen.getAllByRole("row")).toHaveLength(2);
+  fireEvent.change(search, { target: { value: "" } });
+  fireEvent.change(status, { target: { value: "completed" } });
+  expect(screen.getByText("Finished party")).toBeTruthy();
+  expect(screen.queryByText("Garden chaos")).toBeNull();
+});
+
+it("names every platform table column with explicit column scope", async () => {
+  renderPage();
+  await screen.findByText("Garden chaos");
+  const headers = screen.getAllByRole("columnheader");
+  expect(headers.map((header) => header.textContent)).toEqual([
+    "Game",
+    "Host",
+    "Status",
+    "Players",
+    "Sessions",
+    "Date",
+    "Actions",
+  ]);
+  expect(
+    headers.every((header) => header.getAttribute("scope") === "col"),
+  ).toBe(true);
+});

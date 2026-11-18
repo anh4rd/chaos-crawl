@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { activateByKeyboard } from "./support/keyboard";
+import { activateByKeyboard, tabTo } from "./support/keyboard";
 import { installSessionBackend } from "./support/sessionBackend";
 
 const games = [
@@ -454,4 +454,72 @@ test("obsolete list denial cannot replace a fresh refresh or its selected filter
   } finally {
     release();
   }
+});
+
+test("platform filters have visible native labels and named table columns", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.responses.cc_super_admin_list_games = games;
+  await page.goto("#/host/super-admin");
+  await expect(page.getByText("Garden chaos", { exact: true })).toBeVisible();
+  const search = page.getByRole("textbox", {
+    name: "Search games",
+    exact: true,
+  });
+  const status = page.getByRole("combobox", { name: "Status", exact: true });
+  await expect(search).toBeVisible();
+  await expect(status).toBeVisible();
+  const searchLabel = page.locator(".sa-toolbar label").filter({ has: search });
+  const statusLabel = page.locator(".sa-toolbar label").filter({ has: status });
+  await expect(searchLabel).toContainText("Search games");
+  await expect(statusLabel).toContainText("Status");
+  await expect(page.getByRole("columnheader")).toHaveText([
+    "Game",
+    "Host",
+    "Status",
+    "Players",
+    "Sessions",
+    "Date",
+    "Actions",
+  ]);
+  expect(
+    await page
+      .getByRole("columnheader")
+      .evaluateAll((headers) =>
+        headers.every((header) => header.getAttribute("scope") === "col"),
+      ),
+  ).toBe(true);
+  await tabTo(page, search);
+  await page.keyboard.type("ANNA@");
+  await expect(page.locator(".sa-table tbody tr td:first-child")).toHaveText([
+    "Garden chaos",
+  ]);
+  await page.keyboard.press("ControlOrMeta+A");
+  await page.keyboard.press("Backspace");
+  await page.keyboard.press("Tab");
+  await expect(status).toBeFocused();
+  await page.keyboard.press("End");
+  await page.keyboard.press("Enter");
+  await expect(status).toHaveValue("completed");
+  await expect(page.locator(".sa-table tbody tr td:first-child")).toHaveText([
+    "Finished party",
+  ]);
+  await page.keyboard.press("Home");
+  await page.keyboard.press("Enter");
+  await expect(status).toHaveValue("all");
+  await searchLabel.getByText("Search games", { exact: true }).click();
+  await expect(search).toBeFocused();
+  await statusLabel.getByText("Status", { exact: true }).click();
+  await expect(status).toBeFocused();
+  await expect(search).toHaveAttribute(
+    "placeholder",
+    "Search game or host email",
+  );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  backend.verify();
 });

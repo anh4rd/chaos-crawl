@@ -92,6 +92,7 @@ export default function PlatformGamesView({
       <section className="sa-panel">
         <div className="sa-toolbar">
           <label>
+            <span>Search games</span>
             <Icon name="search" className="icon--size-17" />
             <input
               value={query}
@@ -99,16 +100,19 @@ export default function PlatformGamesView({
               placeholder="Search game or host email"
             />
           </label>
-          <select
-            value={status}
-            onChange={(e) => onStatusChange(e.target.value)}
-          >
-            <option value="all">All statuses</option>
-            <option value="draft">Draft</option>
-            <option value="planned">Planned</option>
-            <option value="live">Live</option>
-            <option value="completed">Completed</option>
-          </select>
+          <label>
+            <span>Status</span>
+            <select
+              value={status}
+              onChange={(e) => onStatusChange(e.target.value)}
+            >
+              <option value="all">All statuses</option>
+              <option value="draft">Draft</option>
+              <option value="planned">Planned</option>
+              <option value="live">Live</option>
+              <option value="completed">Completed</option>
+            </select>
+          </label>
         </div>
         {loading ? (
           <p className="sa-muted">Loading platform games…</p>
