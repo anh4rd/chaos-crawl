@@ -2970,6 +2970,46 @@ interaction concurrency still need explicitly tested slices; do not infer those
 fixes from this persistence extraction. Follow with owned/shared styling and the
 separate modal/tab accessibility work.
 
+## Phase 5p — HostExplore query/command lifetime and feedback fixes
+
+Before extracting controllers, eight component regressions exposed defects in the
+existing coordinator. All eight fail before the changes and pass afterward:
+obsolete mount/StrictMode identity replies started new reads; an old community
+response replaced a newer post-contribution refresh; a collection failure erased
+failed-command feedback; late save/moderation auth replies issued writes after
+unmount; and completed contribution/deletion commands started reloads off-page.
+
+The coordinator now captures a mount lifetime and a per-collection request
+generation. Only current reads may publish results or start their next query.
+Commands check their captured lifetime after auth/persistence awaits, preventing
+later writes/reloads and UI updates after departure. Already-issued requests can
+still complete; nothing is cancelled or rolled back. Separate query/action error
+channels give failed actions precedence; starting another action clears both as
+before. This is an intentional behavior fix, kept separate from hook extraction,
+styling, accessibility and interaction-concurrency changes. It does not introduce
+an auth subscription or claim to handle every external identity change.
+
+Verification with source/documentation frozen during browser jobs:
+
+- All **366 unit/component tests**, lint/formatting, strict production build and
+  Playwright type checks pass. All **18 desktop/mobile catalogue journeys** pass.
+- **20 baseline/current comparisons** preserve exact subsequent SDK methods,
+  URLs, Accept headers, bodies and command/reload order. Initial StrictMode
+  collection GETs intentionally reduce from four to two: the obsolete effect no
+  longer starts either read; the current queries retain their exact contracts.
+  Independent initial arrival order is not constrained; raw traces retain counts.
+- Those twenty ordinary states have exact raw DOM/attributes, geometry, standard
+  computed properties and viewport PNGs at 1280/393px, without masks or class
+  normalization. JSX and existing icon markup remain byte-identical, as do all
+  **221 stylesheet files**, auth/client boundaries and persistence DTO behavior.
+- The existing save-exception recovery regression also passes. No dependency,
+  live backend write, schema migration or deployment occurred; Sentry uploads
+  were disabled for builds. Whole-goal final verification remains outstanding.
+
+Proceed with behavior-neutral favourites, community-read, contribution and
+moderation controller extraction against this guarded baseline, then controlled
+views. Keep pending action-concurrency and modal/tab accessibility work separate.
+
 ## Queued phases for the full refactor
 
 Next: focused HostExplore controllers and controlled views. Catalogue models,

@@ -152,8 +152,15 @@ trimming, timestamps, confirmation and navigation stay in the coordinator. The
 favourite adapter supplies a plain record; SDK JSON serialization preserves the
 stored metadata body without broad response assertions. Database exceptions use
 the ordinary error result so controls can recover; this does not change auth's
-SDK contract. Route-local coordination and markup remain migration exceptions
-until their focused controller/view slice; do not expand them.
+SDK contract. Catalogue reads use a mount lifetime and per-collection generation:
+obsolete auth/results cannot start later reads or replace a newer refresh.
+Commands check the captured lifetime after auth and persistence awaits; issued
+requests may finish, but obsolete outcomes cannot update UI or start reloads.
+Query feedback cannot overwrite failed action feedback; a new action clears both
+channels as before. These guards cover mount/refresh lifetime, not a new auth
+subscription or cancellation/rollback contract. Route-local coordination and
+markup remain migration exceptions until their focused controller/view slice;
+do not expand them.
 
 Supabase auth is shared by the legacy and session clients. Legacy player IDs and V2 session-player credentials use different storage keys and are not interchangeable. Preserve RPC payloads, storage paths, query ordering, score semantics, subscription cleanup, timer behavior, error handling, and route/query parameters. Client storage is not an authorization boundary; policies and atomic awards require server enforcement.
 

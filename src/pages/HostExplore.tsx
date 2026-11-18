@@ -29,6 +29,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FormEvent,
 } from "react";
@@ -62,7 +63,8 @@ export default function HostExplore() {
   const [favourites, setFavourites] = useState<HostFavourite[]>([]);
   const [loadingFavourites, setLoadingFavourites] = useState(true);
   const [busyFavourite, setBusyFavourite] = useState<string | null>(null);
-  const [error, setError] = useState("");
+  const [queryError, setQueryError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [expandedRoutes, setExpandedRoutes] = useState<string[]>([]);
   const [submissions, setSubmissions] = useState<CommunitySubmission[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -73,21 +75,43 @@ export default function HostExplore() {
   const [submittingChallenge, setSubmittingChallenge] = useState(false);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [challengeDraft, setChallengeDraft] = useState(createChallengeDraft);
+  const mounted = useRef(false);
+  const lifetime = useRef(0);
+  const favouriteRead = useRef(0);
+  const communityRead = useRef(0);
+  const error = actionError || queryError;
+
+  useEffect(() => {
+    mounted.current = true;
+    lifetime.current += 1;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const loadFavourites = useCallback(async () => {
+    if (!mounted.current) return;
+    const request = ++favouriteRead.current;
+    const generation = lifetime.current;
+    const current = () =>
+      mounted.current &&
+      lifetime.current === generation &&
+      favouriteRead.current === request;
     setLoadingFavourites(true);
     const { data: userData, error: userError } = await readHostIdentity();
+    if (!current()) return;
     if (userError || !userData.user) {
-      setError("Your session has expired. Please log in again.");
+      setQueryError("Your session has expired. Please log in again.");
       setLoadingFavourites(false);
       return;
     }
     const { data, error: queryError } = await readExploreFavourites(
       userData.user.id,
     );
+    if (!current()) return;
     setLoadingFavourites(false);
     if (queryError) {
-      setError(
+      setQueryError(
         "Couldn't load your saved items. Check that the host planning migration has been run.",
       );
       return;
@@ -100,8 +124,16 @@ export default function HostExplore() {
   }, [loadFavourites]);
 
   const loadSubmissions = useCallback(async () => {
+    if (!mounted.current) return;
+    const request = ++communityRead.current;
+    const generation = lifetime.current;
+    const current = () =>
+      mounted.current &&
+      lifetime.current === generation &&
+      communityRead.current === request;
     const [{ data: userData }, { data: adminData, error: adminError }] =
       await Promise.all([readHostIdentity(), readPlatformAdmin()]);
+    if (!current()) return;
     if (adminError) {
       console.warn(
         "Platform-admin check unavailable; community review controls remain hidden.",
@@ -112,8 +144,9 @@ export default function HostExplore() {
     if (!userData.user) return;
     setCurrentUserId(userData.user.id);
     const { data, error: queryError } = await readCommunitySubmissions();
+    if (!current()) return;
     if (queryError) {
-      setError(
+      setQueryError(
         "Community submissions need the catalogue moderation migration. Run 20261112_community_catalog_and_host_view_as.sql in Supabase.",
       );
       return;
@@ -154,9 +187,13 @@ export default function HostExplore() {
     id: string,
     data: CatalogTask | LocationIdea | RouteIdea,
   ) {
+    const generation = lifetime.current;
+    const current = () => mounted.current && lifetime.current === generation;
+    if (!current()) return;
     const key = `${type}:${id}`;
     setBusyFavourite(key);
-    setError("");
+    setActionError("");
+    setQueryError("");
     const existing = favourites.find(
       (item) => item.item_type === type && item.item_id === id,
     );
@@ -164,9 +201,10 @@ export default function HostExplore() {
       const { error: deleteError } = await removeHostFavourite({
         id: existing.id,
       });
+      if (!current()) return;
       setBusyFavourite(null);
       if (deleteError) {
-        setError(deleteError.message);
+        setActionError(deleteError.message);
         return;
       }
       setFavourites((current) =>
@@ -176,9 +214,10 @@ export default function HostExplore() {
     }
 
     const { data: userData, error: userError } = await readHostIdentity();
+    if (!current()) return;
     if (userError || !userData.user) {
       setBusyFavourite(null);
-      setError("Your host session has expired. Please log in again.");
+      setActionError("Your host session has expired. Please log in again.");
       return;
     }
 
@@ -188,9 +227,10 @@ export default function HostExplore() {
       itemId: id,
       itemData: favouriteData(data),
     });
+    if (!current()) return;
     setBusyFavourite(null);
     if (saveError) {
-      setError(
+      setActionError(
         type === "route"
           ? "Route favourites need the latest host catalogue migration. Run 20261023_host_catalog_routes.sql in Supabase, then try again."
           : saveError.message,
@@ -226,11 +266,16 @@ export default function HostExplore() {
 
   async function submitChallenge(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const generation = lifetime.current;
+    const current = () => mounted.current && lifetime.current === generation;
+    if (!current()) return;
     setSubmittingChallenge(true);
-    setError("");
+    setActionError("");
+    setQueryError("");
     const { data: userData, error: userError } = await readHostIdentity();
+    if (!current()) return;
     if (userError || !userData.user) {
-      setError("Your session has expired. Please log in again.");
+      setActionError("Your session has expired. Please log in again.");
       setSubmittingChallenge(false);
       return;
     }
@@ -248,9 +293,10 @@ export default function HostExplore() {
           payload,
           submittedBy: userData.user.id,
         });
+    if (!current()) return;
     setSubmittingChallenge(false);
     if (insertError) {
-      setError(insertError.message);
+      setActionError(insertError.message);
       return;
     }
     setChallengeDraft(createChallengeDraft());
@@ -266,6 +312,9 @@ export default function HostExplore() {
   }
 
   async function deleteCommunityChallenge(submission: CommunitySubmission) {
+    const generation = lifetime.current;
+    const current = () => mounted.current && lifetime.current === generation;
+    if (!current()) return;
     if (
       !isPlatformAdmin ||
       !window.confirm(
@@ -274,13 +323,15 @@ export default function HostExplore() {
     )
       return;
     setReviewingId(submission.id);
-    setError("");
+    setActionError("");
+    setQueryError("");
     const { error: deleteError } = await deleteApprovedCommunityChallenge({
       id: submission.id,
     });
+    if (!current()) return;
     setReviewingId(null);
     if (deleteError) {
-      setError(deleteError.message);
+      setActionError(deleteError.message);
       return;
     }
     await loadSubmissions();
@@ -290,11 +341,16 @@ export default function HostExplore() {
     submission: CommunitySubmission,
     status: "approved" | "rejected",
   ) {
+    const generation = lifetime.current;
+    const current = () => mounted.current && lifetime.current === generation;
+    if (!current()) return;
     setReviewingId(submission.id);
-    setError("");
+    setActionError("");
+    setQueryError("");
     const { data: userData, error: userError } = await readHostIdentity();
+    if (!current()) return;
     if (userError || !userData.user || !isPlatformAdmin) {
-      setError("Only a platform administrator can review submissions.");
+      setActionError("Only a platform administrator can review submissions.");
       setReviewingId(null);
       return;
     }
@@ -304,9 +360,10 @@ export default function HostExplore() {
       reviewedBy: userData.user.id,
       reviewedAt: new Date().toISOString(),
     });
+    if (!current()) return;
     setReviewingId(null);
     if (updateError) {
-      setError(updateError.message);
+      setActionError(updateError.message);
       return;
     }
     await loadSubmissions();
