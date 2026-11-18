@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Page, WebSocketRoute } from "@playwright/test";
 import { installSessionBackend } from "./sessionBackend";
 import type { Challenge, GameState } from "../../src/types/database";
 
@@ -39,12 +39,40 @@ export async function installLegacyHostChallenges(page: Page, empty = false) {
     host: true,
     savedPlayer: false,
   });
+  const rosterSubscriptions: Array<{
+    socket: WebSocketRoute;
+    topic: string;
+    join: unknown;
+    array: boolean;
+    ids: number[];
+  }> = [];
   await page.routeWebSocket("**/realtime/v1/**", (socket) => {
     socket.onMessage((raw) => {
       const message: unknown = JSON.parse(String(raw));
       if (Array.isArray(message)) {
         const envelope: unknown[] = message;
         const [join, ref, topic, event, payload] = envelope;
+        if (event === "phx_join" && typeof topic === "string") {
+          const ids = subscriptionBindings(payload)
+            .filter(
+              (binding) => "table" in binding && binding.table === "players",
+            )
+            .map((binding) => binding.id);
+          if (ids.length)
+            rosterSubscriptions.push({ socket, topic, join, array: true, ids });
+        }
+        if (event === "phx_leave") {
+          for (
+            let index = rosterSubscriptions.length - 1;
+            index >= 0;
+            index -= 1
+          )
+            if (
+              rosterSubscriptions[index].socket === socket &&
+              rosterSubscriptions[index].topic === topic
+            )
+              rosterSubscriptions.splice(index, 1);
+        }
         if (
           event === "phx_join" ||
           event === "heartbeat" ||
@@ -67,6 +95,38 @@ export async function installLegacyHostChallenges(page: Page, empty = false) {
           );
         }
       } else if (message && typeof message === "object" && "event" in message) {
+        if (
+          message.event === "phx_join" &&
+          "topic" in message &&
+          typeof message.topic === "string" &&
+          "payload" in message
+        ) {
+          const ids = subscriptionBindings(message.payload)
+            .filter(
+              (binding) => "table" in binding && binding.table === "players",
+            )
+            .map((binding) => binding.id);
+          if (ids.length)
+            rosterSubscriptions.push({
+              socket,
+              topic: message.topic,
+              join: "join_ref" in message ? message.join_ref : null,
+              array: false,
+              ids,
+            });
+        }
+        if (message.event === "phx_leave" && "topic" in message) {
+          for (
+            let index = rosterSubscriptions.length - 1;
+            index >= 0;
+            index -= 1
+          )
+            if (
+              rosterSubscriptions[index].socket === socket &&
+              rosterSubscriptions[index].topic === message.topic
+            )
+              rosterSubscriptions.splice(index, 1);
+        }
         if (
           message.event === "phx_join" ||
           message.event === "heartbeat" ||
@@ -219,5 +279,40 @@ export async function installLegacyHostChallenges(page: Page, empty = false) {
       await route.fulfill({ status: 204, body: "" });
     },
   );
-  return { backend, writes };
+  function notifyPlayers() {
+    for (const subscription of rosterSubscriptions) {
+      const payload = {
+        ids: subscription.ids,
+        data: {
+          schema: "public",
+          table: "players",
+          type: "DELETE",
+          commit_timestamp: "2030-01-01T12:00:00Z",
+          columns: [],
+          record: {},
+          old_record: { id: "p1" },
+        },
+      };
+      subscription.socket.send(
+        JSON.stringify(
+          subscription.array
+            ? [
+                subscription.join,
+                null,
+                subscription.topic,
+                "postgres_changes",
+                payload,
+              ]
+            : {
+                join_ref: subscription.join,
+                ref: null,
+                topic: subscription.topic,
+                event: "postgres_changes",
+                payload,
+              },
+        ),
+      );
+    }
+  }
+  return { backend, writes, notifyPlayers };
 }

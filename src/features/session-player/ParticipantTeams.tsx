@@ -68,6 +68,8 @@ export default function ParticipantTeams({
             variant="team-create"
             fullWidth={false}
             type="submit"
+            aria-label="Create team"
+            aria-busy={busyKey === "create-team"}
             disabled={busyKey !== null || !teamName.trim()}
           >
             {busyKey === "create-team" ? (

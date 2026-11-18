@@ -36,6 +36,7 @@ export default function ScoreAdjustment({
           fullWidth={false}
           variant="console-segment"
           type="button"
+          aria-pressed={target === "player"}
           className={target === "player" ? "btn--console-selected" : ""}
           onClick={() => onTargetChange("player")}
         >
@@ -45,6 +46,7 @@ export default function ScoreAdjustment({
           fullWidth={false}
           variant="console-segment"
           type="button"
+          aria-pressed={target === "team"}
           className={target === "team" ? "btn--console-selected" : ""}
           onClick={() => onTargetChange("team")}
         >
@@ -60,6 +62,7 @@ export default function ScoreAdjustment({
           fullWidth={false}
           variant="console-segment"
           type="button"
+          aria-pressed={action === "award"}
           className={action === "award" ? "btn--console-selected" : ""}
           onClick={() => onActionChange("award")}
         >
@@ -69,6 +72,7 @@ export default function ScoreAdjustment({
           fullWidth={false}
           variant="console-segment"
           type="button"
+          aria-pressed={action === "dock"}
           className={action === "dock" ? "btn--console-selected" : ""}
           onClick={() => onActionChange("dock")}
         >

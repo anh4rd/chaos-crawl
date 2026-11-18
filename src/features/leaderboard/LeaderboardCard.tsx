@@ -1,3 +1,4 @@
+import { useId } from "react";
 import Card from "../../components/ui/Card";
 import { type LeaderboardEntry } from "../../lib/leaderboard";
 import { ScoreHistoryRow } from "./ScoreHistoryRow";
@@ -13,10 +14,13 @@ export function LeaderboardCard({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const historyId = useId();
   return (
     <Card className="leaderboard-card">
       <button
         type="button"
+        aria-expanded={expanded}
+        aria-controls={expanded ? historyId : undefined}
         onClick={onToggle}
         className="leaderboard-card__toggle"
       >
@@ -50,10 +54,8 @@ export function LeaderboardCard({
         </div>
       </button>
 
-      {/* SCORE HISTORY */}
-
       {expanded && (
-        <div className="leaderboard-card__history">
+        <div id={historyId} className="leaderboard-card__history">
           {entry.events.length === 0 ? (
             <p className="leaderboard-card__hint">No points awarded yet.</p>
           ) : (

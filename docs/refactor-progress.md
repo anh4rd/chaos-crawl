@@ -4317,3 +4317,26 @@ a socket deadline; no proxy or network-policy change is needed. A temporary
 config over unchanged source started Vite in about300ms and passed the mocked
 join journey in3.3s. Evidence: /tmp/finishing-neutral-startup-diagnosis.md and
 /tmp/finishing-startup-smoke.log. Existing running snapshots were not modified.
+
+The consolidated neutral checkpoint is now fully verified: all576 default mocked
+browser cases pass (desktop/mobile,16.4minutes), alongside534units, lint, forced
+application/browser types and production build. No live backend was used.
+
+## Finishing accessibility behavior
+
+A separate slice exposes score-choice pressed states, retains the pending team
+creation action name/busy state, restores roster focus after confirmed removal,
+and associates expandable legacy score history with its current rendered target.
+These changes preserve operation payloads and existing appearance. Regressions
+failed before repair; the integrated slice passes541units,14focused desktop/mobile
+browser cases, strict application/browser types, full lint and production build.
+Score10pairs and history10pairs preserve computed styles, geometry and pixels;
+only intended ARIA/IDs differ. Roster tests cover real mocked DELETE/Realtime,
+failed/cancelled operations and leaving the roster without focus theft.
+
+Review map: native disclosure/pressed semantics; the focused DOM-only roster
+recovery hook; stable pending action naming; deterministic regressions/fixtures.
+Review focus recovery conditions and intended ARIA changes. No palette changes,
+new dependencies or persistence behavior are included. Evidence:
+/tmp/shared-a11y-finishing-handoff.md, /tmp/leaderboard-aria-pixels.json,
+/tmp/finishing-a11y-{unit,browser,types,pwtypes,lint,build}.log.

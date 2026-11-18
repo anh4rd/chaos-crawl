@@ -1,3 +1,4 @@
+import { useRosterFocus } from "./useRosterFocus";
 import PanelGrid from "../../components/ui/PanelGrid";
 import Button from "../../components/ui/Button";
 import ControlRow from "../../components/ui/ControlRow";
@@ -17,8 +18,13 @@ export default function PlayerRoster({
   onDraftChange,
   onCreate,
 }: PlayerRosterModel) {
+  const focus = useRosterFocus(players);
   return (
-    <ContentPanel variant="console-white">
+    <ContentPanel
+      variant="console-white"
+      onFocusCapture={focus.onFocusCapture}
+      onBlurCapture={focus.onBlurCapture}
+    >
       <PanelHeading variant="console">
         <Overline variant="console">
           <Icon name="users" className="icon--size-14" /> PLAYER ROSTER
@@ -29,6 +35,7 @@ export default function PlayerRoster({
       </PanelHeading>
       <ControlRow variant="console-add">
         <input
+          ref={focus.newPlayer}
           aria-label="New player name"
           placeholder="Add a player"
           value={draft}

@@ -10,7 +10,7 @@ export default function PlayerRow({
   teams: string[];
 }) {
   return (
-    <article className="roster-row">
+    <article className="roster-row" data-roster-player-id={player.id}>
       <Avatar
         as="div"
         variant="console"

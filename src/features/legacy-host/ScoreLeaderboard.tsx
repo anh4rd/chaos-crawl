@@ -30,6 +30,7 @@ export default function ScoreLeaderboard({
           fullWidth={false}
           variant="console-segment"
           type="button"
+          aria-pressed={target === "player"}
           className={target === "player" ? "btn--console-selected" : ""}
           onClick={() => onTargetChange("player")}
         >
@@ -39,6 +40,7 @@ export default function ScoreLeaderboard({
           fullWidth={false}
           variant="console-segment"
           type="button"
+          aria-pressed={target === "team"}
           className={target === "team" ? "btn--console-selected" : ""}
           onClick={() => onTargetChange("team")}
         >
