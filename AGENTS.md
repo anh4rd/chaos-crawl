@@ -59,6 +59,33 @@ One named component per file. Pages orchestrate; components implement. Extract h
 
 The host route keys `features/host-live/HostSession` by session ID. That coordinator composes focused lobby, participation, roster, round/timer, reward, final, secret-review and moderation controllers. `useHostSessionData` owns the single host polling lifecycle; the timer controller owns its separate ticking/publish cadence and serialized write queue. Presentation connections remove listeners and close on identity changes or unmount. Keep these external concerns separate; do not duplicate polling in panels.
 
+Persistence-shared `RewardMethod`, `RewardTargetKind` and `PlannedTaskInfo` live
+in `src/types/hostSession.ts`; persistence modules never import feature-owned
+contracts. Multi-identity host updates take named target IDs and `values`; preserve
+SDK filters, payloads and write order when changing their callers. Raw SDK calls
+use `runApi` once. Services already returning `ApiResult` retain that result;
+catch unexpected rejections with `failedResult` rather than wrapping the result
+and reporting the same failure twice.
+
+`useHostRoundTimer` owns validated clock snapshots, synchronous storage timing,
+one-second ticks and serialized publication. `useHostSessionActions` owns round
+transitions, override prompts and expiry outcomes through named clock operations;
+it never receives clock setters or an advancement ref. Reset pauses; restart
+runs. Invalid saved resume targets fall back to the existing fresh paused clock;
+valid future targets remain valid while challenge details are absent. Existing
+manual next-round actions recover from denial without an automatic retry loop.
+
+`useHostPlan` projects consumed persisted values and owns an identity-scoped read
+error/reload channel. Saved-plan challenge patches preserve unknown root/task
+fields and order; malformed metadata retains the existing partial-save warning
+without overwriting the stored plan. Participation owns `ensureHostPlayerToken`;
+reward/final/secret controllers keep their phase guards and navigation, and never
+vote after failed recovery or erase its specific feedback.
+
+Shared `useClipboard` owns clipboard request identity and reset-timer cleanup;
+controllers retain success/fallback copy. Overlapping copies cannot let an older
+timeout clear newer feedback; obsolete completions publish no UI state.
+
 Named host and participant commands in `src/lib/*Commands.ts` use `runApi` and typed arguments. UI prompts, notices and credential storage stay in feature controllers. `useHostOperation` supplies the shared synchronous host action lock. Command feedback is separate from query feedback so a refresh cannot erase a failed operation. Preserve the original RPC payloads, filters and multi-step write ordering when extending a workflow.
 
 Feature adapters translate database contracts into shared presentation models. Queries, timer subscriptions and participation commands stay in feature hooks/services; evidence validation and persistence live in `src/lib/sessionEvidence.ts`. Ignore obsolete query responses after navigation, identity changes or unmount. Hide winners, vote totals and voter identities while voting is open, even if a stale payload includes them. Preserve secret-review precedence over reward and ordinary game content.
@@ -116,10 +143,9 @@ only local page/tour/sample state; controlled PlayerDemoView has no routes,
 storage or backend calls. The public demo is its interactive reference. Preserve
 all seven tour targets, native file chooser behavior, sample-state retention
 across navigation/restarts, reload reset and zero backend/credential operations.
-The older visual composition is a retained exception while the user's explicit
-shared-layout choice is pending. Do not create duplicate shared session widgets
-from it or treat automatic continuation as design approval; continue independent
-migration work meanwhile.
+The demo retains its current visual composition under the approved preserve-design
+scope. Reuse shared widgets; a different composition requires an explicit product
+decision rather than an incidental refactor.
 
 Card variant="idea" composes ContentPanel's entity surface and owns its header
 slot, layout, typography and hover frame in the card SCSS block. TaskCard,
@@ -269,6 +295,7 @@ favourite snapshots reconcile successful local mutation keys, including removal
 tombstones; failed mutations do not override incoming records. Preserve unrelated
 incoming order, existing query/command payloads and query/action feedback precedence.
 
+The legacy /challenge-review route shares HostGuard with administration; anonymous navigation must not mount its reads or award controls.
 HostGuard remounts its private Outlet only when the authenticated user ID changes;
 same-user token replacement preserves feature state. Auth notifications outrank
 older initial recovery. Keep subscription cleanup and player credential storage
@@ -554,7 +581,7 @@ The theme is Chaos Crawl's existing purple/pink/lime comic style with Quicksand 
 
 ## Migration and reviewability
 
-The maintained application uses owned SCSS and native reset rules through one stylesheet import; do not restore legacy route stylesheets or Tailwind dependencies. Semantic icons come through the shared Icon module, and pages compose feature controllers rather than becoming persistence boundaries. Retained exceptions are explicit: the dynamic V2 Supabase type bridge, PlayerDemo's pending composition choice, and documented existing glyph/contrast decisions. These do not authorize new type assertions, duplicate layouts or unapproved design changes. Track progress and verification evidence in `docs/refactor-progress.md`.
+The maintained application uses owned SCSS and native reset rules through one stylesheet import; do not restore legacy route stylesheets or Tailwind dependencies. Semantic icons come through the shared Icon module, and pages compose feature controllers rather than becoming persistence boundaries. Retained exceptions are explicit: the dynamic V2 Supabase type bridge, PlayerDemo's preserved visual composition, and documented existing glyph/contrast decisions. These do not authorize new type assertions, duplicate layouts or unapproved design changes. Track progress and verification evidence in `docs/refactor-progress.md`.
 
 Work in independently reviewable slices: guidance/regressions → styling foundation → shared UI pilot → host planning → host live → session players → remaining V2 → legacy. Separate extraction, styling conversion, and accessibility behavior fixes. Remove dead modules and update imports/catalog entries in the same slice.
 

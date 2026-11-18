@@ -1234,7 +1234,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   HostSession: {
     usage:
-      "Keyed V2 host composition: shared session page plus focused management controllers. The route remounts it when the session ID changes.",
+      "Keyed V2 host composition: shared session page, validated plan projections and focused management controllers. The route remounts it when session ID changes. Timer clock operations and round decisions have separate owners; participation supplies shared credential recovery.",
     dependencies:
       "Authenticated host route, feature read hooks and persistence services. Use isolated fixtures; mounting it starts reads and polling.",
   },
@@ -1242,91 +1242,103 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     usage:
       "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
     dependencies:
-      "Caller-supplied host models and callbacks; project SCSS and retained host styles. No internal backend reads or writes.",
+      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
   LobbyInviteStep: {
     usage:
       "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
     dependencies:
-      "Caller-supplied host models and callbacks; project SCSS and retained host styles. No internal backend reads or writes.",
+      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
   LobbyParticipationStep: {
     usage:
       "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
     dependencies:
-      "Caller-supplied host models and callbacks; project SCSS and retained host styles. No internal backend reads or writes.",
+      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
   LobbyRosterStep: {
     usage:
       "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
     dependencies:
-      "Caller-supplied host models and callbacks; project SCSS and retained host styles. No internal backend reads or writes.",
+      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
   LobbyTeamAssignmentStep: {
     usage:
       "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
     dependencies:
-      "Caller-supplied host models and callbacks; project SCSS and retained host styles. No internal backend reads or writes.",
+      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
   LobbyTeamNamesStep: {
     usage:
       "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
     dependencies:
-      "Caller-supplied host models and callbacks; project SCSS and retained host styles. No internal backend reads or writes.",
+      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
   LobbyReadyStep: {
     usage:
       "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
     dependencies:
-      "Caller-supplied host models and callbacks; project SCSS and retained host styles. No internal backend reads or writes.",
+      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
+  },
+  HostRewardRound: {
+    usage:
+      "Controlled reward stage composed from RewardSetupForm and RewardAwardControls. Receive player/team data and explicit actions; unused lookup-map props are not part of its contract.",
+    dependencies:
+      "Shared reward primitives and owned reward SCSS; useHostRewards owns commands, locks, credentials and feedback. Local reward examples use only state and callbacks.",
+  },
+  HostFinalRound: {
+    usage:
+      "Controlled final-round management using caller-supplied challenge, evidence and voting presentation. The controller retains publication and winner rules; this view does not require an unused top-vote-count prop.",
+    dependencies:
+      "Shared review controls and evidence presentation; useHostFinalRound owns persistence and participation recovery. Local review references never mount the controller.",
   },
   HostRoundControls: {
     usage:
-      "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
+      "Controlled timer and round actions. startGameOrToggleTimer names its toggle/start behavior; resetRoundTimer pauses at full duration while restartRoundTimer runs. The feature owns transitions, persistence and locks; local timer primitives remain backend-free.",
     dependencies:
-      "Caller-supplied host models and callbacks; project SCSS and retained host styles. No internal backend reads or writes.",
+      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
   HostRoundOverview: {
     usage:
-      "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
+      "Controlled host round overview with supplied phase state and named actions. The existing Start Now and next-round controls provide explicit recovery; no timer, query or persistence lifecycle lives in this view.",
     dependencies:
-      "Caller-supplied host models and callbacks; project SCSS and retained host styles. No internal backend reads or writes.",
+      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
   HostInvite: {
     usage:
       "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
     dependencies:
-      "Caller-supplied host models and callbacks; project SCSS and retained host styles. No internal backend reads or writes.",
+      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
   HostSecretMissions: {
     usage:
       "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
     dependencies:
-      "Caller-supplied host models and callbacks; project SCSS and retained host styles. No internal backend reads or writes.",
+      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
   HostSecretReview: {
     usage:
       "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
     dependencies:
-      "Caller-supplied host models and callbacks; project SCSS and retained host styles. No internal backend reads or writes.",
+      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
   HostSecretScreenControls: {
     usage:
       "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
     dependencies:
-      "Caller-supplied host models and callbacks; project SCSS and retained host styles. No internal backend reads or writes.",
+      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
   HostMainSubmissions: {
     usage:
       "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
     dependencies:
-      "Caller-supplied host models and callbacks; project SCSS and retained host styles. No internal backend reads or writes.",
+      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
   HostSideSubmissions: {
     usage:
       "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
     dependencies:
-      "Caller-supplied host models and callbacks; project SCSS and retained host styles. No internal backend reads or writes.",
+      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
   ParticipantTeams: {
     usage:

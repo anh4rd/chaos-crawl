@@ -4693,3 +4693,52 @@ Combined changes exceed800lines; inspect identity/filter choices and asynchronou
 feedback conditions separately from mechanically proven imports/props. Evidence:
 /tmp/host-command-contracts-handoff.md, /tmp/host-command-runtime-trace-proof.json,
 /tmp/clipboard-stage-handoff.md and /tmp/clipboard-final-runtime-proof.json.
+
+## Final completion checkpoint
+
+The approved frontend refactor is complete. Host and player retain one SessionPage
+base and shared participant controller; feature controllers own queries, commands,
+credentials and lifecycles. Shared views remain backend-free. All legacy/V2 route,
+storage, RPC and visual contracts remain, with the separately tested recovery,
+authentication, native-label/focus and clipboard fixes described above. Current
+appearance, PlayerDemo composition and colors are preserved; no deployment, live
+backend writes or database migration was performed.
+
+Final working-tree checks pass738units across96files, forced app/browser strict
+types, complete JS/SCSS/format lint and upload-disabled production build. The full
+664-case mocked desktop/mobile run exercised every default spec:656passed and8
+long keyboard journeys exceeded the old30-second deadline. Every one of those8
+passes on identical source in serial reruns (9rerun cases total include one extra
+positive case). The longest is34.6seconds. The configured budget is now60seconds;
+all functional assertions, keyboard-only traversal and zero-retry policy remain.
+All972source/assets under src/scss/public match across the full and rerun copies.
+No live tests were included. Evidence: /tmp/finishing-browser-coverage-proof.json,
+/tmp/final-keyboard-budget-source-proof.json, /tmp/finishing-working-tree-*.log.
+The first full parallel command's nonzero timeout result is retained; it is not
+misreported as a first-pass green run.
+
+The closing full mechanical scan completed with cached duplication tooling and
+no detector omissions. All confirmed imported review findings are closed; the
+flat-directory opinion is an explicitly accepted organization choice. Exact
+security-pattern false positives are individually documented, including the
+moved static domain label and the pure clock decoder's guarded caller. Remaining
+static-import coverage/size/duplication heuristics are visible diagnostics, not
+silenced or claimed to prove defects. No mirror tests or bulk suppressions were
+added to chase a score. Historical tool auto-completion after review re-import is
+not server evidence: backend authorization/live-journey steps are restored to
+pending. Deployed policies/schema/atomic awards, real media captions and any future
+palette/demo redesign remain separately scoped product/backend/content work.
+
+Review capacity remains high: the complete finishing delta is far above800lines.
+Review map by local commit/slice: discovery/readiness; neutral legacy consoles and
+participant helpers; score/roster/disclosure semantics; administrator labels and
+async lifetimes; host furniture and tabs; native reset/Tailwind retirement; guarded
+legacy review; unused-launch/evidence/core cleanup; persisted plan validation;
+shared participation and secret submission coverage; clock/transition ownership;
+host read/sign-out/favourite/telemetry recovery; shared types/named command targets;
+clipboard lifetime/unused props; final guidance/catalogue/test-budget evidence.
+Mechanical proof covers reset66states, timer8states, clipboard/stage18states,
+evidence29376cases, scoring4000cases, time17280cases,13type-erased consumers and
+21command execution traces. Human scrutiny should focus on authority/lifetime
+and error precedence, malformed-state fallback, token recovery and named target
+identity choices rather than the proven formatting/style/import moves.

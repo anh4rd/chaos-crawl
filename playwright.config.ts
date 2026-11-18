@@ -12,6 +12,9 @@ export default defineConfig({
 
   fullyParallel: false,
 
+  // Full styleguide keyboard journeys traverse hundreds of native controls.
+  timeout: 60_000,
+
   retries: 0,
 
   workers: 1,
