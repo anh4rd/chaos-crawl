@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { useState, type FormEvent } from "react";
 import * as hostSessionCommands from "../../lib/hostSessionCommands";
+import { patchLiveHostPlanTask } from "./liveHostPlanData";
 import type { GameSession, PlannedTaskInfo, SessionChallenge } from "./types";
 import type { SetHostBusy } from "./useHostOperation";
 
@@ -77,34 +78,32 @@ export function useHostChallengeEditor({
     }
     let saveNotice = `Round ${editingBreakChallenge.round_number} updated.`;
     if (session.host_game_id && nextBreakTask?.id) {
-      const { data: gameData } = await hostSessionCommands.readHostPlan(
-        session.host_game_id,
-      );
-      const planData = (gameData?.plan_data ?? {}) as Record<string, unknown>;
-      const selectedTasks = Array.isArray(planData.selectedTasks)
-        ? (planData.selectedTasks as PlannedTaskInfo[])
-        : [];
-      const updatedTasks = selectedTasks.map((task) =>
-        task.id === nextBreakTask.id
-          ? {
-              ...task,
-              title: editChallengeTitle.trim(),
-              description: editChallengeDescription.trim(),
-              minutes: Math.max(1, Number(editChallengeDuration) || 1),
-              points: Math.max(0, Number(editChallengePoints) || 0),
-              equipment,
-            }
-          : task,
-      );
-      const { error: planError } = await hostSessionCommands.saveHostPlanTasks(
-        { plan_data: { ...planData, selectedTasks: updatedTasks } },
-        session.host_game_id,
-        session.host_id,
-      );
-      if (planError)
+      const { data: gameData, error: readError } =
+        await hostSessionCommands.readHostPlan(session.host_game_id);
+      const update = readError
+        ? null
+        : patchLiveHostPlanTask(gameData?.plan_data, nextBreakTask.id, {
+            title: editChallengeTitle.trim(),
+            description: editChallengeDescription.trim(),
+            minutes: Math.max(1, Number(editChallengeDuration) || 1),
+            points: Math.max(0, Number(editChallengePoints) || 0),
+            equipment,
+          });
+      if (!update) {
         saveNotice =
           "Challenge updated for this game. Its saved plan equipment could not be updated.";
-      else setPlannedTasks(updatedTasks);
+      } else {
+        const { error: planError } =
+          await hostSessionCommands.saveHostPlanTasks(
+            { plan_data: update.planData },
+            session.host_game_id,
+            session.host_id,
+          );
+        if (planError)
+          saveNotice =
+            "Challenge updated for this game. Its saved plan equipment could not be updated.";
+        else setPlannedTasks(update.plannedTasks);
+      }
     }
     setBusy(false);
     setNotice(saveNotice);

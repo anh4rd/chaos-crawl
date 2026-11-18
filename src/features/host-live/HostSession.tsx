@@ -91,11 +91,6 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   const { busy, setBusy } = useHostOperation();
   const [notice, setNotice] = useState("");
   const [actionError, setError] = useState("");
-  const error = actionError || queryError;
-  const dismissError = useCallback(() => {
-    setError("");
-    setQueryError("");
-  }, [setQueryError]);
   const [activeTab, setActiveTab] = useState<HostTab>("game");
   const { navigationRef, restoreFocus } = useNavigationFocus();
   const {
@@ -107,7 +102,15 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     plannedTasks,
     setPlannedTasks,
     defaultBreakMinutes,
+    error: planError,
+    setError: setPlanError,
   } = useHostPlan({ session });
+  const error = actionError || planError || queryError;
+  const dismissError = useCallback(() => {
+    setError("");
+    setPlanError("");
+    setQueryError("");
+  }, [setPlanError, setQueryError]);
 
   const { hostPlayerName, hostDisplayName } = useHostIdentity();
   const {

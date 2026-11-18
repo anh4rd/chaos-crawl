@@ -1,68 +1,147 @@
-import { useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type SetStateAction,
+} from "react";
 import { supabase } from "../../lib/sessionSupabase";
-import type { GameScheduleItem, GameSession, PlannedTaskInfo } from "./types";
+import { projectLiveHostPlan } from "./liveHostPlanData";
+import type { GameSession, PlannedTaskInfo } from "./types";
 
 interface Options {
   session: GameSession | null;
 }
-export function useHostPlan({ session }: Options) {
-  const [teamPhotoUrls, setTeamPhotoUrls] = useState<Record<string, string>>(
-    {},
-  );
-
-  const [gamePhotoUrl, setGamePhotoUrl] = useState<string | null>(null);
-
-  const [autoplayEnabled, setAutoplayEnabled] = useState(false);
-
-  const [gameSchedule, setGameSchedule] = useState<GameScheduleItem[]>([]);
-
-  const [plannedTasks, setPlannedTasks] = useState<PlannedTaskInfo[]>([]);
-
-  const [defaultBreakMinutes, setDefaultBreakMinutes] = useState(0);
-
-  useEffect(() => {
-    if (!session?.host_game_id) return;
-    let alive = true;
-    void supabase
-      .from("host_games")
-      .select("plan_data")
-      .eq("id", session.host_game_id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!alive) return;
-        const planData = data?.plan_data as {
-          gamePhotoUrl?: string | null;
-          teamPhotoUrls?: Record<string, string>;
-          autoplay?: boolean;
-          breakMinutes?: number;
-          schedule?: GameScheduleItem[];
-          selectedTasks?: PlannedTaskInfo[];
-        } | null;
-        setGamePhotoUrl(planData?.gamePhotoUrl ?? null);
-        setTeamPhotoUrls(planData?.teamPhotoUrls ?? {});
-        setAutoplayEnabled(Boolean(planData?.autoplay));
-        setDefaultBreakMinutes(
-          Math.max(0, Number(planData?.breakMinutes) || 0),
-        );
-        setGameSchedule(
-          Array.isArray(planData?.schedule) ? planData.schedule : [],
-        );
-        setPlannedTasks(
-          Array.isArray(planData?.selectedTasks) ? planData.selectedTasks : [],
-        );
-      });
-    return () => {
-      alive = false;
-    };
-  }, [session?.host_game_id]);
+function emptyPlan(hostGameId: string | null) {
   return {
-    teamPhotoUrls,
+    hostGameId,
+    ...projectLiveHostPlan(null),
+    loading: false,
+    error: "",
+  };
+}
+function planReadError(error: unknown) {
+  if (error instanceof Error) return error.message;
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  )
+    return error.message;
+  return "Couldn't load the saved game plan.";
+}
+export function useHostPlan({ session }: Options) {
+  const hostGameId = session?.host_game_id ?? null;
+  const identity = useRef(hostGameId);
+  identity.current = hostGameId;
+  const mounted = useRef(true);
+  const request = useRef(0);
+  const [state, setState] = useState(() => emptyPlan(hostGameId));
+  const current =
+    state.hostGameId === hostGameId ? state : emptyPlan(hostGameId);
+  const reload = useCallback(async () => {
+    if (!mounted.current || identity.current !== hostGameId) return;
+    const generation = ++request.current;
+    const active = () =>
+      mounted.current &&
+      identity.current === hostGameId &&
+      request.current === generation;
+    if (!hostGameId) {
+      setState(emptyPlan(null));
+      return;
+    }
+    setState((previous) => ({
+      ...(previous.hostGameId === hostGameId
+        ? previous
+        : emptyPlan(hostGameId)),
+      loading: true,
+      error: "",
+    }));
+    try {
+      const { data, error } = await supabase
+        .from("host_games")
+        .select("plan_data")
+        .eq("id", hostGameId)
+        .maybeSingle();
+      if (!active()) return;
+      if (error) throw error;
+      setState({
+        hostGameId,
+        ...projectLiveHostPlan(data?.plan_data),
+        loading: false,
+        error: "",
+      });
+    } catch (error) {
+      if (!active()) return;
+      const message = planReadError(error);
+      setState((previous) => ({ ...previous, loading: false, error: message }));
+    }
+  }, [hostGameId]);
+  useEffect(() => {
+    mounted.current = true;
+    void reload();
+    return () => {
+      mounted.current = false;
+      request.current += 1;
+    };
+  }, [reload]);
+  const setTeamPhotoUrls = useCallback(
+    (value: SetStateAction<Record<string, string>>) => {
+      if (!mounted.current || identity.current !== hostGameId) return;
+      setState((previous) => {
+        const active =
+          previous.hostGameId === hostGameId ? previous : emptyPlan(hostGameId);
+        return {
+          ...active,
+          teamPhotoUrls:
+            typeof value === "function" ? value(active.teamPhotoUrls) : value,
+        };
+      });
+    },
+    [hostGameId],
+  );
+  const setPlannedTasks = useCallback(
+    (value: SetStateAction<PlannedTaskInfo[]>) => {
+      if (!mounted.current || identity.current !== hostGameId) return;
+      setState((previous) => {
+        const active =
+          previous.hostGameId === hostGameId ? previous : emptyPlan(hostGameId);
+        return {
+          ...active,
+          plannedTasks:
+            typeof value === "function" ? value(active.plannedTasks) : value,
+        };
+      });
+    },
+    [hostGameId],
+  );
+  const setError = useCallback(
+    (value: SetStateAction<string>) => {
+      if (!mounted.current || identity.current !== hostGameId) return;
+      setState((previous) => {
+        const active =
+          previous.hostGameId === hostGameId ? previous : emptyPlan(hostGameId);
+        return {
+          ...active,
+          error: typeof value === "function" ? value(active.error) : value,
+        };
+      });
+    },
+    [hostGameId],
+  );
+  return {
+    teamPhotoUrls: current.teamPhotoUrls,
     setTeamPhotoUrls,
-    gamePhotoUrl,
-    autoplayEnabled,
-    gameSchedule,
-    plannedTasks,
+    gamePhotoUrl: current.gamePhotoUrl,
+    autoplayEnabled: current.autoplayEnabled,
+    gameSchedule: current.gameSchedule,
+    plannedTasks: current.plannedTasks,
     setPlannedTasks,
-    defaultBreakMinutes,
+    defaultBreakMinutes: current.defaultBreakMinutes,
+    loading: current.loading,
+    error: current.error,
+    reload,
+    setError,
   };
 }

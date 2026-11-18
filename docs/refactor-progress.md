@@ -3983,7 +3983,7 @@ PNGs remain exact and focused states show the intended ring. Pointer text focus
 follows browser :focus-visible semantics; disabled local fields remain skipped.
 Evidence: `/tmp/admin-focus-comparison.log` and `/tmp/admin-focus-comparisons.json`.
 
-## Remaining finish milestones
+## Finish milestones at the 54e84f6 checkpoint
 
 1. **Close active presentation migrations:** legacy host console styling is
    verified; legacy player styling has completed its 44-state comparison and
@@ -4000,8 +4000,8 @@ Evidence: `/tmp/admin-focus-comparison.log` and `/tmp/admin-focus-comparisons.js
    mocked desktop/mobile suite, lint, strict types, build and review load; then run
    the requested desloppify audit, address findings and perform final verification.
 
-The existing PlayerDemo layout choice and contrast questions still await user
-input. Current appearance is preserved while independent work proceeds. Native
+At that checkpoint, PlayerDemo layout and contrast choices were unresolved.
+The subsequently approved preserve-design scope retains their current appearance. Native
 media lacks a supplied caption/transcript contract; no fake content or new upload
 feature is authorized by this migration. Live backend schema/policy/atomic awards
 are not proven by mocked frontend tests.
@@ -4555,3 +4555,22 @@ permanent; work-item status totals are a different population. Evidence:
 /tmp/finishing-audit-state-accountability.json. A review re-import not reporting
 an old finding is never accepted as deployed policy/live-journey verification;
 those real external limitations remain unverified in this report.
+
+## Live saved-plan validation and recovery
+
+A separate seven-file slice narrows consumed persisted plan fields, isolates plan
+read identity/error/reload state, and preserves unknown root/task metadata and
+order during a valid challenge patch. Malformed metadata never gets overwritten
+after a successful live challenge save; the existing partial-save warning remains.
+Obsolete/rejected reads cannot replace another plan; successful session polling
+cannot erase a failed command or the independent plan error. The coordinator adds
+only that feedback channel in this slice; voting/timer wiring follows separately.
+
+Regression-first plan/read/editor cases pass. The isolated assembly passes615units,
+forced app/browser types, full lint/build, two existing break-preview checks and
+six actual editor/modal-error desktop/mobile cases. Evidence:
+/tmp/live-host-phase3-handoff.md, /tmp/live-plan-only-{unit,types,pwtypes,lint,build,
+browser,editor-browser}.log. Review read projections, lossless write guards and
+identity/error precedence separately from tests. Source delta is7files,
++668/-74=742review-relevant lines before this note; the live workspace's newer
+named-command and timer overlays are intentionally excluded from this commit.
