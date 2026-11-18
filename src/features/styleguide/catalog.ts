@@ -845,7 +845,8 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     dependencies: "challengeVisuals and SCSS .challenge-icons; no queries.",
   },
   HostDashboard: {
-    usage: "Host hub view composition selected by route view/preview ID.",
+    usage:
+      "Host hub selected by route view/preview ID. Overview and Your games use roving tab stops, wrapping Left/Right and Home/End, and a named games panel. Local host workspace furniture demonstrates the same keyboard contract without connected controllers.",
     dependencies:
       "useHostHub, connected HostWorkspace and feature presentation panels; do not mount in local demos.",
   },
@@ -951,7 +952,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   HostAccessForm: {
     usage:
-      "Controlled host login/signup form. Pass auth: HostAccessState containing values, feedback, busy state and callbacks.",
+      "Controlled host login/signup form. Pass auth: HostAccessState containing values, feedback, busy state and callbacks. Linked account tabs use one keyboard stop and wrapping arrows/Home/End; the named panel retains its native form. Local host account tabs supplies state only and never authenticates.",
     dependencies:
       "Caller-supplied state; shared Field comic variant, InputIcon and Button; SCSS .host-access-form. No direct backend access.",
   },

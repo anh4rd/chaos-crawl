@@ -4423,3 +4423,25 @@ backend-free local reference; counted runtime utility audit. Source delta before
 documentation is63review-relevant files,+1010/-682=1692lines. Scrutinize selector
 contexts and native prop/default behavior. Reset/tooling removal and tab keyboard
 changes remain separate slices; the whole-tree reviewer load includes both.
+
+## Host account and workspace keyboard contracts
+
+Account and dashboard tabs now have stable linked IDs, one selected tab stop,
+wrapping arrow/Home/End activation and named panels. The account panel wraps the
+unchanged native form; the dashboard uses its existing games section. Read-only
+preview parameters and ordinary routing remain. Controlled local account and
+workspace references demonstrate the same behavior without auth/storage/backend
+reads or writes. Shared tab-handler extraction preserves its original AST.
+
+Actual keyboard regressions failed before repair. All28 integrated desktop/mobile
+account, dashboard, hub, foundation and local-reference cases pass against
+/tmp/chaos-finishing-host-keyboard-current. Its575units, forced app/browser types,
+JS/SCSS linters and production build pass. The only formatting failure was the
+unrelated countdown source, corrected and passing in the neutral commit. Twelve
+account appearance pairs remain pixel-exact; dashboard native focus is exercised.
+Evidence: /tmp/host-keyboard-integration-handoff.md and
+/tmp/finishing-host-keyboard-{unit,browser,types,pwtypes,lint,build}.log.
+
+Review native form/panel semantics, focus order, preview routing and local demo
+isolation. Twelve source/test/catalog paths change; this behavior slice follows
+the neutral furniture commit and does not include native reset/package removal.

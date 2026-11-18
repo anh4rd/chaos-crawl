@@ -1,3 +1,4 @@
+import HostAccessExample from "./HostAccessExample";
 import ModerationExample from "./ModerationExample";
 import IdeaCardExample from "./IdeaCardExample";
 import CatalogueExample from "./CatalogueExample";
@@ -124,6 +125,7 @@ export default function HostExamples() {
       <FilterToolbarExample />
       <PlatformGamesExample />
       <LegacyAdminExample />
+      <HostAccessExample />
       <HostFoundationExample />
       <PlanningPrimitivesExample />
       <LobbyPrimitivesExample />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import HostShell from "../../components/host/HostShell";
 import Button from "../../components/ui/Button";
 import ContentPanel from "../../components/ui/ContentPanel";
@@ -14,6 +14,10 @@ import HostDirectory from "../host-hub/HostDirectory";
 import { Example } from "./Example";
 
 export default function HostFoundationExample() {
+  const id = useId();
+  const overviewId = `${id}-overview`;
+  const gamesId = `${id}-games`;
+  const panelId = `${id}-plans`;
   const [view, setView] = useState("home");
   const [empty, setEmpty] = useState(false);
   const [preview, setPreview] = useState(false);
@@ -40,7 +44,7 @@ export default function HostFoundationExample() {
         title="Local host workspace furniture"
         source="shared workspace primitives + HostDirectory"
         code={
-          '<TabList navigation="native" variant="workspace" label="Game list view">...</TabList>\n<FeedbackNotice tone="error" role="alert">...</FeedbackNotice>'
+          '<TabList variant="workspace" label="Game list view">...</TabList>\n<FeedbackNotice tone="error" role="alert">...</FeedbackNotice>'
         }
       >
         <label>
@@ -98,14 +102,13 @@ export default function HostFoundationExample() {
                   ? "Preview connection failed. Try the local action again."
                   : "Local game plan saved."}
               </FeedbackNotice>
-              <TabList
-                label="Local game list view"
-                variant="workspace"
-                navigation="native"
-              >
+              <TabList label="Local game list view" variant="workspace">
                 <Button
                   type="button"
                   role="tab"
+                  id={overviewId}
+                  aria-controls={panelId}
+                  tabIndex={view === "home" ? 0 : -1}
                   aria-selected={view === "home"}
                   variant="workspace-tab"
                   fullWidth={false}
@@ -117,6 +120,9 @@ export default function HostFoundationExample() {
                 <Button
                   type="button"
                   role="tab"
+                  id={gamesId}
+                  aria-controls={panelId}
+                  tabIndex={view === "games" ? 0 : -1}
                   aria-selected={view === "games"}
                   variant="workspace-tab"
                   fullWidth={false}
@@ -127,7 +133,13 @@ export default function HostFoundationExample() {
                   <CountBadge variant="workspace">{empty ? 0 : 1}</CountBadge>
                 </Button>
               </TabList>
-              <section className="host-dashboard__section">
+              <section
+                className="host-dashboard__section"
+                id={panelId}
+                role="tabpanel"
+                aria-labelledby={view === "home" ? overviewId : gamesId}
+                tabIndex={0}
+              >
                 <PanelHeading variant="workspace">
                   <div>
                     <h2>{view === "home" ? "Upcoming games" : "All plans"}</h2>

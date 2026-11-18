@@ -1,3 +1,4 @@
+import { useId } from "react";
 import PanelGrid from "../../components/ui/PanelGrid";
 import EmptyState from "../../components/ui/EmptyState";
 import PanelHeading from "../../components/ui/PanelHeading";
@@ -24,6 +25,10 @@ export default function HostDashboard({
   created: boolean;
 }) {
   const navigate = useNavigate();
+  const tabId = useId();
+  const overviewId = `${tabId}-overview`;
+  const gamesId = `${tabId}-games`;
+  const panelId = `${tabId}-plans`;
   const {
     games,
     upcoming,
@@ -100,12 +105,15 @@ export default function HostDashboard({
         )}
         {error && <FeedbackNotice tone="error">{error}</FeedbackNotice>}
 
-        <TabList label="Game list view" variant="workspace" navigation="native">
+        <TabList label="Game list view" variant="workspace">
           <Button
             variant="workspace-tab"
             fullWidth={false}
             type="button"
             role="tab"
+            id={overviewId}
+            aria-controls={panelId}
+            tabIndex={view === "home" ? 0 : -1}
             aria-selected={view === "home"}
             className={view === "home" ? "btn--workspace-selected" : ""}
             onClick={() =>
@@ -123,6 +131,9 @@ export default function HostDashboard({
             fullWidth={false}
             type="button"
             role="tab"
+            id={gamesId}
+            aria-controls={panelId}
+            tabIndex={view === "games" ? 0 : -1}
             aria-selected={view === "games"}
             className={view === "games" ? "btn--workspace-selected" : ""}
             onClick={() =>
@@ -161,7 +172,13 @@ export default function HostDashboard({
           />
         </section>
 
-        <section className="host-dashboard__section">
+        <section
+          className="host-dashboard__section"
+          id={panelId}
+          role="tabpanel"
+          aria-labelledby={view === "home" ? overviewId : gamesId}
+          tabIndex={0}
+        >
           <PanelHeading variant="workspace">
             <div>
               <h2>{view === "home" ? "Upcoming games" : "All plans"}</h2>

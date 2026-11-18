@@ -35,7 +35,7 @@ test("public suspense fallback remains a main landmark until its route chunk res
   );
 });
 
-test("host directory fallbacks, native tab activation and read-only preview preserve their route contracts", async ({
+test("host directory fallbacks, arrow tab activation and read-only preview preserve their route contracts", async ({
   page,
 }) => {
   const backend = await installHostFoundation(page);
@@ -51,9 +51,8 @@ test("host directory fallbacks, native tab activation and read-only preview pres
     .locator("xpath=ancestor::article[1]");
   await expect(named).toContainText("1 game ·");
   await tabTo(page, page.getByRole("tab", { name: "Overview", exact: true }));
-  await page.keyboard.press("Tab");
+  await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("tab", { name: /Your games/ })).toBeFocused();
-  await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/#\/host\/games$/);
   await expect(
     page.getByRole("heading", { name: "All plans", exact: true }),
