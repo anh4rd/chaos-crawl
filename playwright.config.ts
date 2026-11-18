@@ -24,6 +24,7 @@ export default defineConfig({
     "**/privateMissions.spec.ts",
     "**/join.spec.ts",
     "**/playerDemo.spec.ts",
+    "**/hostSaved.spec.ts",
   ],
 
   fullyParallel: false,

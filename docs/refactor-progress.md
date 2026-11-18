@@ -2703,13 +2703,74 @@ explicitly not included in this checkpoint. While the design choice is pending,
 continue independent HostSaved regression/boundary work, then remaining host/V2,
 legacy, styling retirement and the final desloppify audit.
 
+## Phase 5k — saved-item feature, API and read-lifetime boundaries
+
+HostSaved now composes SavedItemsWorkspace. useSavedItems owns the collection,
+filter, loading and feedback; controlled SavedItemsView/SavedItemCard implement
+presentation. Typed hostSavedQueries/hostSavedCommands use runApi and the existing
+SDK/auth access functions. The frontend HostSavedItem contract replaces broad
+component assertions; it is an inferred consumption shape, not deployed schema.
+Title/name/fallback precedence, optional descriptions/stops, zero-point display,
+server-provided order and native remove labels remain intact.
+
+The presentation move is neutral. The read controller also deliberately fixes an
+obsolete-effect issue found during extraction: a late identity lookup previously
+started another query after unmount or StrictMode cleanup, and a stale read
+failure could replace removal feedback. Effect-local cleanup guards now reject
+obsolete identity/query results. Command outcomes check mount lifetime; query
+and action feedback have separate state. Server requests already issued are not
+cancelled or undone. Pending remove controls retain their existing enabled state.
+
+Verification, with source/documentation frozen during browser jobs:
+
+- Seven saved-route journeys per viewport pass before extraction and afterward,
+  covering exact host filter/select/order, incoming order and fallbacks, native
+  filters, pending reads/filter retention, pending and failed/retried deletion,
+  missing identity, query failure and empty collections. Deletes retain the exact
+  id-only filter and empty body. Client filters are not proof of server policy.
+- The local reference uses only state and controlled views inside HostPatternPreview.
+  Its additional keyboard journey filters/removes sample rows and toggles loading
+  with zero backend requests. All **16 affected browser cases** pass, eight per
+  viewport; no connected workspace is mounted by the reference.
+- Three lifecycle regressions fail before the guards and pass afterward. They
+  prove an unmounted identity response cannot start a query, only the current
+  StrictMode effect reads rows, and an obsolete identity/read cannot erase a
+  failed removal. All **346 unit/component tests** pass.
+- Lint/formatting, strict TypeScript production build and Playwright type checks
+  pass. Sentry uploads were disabled. No live backend writes, migrations, new
+  dependencies or deployment occurred. Other workflows last passed in the earlier
+  full 330-case browser run; this feature slice reran its affected journeys.
+- All **218 stylesheet files** remain byte-identical. **20 render comparisons**
+  at 1280/393px cover all/task/location/route filters, empty data, read/identity
+  errors, pending loading, failed deletion and successful deletion. Raw DOM,
+  attributes, geometry and every standard computed property match without
+  normalization; every final viewport PNG pair is byte-identical. The mobile
+  verifier waits for the settled account text in the DOM because that text is
+  intentionally hidden at narrow widths; no production readiness code changed.
+
+| Review slice            | Intent / scrutiny                                                            | Proof                                                                                    |
+| ----------------------- | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Feature/view extraction | Native markup, labels, callback wiring, filtering and fallback copy          | Fourteen original-route regressions and twenty exact DOM/style/PNG comparisons           |
+| Persistence boundary    | Preserve host-scoped read/order and id-only delete; use standard API results | Actual mocked SDK request URL/body assertions, failure/retry and strict build            |
+| Read ownership          | Reject obsolete effect results and protect action feedback                   | Three before-failing/after-passing lifecycle regressions; current browser flows retained |
+| Local contract          | Reuse controlled collection/card presentation without connecting             | Local keyboard selection/removal/loading journey with zero backend requests              |
+| Test support            | Permit only the existing saved-row DELETE shape in the shared mock           | Precise id-filter handling and request-contract assertions; other endpoints unchanged    |
+
+This slice exceeds the approximate 800-line review budget. Review regression/test
+support additions separately from view movement, typed persistence and the small
+intentional lifecycle fix. Styling and accessibility behavior changes are not
+part of this checkpoint. Continue with owned saved-item styles and shared
+furniture, then remaining host/V2/legacy work and the final desloppify audit.
+The player-demo visual choice and previously recorded contrast choices remain
+pending; continue independent work without inferring approval.
+
 ## Queued phases for the full refactor
 
 Player-demo regressions and the local controller/view boundary are verified.
 Its shared-layout conversion awaits the user's explicit design choice; preserve
 the old view and all seven tour targets until that answer arrives. Continue
-independent HostSaved regressions and route/controller/persistence separation
-while waiting, then remaining host/V2/legacy work. Keep the completed join,
+owned saved-item styles and shared furniture while waiting, then remaining
+host/V2/legacy work. Keep the completed join,
 mission reveal and shared host/player contracts intact.
 Preserve conditional visibility and query,
 subscription and timer boundaries. The three recorded contrast changes still

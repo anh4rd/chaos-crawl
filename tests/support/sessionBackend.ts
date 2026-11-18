@@ -4,7 +4,7 @@ import { expect, type Page } from "@playwright/test";
 
 export const sessionCode = "123456";
 export const sessionId = "test-session";
-const hostId = "00000000-0000-4000-8000-000000000001";
+export const hostId = "00000000-0000-4000-8000-000000000001";
 const timestamp = "2030-01-01T12:00:00Z";
 
 export function sessionFixture() {
@@ -504,6 +504,25 @@ export async function installSessionBackend(
             ? (rows[0] ?? null)
             : rows,
         );
+        return;
+      }
+      if (
+        name === "host_favourites" &&
+        request.method() === "DELETE" &&
+        url.searchParams.size === 1 &&
+        url.searchParams.get("id")?.startsWith("eq.")
+      ) {
+        const id = url.searchParams.get("id")?.slice(3);
+        rows.host_favourites = (rows.host_favourites ?? []).filter(
+          (row) =>
+            !(
+              typeof row === "object" &&
+              row !== null &&
+              "id" in row &&
+              row.id === id
+            ),
+        );
+        await respond(null);
         return;
       }
       if (

@@ -1,3 +1,4 @@
+import SavedItemsExample from "./SavedItemsExample";
 import StagePlanExample from "./StagePlanExample";
 import OverlayPanelExample from "./OverlayPanelExample";
 import RewardPrimitivesExample from "./RewardPrimitivesExample";
@@ -112,6 +113,7 @@ export default function HostExamples() {
         </HostPatternPreview>
       </Example>
       <WorkspaceExamples />
+      <SavedItemsExample />
       <PlanningPrimitivesExample />
       <LobbyPrimitivesExample />
       <HostChromeExample />

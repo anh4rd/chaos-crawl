@@ -1,5 +1,24 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
+  SavedItemsWorkspace: {
+    usage:
+      "Connected /host/saved coordinator. Mount through HostSaved; it composes the authenticated workspace with the saved-items controller.",
+    dependencies:
+      "HostWorkspace identity, useSavedItems, typed hostSavedQueries/hostSavedCommands and retained host styles. Never mount in the local reference. Query contracts are inferred frontend consumption shapes, not verified deployed schema.",
+  },
+  SavedItemsView: {
+    usage:
+      "Controlled saved-item collection. Supply count, visible records, filter, loading/error and callbacks. Local saved items demonstrates filtering, removal and loading without a backend.",
+    dependencies:
+      "SavedItemCard, shared Icon and retained host styles. No router, storage, auth or persistence access.",
+  },
+  SavedItemCard: {
+    usage:
+      "Saved task/location/route presentation. Preserves nullish title fallback, optional description/stops, numeric points including zero and the labeled remove action.",
+    dependencies:
+      "Caller-supplied saved item and remove callback; shared Icon/IconButton with retained host styles. No queries or writes.",
+  },
+
   PlayerDemoExperience: {
     usage:
       "Public /demo/player coordinator. Owns only local state and the existing guided-tour content; it never reads a live session.",

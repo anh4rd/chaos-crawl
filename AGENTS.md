@@ -121,6 +121,17 @@ shared-layout choice is pending. Do not create duplicate shared session widgets
 from it or treat automatic continuation as design approval; continue independent
 migration work meanwhile.
 
+HostSaved composes features/host-saved/SavedItemsWorkspace. Its controller owns
+collection/filter/loading and separate query/action feedback. Effect-local cleanup
+rejects obsolete identity/query results, and commands check mount lifetime.
+Typed hostSavedQueries/hostSavedCommands use runApi; preserve host-scoped select/
+created_at ordering and the original id-only delete filter/body. The frontend
+saved-item contract is not deployed schema or proof of server authorization.
+Controlled SavedItemsView/SavedItemCard retain title/name/fallback precedence,
+optional stops/description, zero points, incoming order and native remove labels.
+The local saved-items reference uses only state, including filtering, removal and
+loading. Retained host CSS awaits its owned-style slice; do not add overrides.
+
 Supabase auth is shared by the legacy and session clients. Legacy player IDs and V2 session-player credentials use different storage keys and are not interchangeable. Preserve RPC payloads, storage paths, query ordering, score semantics, subscription cleanup, timer behavior, error handling, and route/query parameters. Client storage is not an authorization boundary; policies and atomic awards require server enforcement.
 
 `HostLogin` composes `features/host-access/HostAccess`. Its focused hook owns credentials, initial session recovery, command feedback and redirects through the typed SDK functions in `lib/hostAuth.ts`. `HostAccessForm` receives controlled values and callbacks; shared `BrandLink` and `InputIcon` remain presentation-only. The host header and login use the same host wordmark variant.
