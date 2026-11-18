@@ -8,7 +8,7 @@ export default function Note({
   ...props
 }: HTMLAttributes<HTMLElement> & {
   compact?: boolean;
-  variant?: "lobby" | "control" | "session";
+  variant?: "lobby" | "control" | "session" | "access-intro" | "access-help";
   as?: "p" | "output" | "small";
 }) {
   return (

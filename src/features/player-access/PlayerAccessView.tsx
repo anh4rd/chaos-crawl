@@ -1,3 +1,10 @@
+import AccessHeader from "../../components/ui/AccessHeader";
+import Button from "../../components/ui/Button";
+import DisplayHeading from "../../components/ui/DisplayHeading";
+import FloatingNotice from "../../components/ui/FloatingNotice";
+import FormStack from "../../components/ui/FormStack";
+import MascotArt from "../../components/ui/MascotArt";
+import Note from "../../components/ui/Note";
 import ChaosMonster from "../../../public/chaos-logo.png";
 import Icon from "../../components/ui/Icon";
 import GameCodeInput from "../../components/ui/GameCodeInput";
@@ -22,73 +29,56 @@ export default function PlayerAccessView({
   onToggleMode,
   onSubmit,
 }: PlayerAccessModel & { as?: "main" | "section" }) {
+  let titleLead = "Enter your";
+  let titleEnd = "details";
+  let intro = "Choose how you want to show up in the game.";
+  let submitLabel = mode === "join" ? "Join game" : "Rejoin game";
+  if (joinStep === 1) {
+    titleLead = mode === "join" ? "Join" : "Back for";
+    titleEnd = mode === "join" ? "the chaos" : "more chaos";
+    intro =
+      mode === "join"
+        ? "Join a game with the code from your host."
+        : "Enter the code and the same mobile number you used when you joined.";
+    submitLabel = "Next";
+  }
   return (
-    <Container className="join-flow">
-      <header className="join-topbar">
-        <span className="join-brand">Chaos</span>
-        <span className="join-topbar__hint">
-          {mode === "join" ? "JOIN GAME" : "REJOIN GAME"}
-        </span>
-      </header>
+    <Container className="player-access">
+      <AccessHeader
+        brand="Chaos"
+        hint={mode === "join" ? "JOIN GAME" : "REJOIN GAME"}
+      />
       <div
-        className={`join-flow__content ${joinStep === 1 ? "join-flow__content--code" : "join-flow__content--details"}`}
+        className={`player-access__content ${joinStep === 1 ? "player-access__content--code" : "player-access__content--details"}`}
       >
         {joinStep === 2 && (
-          <button type="button" className="join-back" onClick={onBack}>
+          <Button
+            type="button"
+            variant="access-back"
+            fullWidth={false}
+            onClick={onBack}
+          >
             ← Back
-          </button>
+          </Button>
         )}
-        {joinStep === 1 && (
-          <img
-            className="join-monster-art"
-            src={ChaosMonster}
-            alt="Chaos mascot"
-          />
-        )}
-        <h1 className="join-display-title">
-          {joinStep === 1 ? (
-            mode === "join" ? (
-              <>
-                Join
-                <br />
-                <span>the chaos</span>
-              </>
-            ) : (
-              <>
-                Back for
-                <br />
-                <span>more chaos</span>
-              </>
-            )
-          ) : (
-            <>
-              Enter your
-              <br />
-              <span>details</span>
-            </>
-          )}
-        </h1>
-        <p className="join-intro">
-          {joinStep === 2
-            ? "Choose how you want to show up in the game."
-            : mode === "join"
-              ? "Join a game with the code from your host."
-              : "Enter the code and the same mobile number you used when you joined."}
-        </p>
+        {joinStep === 1 && <MascotArt src={ChaosMonster} alt="Chaos mascot" />}
+        <DisplayHeading as="h1" variant="access">
+          {titleLead}
+          <br />
+          <span>{titleEnd}</span>
+        </DisplayHeading>
+        <Note variant="access-intro">{intro}</Note>
 
         {notice && (
-          <div className="join-message join-message--notice">
-            <Icon name="check-circle2" className="icon--size-17" />
-            <span>{notice}</span>
-          </div>
+          <FloatingNotice
+            tone="notice"
+            icon={<Icon name="check-circle2" className="icon--size-17" />}
+            message={notice}
+          />
         )}
-        {error && (
-          <div className="join-message join-message--error" role="alert">
-            <span>{error}</span>
-          </div>
-        )}
+        {error && <FloatingNotice tone="error" role="alert" message={error} />}
 
-        <form onSubmit={onSubmit} className="join-form">
+        <FormStack onSubmit={onSubmit}>
           {joinStep === 1 ? (
             <>
               <GameCodeInput
@@ -99,7 +89,7 @@ export default function PlayerAccessView({
             </>
           ) : (
             <>
-              <div className="join-current-code">
+              <div className="form-stack__code">
                 GAME CODE <strong>{code}</strong>
               </div>
               <PlayerDetailsFields
@@ -111,9 +101,9 @@ export default function PlayerAccessView({
               />
             </>
           )}
-          <button
+          <Button
             type="submit"
-            className="join-primary-button"
+            variant="access"
             disabled={
               joinStep === 1 ? code.replace(/\D/g, "").length !== 6 : !canSubmit
             }
@@ -125,26 +115,23 @@ export default function PlayerAccessView({
               </>
             ) : (
               <>
-                {joinStep === 1
-                  ? "Next"
-                  : mode === "join"
-                    ? "Join game"
-                    : "Rejoin game"}{" "}
+                {submitLabel}{" "}
                 <Icon name="check-circle2" className="icon--size-18" />
               </>
             )}
-          </button>
-        </form>
+          </Button>
+        </FormStack>
         {joinStep === 1 && (
-          <button
+          <Button
             type="button"
-            className="join-text-button"
+            variant="access-switch"
+            fullWidth={false}
             onClick={onToggleMode}
           >
             {mode === "join"
               ? "Already joined? Rejoin"
               : "New player? Join game"}
-          </button>
+          </Button>
         )}
       </div>
     </Container>

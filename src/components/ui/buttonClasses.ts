@@ -1,4 +1,7 @@
 export type ButtonVariant =
+  | "access"
+  | "access-back"
+  | "access-switch"
   | "reveal"
   | "team-create"
   | "session-action"

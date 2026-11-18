@@ -1,3 +1,4 @@
+@use "../variables/motion";
 @use "../variables/colors";
 @use "../variables/fonts";
 @use "../variables/layout";
@@ -18,5 +19,30 @@
     -webkit-text-stroke: layout.$pixel-unit * 0.45 colors.$poster-ink;
     text-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit 0
       colors.$poster-ink;
+  }
+}
+
+.display-heading {
+  &--access {
+    margin: 0 0 layout.$pixel-unit * 3.5;
+    color: colors.$white;
+    font-family: fonts.$family-entry-title;
+    font-size: fonts.$size-entry-title;
+    font-weight: fonts.$weight-action;
+    line-height: 0.82;
+    letter-spacing: fonts.$tracking-card-title;
+    text-align: center;
+    -webkit-text-stroke: 0 currentColor;
+    text-shadow:
+      layout.$pixel-unit * 0.75 layout.$pixel-unit 0 colors.$ink,
+      layout.$pixel-unit * -0.25 layout.$pixel-unit * -0.25 0 colors.$ink,
+      layout.$pixel-unit * 0.25 layout.$pixel-unit * -0.25 0 colors.$ink,
+      layout.$pixel-unit * -0.25 layout.$pixel-unit * 0.25 0 colors.$ink,
+      layout.$pixel-unit * 0.25 layout.$pixel-unit * 0.25 0 colors.$ink;
+    transform: rotate(motion.$entry-title-angle);
+    span {
+      display: inline-block;
+      margin-top: layout.$pixel-unit * 1.75;
+    }
   }
 }

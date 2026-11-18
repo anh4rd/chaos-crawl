@@ -132,3 +132,10 @@ $player-compact-breakpoint: 480px;
 
 $reveal-width: $pixel-unit * 82.5;
 $reveal-outline-width: $pixel-unit * 0.35;
+
+$entry-content-width: 430px;
+$entry-content-height-offset: 94px;
+$entry-header-height: 42px;
+$entry-code-top: clamp(22px, 5svh, 44px);
+$entry-copy-width: 290px;
+$notice-content-width: 428px;

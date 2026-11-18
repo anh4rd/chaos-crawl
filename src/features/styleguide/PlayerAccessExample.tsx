@@ -12,6 +12,7 @@ export default function PlayerAccessExample() {
   const [mobile, setMobile] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const [showError, setShowError] = useState(false);
   const canSubmit =
     code.length === 6 &&
     mobile.trim().length >= 8 &&
@@ -33,6 +34,14 @@ export default function PlayerAccessExample() {
         />{" "}
         Simulate pending join
       </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={showError}
+          onChange={(event) => setShowError(event.target.checked)}
+        />{" "}
+        Show sample join error
+      </label>
       <Note as="output">
         {notice ||
           "This reference never stores credentials or contacts a backend."}
@@ -47,7 +56,9 @@ export default function PlayerAccessExample() {
           name={name}
           mobile={mobile}
           busy={busy}
-          error=""
+          error={
+            showError ? "Sample join error. This reference remains local." : ""
+          }
           notice={notice}
           canSubmit={canSubmit}
           onCodeChange={setCode}

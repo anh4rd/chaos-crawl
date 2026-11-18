@@ -94,3 +94,12 @@ $family-choice-heading: list.set-nth($family-display, 1, "Hard Beat");
 $tracking-choice: 0.09em;
 
 $family-reveal-copy: "Quicksand", ui-sans-serif, sans-serif;
+
+$family-entry: "Quicksand", ui-sans-serif, system-ui, sans-serif;
+$family-entry-title: "Hardbeat", "Permanent Marker", Impact, sans-serif;
+$family-entry-label: "Hardbeat", "Permanent Marker", sans-serif;
+$family-game-code: "Hardbeat", "Trebuchet MS", sans-serif;
+$size-entry-title: clamp(45px, 13vw, 61px);
+$size-game-code: clamp(27px, 8vw, 36px);
+$tracking-entry-brand: 0.02em;
+$tracking-code-label: 0.11em;

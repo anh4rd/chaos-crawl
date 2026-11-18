@@ -1,0 +1,47 @@
+@use "../variables/layers";
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.player-access {
+  position: relative;
+  isolation: isolate;
+  min-height: 100svh;
+  overflow: hidden;
+  color: colors.$white;
+  background-color: colors.$entry-surface;
+  background-image: colors.$entry-background;
+  font-family: fonts.$family-entry;
+  &::before {
+    position: absolute;
+    z-index: layers.$sidebar-decoration;
+    inset: 0;
+    content: "";
+    pointer-events: none;
+    background: colors.$entry-wash;
+    mask-image: none;
+  }
+  &::after {
+    position: absolute;
+    z-index: layers.$sidebar-decoration;
+    inset: 0;
+    content: "";
+    pointer-events: none;
+    background: colors.$entry-shade;
+  }
+  &__content {
+    position: relative;
+    width: min(100%, layout.$entry-content-width);
+    min-height: calc(100svh - layout.$entry-content-height-offset);
+    margin: 0 auto;
+    padding: layout.$pixel-unit * 4.5 layout.$pixel-unit * 4
+      calc(layout.$pixel-unit * 7 + env(safe-area-inset-bottom));
+    &--code {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      min-height: calc(100svh - layout.$entry-header-height);
+      padding-top: layout.$entry-code-top;
+    }
+  }
+}

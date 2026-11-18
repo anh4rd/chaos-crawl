@@ -1076,3 +1076,76 @@
     }
   }
 }
+
+.btn {
+  &--access {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: layout.$pixel-unit * 2.25;
+    width: 100%;
+    min-height: layout.$pixel-unit * 11;
+    padding: layout.$pixel-unit * 3 layout.$pixel-unit * 4.5;
+    border: 0;
+    border-radius: layout.$pixel-unit * 3;
+    background: colors.$accent-soft;
+    color: colors.$ink;
+    box-shadow: 0 layout.$pixel-unit * 0.75 0
+      rgba(colors.$purple-dark, effects.$entry-action-shadow-opacity);
+    font-size: fonts.$size-body;
+    font-weight: fonts.$weight-action;
+    font-style: italic;
+    cursor: pointer;
+    text-transform: none;
+    scale: none;
+    transition:
+      transform motion.$duration-entry-action motion.$easing-default,
+      filter motion.$duration-entry-action motion.$easing-default;
+    &:hover:not(:disabled) {
+      filter: brightness(motion.$entry-action-brightness);
+      transform: translateY(layout.$pixel-unit * -0.25);
+    }
+    &:active:not(:disabled) {
+      transform: translateY(layout.$pixel-unit * 0.25);
+    }
+    &:disabled {
+      cursor: not-allowed;
+      opacity: effects.$disabled-input-opacity;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+  &--access-back,
+  &--access-switch {
+    border: 0;
+    background: transparent;
+    font-weight: fonts.$weight-extra-bold;
+    cursor: pointer;
+    box-shadow: none;
+    text-transform: none;
+    scale: none;
+    transition-property: all;
+    transition-duration: motion.$duration-none;
+    transition-timing-function: motion.$easing-default;
+  }
+  &--access-back {
+    border-radius: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.75;
+    margin: 0 0 layout.$pixel-unit * 3 layout.$pixel-unit * 0.5;
+    padding: layout.$pixel-unit * 1.5 0;
+    color: rgba(colors.$white, effects.$entry-back-opacity);
+    font-size: fonts.$size-label;
+  }
+  &--access-switch {
+    align-self: center;
+    margin-top: layout.$pixel-unit * 3.25;
+    padding: 0;
+    border-radius: 0;
+    color: rgba(colors.$white, effects.$entry-switch-opacity);
+    font-size: fonts.$size-small;
+    text-decoration: underline;
+  }
+}

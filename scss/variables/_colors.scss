@@ -397,3 +397,34 @@ $team-name-border: #c9c2de;
 
 $reveal-scrim: #1d0c68;
 $reveal-points: #ff2673;
+
+$entry-surface: #6846ff;
+$entry-glow: #836aff;
+$entry-header: #5632f7;
+$entry-wash-ink: #361cc4;
+$entry-field-ink: #2d18aa;
+$entry-placeholder: #bcb8c7;
+$notice-error-surface: #fff0f4;
+$notice-error-ink: #991b43;
+$notice-success-surface: #f1ffcd;
+$notice-success-ink: #23340a;
+$notice-shadow: rgba(18, 8, 67, 0.25);
+$entry-background:
+  repeating-conic-gradient(
+    from 2deg at 50% 48%,
+    rgba($white, 0.1) 0deg 13deg,
+    transparent 13deg 28deg
+  ),
+  radial-gradient(ellipse at center, $entry-glow 0%, $entry-surface 70%);
+$entry-wash: radial-gradient(
+  ellipse at center,
+  transparent 5%,
+  rgba($entry-wash-ink, 0.18) 100%
+);
+$entry-shade: linear-gradient(
+  180deg,
+  rgba($entry-wash-ink, 0.12) 0%,
+  transparent 22%,
+  rgba($entry-wash-ink, 0.04) 74%,
+  rgba($purple-dark, 0.12) 100%
+);

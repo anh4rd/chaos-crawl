@@ -1,5 +1,30 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
+  AccessHeader: {
+    usage:
+      "Presentation header with brand and hint copy. Local join and rejoin demonstrates the entry labels.",
+    dependencies:
+      "Native header/span markup and owned access-header SCSS. No routes, storage or backend work.",
+  },
+  FormStack: {
+    usage:
+      "Native controlled form with vertical spacing. Pass native form props and caller-composed children; demonstrated in the local join reference.",
+    dependencies:
+      "Owned form-stack SCSS; submission and validation belong to the caller.",
+  },
+  MascotArt: {
+    usage:
+      "Presentation-only mascot illustration. Pass native image props including descriptive alt text and the existing source asset.",
+    dependencies:
+      "Owned mascot-art SCSS. Local join/rejoin demonstrates the existing image without backend access.",
+  },
+  FloatingNotice: {
+    usage:
+      "Controlled floating error/notice surface. Supply message, optional icon, tone and native div attributes. The caller chooses announcement semantics; local join demonstrates existing success and toggled error states.",
+    dependencies:
+      "Owned floating-notice SCSS; no timers, global toast provider, persistence or backend access.",
+  },
+
   PlayerAccess: {
     usage:
       "Connected join/rejoin coordinator. The Join route supplies normalized URL code, entry mode and the successful credential redirect callback.",
@@ -10,19 +35,19 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     usage:
       "Controlled join/rejoin presentation. Supply values, validation state and callbacks; as=section avoids a nested main landmark in the local reference.",
     dependencies:
-      "GameCodeInput, PlayerDetailsFields, semantic icons and retained join CSS. No router, storage or backend reads/writes. Local join and rejoin demonstrates both steps and the pending contract.",
+      "Shared access header, heading, notices, form/panel/field/input/button primitives, GameCodeInput, PlayerDetailsFields and owned SCSS. No router, storage or backend reads/writes. Local join and rejoin demonstrates both steps and the pending contract.",
   },
   PlayerDetailsFields: {
     usage:
       "Controlled player name/mobile fields. Rejoin omits the name; preserve the mobile recovery copy, native label associations and input constraints.",
     dependencies:
-      "Feature presentation values and callbacks, semantic icons and retained join CSS. No persistence or credential work.",
+      "Feature presentation values and callbacks, ContentPanel access-field, FormLabel/InputIcon access and Note access-help; owned SCSS. No persistence or credential work.",
   },
   GameCodeInput: {
     usage:
       "Controlled six-digit code input with a caller-supplied unique ID. Filters non-digits, preserves numeric/one-time-code attributes and exposes a visible label. Demonstrated in Local join and rejoin.",
     dependencies:
-      "Native input and six decorative code cells, retained join CSS. No route, storage or backend work. Styling migration is a separate slice.",
+      "Native input and six decorative code cells with owned game-code-input SCSS. No route, storage or backend work.",
   },
 
   ChoiceOption: {
@@ -174,7 +199,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   ContentPanel: {
     usage:
-      "The overlay modifier supplies the shared centered/scrolled reward frame; compose Dialog separately for modal behavior. See Shared reward overlay frame. Section, library, selection, form, workspace, lobby, controls and session panel surfaces. Review-controls is a native div-compatible management well demonstrated locally; review-result supplies its published results surface. Session panels support stacked and compact spacing and appear in Shared session panels and invitation. Pass native props, a variant and optional as=div or as=main for its containing element; examples appear in Planning panels and fields. Choice variant supplies the participant choice surface in the local team reference.",
+      "Access variants retain native join markup in the local join/rejoin example. The overlay modifier supplies the shared centered/scrolled reward frame; compose Dialog separately for modal behavior. See Shared reward overlay frame. Section, library, selection, form, workspace, lobby, controls and session panel surfaces. Review-controls is a native div-compatible management well demonstrated locally; review-result supplies its published results surface. Session panels support stacked and compact spacing and appear in Shared session panels and invitation. Pass native props, a variant and optional as=div or as=main for its containing element; examples appear in Planning panels and fields. Choice variant supplies the participant choice surface in the local team reference.",
     dependencies:
       "SCSS .content-panel; composes caller content without backend access.",
   },
@@ -414,7 +439,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   InputIcon: {
     usage:
-      "Semantic icon positioned inside a composed input. Pass icon and a native or shared Input child. A local example appears in Host patterns.",
+      "Access variants retain native join markup in the local join/rejoin example. Semantic icon positioned inside a composed input. Pass icon and a native or shared Input child. A local example appears in Host patterns.",
     dependencies:
       "SCSS .input-icon and Icon. Host palette variables come from the surrounding host portal.",
   },
@@ -437,7 +462,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Note: {
     usage:
-      "Session variant provides panel copy with optional native small markup, demonstrated in Shared session panels and invitation. Control variant provides host timer messages. Lobby variant provides compact supporting copy and appears in Lobby surfaces and identity. Muted paragraph accepting shared HTML attributes. compact uses caption typography for dense descriptions; as=output supplies native status semantics, as shown in the local HostShell preview.",
+      "Access variants retain native join markup in the local join/rejoin example. Session variant provides panel copy with optional native small markup, demonstrated in Shared session panels and invitation. Control variant provides host timer messages. Lobby variant provides compact supporting copy and appears in Lobby surfaces and identity. Muted paragraph accepting shared HTML attributes. compact uses caption typography for dense descriptions; as=output supplies native status semantics, as shown in the local HostShell preview.",
     dependencies:
       "SCSS .note. Content and status semantics belong to the caller.",
   },
@@ -470,7 +495,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Button: {
     usage:
-      'Native button with poster, text, comic, setup, session-tour, timer/flow, dialog, round/chip, session-edit/send and review appearances. Session-action, session-secondary and session-ghost own the pink live-session appearances; reward, submission and mission examples demonstrate their enabled/disabled states without a backend. Round controls preserve their distinct shadows and hover behavior. Overlay-dismiss retains its native text close mark and focus/disabled behavior. fullWidth defaults to true. Set type="The private-mission local reference demonstrates its reveal variant. button" outside form submission. team-create preserves participant creation controls and disabled states in the local team reference.',
+      'Native button with poster, text, comic, setup, session-tour, timer/flow, dialog, round/chip, session-edit/send and review appearances. Session-action, session-secondary and session-ghost own the pink live-session appearances; reward, submission and mission examples demonstrate their enabled/disabled states without a backend. Round controls preserve their distinct shadows and hover behavior. Overlay-dismiss retains its native text close mark and focus/disabled behavior. fullWidth defaults to true. Set type="Access variants retain native join markup in the local join/rejoin example. The private-mission local reference demonstrates its reveal variant. button" outside form submission. team-create preserves participant creation controls and disabled states in the local team reference.',
     dependencies:
       "Owned SCSS .btn and ordinary native button attributes. Feature controllers own actions; local examples use only supplied callbacks/state.",
   },
@@ -540,7 +565,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   FormLabel: {
     usage:
-      "Reward and award-points variants retain native nested labels, number bounds and disabled controls; demonstrated in local Reward primitives. Review variant preserves direct label text and a native picker; shown in Shared review and presentation controls. Session and session-checkbox variants retain native nested controls and labels; Shared mission form controls demonstrates them. Composable native label preserving direct label text and control markup. spaced adds editor separation; checkbox preserves the existing checkbox layout. Native label attributes pass through, and small children retain editor hint styling; unlike Field, it adds no label span.",
+      "Access variants retain native join markup in the local join/rejoin example. Reward and award-points variants retain native nested labels, number bounds and disabled controls; demonstrated in local Reward primitives. Review variant preserves direct label text and a native picker; shown in Shared review and presentation controls. Session and session-checkbox variants retain native nested controls and labels; Shared mission form controls demonstrates them. Composable native label preserving direct label text and control markup. spaced adds editor separation; checkbox preserves the existing checkbox layout. Native label attributes pass through, and small children retain editor hint styling; unlike Field, it adds no label span.",
     dependencies:
       "SCSS .form-label. Controls and accessible label text belong to its caller. Demonstrated with FormGrid dialog in the local host dialog.",
   },
@@ -834,7 +859,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   DisplayHeading: {
     usage:
-      "Outlined display heading. Choose h1/h2/h3 through as; hero selects the large hero treatment.",
+      "Access variants retain native join markup in the local join/rejoin example. Outlined display heading. Choose h1/h2/h3 through as; hero selects the large hero treatment.",
     dependencies:
       "Project SCSS .display-heading. Local poster and host anchor examples above.",
   },

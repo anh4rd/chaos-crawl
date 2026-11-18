@@ -149,3 +149,16 @@
     }
   }
 }
+
+.form-label {
+  &--access {
+    display: block;
+    gap: normal;
+    margin-bottom: layout.$pixel-unit * 2;
+    color: colors.$white;
+    font-family: fonts.$family-entry-label;
+    font-size: fonts.$size-ribbon;
+    font-weight: fonts.$weight-action;
+    line-height: 1.1;
+  }
+}

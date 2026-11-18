@@ -9,13 +9,13 @@ export default function GameCodeInput({
 }) {
   return (
     <>
-      <label className="join-code-label" htmlFor={id}>
+      <label className="game-code-input__label" htmlFor={id}>
         Six-digit game code
       </label>
-      <div className="join-code-boxes" aria-label="Six digit game code">
+      <div className="game-code-input__cells" aria-label="Six digit game code">
         {Array.from({ length: 6 }, (_, index) => (
           <span
-            className={`join-code-box${value[index] ? " join-code-box--filled" : ""}`}
+            className={`game-code-input__cell${value[index] ? " game-code-input__cell--filled" : ""}`}
             key={index}
           >
             {value[index] ?? "1"}
@@ -23,7 +23,7 @@ export default function GameCodeInput({
         ))}
         <input
           id={id}
-          className="join-code-input-overlay"
+          className="game-code-input__control"
           value={value}
           inputMode="numeric"
           autoComplete="one-time-code"

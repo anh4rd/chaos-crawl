@@ -373,6 +373,16 @@ test("local join reference advances by keyboard, exposes pending controls and ne
   expect(
     await page.evaluate((key) => localStorage.getItem(key), credentialKey),
   ).toBeNull();
+  const sampleError = example.getByRole("checkbox", {
+    name: "Show sample join error",
+  });
+  await tabTo(page, sampleError);
+  await page.keyboard.press("Space");
+  await expect(example.getByRole("alert")).toHaveText(
+    "Sample join error. This reference remains local.",
+  );
+  await page.keyboard.press("Space");
+  await expect(example.getByRole("alert")).toHaveCount(0);
   expect(backend.requests).toHaveLength(0);
   backend.verify();
 });
@@ -461,7 +471,7 @@ for (const outcome of ["success", "failure"] as const) {
       await page.evaluate(() => {
         window.location.hash = "/join?code=654321";
       });
-      await expect(page.locator(".join-current-code strong")).toHaveText(
+      await expect(page.locator(".form-stack__code strong")).toHaveText(
         "654321",
       );
       await held.complete();

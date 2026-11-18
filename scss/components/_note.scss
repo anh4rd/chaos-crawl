@@ -47,3 +47,21 @@
     display: inline;
   }
 }
+
+.note {
+  &--access-intro {
+    max-width: layout.$entry-copy-width;
+    margin: layout.$pixel-unit * 2 auto layout.$pixel-unit * 4.5;
+    color: rgba(colors.$white, effects.$header-help-opacity);
+    font-size: fonts.$size-label;
+    font-weight: fonts.$weight-caption;
+    line-height: 1.35;
+    text-align: center;
+  }
+  &--access-help {
+    margin: layout.$pixel-unit * -0.75 0 layout.$pixel-unit * 2;
+    color: rgba(colors.$white, effects.$entry-help-opacity);
+    font-size: fonts.$size-micro;
+    line-height: 1.3;
+  }
+}

@@ -1,0 +1,37 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/layers";
+@use "../variables/effects";
+.floating-notice {
+  position: fixed;
+  z-index: layers.$notice-overlay;
+  right: layout.$pixel-unit * 3;
+  bottom: calc(layout.$pixel-unit * 19 + env(safe-area-inset-bottom));
+  left: layout.$pixel-unit * 3;
+  display: flex;
+  align-items: flex-start;
+  gap: layout.$pixel-unit * 2.25;
+  max-width: layout.$notice-content-width;
+  margin: 0 auto;
+  padding: layout.$pixel-unit * 3 layout.$pixel-unit * 3.25;
+  border: layout.$pixel-unit * 0.25 solid
+    rgba(colors.$white, effects.$notice-border-opacity);
+  border-radius: layout.$pixel-unit * 3.5;
+  box-shadow: 0 layout.$pixel-unit * 2 layout.$pixel-unit * 7
+    colors.$notice-shadow;
+  font-size: fonts.$size-small;
+  font-weight: fonts.$weight-bold;
+  line-height: 1.4;
+  &--error {
+    background: colors.$notice-error-surface;
+    color: colors.$notice-error-ink;
+  }
+  &--notice {
+    background: colors.$notice-success-surface;
+    color: colors.$notice-success-ink;
+  }
+  span {
+    flex: 1;
+  }
+}

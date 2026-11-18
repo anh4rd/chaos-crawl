@@ -2582,14 +2582,80 @@ appearances with raw DOM, computed-style and screenshot comparisons. Keep that
 styling move separate from this lifecycle behavior change. The full refactor and
 final desloppify audit remain outstanding.
 
+## Phase 5i — owned join styling and shared access primitives
+
+The join view now composes shared AccessHeader, DisplayHeading access, Note
+access-intro/help, MascotArt, FloatingNotice, FormStack, ContentPanel access-field,
+FormLabel/InputIcon access and Button access/back/switch variants. GameCodeInput
+owns its BEM label/cells/control styles. Native tags, labels, IDs, control types,
+copy, callbacks and error announcement semantics are retained. Title/intro/submit
+copy is derived before JSX rather than through nested render ternaries.
+
+All 73 remaining join selector arms were retired from PlayerGame.css, including
+historical overrides and the obsolete CSS-drawn mascot. Effective declaration
+values were consolidated into owned component partials and the player-access
+route shell. Existing colors, font stacks and measurements were promoted to
+project tokens; this is not a palette redesign. The shared player gradient arm
+and legacy root aliases remain for their other consumers. The retained legacy
+spinner still has multiple callers, so the access coordinator keeps its existing
+legacy stylesheet import until that separate migration.
+
+Verification completed with source/documentation frozen during browser jobs:
+
+- **343 unit/component tests**, lint/formatting, strict TypeScript production
+  build and Playwright type checks pass. MascotArt requires an explicit alt string
+  at the type boundary; the tested rendered image markup is unchanged.
+- All **26 affected browser cases** pass on desktop/mobile. They retain normal
+  join/rejoin, validation, pending edits, errors, storage/history and stale-result
+  behavior. The local reference also toggles its sample error by keyboard, renders
+  the shared floating notice and still performs no backend or credential work.
+  Other browser workflows last passed in the preceding complete 330-case run;
+  this styling slice reran the affected join journeys rather than that full suite.
+- A compiled-rule manifest proves all **249 retained player selector arms** keep
+  their exact order, conditions and declarations. The four other legacy
+  stylesheet sources remain byte-identical. All **1,329 previous expanded SCSS
+  rule projections** remain an identical ordered subsequence.
+- **50 render comparisons** match native DOM/attributes/input values after only
+  explicit class replacements/additions, geometry and every standard computed
+  property. Twenty main cases cover both steps, join/rejoin, error/pending and
+  primary hover/active states at 1280/393px. Four check code focus/selection;
+  sixteen check 599/600px widths and 739/740/741px heights; two check reduced
+  motion; eight check back/switch hover and keyboard-focus presentation.
+- Thirty-six final viewport PNG pairs are byte-identical. Fourteen differ by at
+  most seven pixels, maximum channel delta 3, in narrow field/control edge
+  regions. Raw differences are retained; no image or computed-style tolerance
+  masks were applied. This is not a claim that every PNG was byte-identical.
+- The original 600px-width padding and 740px-height join overrides were already
+  shadowed by later unconditional declarations. The new shell preserves those
+  effective values; comparisons check both sides instead of reinstating the old
+  ineffective rules. Query/state controllers, access contracts, SDK payloads and
+  route adapter remain byte-identical to c22b9f8.
+
+No live backend writes, migrations, dependencies, Sentry uploads or deployment
+occurred. Local demos remain disconnected from the access controller.
+
+| Review slice                      | Purpose / scrutiny                                                                  | Proof                                                                                           |
+| --------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Retired CSS and tokens            | Consolidate effective values without changing other player or host rules            | Retained selector manifest, ordered expanded SCSS projections and fifty render comparisons      |
+| Shared primitive APIs             | Preserve default behavior and explicit native props while adding access appearances | Existing rule projections unchanged; all unit/component tests and strict build                  |
+| Access view composition           | Native tags, labels, IDs, values and callbacks; class ownership                     | Normalized DOM/computed parity, unchanged controller/SDK/adapter bytes and affected journeys    |
+| State and responsive presentation | Pending/error/focus/hover/active, reduced motion and old thresholds                 | Explicit interaction/boundary comparisons, recorded PNG deltas and keyboard journeys            |
+| Local contract                    | Demonstrate shared controls and both notice tones without connecting                | Existing local submit/pending checks plus the new error toggle; zero backend/storage assertions |
+
+This slice exceeds the approximate 800-line review budget. Review the mechanical
+CSS/token move separately from shared API/composition and local-reference changes;
+use the table to distinguish source movement from native-prop scrutiny. The next
+phase covers player-demo regressions and reuse while preserving its local-only
+behavior and tour targets, then continues through remaining V2 and legacy work.
+
 ## Queued phases for the full refactor
 
-Continue with owned join styles and shared form/control appearances, followed by
-local player demo reuse and remaining player UI. The join route extraction and
-pending-response lifecycle are verified; preserve target generation, synchronous
-locking, editable name/mobile fields, payloads and legacy/V2 credential isolation.
-Preserve the verified mission reveal's explicit Play acceptance, storage keys
-and reward/review precedence.
+Continue with local player-demo regressions and shared presentation reuse,
+preserving native markup, local-only uploads/votes and every tour target. The
+join route, lifecycle and owned styling are verified; keep its guarded credential
+completion, shared field/control appearances and local reference intact. Continue
+with remaining player/V2/host utilities and legacy migration after the demo.
+Preserve the verified mission reveal's acceptance and reward/review precedence.
 Preserve conditional visibility and query,
 subscription and timer boundaries. The three recorded contrast changes still
 await the existing design input request; do not treat automatic goal continuation

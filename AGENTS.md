@@ -95,8 +95,15 @@ GameCodeInput retains the six-digit native input contract and visible label.
 The local join reference uses state only and a section root. lib/playerAccess.ts
 preserves the SDK error objects because existing feedback distinguishes Error
 instances from plain database errors. Its consumed response type is a frontend
-contract, not verified deployed schema. Retained join CSS awaits its independent
-styling slice. Pending joins use a synchronous lock and a mounted code/mode
+contract, not verified deployed schema. AccessHeader, DisplayHeading/Note access
+variants, MascotArt, FloatingNotice, FormStack, ContentPanel access-field,
+FormLabel/InputIcon access and Button access/back/switch own its presentation.
+GameCodeInput owns its BEM cells/control; the route shell owns arrangement. Keep
+native tags, IDs, types and announcement semantics intact. The local example
+includes pending and error toggles without connecting. Do not restore retired
+join selectors in PlayerGame.css; the legacy import still serves the shared
+spinner until its remaining consumers migrate. Pending joins use a synchronous
+lock and a mounted code/mode
 generation: stale success/error cannot store credentials, redirect or publish
 feedback, including when the target changes away and back. The server request
 may still complete. Keep name/mobile fields editable, unlock after the request

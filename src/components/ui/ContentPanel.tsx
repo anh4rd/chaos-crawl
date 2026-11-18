@@ -19,7 +19,8 @@ export default function ContentPanel({
     | "session"
     | "review-controls"
     | "review-result"
-    | "choice";
+    | "choice"
+    | "access-field";
   stacked?: boolean;
   overlay?: boolean;
   compact?: boolean;

@@ -195,3 +195,14 @@
     }
   }
 }
+
+.content-panel {
+  &--access-field {
+    padding: layout.$pixel-unit * 3;
+    border: 0;
+    border-radius: layout.$pixel-unit * 4.25;
+    background: rgba(colors.$entry-field-ink, effects.$entry-field-opacity);
+    box-shadow: 0 layout.$pixel-unit * 2 layout.$pixel-unit * 5
+      rgba(colors.$purple-dark, effects.$entry-field-shadow-opacity);
+  }
+}

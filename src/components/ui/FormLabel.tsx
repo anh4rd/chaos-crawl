@@ -15,7 +15,8 @@ export default function FormLabel({
     | "session-checkbox"
     | "review"
     | "reward"
-    | "award-points";
+    | "award-points"
+    | "access";
 }) {
   return (
     <label

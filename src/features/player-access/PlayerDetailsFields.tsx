@@ -1,4 +1,7 @@
-import Icon from "../../components/ui/Icon";
+import ContentPanel from "../../components/ui/ContentPanel";
+import FormLabel from "../../components/ui/FormLabel";
+import InputIcon from "../../components/ui/InputIcon";
+import Note from "../../components/ui/Note";
 import type { PlayerAccessModel } from "./types";
 
 export default function PlayerDetailsFields({
@@ -14,10 +17,15 @@ export default function PlayerDetailsFields({
   return (
     <>
       {mode === "join" && (
-        <div className="join-form-card">
-          <label htmlFor="join-name">Your name?</label>
-          <div className="join-input-wrap">
-            <Icon name="users" className="icon--size-17" />
+        <ContentPanel as="div" variant="access-field">
+          <FormLabel variant="access" htmlFor="join-name">
+            Your name?
+          </FormLabel>
+          <InputIcon
+            icon="users"
+            variant="access"
+            iconClassName="icon--size-17"
+          >
             <input
               id="join-name"
               autoComplete="given-name"
@@ -27,16 +35,17 @@ export default function PlayerDetailsFields({
               onChange={(event) => onNameChange(event.target.value)}
               required
             />
-          </div>
-        </div>
+          </InputIcon>
+        </ContentPanel>
       )}
-      <div className="join-form-card">
-        <label htmlFor="join-mobile">Your phone number?</label>
-        <p className="join-field-help">
+      <ContentPanel as="div" variant="access-field">
+        <FormLabel variant="access" htmlFor="join-mobile">
+          Your phone number?
+        </FormLabel>
+        <Note variant="access-help">
           Used only to reconnect you to this game. No SMS is sent.
-        </p>
-        <div className="join-input-wrap">
-          <Icon name="users" className="icon--size-17" />
+        </Note>
+        <InputIcon icon="users" variant="access" iconClassName="icon--size-17">
           <input
             id="join-mobile"
             type="tel"
@@ -47,8 +56,8 @@ export default function PlayerDetailsFields({
             onChange={(event) => onMobileChange(event.target.value)}
             required
           />
-        </div>
-      </div>
+        </InputIcon>
+      </ContentPanel>
     </>
   );
 }
