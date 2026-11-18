@@ -122,3 +122,18 @@
     letter-spacing: fonts.$tracking-brand;
   }
 }
+
+.badge {
+  &--entity {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    padding: layout.$pixel-unit layout.$pixel-unit * 1.75;
+    border-radius: layout.$pixel-unit * 1.75;
+    color: colors.$entity-badge-ink;
+    background: colors.$surface-soft;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-heavy;
+    text-transform: capitalize;
+  }
+}

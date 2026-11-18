@@ -1,3 +1,7 @@
+import Badge from "../../components/ui/Badge";
+import ContentPanel from "../../components/ui/ContentPanel";
+import IconBadge from "../../components/ui/IconBadge";
+import Overline from "../../components/ui/Overline";
 import Icon from "../../components/ui/Icon";
 import IconButton from "../../components/ui/IconButton";
 import type { HostSavedItem } from "../../types/hostSaved";
@@ -25,17 +29,17 @@ export default function SavedItemCard({
     ? item.item_data.stops.join(" → ")
     : null;
   return (
-    <article className="host-saved-card">
-      <div className="host-saved-icon">
+    <ContentPanel as="article" variant="entity" className="saved-item-card">
+      <IconBadge as="div" variant="entity">
         <Icon name={icon} className="icon--size-21" />
-      </div>
-      <div className="host-saved-copy">
-        <span className="host-eyebrow">{label}</span>
+      </IconBadge>
+      <div className="saved-item-card__copy">
+        <Overline variant="workspace">{label}</Overline>
         <h3>{title}</h3>
         {item.item_data.description && <p>{item.item_data.description}</p>}
         {stops !== null && <p>{stops}</p>}
         {typeof item.item_data.points === "number" && (
-          <span className="host-tag">★ {item.item_data.points} points</span>
+          <Badge variant="entity">★ {item.item_data.points} points</Badge>
         )}
       </div>
       <IconButton
@@ -44,8 +48,8 @@ export default function SavedItemCard({
         icon="trash2"
         label={`Remove ${title} from saved items`}
         iconClassName="icon--size-17"
-        variant="danger"
+        variant="entity-remove"
       />
-    </article>
+    </ContentPanel>
   );
 }

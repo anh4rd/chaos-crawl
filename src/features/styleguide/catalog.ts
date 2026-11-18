@@ -1,22 +1,28 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
+  FilterGroup: {
+    usage:
+      "Native div grouping explicit filter controls; caller supplies labels, roles and buttons. Local saved items demonstrates filtering without backend access.",
+    dependencies:
+      "Owned filter-group SCSS. Pair with Button filter and CountBadge filter; no state or automatic selection.",
+  },
   SavedItemsWorkspace: {
     usage:
       "Connected /host/saved coordinator. Mount through HostSaved; it composes the authenticated workspace with the saved-items controller.",
     dependencies:
-      "HostWorkspace identity, useSavedItems, typed hostSavedQueries/hostSavedCommands and retained host styles. Never mount in the local reference. Query contracts are inferred frontend consumption shapes, not verified deployed schema.",
+      "HostWorkspace identity, useSavedItems, typed hostSavedQueries/hostSavedCommands and owned collection styling. Never mount in the local reference. Query contracts are inferred frontend consumption shapes, not verified deployed schema.",
   },
   SavedItemsView: {
     usage:
       "Controlled saved-item collection. Supply count, visible records, filter, loading/error and callbacks. Local saved items demonstrates filtering, removal and loading without a backend.",
     dependencies:
-      "SavedItemCard, shared Icon and retained host styles. No router, storage, auth or persistence access.",
+      "SavedItemCard, FilterGroup/Button filter, CountBadge filter, PanelGrid collection, ContentPanel workspace-error and EmptyState workspace. No router, storage, auth or persistence access.",
   },
   SavedItemCard: {
     usage:
       "Saved task/location/route presentation. Preserves nullish title fallback, optional description/stops, numeric points including zero and the labeled remove action.",
     dependencies:
-      "Caller-supplied saved item and remove callback; shared Icon/IconButton with retained host styles. No queries or writes.",
+      "Caller-supplied saved item and remove callback; shared ContentPanel entity, IconBadge entity, Overline workspace, Badge entity and Icon/IconButton with owned saved-item-card SCSS. No queries or writes.",
   },
 
   PlayerDemoExperience: {
@@ -96,7 +102,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   PanelGrid: {
     usage:
-      "Two-panel layout with a wider first column, stacking at 900px. The local host frame example composes controls and context without connected controllers.",
+      "Collection supplies equal columns, stacking at 850px; see Local saved items. Two-panel layout with a wider first column, stacking at 900px. The local host frame example composes controls and context without connected controllers.",
     dependencies:
       "Native div attributes, supplied children and owned panel-grid SCSS. No queries, state or commands.",
   },
@@ -231,7 +237,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   ContentPanel: {
     usage:
-      "Access variants retain native join markup in the local join/rejoin example. The overlay modifier supplies the shared centered/scrolled reward frame; compose Dialog separately for modal behavior. See Shared reward overlay frame. Section, library, selection, form, workspace, lobby, controls and session panel surfaces. Review-controls is a native div-compatible management well demonstrated locally; review-result supplies its published results surface. Session panels support stacked and compact spacing and appear in Shared session panels and invitation. Pass native props, a variant and optional as=div or as=main for its containing element; examples appear in Planning panels and fields. Choice variant supplies the participant choice surface in the local team reference.",
+      "Entity supports native article cards; workspace-error retains the plain div feedback surface. Both appear in Local saved items. Access variants retain native join markup in the local join/rejoin example. The overlay modifier supplies the shared centered/scrolled reward frame; compose Dialog separately for modal behavior. See Shared reward overlay frame. Section, library, selection, form, workspace, lobby, controls and session panel surfaces. Review-controls is a native div-compatible management well demonstrated locally; review-result supplies its published results surface. Session panels support stacked and compact spacing and appear in Shared session panels and invitation. Pass native props, a variant and optional as=div or as=main for its containing element; examples appear in Planning panels and fields. Choice variant supplies the participant choice surface in the local team reference.",
     dependencies:
       "SCSS .content-panel; composes caller content without backend access.",
   },
@@ -243,7 +249,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   CountBadge: {
     usage:
-      "Round-index and round-index-current variants retain the detailed option number well; demonstrated in the shared round plan. Compact numeric/content badge accepting native span props. Shown in the planning panel example; session variant appears in Shared session panels and invitation. Choice variant supplies the participant capacity pill in the local team reference.",
+      "Filter supplies the inline collection count; see Local saved items. Round-index and round-index-current variants retain the detailed option number well; demonstrated in the shared round plan. Compact numeric/content badge accepting native span props. Shown in the planning panel example; session variant appears in Shared session panels and invitation. Choice variant supplies the participant capacity pill in the local team reference.",
     dependencies: "SCSS .count-badge; caller supplies the count.",
   },
   FormGrid: {
@@ -323,7 +329,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   IconBadge: {
     usage:
-      "The private-mission local reference demonstrates its reveal variant. Stage/stage-break variants accept illustration children in a native decorative b and retain its size/type across break states. Method variant accepts text children and lime/violet/pink tones, as shown in local reward summaries. Semantic icon well with lime, violet and pink tones. Assignment variant accepts decorative illustration children and span/div markup; shown in Shared assignment rows and empty state. Used by StatTile and shown in Host patterns.",
+      "Entity retains the saved-item icon well, including mobile icon dimensions; see Local saved items. The private-mission local reference demonstrates its reveal variant. Stage/stage-break variants accept illustration children in a native decorative b and retain its size/type across break states. Method variant accepts text children and lime/violet/pink tones, as shown in local reward summaries. Semantic icon well with lime, violet and pink tones. Assignment variant accepts decorative illustration children and span/div markup; shown in Shared assignment rows and empty state. Used by StatTile and shown in Host patterns.",
     dependencies: "Icon and SCSS .icon-badge; no data reads.",
   },
   StatTile: {
@@ -406,7 +412,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   IconButton: {
     usage:
-      "Semantic icon action with a required accessible label; optional danger, control-replay or dialog-dismiss variant. Demonstrated locally in Host patterns.",
+      "Entity-remove retains the saved-card border explicitly; see Local saved items. Semantic icon action with a required accessible label; optional danger, control-replay or dialog-dismiss variant. Demonstrated locally in Host patterns.",
     dependencies:
       "Button comic/control variants, Icon and SCSS .btn; native button attributes pass through.",
   },
@@ -489,7 +495,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Overline: {
     usage:
-      "The private-mission local reference demonstrates its reveal variant. Small uppercase-style label typography. Review variant supports native strong/span titles in Shared review and presentation controls. Accepts span/div/strong markup, primary/pink tones and an icon arrangement. Session variant appears in Shared session panels and invitation. Examples appear in the styleguide introduction, top bar and foundation panels. Choice variant supplies the participant eyebrow in the local team reference.",
+      "Workspace supplies the saved-item uppercase label; see Local saved items. The private-mission local reference demonstrates its reveal variant. Small uppercase-style label typography. Review variant supports native strong/span titles in Shared review and presentation controls. Accepts span/div/strong markup, primary/pink tones and an icon arrangement. Session variant appears in Shared session panels and invitation. Examples appear in the styleguide introduction, top bar and foundation panels. Choice variant supplies the participant eyebrow in the local team reference.",
     dependencies: "SCSS .overline. Text casing belongs to the caller.",
   },
   Note: {
@@ -522,12 +528,12 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   EmptyState: {
     usage:
-      "Centered semantic icon, message and optional action. Session variant retains the compact inline message and is demonstrated in Shared assignment rows and empty state. Search for an absent component to see the catalog example.",
+      "Workspace accepts explicit children to preserve native loading/empty markup; see Local saved items. Centered semantic icon, message and optional action. Session variant retains the compact inline message and is demonstrated in Shared assignment rows and empty state. Search for an absent component to see the catalog example.",
     dependencies: "SCSS .empty-state and Icon; actions belong to the caller.",
   },
   Button: {
     usage:
-      'Native button with poster, text, comic, setup, session-tour, timer/flow, dialog, round/chip, session-edit/send and review appearances. Session-action, session-secondary and session-ghost own the pink live-session appearances; reward, submission and mission examples demonstrate their enabled/disabled states without a backend. Round controls preserve their distinct shadows and hover behavior. Overlay-dismiss retains its native text close mark and focus/disabled behavior. fullWidth defaults to true. Set type="Access variants retain native join markup in the local join/rejoin example. The private-mission local reference demonstrates its reveal variant. button" outside form submission. team-create preserves participant creation controls and disabled states in the local team reference.',
+      'Native button with poster, text, comic, setup, session-tour, timer/flow, dialog, round/chip, session-edit/send and review appearances. Session-action, session-secondary and session-ghost own the pink live-session appearances; reward, submission and mission examples demonstrate their enabled/disabled states without a backend. Round controls preserve their distinct shadows and hover behavior. Overlay-dismiss retains its native text close mark and focus/disabled behavior. fullWidth defaults to true. Set type="Filter supplies controlled aria-pressed collection buttons; see Local saved items. Access variants retain native join markup in the local join/rejoin example. The private-mission local reference demonstrates its reveal variant. button" outside form submission. team-create preserves participant creation controls and disabled states in the local team reference.',
     dependencies:
       "Owned SCSS .btn and ordinary native button attributes. Feature controllers own actions; local examples use only supplied callbacks/state.",
   },
@@ -879,7 +885,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Badge: {
     usage:
-      "The private-mission local reference demonstrates its reveal variant. Stage/stage-break variants supply the preview label pill, demonstrated in the local stage/plan reference. Eyebrow, sticker, metadata, outline and subtle badge variants. Vote badges display published names and choices in the local review body example. Optional semantic icon; children supply the label and className can position the badge. Dialog variant supplies the existing editor kicker and appears in Host modal behavior.",
+      "Entity supplies the saved-item points tag; see Local saved items. The private-mission local reference demonstrates its reveal variant. Stage/stage-break variants supply the preview label pill, demonstrated in the local stage/plan reference. Eyebrow, sticker, metadata, outline and subtle badge variants. Vote badges display published names and choices in the local review body example. Optional semantic icon; children supply the label and className can position the badge. Dialog variant supplies the existing editor kicker and appears in Host modal behavior.",
     dependencies:
       "Project SCSS .badge. Poster examples show invitation variants; the introduction and catalog demonstrate outline and subtle.",
   },

@@ -2,7 +2,13 @@ import type { HTMLAttributes } from "react";
 
 export default function PanelGrid({
   className = "",
+  variant,
   ...props
-}: HTMLAttributes<HTMLDivElement>) {
-  return <div {...props} className={`panel-grid ${className}`.trim()} />;
+}: HTMLAttributes<HTMLDivElement> & { variant?: "collection" }) {
+  return (
+    <div
+      {...props}
+      className={`panel-grid${variant ? ` panel-grid--${variant}` : ""} ${className}`.trim()}
+    />
+  );
 }

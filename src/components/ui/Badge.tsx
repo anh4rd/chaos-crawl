@@ -21,7 +21,8 @@ export default function Badge({
     | "vote"
     | "stage"
     | "stage-break"
-    | "reveal";
+    | "reveal"
+    | "entity";
   icon?: IconName;
   className?: string;
 }) {

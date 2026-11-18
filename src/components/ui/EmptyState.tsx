@@ -7,11 +7,14 @@ export default function EmptyState({
   children,
   action,
 }: {
-  icon: IconName;
-  variant?: "session";
   children: ReactNode;
-  action?: ReactNode;
-}) {
+} & (
+  | { variant: "workspace"; icon?: never; action?: never }
+  | { variant?: "session"; icon: IconName; action?: ReactNode }
+)) {
+  if (variant === "workspace") {
+    return <div className="empty-state empty-state--workspace">{children}</div>;
+  }
   return (
     <div className={`empty-state${variant ? ` empty-state--${variant}` : ""}`}>
       <Icon

@@ -20,11 +20,13 @@ export default function ContentPanel({
     | "review-controls"
     | "review-result"
     | "choice"
-    | "access-field";
+    | "access-field"
+    | "entity"
+    | "workspace-error";
   stacked?: boolean;
   overlay?: boolean;
   compact?: boolean;
-  as?: "section" | "main" | "div";
+  as?: "section" | "main" | "div" | "article";
 }) {
   return (
     <Container

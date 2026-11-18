@@ -1,3 +1,4 @@
+@use "../tools/workspace-surface";
 @use "../variables/fonts";
 @use "../variables/effects";
 @use "../variables/colors";
@@ -33,6 +34,34 @@
       color: colors.$session-empty-copy;
       font-size: fonts.$size-caption;
       line-height: 1.45;
+    }
+  }
+}
+
+.empty-state {
+  &--workspace {
+    @include workspace-surface.workspace-surface;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: layout.$pixel-unit * 2;
+    color: colors.$purple;
+    > svg {
+      margin: 0;
+    }
+    h3 {
+      margin: layout.$pixel-unit * 1.25 0 0;
+      color: colors.$ink;
+      font: fonts.$weight-heavy fonts.$size-ribbon fonts.$family-type-sample;
+      text-shadow: none;
+    }
+    p {
+      max-width: layout.$pixel-unit * 90;
+      margin: 0 0 layout.$pixel-unit * 2.25;
+      color: colors.$host-muted;
+      font-size: fonts.$size-small;
+      line-height: 1.5;
     }
   }
 }

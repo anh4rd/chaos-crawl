@@ -18,13 +18,11 @@
   text-shadow: 1px 2px 0 #23166e;
 }
 
-.host-portal.host-portal--app .host-saved-card,
 .host-portal.host-portal--app .host-explore-card {
   border: 2.5px solid #080817;
   border-radius: 20px;
   box-shadow: 4px 4px 0 #23166e;
 }
-.host-portal.host-portal--app .host-saved-card,
 .host-portal.host-portal--app .host-explore-card {
   background-color: rgba(255, 255, 255, 0.97);
 }
@@ -60,14 +58,6 @@
 .host-portal.host-portal--app .host-explore-categories button.is-active {
   background: #5c36fb;
   color: #fff;
-}
-
-.host-portal.host-portal--app .host-saved-card {
-  gap: 14px;
-}
-.host-portal.host-portal--app .host-saved-icon {
-  border: 2px solid #080817;
-  background: #d3fb6e;
 }
 .host-portal.host-portal--app .host-explore-save {
   border: 2px solid #080817;

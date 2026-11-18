@@ -13,7 +13,13 @@ export default function IconBadge({
   as?: "span" | "div" | "b";
 } & (
     | {
-        variant: "assignment" | "method" | "stage" | "stage-break" | "reveal";
+        variant:
+          | "assignment"
+          | "method"
+          | "stage"
+          | "stage-break"
+          | "reveal"
+          | "entity";
         children: ReactNode;
         icon?: never;
       }

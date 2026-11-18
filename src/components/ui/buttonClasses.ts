@@ -1,4 +1,5 @@
 export type ButtonVariant =
+  | "filter"
   | "access"
   | "access-back"
   | "access-switch"

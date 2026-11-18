@@ -1,0 +1,10 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+@mixin workspace-surface {
+  border: layout.$pixel-unit * 0.5 solid colors.$comic-ink;
+  border-radius: layout.$pixel-unit * 4;
+  padding: layout.$pixel-unit * 3.5 layout.$pixel-unit * 4.25;
+  background: colors.$white;
+  box-shadow: 0 layout.$pixel-unit * 0.75 0 colors.$purple-dark;
+}

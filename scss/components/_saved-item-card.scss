@@ -1,0 +1,26 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.saved-item-card {
+  display: flex;
+  align-items: flex-start;
+  gap: layout.$pixel-unit * 3.5;
+  padding: layout.$pixel-unit * 3.75;
+  &__copy {
+    min-width: 0;
+    flex: 1;
+    h3 {
+      margin: layout.$pixel-unit * 1.5 0;
+      color: colors.$ink;
+      font: fonts.$weight-heavy fonts.$size-body fonts.$family-saved-heading;
+      text-shadow: none;
+    }
+    p {
+      margin: 0 0 layout.$pixel-unit * 2.25;
+      color: colors.$host-muted;
+      font-size: fonts.$size-caption;
+      line-height: 1.4;
+    }
+  }
+}

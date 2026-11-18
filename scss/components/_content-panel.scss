@@ -1,3 +1,4 @@
+@use "../tools/workspace-surface";
 @use "../variables/layers";
 @use "../variables/effects";
 @use "../variables/motion";
@@ -204,5 +205,22 @@
     background: rgba(colors.$entry-field-ink, effects.$entry-field-opacity);
     box-shadow: 0 layout.$pixel-unit * 2 layout.$pixel-unit * 5
       rgba(colors.$purple-dark, effects.$entry-field-shadow-opacity);
+  }
+}
+
+.content-panel {
+  &--entity {
+    border: layout.$pixel-unit * 0.625 solid colors.$comic-ink;
+    border-radius: layout.$pixel-unit * 5;
+    background: colors.$panel-surface;
+    box-shadow: layout.$pixel-unit layout.$pixel-unit 0 colors.$purple-dark;
+  }
+  &--workspace-error {
+    @include workspace-surface.workspace-surface;
+    margin-bottom: layout.$pixel-unit * 4;
+    color: colors.$feedback-error;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-bold;
+    line-height: 1.4;
   }
 }

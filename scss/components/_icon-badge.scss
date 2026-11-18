@@ -1,3 +1,4 @@
+@use "../variables/icons";
 @use "../variables/fonts";
 @use "../variables/colors";
 @use "../variables/layout";
@@ -99,5 +100,19 @@
     box-shadow: layout.$pixel-unit * 0.25 layout.$pixel-unit * 0.5 0
       colors.$lobby-setup-shadow;
     font-size: fonts.$size-display;
+  }
+}
+
+.icon-badge {
+  &--entity {
+    flex: 0 0 layout.$pixel-unit * 9.75;
+    width: layout.$pixel-unit * 9.75;
+    height: layout.$pixel-unit * 9.75;
+    border-radius: layout.$pixel-unit * 3;
+    color: colors.$purple;
+    svg {
+      width: icons.$size-21;
+      height: icons.$size-21;
+    }
   }
 }

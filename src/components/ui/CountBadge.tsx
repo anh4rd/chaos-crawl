@@ -4,7 +4,8 @@ export default function CountBadge({
   variant,
   ...props
 }: HTMLAttributes<HTMLSpanElement> & {
-  variant?: "session" | "round-index" | "round-index-current" | "choice";
+  variant?:
+    "session" | "round-index" | "round-index-current" | "choice" | "filter";
 }) {
   return (
     <span

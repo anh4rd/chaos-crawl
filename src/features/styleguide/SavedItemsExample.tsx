@@ -33,6 +33,7 @@ export default function SavedItemsExample() {
   const [items, setItems] = useState(samples);
   const [filter, setFilter] = useState<HostSavedFilter>("all");
   const [loading, setLoading] = useState(false);
+  const [showError, setShowError] = useState(false);
   const visible = items.filter(
     (item) => filter === "all" || item.item_type === filter,
   );
@@ -50,6 +51,14 @@ export default function SavedItemsExample() {
         />{" "}
         Simulate saved-items loading
       </label>
+      <label>
+        <input
+          type="checkbox"
+          checked={showError}
+          onChange={(event) => setShowError(event.target.checked)}
+        />{" "}
+        Simulate saved-items error
+      </label>
       <HostPatternPreview>
         <SavedItemsView
           itemsCount={items.length}
@@ -57,7 +66,7 @@ export default function SavedItemsExample() {
           filter={filter}
           onFilterChange={setFilter}
           loading={loading}
-          error=""
+          error={showError ? "Local saved-items error" : ""}
           onRemove={(item) =>
             setItems((current) =>
               current.filter((entry) => entry.id !== item.id),

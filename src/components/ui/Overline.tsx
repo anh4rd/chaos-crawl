@@ -8,7 +8,7 @@ export default function Overline({
   ...props
 }: ComponentPropsWithoutRef<"span"> & {
   tone?: "primary" | "pink";
-  variant?: "session" | "review" | "choice" | "reveal";
+  variant?: "session" | "review" | "choice" | "reveal" | "workspace";
   withIcon?: boolean;
   as?: "span" | "div" | "strong";
 }) {

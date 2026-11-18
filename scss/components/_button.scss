@@ -235,7 +235,7 @@
     background: var(--cc-lime);
     color: var(--cc-ink);
   }
-  .host-portal.host-portal--app .host-saved-card &--comic-icon {
+  &--entity-remove {
     border-color: colors.$comic-ink;
   }
   .host-portal.host-portal--app &--comic {
@@ -1147,5 +1147,34 @@
     color: rgba(colors.$white, effects.$entry-switch-opacity);
     font-size: fonts.$size-small;
     text-decoration: underline;
+  }
+}
+
+.btn {
+  &--filter,
+  .host-portal &--filter {
+    display: inline-flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.75;
+    padding: layout.$pixel-unit * 2.5 layout.$pixel-unit * 3.25;
+    border: 0;
+    border-color: colors.$comic-ink;
+    border-radius: layout.$pixel-unit * 2.5;
+    color: colors.$white;
+    background: transparent;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-action;
+    text-transform: none;
+    box-shadow: none;
+    scale: none;
+    transition-property: all;
+    transition-duration: motion.$duration-none;
+    transition-timing-function: motion.$easing-default;
+    &[aria-pressed="true"] {
+      color: colors.$comic-ink;
+      background: colors.$accent-soft;
+      box-shadow: layout.$pixel-unit * 0.5 layout.$pixel-unit * 0.5 0
+        colors.$comic-ink;
+    }
   }
 }

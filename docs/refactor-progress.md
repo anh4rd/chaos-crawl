@@ -2764,33 +2764,68 @@ furniture, then remaining host/V2/legacy work and the final desloppify audit.
 The player-demo visual choice and previously recorded contrast choices remain
 pending; continue independent work without inferring approval.
 
+## Phase 5l — saved-item shared primitives and owned styling
+
+SavedItemsView now composes FilterGroup, Button/CountBadge filter, PanelGrid
+collection, ContentPanel workspace-error and EmptyState workspace. SavedItemCard
+composes ContentPanel entity, IconBadge entity, Overline workspace and Badge
+entity; its owned block contains only card arrangement and copy. IconButton
+entity-remove replaces the old saved-card-dependent border selector with an
+explicit appearance. The shared workspace-surface fragment supplies the recurring
+feedback/empty frame. New tokens promote existing literal values; no palette or
+intentional appearance change was introduced.
+
+Native tags, text, attributes, filter selection, points including zero, removal
+callbacks and pending/error semantics are retained. Persistence/controllers are
+unchanged. The local reference demonstrates the shared views, filtering/removal,
+loading and error states without backend access. Legacy host rules still used by
+other screens remain until their consumers migrate.
+
+Verification with source/documentation frozen during browser jobs:
+
+- All **346 unit/component tests**, lint/formatting, strict production build and
+  Playwright type checks pass. Sentry uploads were disabled.
+- All **16 saved-item browser cases** pass on desktop/mobile. The local keyboard
+  journey now also toggles error feedback, retaining zero backend requests.
+- **32 render comparisons** cover ten collection/loading/error/deletion states
+  at 1280/393px, keyboard focus/hover/pressed controls, and both 850/851px grid
+  boundaries. DOM (normalizing only explicit class replacements), geometry and
+  every standard computed property match. Thirty PNG pairs are pixel-exact;
+  two desktop focus pairs differ by 19/26 pixels, maximum channel delta 4/6,
+  with no masks or ignored regions. This is recorded raster variation, not a
+  claim of exact screenshots for those two cases.
+- Expanded CSS proof retires **12 saved-only legacy selector arms**. The other
+  **73 retained HostPortal/HostTheme arms** preserve exact conditions, order and
+  declarations; the other three legacy stylesheets remain byte-identical.
+  All **1,369 prior expanded SCSS projections** retain their declarations and
+  order after the one explicit remove-button selector replacement.
+- No live backend writes, schema migrations, new dependencies or deployment.
+  Other journeys last passed in the earlier full 330-case browser run; the
+  whole-goal final browser run remains required.
+
+Continue with HostExplore regression coverage before separating its catalogue
+models, persistence/controllers and presentation. Its current route is roughly
+1,900 lines; split boundary moves and styling into reviewable checkpoints rather
+than combining the whole conversion.
+
 ## Queued phases for the full refactor
 
-Player-demo regressions and the local controller/view boundary are verified.
-Its shared-layout conversion awaits the user's explicit design choice; preserve
-the old view and all seven tour targets until that answer arrives. Continue
-owned saved-item styles and shared furniture while waiting, then remaining
-host/V2/legacy work. Keep the completed join,
-mission reveal and shared host/player contracts intact.
-Preserve conditional visibility and query,
-subscription and timer boundaries. The three recorded contrast changes still
-await the existing design input request; do not treat automatic goal continuation
-as approval. Then continue through
-remaining player/join/demo and shared host/remaining V2 migration. HostPortal and
-HostPlanning utilities, including the now-unreferenced legacy cc-round-number
-selector, still need caller audits and owned-style migration/cleanup. Preserve
-the shared host/player visual base. Keep the recorded reward contrast and
-confirmation-copy findings in separate tested behavior/design slices.
-Preserve controller boundaries and verify each affected state before retiring
-its legacy rules.
-Continue through remaining
-player/join/demo styles
-and V2 route composition, preserving effective order and rendered behavior.
-Follow with remaining V2/legacy utility migration, remove obsolete CSS/Tailwind
-tooling after its final consumer is gone, and finish the remaining tested
-accessibility/lifecycle findings. Run the final desloppify audit and address
-findings within the full refactor scope.
+Next: HostExplore regressions, then focused catalogue models, typed persistence,
+controllers and controlled views. Keep styling and intentional behavior fixes in
+separate verified slices. Continue remaining host utilities/admin and V2 player/
+slideshow presentation, then legacy workflows and obsolete CSS/Tailwind retirement
+once their final consumers migrate. Preserve the shared host/player session base,
+role-specific controls, route contracts, privacy and external-system lifecycles.
 
-Mocked tests cannot verify deployed Supabase policy, schema or atomic scoring.
-Keep those backend claims separate from frontend refactor completion and use only
-an explicitly configured disposable backend for any live verification.
+PlayerDemo already has local regressions and controller/view separation. Its
+shared-layout conversion awaits the user's explicit visual choice; preserve the
+old view and seven tour targets meanwhile. The three contrast changes likewise
+await their existing design-input request. Continue independent migration without
+inferring approval from goal continuation. Finish the recorded reward confirmation
+copy and accessibility/lifecycle findings in separate tested behavior slices.
+
+Finally run all required checks and the complete mocked desktop/mobile browser
+suite, then the requested desloppify audit and address findings within the full
+refactor scope. Mocked tests cannot verify deployed Supabase policy, schema or
+atomic scoring. Use only an explicitly configured disposable backend for any
+separately authorized live verification.

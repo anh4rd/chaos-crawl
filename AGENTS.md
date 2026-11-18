@@ -130,7 +130,13 @@ saved-item contract is not deployed schema or proof of server authorization.
 Controlled SavedItemsView/SavedItemCard retain title/name/fallback precedence,
 optional stops/description, zero points, incoming order and native remove labels.
 The local saved-items reference uses only state, including filtering, removal and
-loading. Retained host CSS awaits its owned-style slice; do not add overrides.
+loading and error feedback. Shared FilterGroup/Button/CountBadge filter,
+PanelGrid collection, ContentPanel entity/workspace-error, IconBadge entity,
+Overline workspace, Badge entity, EmptyState workspace and IconButton
+entity-remove own its presentation in SCSS. SavedItemCard owns arrangement/copy
+only. Preserve the 850px collection breakpoint and mobile icon dimensions.
+Do not restore retired saved-item selectors or tie button appearance to a route
+class; keep retained host CSS only for its remaining consumers.
 
 Supabase auth is shared by the legacy and session clients. Legacy player IDs and V2 session-player credentials use different storage keys and are not interchangeable. Preserve RPC payloads, storage paths, query ordering, score semantics, subscription cleanup, timer behavior, error handling, and route/query parameters. Client storage is not an authorization boundary; policies and atomic awards require server enforcement.
 

@@ -141,63 +141,8 @@
   color: #385b11;
   background: #f5ffdf;
 }
-.host-tag {
-  display: inline-flex;
-  align-items: center;
-  flex: 0 0 auto;
-  padding: 4px 7px;
-  border-radius: 7px;
-  color: #3c266f;
-  background: #eee9ff;
-  font-size: 9px;
-  font-weight: 1000;
-  text-transform: capitalize;
-}
-.host-saved-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 13px;
-}
-.host-saved-card {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 15px;
-  border: 1px solid var(--host-line);
-  border-radius: 16px;
-  background: #fff;
-}
-.host-saved-icon {
-  display: grid;
-  place-items: center;
-  flex: 0 0 39px;
-  width: 39px;
-  height: 39px;
-  border-radius: 12px;
-  color: var(--host-purple);
-  background: #eee9ff;
-}
-.host-saved-copy {
-  min-width: 0;
-  flex: 1;
-}
-.host-saved-copy h3 {
-  margin: 6px 0;
-  color: var(--host-ink);
-  font:
-    1000 14px "Maven Pro",
-    sans-serif;
-  text-shadow: none;
-}
-.host-saved-copy p {
-  margin: 0 0 9px;
-  color: var(--host-muted);
-  font-size: 11px;
-  line-height: 1.4;
-}
 @media (max-width: 850px) {
-  .host-game-grid,
-  .host-saved-grid {
+  .host-game-grid {
     grid-template-columns: 1fr;
   }
 }

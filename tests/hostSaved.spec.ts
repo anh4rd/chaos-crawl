@@ -11,7 +11,7 @@ test("saved items preserve read filters/order, fallback copy and native keyboard
 }) => {
   const { backend, requests } = await installSavedBackend(page);
   await page.goto("#/host/saved");
-  const cards = page.locator(".host-saved-card");
+  const cards = page.locator(".saved-item-card");
   await expect(cards).toHaveCount(4);
   await expect(cards.getByRole("heading")).toHaveText([
     "Conga challenge",
@@ -93,7 +93,7 @@ test("pending saved-item reads show loading and retain a filter selected before 
     await expect(
       page.getByRole("heading", { name: "Conga challenge", exact: true }),
     ).toBeVisible();
-    await expect(page.locator(".host-saved-card")).toHaveCount(1);
+    await expect(page.locator(".saved-item-card")).toHaveCount(1);
     await expect(
       page.getByRole("button", { name: "Tasks", exact: true }),
     ).toHaveAttribute("aria-pressed", "true");
@@ -121,7 +121,7 @@ test("saved-item removal waits for the response, keeps its filter and changes on
   });
   try {
     await page.goto("#/host/saved");
-    await expect(page.locator(".host-saved-card")).toHaveCount(4);
+    await expect(page.locator(".saved-item-card")).toHaveCount(4);
     await activateByKeyboard(
       page,
       page.getByRole("button", { name: "Tasks", exact: true }),
@@ -148,7 +148,7 @@ test("saved-item removal waits for the response, keeps its filter and changes on
       page.getByRole("button", { name: "Everything 3", exact: true }),
     );
     await expect(
-      page.locator(".host-saved-card").getByRole("heading"),
+      page.locator(".saved-item-card").getByRole("heading"),
     ).toHaveText(["The Corner", "Two stops", "Saved idea"]);
     const deletes = requests.filter((request) => request.method === "DELETE");
     expect(deletes).toHaveLength(1);
@@ -172,7 +172,7 @@ test("failed saved-item removal retains the card and allows retrying the same de
 }) => {
   const { backend, requests } = await installSavedBackend(page);
   await page.goto("#/host/saved");
-  await expect(page.locator(".host-saved-card")).toHaveCount(4);
+  await expect(page.locator(".saved-item-card")).toHaveCount(4);
   backend.failures.add("host_favourites");
   const remove = page.getByRole("button", {
     name: "Remove Two stops from saved items",
@@ -182,10 +182,10 @@ test("failed saved-item removal retains the card and allows retrying the same de
   await expect(
     page.getByText("Fixture connection failed", { exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".host-saved-card")).toHaveCount(4);
+  await expect(page.locator(".saved-item-card")).toHaveCount(4);
   backend.failures.delete("host_favourites");
   await activateByKeyboard(page, remove);
-  await expect(page.locator(".host-saved-card")).toHaveCount(3);
+  await expect(page.locator(".saved-item-card")).toHaveCount(3);
   await expect(
     page.getByRole("heading", { name: "Two stops", exact: true }),
   ).toHaveCount(0);
@@ -293,7 +293,7 @@ test("local saved-item reference filters, removes and toggles loading by keyboar
     page,
     example.getByRole("button", { name: "Everything 2", exact: true }),
   );
-  await expect(example.locator(".host-saved-card")).toHaveCount(2);
+  await expect(example.locator(".saved-item-card")).toHaveCount(2);
   const pending = example.getByRole("checkbox", {
     name: "Simulate saved-items loading",
     exact: true,
@@ -304,7 +304,20 @@ test("local saved-item reference filters, removes and toggles loading by keyboar
     example.getByText("Loading saved items…", { exact: true }),
   ).toBeVisible();
   await page.keyboard.press("Space");
-  await expect(example.locator(".host-saved-card")).toHaveCount(2);
+  await expect(example.locator(".saved-item-card")).toHaveCount(2);
+  const feedback = example.getByRole("checkbox", {
+    name: "Simulate saved-items error",
+    exact: true,
+  });
+  await tabTo(page, feedback);
+  await page.keyboard.press("Space");
+  await expect(
+    example.getByText("Local saved-items error", { exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press("Space");
+  await expect(
+    example.getByText("Local saved-items error", { exact: true }),
+  ).toHaveCount(0);
   expect(backend.requests).toEqual([]);
   backend.verify();
 });
