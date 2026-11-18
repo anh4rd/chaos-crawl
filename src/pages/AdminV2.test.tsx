@@ -18,6 +18,7 @@ import type {
 } from "../types/database";
 import { updateGameState } from "../lib/gameApi";
 import { awardScore } from "../lib/scoreApi";
+import { deletePlayer, renamePlayer } from "../lib/playerApi";
 import type { ApiResult } from "../lib/apiResult";
 
 const mocks = vi.hoisted(() => {
@@ -42,6 +43,11 @@ const mocks = vi.hoisted(() => {
     from: vi.fn(),
     channel: vi.fn(),
     navigate: vi.fn(),
+    teamRead: vi.fn(),
+    teamInsert: vi.fn(),
+    playerInsert: vi.fn(),
+    playerAssign: vi.fn(),
+    removeChannel: vi.fn(),
   };
 });
 const query = <T,>(data: T) => ({
@@ -109,11 +115,15 @@ vi.mock("react-router-dom", async (original) => ({
 }));
 vi.mock("../lib/gameApi", () => ({ updateGameState: vi.fn() }));
 vi.mock("../lib/scoreApi", () => ({ awardScore: vi.fn() }));
+vi.mock("../lib/playerApi", () => ({
+  deletePlayer: vi.fn(),
+  renamePlayer: vi.fn(),
+}));
 vi.mock("../lib/supabase", () => ({
   supabase: {
     from: mocks.from,
     channel: mocks.channel,
-    removeChannel: vi.fn(),
+    removeChannel: mocks.removeChannel,
   },
 }));
 import Admin from "./Admin";
@@ -133,10 +143,34 @@ beforeEach(() => {
     .mockReset()
     .mockResolvedValue({ data: null, error: null });
   mocks.reload.mockReset();
-  mocks.from.mockReturnValue({
-    select: () => ({
-      order: async () => ({ data: [{ id: "t1", name: "Ducks" }], error: null }),
-    }),
+  mocks.teamRead
+    .mockReset()
+    .mockResolvedValue({ data: [{ id: "t1", name: "Ducks" }], error: null });
+  mocks.teamInsert.mockReset().mockResolvedValue({ data: null, error: null });
+  mocks.playerInsert.mockReset().mockResolvedValue({ data: null, error: null });
+  mocks.playerAssign.mockReset().mockResolvedValue({ data: null, error: null });
+  mocks.removeChannel.mockReset();
+  vi.mocked(renamePlayer)
+    .mockReset()
+    .mockResolvedValue({ data: null, error: null });
+  vi.mocked(deletePlayer)
+    .mockReset()
+    .mockResolvedValue({ data: null, error: null });
+  mocks.from.mockImplementation((table: string) => {
+    if (table === "teams")
+      return {
+        select: () => ({ order: mocks.teamRead }),
+        insert: mocks.teamInsert,
+      };
+    if (table === "players")
+      return {
+        insert: mocks.playerInsert,
+        update: (values: unknown) => ({
+          eq: (column: string, id: string) =>
+            mocks.playerAssign(values, column, id),
+        }),
+      };
+    throw new Error(`Unexpected legacy table: ${table}`);
   });
   const channel = { on: vi.fn(), subscribe: vi.fn() };
   channel.on.mockReturnValue(channel);
@@ -145,7 +179,7 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 function openAdmin() {
-  render(
+  return render(
     <MemoryRouter>
       <Admin />
     </MemoryRouter>,
@@ -594,4 +628,212 @@ it("score display controls preserve slideshow and return-to-game reset commands"
     }),
   );
   expect(awardScore).not.toHaveBeenCalled();
+});
+
+function openPlayers() {
+  const view = openAdmin();
+  fireEvent.click(screen.getByRole("button", { name: "Players" }));
+  return view;
+}
+
+it("team creation preserves trimmed insert, pending controls, draft reset and explicit team reload", async () => {
+  const write = deferred<ApiResult<null>>();
+  mocks.teamInsert.mockReturnValueOnce(write.promise);
+  openPlayers();
+  await waitFor(() => expect(mocks.teamRead).toHaveBeenCalledTimes(1));
+  fireEvent.change(screen.getByRole("textbox", { name: "New team name" }), {
+    target: { value: "  Owls  " },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Create team" }));
+  expect(mocks.teamInsert).toHaveBeenCalledExactlyOnceWith({ name: "Owls" });
+  expect(
+    screen
+      .getByRole("button", { name: "Create team" })
+      .hasAttribute("disabled"),
+  ).toBe(true);
+  expect(
+    screen
+      .getByRole("textbox", { name: "New team name" })
+      .hasAttribute("disabled"),
+  ).toBe(false);
+  await act(async () => {
+    write.resolve({ data: null, error: null });
+    await write.promise;
+  });
+  await waitFor(() => expect(mocks.teamRead).toHaveBeenCalledTimes(2));
+  expect(
+    screen
+      .getByRole("textbox", { name: "New team name" })
+      .getAttribute("value"),
+  ).toBe("");
+});
+
+it("player creation preserves the zero-score unassigned body and failure/retry draft", async () => {
+  const alert = vi.spyOn(window, "alert").mockImplementation(() => {});
+  mocks.playerInsert.mockResolvedValueOnce({
+    data: null,
+    error: { message: "No connection" },
+  });
+  openPlayers();
+  fireEvent.change(screen.getByRole("textbox", { name: "New player name" }), {
+    target: { value: "  Kai  " },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Add player" }));
+  await waitFor(() =>
+    expect(alert).toHaveBeenCalledWith("Could not add player: No connection"),
+  );
+  expect(
+    screen
+      .getByRole("textbox", { name: "New player name" })
+      .getAttribute("value"),
+  ).toBe("  Kai  ");
+  expect(
+    screen.getByRole("button", { name: "Add player" }).hasAttribute("disabled"),
+  ).toBe(false);
+  fireEvent.click(screen.getByRole("button", { name: "Add player" }));
+  await waitFor(() => expect(mocks.playerInsert).toHaveBeenCalledTimes(2));
+  expect(mocks.playerInsert).toHaveBeenLastCalledWith({
+    name: "Kai",
+    team: null,
+    score: 0,
+  });
+  await waitFor(() =>
+    expect(
+      screen
+        .getByRole("textbox", { name: "New player name" })
+        .getAttribute("value"),
+    ).toBe(""),
+  );
+});
+
+it("roster assignment retains raw team values, id filters and unassigned null", async () => {
+  openPlayers();
+  const teamSelect = screen.getByRole("combobox", { name: "Team" });
+  fireEvent.change(teamSelect, { target: { value: "Ducks" } });
+  await waitFor(() =>
+    expect(mocks.playerAssign).toHaveBeenCalledWith(
+      { team: "Ducks" },
+      "id",
+      "p1",
+    ),
+  );
+  fireEvent.change(teamSelect, { target: { value: "" } });
+  await waitFor(() =>
+    expect(mocks.playerAssign).toHaveBeenLastCalledWith(
+      { team: null },
+      "id",
+      "p1",
+    ),
+  );
+});
+
+it("roster blur keeps blank/unchanged names private and trims an explicit rename", async () => {
+  openPlayers();
+  const name = screen.getByRole("textbox", { name: "Rename Pat" });
+  fireEvent.blur(name, { target: { value: "  Pat  " } });
+  fireEvent.blur(name, { target: { value: "  " } });
+  expect(renamePlayer).not.toHaveBeenCalled();
+  fireEvent.blur(name, { target: { value: "  New Pat  " } });
+  await waitFor(() =>
+    expect(renamePlayer).toHaveBeenCalledExactlyOnceWith("p1", "New Pat"),
+  );
+});
+
+it("roster removal retains confirmation and the original id-only command", async () => {
+  const confirm = vi
+    .spyOn(window, "confirm")
+    .mockReturnValueOnce(false)
+    .mockReturnValue(true);
+  openPlayers();
+  fireEvent.click(screen.getByRole("button", { name: "Remove Pat" }));
+  expect(confirm).toHaveBeenCalledWith("Remove Pat from this game?");
+  expect(deletePlayer).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "Remove Pat" }));
+  await waitFor(() =>
+    expect(deletePlayer).toHaveBeenCalledExactlyOnceWith("p1"),
+  );
+});
+
+it("live auto-reveal validates minute bounds without starting writes", async () => {
+  const alert = vi.spyOn(window, "alert").mockImplementation(() => {});
+  configureChallenges();
+  mocks.game = {
+    ...challengeGame(),
+    scheduled_challenge_id: null,
+    scheduled_reveal_at: null,
+  };
+  openAdmin();
+  const minutes = screen.getByRole("spinbutton", {
+    name: "Minutes until auto reveal",
+  });
+  for (const value of ["0", "241"]) {
+    fireEvent.change(minutes, { target: { value } });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Schedule next challenge" }),
+    );
+    expect(alert).toHaveBeenLastCalledWith(
+      "Enter a reveal time between 1 and 240 minutes.",
+    );
+  }
+  expect(updateGameState).not.toHaveBeenCalled();
+});
+
+it("live cancellation writes only the two scheduled fields", async () => {
+  configureChallenges();
+  openAdmin();
+  fireEvent.click(screen.getByRole("button", { name: "Cancel schedule" }));
+  await waitFor(() =>
+    expect(updateGameState).toHaveBeenCalledExactlyOnceWith({
+      scheduled_challenge_id: null,
+      scheduled_reveal_at: null,
+    }),
+  );
+});
+
+it("live close-voting and slideshow actions preserve the original exclusive flags", async () => {
+  configureChallenges();
+  openAdmin();
+  fireEvent.click(
+    screen.getByRole("button", { name: "Close voting & show results" }),
+  );
+  await waitFor(() =>
+    expect(updateGameState).toHaveBeenNthCalledWith(1, {
+      voting_open: false,
+      show_vote_results: true,
+      slideshow_open: false,
+    }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Close slideshow" }));
+  await waitFor(() =>
+    expect(updateGameState).toHaveBeenNthCalledWith(2, {
+      slideshow_open: false,
+    }),
+  );
+});
+
+it("live team voting and main review preserve target and escaped navigation contracts", async () => {
+  configureChallenges();
+  mocks.game = {
+    ...challengeGame(),
+    voting_open: false,
+    show_vote_results: false,
+    slideshow_open: false,
+  };
+  openAdmin();
+  fireEvent.change(screen.getByRole("combobox", { name: "Vote for" }), {
+    target: { value: "team" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Open voting" }));
+  await waitFor(() =>
+    expect(updateGameState).toHaveBeenCalledExactlyOnceWith({
+      voting_open: true,
+      voting_target: "team",
+      show_vote_results: false,
+      slideshow_open: false,
+    }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Review" }));
+  expect(mocks.navigate).toHaveBeenCalledWith(
+    "/challenge-review?type=main&id=2&title=Current%20challenge&from=admin-v2",
+  );
 });

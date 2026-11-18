@@ -4090,3 +4090,35 @@ Review separately: player controlled markup moves and narrow props (mechanical,
 (no backend); legacy host controller/command behavior; admin owned styling; and
 slideshow extraction/styling versus explicit end/playback behavior fixes. Full
 milestone maps remain required as the other subsystems finish.
+
+## Legacy host architecture milestone
+
+The legacy /admin route is now an adapter to LegacyHostWorkspace. Controlled
+Live/Players/frame/header/navigation views receive presentation values and
+callbacks. Focused game, roster, score and team controllers use typed inferred
+legacyHostQueries/legacyHostCommands boundaries and keep the existing SDK
+payloads, subscription order and HostV2 appearance. Existing fixtures are intact.
+
+Separately tested behavior repairs add synchronous action exclusion (per player
+where independent player operations may overlap), obsolete-result guards, latest
+team-read ownership and ordinary runApi exception recovery. A listener setup
+failure is reported and cannot be erased by a successful read. Initial evidence
+had 15 lifecycle failures and four API exception failures; final focused coverage
+passes 47 units. Thirty mocked desktop/mobile browser cases pass, with the final
+text-node-only correction additionally checked by the parity comparator.
+
+All 32 final states match the original in outerHTML, child text boundaries,
+native values, focus, scroll, geometry, every standard computed property and SDK
+trace. An initial 1/64-pixel width mismatch exposed merged JSX text nodes; keeping
+the original segmentation fixed it without tolerances. Twenty-seven screenshots
+are pixel-exact; five have two changed progress-edge pixels with maximum channel
+delta three. Evidence: `/tmp/legacy-host-milestone-parity-summary.json`,
+`/tmp/legacy-host-milestone-parity-text.log`, final source
+`/tmp/chaos-legacy-host-final-text-parity`. Upload-disabled build passes.
+
+Review pressure: 3,990 relevant lines across 29 owned files (+2,976/-1,014).
+Review map: regression fixtures/contracts; mechanical controlled markup/models
+(32-state parity); focused typed persistence/controller boundaries (payload and
+subscription scrutiny); explicit lock/lifetime/error changes (guard/finally
+scrutiny and red-before tests). Owned SCSS migration follows separately; this
+architecture slice does not claim the legacy host styling is complete.
