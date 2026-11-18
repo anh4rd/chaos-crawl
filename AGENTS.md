@@ -111,6 +111,16 @@ settles and allow a fresh current-target join. Keep URL hydration, entry-only mo
 selection, trimmed payloads, replaced history/welcomeBack state and legacy/V2
 credential isolation intact.
 
+PlayerDemo composes features/player-demo/PlayerDemoExperience. usePlayerDemo owns
+only local page/tour/sample state; controlled PlayerDemoView has no routes,
+storage or backend calls. The public demo is its interactive reference. Preserve
+all seven tour targets, native file chooser behavior, sample-state retention
+across navigation/restarts, reload reset and zero backend/credential operations.
+The older visual composition is a retained exception while the user's explicit
+shared-layout choice is pending. Do not create duplicate shared session widgets
+from it or treat automatic continuation as design approval; continue independent
+migration work meanwhile.
+
 Supabase auth is shared by the legacy and session clients. Legacy player IDs and V2 session-player credentials use different storage keys and are not interchangeable. Preserve RPC payloads, storage paths, query ordering, score semantics, subscription cleanup, timer behavior, error handling, and route/query parameters. Client storage is not an authorization boundary; policies and atomic awards require server enforcement.
 
 `HostLogin` composes `features/host-access/HostAccess`. Its focused hook owns credentials, initial session recovery, command feedback and redirects through the typed SDK functions in `lib/hostAuth.ts`. `HostAccessForm` receives controlled values and callbacks; shared `BrandLink` and `InputIcon` remain presentation-only. The host header and login use the same host wordmark variant.

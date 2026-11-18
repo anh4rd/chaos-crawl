@@ -23,6 +23,7 @@ export default defineConfig({
     "**/participantTeams.spec.ts",
     "**/privateMissions.spec.ts",
     "**/join.spec.ts",
+    "**/playerDemo.spec.ts",
   ],
 
   fullyParallel: false,

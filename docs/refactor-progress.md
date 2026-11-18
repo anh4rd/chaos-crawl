@@ -2648,14 +2648,69 @@ use the table to distinguish source movement from native-prop scrutiny. The next
 phase covers player-demo regressions and reuse while preserving its local-only
 behavior and tour targets, then continues through remaining V2 and legacy work.
 
+## Phase 5j — player-demo regressions and local controller boundary
+
+PlayerDemo now adapts the public route to PlayerDemoExperience. The coordinator
+owns the existing tour content and composes usePlayerDemo with controlled
+PlayerDemoView. Local page, tour and sample-selection state has a typed feature
+model; tour navigation narrows the supported page values instead of asserting a
+string into the page union. No live session controller is mounted.
+
+This checkpoint preserves the older demo appearance and markup. Shared-layout
+conversion remains outstanding: the demo differs visibly from the current
+host/player SessionPage. An asynchronous user choice was requested under
+AGENTS.md's rule, "New colors or intentional design changes require user input."
+No answer has been received, and automatic goal continuation is not approval.
+Do not manufacture parallel shared widgets from the retained legacy view while
+that choice is pending. The neutral controller and regressions support either
+approved layout direction.
+
+Verification, with source/documentation frozen during browser jobs:
+
+- Six production journeys per viewport pass against the original route before
+  extraction and again afterward: **12 affected browser cases**. They cover
+  keyboard navigation across all pages and static scores, separate complete/
+  challenge/vote actions, local native file selection, reload reset, sample-state
+  retention across navigation/restarted tours, all seven visible tour targets,
+  modal dismissal/highlight cleanup and restart-trigger focus restoration.
+- Every journey asserts the demo URL remains local, localStorage stays empty,
+  and the intercepted backend receives no requests. File selection uses the
+  existing local logo asset; it is not uploaded or persisted.
+- All **343 unit/component tests**, lint/formatting, strict TypeScript production
+  build and Playwright type checks pass. Sentry uploads were disabled. Other
+  workflows last passed in the complete 330-case run at the earlier checkpoint;
+  this local-only extraction reran the affected demo journeys.
+- All **218 stylesheet files** remain byte-identical. Twelve before/after render
+  comparisons at 1280/393px cover initial tour, game, selected sample, scores,
+  challenges and final. Raw app and tour DOM/attributes, geometry and every
+  standard computed property match with no class/attribute normalization.
+- Eleven final viewport PNG pairs are byte-identical. One mobile sample pair
+  differs by two pixels, maximum channel delta 2, at a narrow control edge. The
+  raw delta is retained; this is not a claim that every PNG was byte-identical.
+
+| Review slice             | Purpose / scrutiny                                                       | Proof                                                                                              |
+| ------------------------ | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Behavioral regressions   | Preserve native/local sample actions and complete tour paths             | Original-route and post-extraction keyboard/file-chooser journeys; zero backend/storage assertions |
+| Route and state boundary | Keep page orchestration thin and local state explicitly typed            | Strict build, unchanged interaction outcomes and reload/navigation checks                          |
+| Retained presentation    | Move existing markup without redesign or new duplicate primitives        | Twelve raw DOM/computed comparisons, unchanged stylesheets and recorded PNG delta                  |
+| Tour composition         | Preserve content, page changes, highlight cleanup and native modal focus | All seven targets traversed by keyboard on both viewports; raw tour DOM parity                     |
+| Pending layout choice    | Keep local display reusable without silently choosing a visual redesign  | Accurate catalog/guidance; existing view retained until user input                                 |
+
+The source slice is above the approximate 800-line review budget, predominantly
+moved markup plus regression additions. Review the tests separately from the
+mechanical view move and small controller/route wiring; visual unification is
+explicitly not included in this checkpoint. While the design choice is pending,
+continue independent HostSaved regression/boundary work, then remaining host/V2,
+legacy, styling retirement and the final desloppify audit.
+
 ## Queued phases for the full refactor
 
-Continue with local player-demo regressions and shared presentation reuse,
-preserving native markup, local-only uploads/votes and every tour target. The
-join route, lifecycle and owned styling are verified; keep its guarded credential
-completion, shared field/control appearances and local reference intact. Continue
-with remaining player/V2/host utilities and legacy migration after the demo.
-Preserve the verified mission reveal's acceptance and reward/review precedence.
+Player-demo regressions and the local controller/view boundary are verified.
+Its shared-layout conversion awaits the user's explicit design choice; preserve
+the old view and all seven tour targets until that answer arrives. Continue
+independent HostSaved regressions and route/controller/persistence separation
+while waiting, then remaining host/V2/legacy work. Keep the completed join,
+mission reveal and shared host/player contracts intact.
 Preserve conditional visibility and query,
 subscription and timer boundaries. The three recorded contrast changes still
 await the existing design input request; do not treat automatic goal continuation

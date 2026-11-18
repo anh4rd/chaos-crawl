@@ -1,5 +1,18 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
+  PlayerDemoExperience: {
+    usage:
+      "Public /demo/player coordinator. Owns only local state and the existing guided-tour content; it never reads a live session.",
+    dependencies:
+      "usePlayerDemo, PlayerDemoView, shared DemoNotice/GuidedTour/Icon and retained player-demo CSS. Layout unification awaits user design input; preserve local uploads/votes and tour targets in either layout.",
+  },
+  PlayerDemoView: {
+    usage:
+      "Controlled demo presentation with explicit local values/actions and supplied tour steps. Its public route is the backend-free interactive reference.",
+    dependencies:
+      "No route, storage or backend access. Legacy visual composition is retained while the shared-layout choice is pending; do not promote duplicate live-session widgets from this view.",
+  },
+
   AccessHeader: {
     usage:
       "Presentation header with brand and hint copy. Local join and rejoin demonstrates the entry labels.",
