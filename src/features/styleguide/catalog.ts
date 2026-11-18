@@ -24,6 +24,29 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     dependencies:
       "Owned step-outline SCSS. No routes, maps, storage or navigation choices.",
   },
+  FeatureBanner: {
+    usage:
+      "Decorative section with caller-supplied eyebrow, title, copy and artwork slot. Local catalogue demonstrates it without a backend.",
+    dependencies:
+      "Overline banner and owned feature-banner SCSS. Does not choose routes or actions.",
+  },
+  StickerArt: {
+    usage:
+      "Decorative tilted icon/text tile. Caller supplies a semantic icon and copy; Local catalogue demonstrates desktop/mobile sizing.",
+    dependencies: "Icon and owned sticker-art SCSS; native aria-hidden div.",
+  },
+  TabList: {
+    usage:
+      "Native controlled tab-list frame. Compose Button collection-tab and CountBadge tab; Local catalogue retains current ordinary Tab navigation. Arrow-key behavior remains a separately tested accessibility slice.",
+    dependencies:
+      "Owned tab-list SCSS; caller owns selection and callbacks. No router, storage or queries.",
+  },
+  SearchField: {
+    usage:
+      "Controlled search label/input with semantic icon and conditional clear action. Supply value, accessible label, placeholder and onChange; see Local catalogue.",
+    dependencies:
+      "Icon, IconButton search-clear and owned search-field SCSS. Clear preserves the existing native button type contract; callers own filtering.",
+  },
   CatalogueWorkspace: {
     usage:
       "Connected Explore coordinator mounted by HostExplore. Composes focused controllers and adapts filtered domain data into controlled presentation values/callbacks.",
@@ -34,13 +57,13 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     usage:
       "Controlled catalogue composition. Receive selected records, counts, filters, feedback, action callbacks and an optional contribution slot. Local catalogue demonstrates local navigation, saves, moderation, busy/loading/error and forms.",
     dependencies:
-      "CatalogueFilters, TaskCard, LocationCard, RouteCard, CommunityReviewQueue, SubmissionHistory and shared Button/Icon. No routes, auth, storage or persistence.",
+      "FeatureBanner/StickerArt, PageHeading results, ControlRow heading-actions, PanelGrid ideas, ContentPanel workspace-error, EmptyState workspace, Note collection-loading and controlled catalogue sections. No routes, auth, storage or persistence.",
   },
   CatalogueFilters: {
     usage:
       "Controlled native catalogue tabs, search and category buttons. Caller owns selection, category reset and filtering; counts arrive explicitly.",
     dependencies:
-      "CatalogueFiltersModel, shared Icon and retained Explore styles. Local catalogue uses state only. Existing tab arrow-key behavior remains separate accessibility work.",
+      "CatalogueFiltersModel, TabList/Button collection-tab/CountBadge tab, SearchField and FilterGroup/Button category with owned SCSS. Local catalogue uses state only. Existing tab arrow-key behavior remains separate accessibility work.",
   },
   TaskCard: {
     usage:
@@ -100,7 +123,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     usage:
       "Native div grouping explicit filter controls; caller supplies labels, roles and buttons. Local saved items demonstrates filtering without backend access.",
     dependencies:
-      "Owned filter-group SCSS. Pair with Button filter and CountBadge filter; no state or automatic selection.",
+      "Categories supplies catalogue chips with Button category; Local catalogue demonstrates native controlled selection. Owned filter-group SCSS. Pair with Button filter and CountBadge filter; no state or automatic selection.",
   },
   SavedItemsWorkspace: {
     usage:
@@ -198,7 +221,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   PanelGrid: {
     usage:
-      "Collection supplies equal columns, stacking at 850px; see Local saved items. Two-panel layout with a wider first column, stacking at 900px. The local host frame example composes controls and context without connected controllers.",
+      "Ideas retains the three/two/one-column catalogue layout at 1140px/560px; Local catalogue demonstrates it. Collection supplies equal columns, stacking at 850px; see Local saved items. Two-panel layout with a wider first column, stacking at 900px. The local host frame example composes controls and context without connected controllers.",
     dependencies:
       "Native div attributes, supplied children and owned panel-grid SCSS. No queries, state or commands.",
   },
@@ -345,7 +368,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   CountBadge: {
     usage:
-      "Filter supplies the inline collection count; see Local saved items. Round-index and round-index-current variants retain the detailed option number well; demonstrated in the shared round plan. Compact numeric/content badge accepting native span props. Shown in the planning panel example; session variant appears in Shared session panels and invitation. Choice variant supplies the participant capacity pill in the local team reference.",
+      "Tab supplies the native collection counter in Local catalogue. Filter supplies the inline collection count; see Local saved items. Round-index and round-index-current variants retain the detailed option number well; demonstrated in the shared round plan. Compact numeric/content badge accepting native span props. Shown in the planning panel example; session variant appears in Shared session panels and invitation. Choice variant supplies the participant capacity pill in the local team reference.",
     dependencies: "SCSS .count-badge; caller supplies the count.",
   },
   FormGrid: {
@@ -508,13 +531,13 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   IconButton: {
     usage:
-      "Idea-save, idea-saved and idea-close retain catalogue native labels, titles and pending states, demonstrated in Shared idea card and Local catalogue. Entity-remove retains the saved-card border explicitly; see Local saved items. Semantic icon action with a required accessible label; optional danger, control-replay or dialog-dismiss variant. Demonstrated locally in Host patterns.",
+      "Search-clear supplies the conditional clear action in Local catalogue, preserving its native type contract. Idea-save, idea-saved and idea-close retain catalogue native labels, titles and pending states, demonstrated in Shared idea card and Local catalogue. Entity-remove retains the saved-card border explicitly; see Local saved items. Semantic icon action with a required accessible label; optional danger, control-replay or dialog-dismiss variant. Demonstrated locally in Host patterns.",
     dependencies:
       "Button comic/control variants, Icon and SCSS .btn; native button attributes pass through.",
   },
   PageHeading: {
     usage:
-      "Shared title, subtitle and action slot. Demonstrated in HostShell; renders nothing when all slots are empty.",
+      "Results renders an h2/subtitle/action frame at the original catalogue breakpoints; Local catalogue demonstrates it. Shared title, subtitle and action slot. Demonstrated in HostShell; renders nothing when all slots are empty.",
     dependencies:
       "SCSS .page-heading; content and actions belong to the caller.",
   },
@@ -591,18 +614,18 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Overline: {
     usage:
-      "Workspace supplies the saved-item uppercase label; see Local saved items. The private-mission local reference demonstrates its reveal variant. Small uppercase-style label typography. Review variant supports native strong/span titles in Shared review and presentation controls. Accepts span/div/strong markup, primary/pink tones and an icon arrangement. Session variant appears in Shared session panels and invitation. Examples appear in the styleguide introduction, top bar and foundation panels. Choice variant supplies the participant eyebrow in the local team reference.",
+      "Banner retains the uppercase lime label in Local catalogue. Workspace supplies the saved-item uppercase label; see Local saved items. The private-mission local reference demonstrates its reveal variant. Small uppercase-style label typography. Review variant supports native strong/span titles in Shared review and presentation controls. Accepts span/div/strong markup, primary/pink tones and an icon arrangement. Session variant appears in Shared session panels and invitation. Examples appear in the styleguide introduction, top bar and foundation panels. Choice variant supplies the participant eyebrow in the local team reference.",
     dependencies: "SCSS .overline. Text casing belongs to the caller.",
   },
   Note: {
     usage:
-      "Access variants retain native join markup in the local join/rejoin example. Session variant provides panel copy with optional native small markup, demonstrated in Shared session panels and invitation. Control variant provides host timer messages. Lobby variant provides compact supporting copy and appears in Lobby surfaces and identity. Muted paragraph accepting shared HTML attributes. compact uses caption typography for dense descriptions; as=output supplies native status semantics, as shown in the local HostShell preview.",
+      "Collection-loading supports a native div with catalogue loading copy, shown in Local catalogue. Access variants retain native join markup in the local join/rejoin example. Session variant provides panel copy with optional native small markup, demonstrated in Shared session panels and invitation. Control variant provides host timer messages. Lobby variant provides compact supporting copy and appears in Lobby surfaces and identity. Muted paragraph accepting shared HTML attributes. compact uses caption typography for dense descriptions; as=output supplies native status semantics, as shown in the local HostShell preview.",
     dependencies:
       "SCSS .note. Content and status semantics belong to the caller.",
   },
   ControlRow: {
     usage:
-      "Idea-actions retains the two-column catalogue action grid; see Local catalogue. Reward variant keeps right-aligned comic actions and a single-column mobile layout. Wrapping row of controls accepting native div props; timer and break variants provide compact clock/action wells. Examples appear in button and session previews.",
+      "Heading-actions supplies result-count/create arrangement in Local catalogue. Idea-actions retains the two-column catalogue action grid; see Local catalogue. Reward variant keeps right-aligned comic actions and a single-column mobile layout. Wrapping row of controls accepting native div props; timer and break variants provide compact clock/action wells. Examples appear in button and session previews.",
     dependencies: "SCSS .control-row. Compose controls through children.",
   },
   TimerReadout: {
@@ -624,12 +647,12 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   EmptyState: {
     usage:
-      "Workspace accepts explicit children to preserve native loading/empty markup; see Local saved items. Centered semantic icon, message and optional action. Session variant retains the compact inline message and is demonstrated in Shared assignment rows and empty state. Search for an absent component to see the catalog example.",
+      "Workspace optionally composes an icon, title, paragraph and action, as shown by Local catalogue search emptiness; existing plain workspace children remain unchanged. Workspace accepts explicit children to preserve native loading/empty markup; see Local saved items. Centered semantic icon, message and optional action. Session variant retains the compact inline message and is demonstrated in Shared assignment rows and empty state. Search for an absent component to see the catalog example.",
     dependencies: "SCSS .empty-state and Icon; actions belong to the caller.",
   },
   Button: {
     usage:
-      'Native button with poster, text, comic, setup, session, timer/flow, dialog, round/chip, review and access appearances. Idea-use/add variants retain catalogue actions; outline-toggle preserves the controlled expansion icon. Shared idea card and Local catalogue demonstrate them without a backend. Filter supplies controlled collection buttons; see Local saved items. fullWidth defaults to true. Set type="button" outside form submission; keep explicit disabled state and native attributes. Other local references demonstrate their corresponding variants.',
+      'Collection-tab and category retain controlled tab/filter states in Local catalogue. Native button with poster, text, comic, setup, session, timer/flow, dialog, round/chip, review and access appearances. Idea-use/add variants retain catalogue actions; outline-toggle preserves the controlled expansion icon. Shared idea card and Local catalogue demonstrate them without a backend. Filter supplies controlled collection buttons; see Local saved items. fullWidth defaults to true. Set type="button" outside form submission; keep explicit disabled state and native attributes. Other local references demonstrate their corresponding variants.',
     dependencies:
       "Owned SCSS .btn and ordinary native button attributes. Feature controllers own actions; local examples use only supplied callbacks/state.",
   },

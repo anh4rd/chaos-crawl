@@ -24,3 +24,17 @@
     }
   }
 }
+
+.panel-grid {
+  &--ideas {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: layout.$pixel-unit * 3.5;
+    align-items: stretch;
+    @media (max-width: layout.$collection-wide-breakpoint) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (max-width: layout.$compact-breakpoint) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}

@@ -5,15 +5,28 @@ export default function EmptyState({
   icon,
   variant,
   children,
+  title,
   action,
 }: {
   children: ReactNode;
 } & (
-  | { variant: "workspace"; icon?: never; action?: never }
-  | { variant?: "session"; icon: IconName; action?: ReactNode }
+  | {
+      variant: "workspace";
+      icon?: IconName;
+      title?: string;
+      action?: ReactNode;
+    }
+  | { variant?: "session"; icon: IconName; title?: never; action?: ReactNode }
 )) {
   if (variant === "workspace") {
-    return <div className="empty-state empty-state--workspace">{children}</div>;
+    return (
+      <div className="empty-state empty-state--workspace">
+        {icon && <Icon name={icon} className="icon--size-24" />}
+        {title && <h3>{title}</h3>}
+        {title ? <p>{children}</p> : children}
+        {action}
+      </div>
+    );
   }
   return (
     <div className={`empty-state${variant ? ` empty-state--${variant}` : ""}`}>

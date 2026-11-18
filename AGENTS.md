@@ -153,6 +153,17 @@ only. Preserve the 850px collection breakpoint and mobile icon dimensions.
 Do not restore retired saved-item selectors or tie button appearance to a route
 class; keep retained host CSS only for its remaining consumers.
 
+Catalogue presentation composes FeatureBanner/Overline banner and decorative
+StickerArt, PageHeading results with ControlRow heading-actions, PanelGrid ideas,
+ContentPanel workspace-error, EmptyState workspace icon/title/action slots and Note
+collection-loading. CatalogueFilters composes TabList, Button collection-tab,
+CountBadge tab, SearchField and FilterGroup/Button category. These shared views
+accept controlled values/callbacks and own SCSS; the local catalogue reference
+never mounts connected controllers. Preserve the original 1140px/850px/650px/560px
+reflows and effective host typography. TabList retains ordinary Tab navigation;
+its arrow-key/focus semantics belong to the separate tested accessibility slice.
+Do not restore retired catalogue shell/filter selectors in legacy stylesheets.
+
 HostExplore's built-in records and tag choices live in features/host-explore/
 catalogue.ts; feature presentation/draft types stay there, while inferred saved/
 community persistence shapes live in types/hostExplore.ts. catalogueModel owns
@@ -190,9 +201,8 @@ catalogue reference mounts only controlled views and state, including pending,
 loading, error and moderation examples; connected controllers never run there.
 ChallengeContributionDialog retains its legacy frame/dismissal behavior pending
 the separate native-dialog accessibility slice. PlusMark is a retained decorative
-text glyph for parity, not a new shared icon pattern. Legacy catalogue classes
-remain until the owned-style slice; do not expand them or introduce new CSS
-there. Keep native types, bounds, labels and the current editable-while-pending
+text glyph for parity, not a new shared icon pattern. Legacy catalogue classes remain for moderation/history and the contribution
+editor; do not expand them or restore retired card/shell/filter rules there. Keep native types, bounds, labels and the current editable-while-pending
 form contract during subsequent styling moves.
 
 Supabase auth is shared by the legacy and session clients. Legacy player IDs and V2 session-player credentials use different storage keys and are not interchangeable. Preserve RPC payloads, storage paths, query ordering, score semantics, subscription cleanup, timer behavior, error handling, and route/query parameters. Client storage is not an authorization boundary; policies and atomic awards require server enforcement.

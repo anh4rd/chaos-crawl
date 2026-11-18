@@ -1,3 +1,11 @@
+import FeatureBanner from "../../components/ui/FeatureBanner";
+import StickerArt from "../../components/ui/StickerArt";
+import ContentPanel from "../../components/ui/ContentPanel";
+import PageHeading from "../../components/ui/PageHeading";
+import ControlRow from "../../components/ui/ControlRow";
+import PanelGrid from "../../components/ui/PanelGrid";
+import EmptyState from "../../components/ui/EmptyState";
+import Note from "../../components/ui/Note";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
 import CatalogueFilters from "./CatalogueFilters";
@@ -36,96 +44,98 @@ export default function CatalogueView({
   }
   return (
     <>
-      <section className="host-explore-hero">
-        <div className="host-explore-hero-copy">
-          <span className="host-eyebrow host-eyebrow--light">
-            YOUR NEXT GOOD BAD IDEA
-          </span>
-          <h2>Steal a little inspiration.</h2>
-          <p>
-            Browse ready-to-use tasks, places to host and route templates.
-            Create your own challenges and submit them to the community library.
-          </p>
-        </div>
-        <div className="host-explore-hero-art" aria-hidden="true">
-          <Icon name="sparkles" className="icon--size-52" />
-          <span>
+      <FeatureBanner
+        eyebrow="YOUR NEXT GOOD BAD IDEA"
+        title="Steal a little inspiration."
+        artwork={
+          <StickerArt icon="sparkles">
             IDEAS
             <br />
             INSIDE
-          </span>
-        </div>
-      </section>
+          </StickerArt>
+        }
+      >
+        Browse ready-to-use tasks, places to host and route templates. Create
+        your own challenges and submit them to the community library.
+      </FeatureBanner>
       {error && (
-        <div className="host-alert host-alert--error" role="alert">
+        <ContentPanel as="div" variant="workspace-error" role="alert">
           {error}
-        </div>
+        </ContentPanel>
       )}
       {reviewItems.length > 0 && <CommunityReviewQueue items={reviewItems} />}
       <CatalogueFilters {...filters} />
-      <div className="host-explore-results">
-        <div className="host-explore-results-heading">
-          <div>
-            <h2>{heading}</h2>
-            <p>{description}</p>
-          </div>
-          <div className="host-explore-heading-actions">
-            <span>
-              {itemCount} {itemCount === 1 ? "result" : "results"}
-            </span>
-            {tab === "tasks" && (
-              <Button
-                type="button"
-                variant="comic-primary"
-                fullWidth={false}
-                onClick={onCreate}
-              >
-                <Icon name="plus" className="icon--size-16" /> Create challenge
-              </Button>
-            )}
-          </div>
-        </div>
+      <div>
+        <PageHeading
+          variant="results"
+          title={heading}
+          subtitle={description}
+          action={
+            <ControlRow variant="heading-actions">
+              <span>
+                {itemCount} {itemCount === 1 ? "result" : "results"}
+              </span>
+              {tab === "tasks" && (
+                <Button
+                  type="button"
+                  variant="comic-primary"
+                  fullWidth={false}
+                  onClick={onCreate}
+                >
+                  <Icon name="plus" className="icon--size-16" /> Create
+                  challenge
+                </Button>
+              )}
+            </ControlRow>
+          }
+        />
         {loadingFavourites && (
-          <div className="host-explore-loading">Checking your saved items…</div>
+          <Note as="div" variant="collection-loading">
+            Checking your saved items…
+          </Note>
         )}
         {tab === "tasks" && (
-          <div className="host-explore-grid">
+          <PanelGrid variant="ideas">
             {tasks.map((item) => (
               <TaskCard key={item.task.id} {...item} />
             ))}
-          </div>
+          </PanelGrid>
         )}
         {tab === "tasks" && historyItems.length > 0 && (
           <SubmissionHistory items={historyItems} />
         )}
         {tab === "locations" && (
-          <div className="host-explore-grid">
+          <PanelGrid variant="ideas">
             {locations.map((item) => (
               <LocationCard key={item.location.id} {...item} />
             ))}
-          </div>
+          </PanelGrid>
         )}
         {tab === "routes" && (
-          <div className="host-explore-grid">
+          <PanelGrid variant="ideas">
             {routes.map((item) => (
               <RouteCard key={item.route.id} {...item} />
             ))}
-          </div>
+          </PanelGrid>
         )}
         {!itemCount && (
-          <div className="host-empty-state">
-            <Icon name="search" className="icon--size-24" />
-            <h3>No matches</h3>
-            <p>Try a different search or clear your filters.</p>
-            <Button
-              type="button"
-              variant="comic-secondary"
-              fullWidth={false}
-              onClick={onClearFilters}
-            >
-              Clear filters
-            </Button>
-          </div>
+          <EmptyState
+            variant="workspace"
+            icon="search"
+            title="No matches"
+            action={
+              <Button
+                type="button"
+                variant="comic-secondary"
+                fullWidth={false}
+                onClick={onClearFilters}
+              >
+                Clear filters
+              </Button>
+            }
+          >
+            Try a different search or clear your filters.
+          </EmptyState>
         )}
       </div>
       {dialog}

@@ -1,15 +1,13 @@
 /* Remaining legacy comic overrides for host workspace views. */
 
-.host-portal.host-portal--app .host-section-heading h2,
-.host-portal.host-portal--app .host-explore-results-heading h2 {
+.host-portal.host-portal--app .host-section-heading h2 {
   color: #fff;
   -webkit-text-stroke: 1px #080817;
   text-shadow:
     3px 3px 0 #080817,
     5px 5px 0 #23166e;
 }
-.host-portal.host-portal--app .host-section-heading p,
-.host-portal.host-portal--app .host-explore-results-heading p {
+.host-portal.host-portal--app .host-section-heading p {
   color: #f3edff;
   text-shadow: 1px 2px 0 rgba(35, 22, 110, 0.55);
 }
@@ -17,36 +15,7 @@
   color: #d3fb6e;
   text-shadow: 1px 2px 0 #23166e;
 }
-
-.host-portal.host-portal--app .host-explore-hero {
-  border: 3px solid #080817;
-  border-radius: 23px;
-  box-shadow: 4px 5px 0 #23166e;
-}
-.host-portal.host-portal--app .host-explore-tabs {
-  border: 2px solid #23166e;
-  background: #2c167f;
-}
-.host-portal.host-portal--app .host-explore-tabs button {
-  color: #fff;
-}
-.host-portal.host-portal--app .host-explore-tabs button > span {
-  background: #5c36fb;
-  color: #fff;
-}
-.host-portal.host-portal--app .host-explore-tabs button.is-active {
-  border: 2px solid #080817;
-  color: #080817;
-  background: #d3fb6e;
-  box-shadow: 2px 2px 0 #080817;
-}
-.host-portal.host-portal--app .host-explore-categories button,
-.host-portal.host-portal--app .host-explore-search,
 .host-portal.host-portal--app .host-filter-chip,
 .host-portal.host-portal--app .host-tabs button {
   border-color: #080817;
-}
-.host-portal.host-portal--app .host-explore-categories button.is-active {
-  background: #5c36fb;
-  color: #fff;
 }

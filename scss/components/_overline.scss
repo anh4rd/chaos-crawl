@@ -67,3 +67,14 @@
     color: colors.$purple;
   }
 }
+
+.overline {
+  &--banner {
+    display: inline-flex;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-workspace-label;
+    text-transform: uppercase;
+    color: colors.$accent-soft;
+  }
+}

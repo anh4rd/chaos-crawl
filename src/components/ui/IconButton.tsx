@@ -14,7 +14,8 @@ interface Props extends Omit<
     | "dialog-dismiss"
     | "idea-save"
     | "idea-saved"
-    | "idea-close";
+    | "idea-close"
+    | "search-clear";
   iconClassName?: string;
 }
 export default function IconButton({

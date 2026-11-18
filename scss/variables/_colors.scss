@@ -446,3 +446,22 @@ $outline-divider: #eeeaf6;
 $outline-title: #32245c;
 $outline-detail: #918aa7;
 $outline-note-divider: #e8e2f8;
+
+$banner-background: linear-gradient(
+  115deg,
+  $purple-dark 0%,
+  $purple 68%,
+  #8068ff 100%
+);
+$banner-rays: repeating-conic-gradient(
+  from 16deg at 86% 50%,
+  rgba($white, 0.08) 0deg 8deg,
+  transparent 8deg 22deg
+);
+$banner-mask: radial-gradient(ellipse at 85% 50%, $black 0%, transparent 50%);
+$banner-copy: #e9e4ff;
+$tab-list-surface: #2c167f;
+$search-field-icon: #827b96;
+$search-field-placeholder: #aaa4bb;
+$search-field-clear: #817b92;
+$category-copy: #6f6884;

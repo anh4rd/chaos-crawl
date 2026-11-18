@@ -1,0 +1,16 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+.tab-list {
+  display: flex;
+  gap: layout.$pixel-unit * 1.25;
+  max-width: 100%;
+  padding: layout.$pixel-unit * 1.25;
+  border: layout.$pixel-unit * 0.5 solid colors.$purple-dark;
+  border-radius: layout.$pixel-unit * 3.5;
+  background: colors.$tab-list-surface;
+  @media (max-width: layout.$host-compact-breakpoint) {
+    width: 100%;
+    justify-content: stretch;
+  }
+}

@@ -84,3 +84,15 @@
     font-size: fonts.$size-micro;
   }
 }
+
+.count-badge {
+  &--tab {
+    display: inline-grid;
+    min-width: layout.$pixel-unit * 4.75;
+    height: layout.$pixel-unit * 4.75;
+    padding: 0 layout.$pixel-unit * 1.25;
+    border-radius: layout.$pixel-unit * 5;
+    font-size: fonts.$size-micro;
+    font-weight: inherit;
+  }
+}

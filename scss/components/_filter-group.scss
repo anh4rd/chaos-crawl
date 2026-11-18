@@ -13,3 +13,17 @@
   width: fit-content;
   max-width: 100%;
 }
+
+.filter-group {
+  &--categories {
+    gap: layout.$pixel-unit * 1.75;
+    margin-bottom: layout.$pixel-unit * 6;
+    padding: 0;
+    border: 0;
+    border-style: solid;
+    border-radius: 0;
+    background: transparent;
+    width: auto;
+    max-width: none;
+  }
+}

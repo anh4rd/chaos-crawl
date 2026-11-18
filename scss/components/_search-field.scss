@@ -1,0 +1,37 @@
+@use "../variables/colors";
+@use "../variables/effects";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: layout.$pixel-unit * 2.25;
+  width: min(100%, layout.$pixel-unit * 77.5);
+  min-height: layout.$pixel-unit * 11.25;
+  padding: 0 layout.$pixel-unit * 3.25;
+  border: layout.$pixel-unit * 0.25 solid colors.$comic-ink;
+  border-radius: layout.$pixel-unit * 3.5;
+  color: colors.$search-field-icon;
+  background: colors.$white;
+  &:focus-within {
+    box-shadow: 0 0 0 layout.$pixel-unit * 0.75
+      rgba(colors.$purple, effects.$soft-shadow-opacity);
+  }
+  input {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    color: colors.$ink;
+    background: transparent;
+    font-size: fonts.$size-small;
+    &::placeholder {
+      color: colors.$search-field-placeholder;
+    }
+  }
+  @media (max-width: layout.$host-compact-breakpoint) {
+    width: 100%;
+  }
+}

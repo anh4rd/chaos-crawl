@@ -3309,11 +3309,102 @@ the separate native-dialog/tab accessibility and duplicate-action concurrency
 slices, including the verified desktop close obstruction. Continue the remaining
 V2/legacy queue below; full-suite verification and final desloppify remain pending.
 
+## Phase 5v — shared catalogue shell and filters
+
+CatalogueView now composes shared FeatureBanner/Overline banner and decorative
+StickerArt, PageHeading results with ControlRow heading-actions, PanelGrid ideas,
+ContentPanel workspace-error, EmptyState workspace icon/title/action slots and
+Note collection-loading. CatalogueFilters composes TabList, Button collection-tab,
+CountBadge tab, SearchField and FilterGroup/Button category. The controlled
+coordinator, state, domain selection, callbacks and navigation remain unchanged.
+The unused results-container marker was removed without adding a wrapper.
+
+Owned SCSS supplies their original appearance and responsive behavior. Existing
+paint, color, type, spacing and tilt values are preserved through tokens. Palette
+primitives reused inside the promoted banner paint tokens additionally preserve
+the entire expanded stylesheet byte-for-byte. The backend-free Local catalogue
+reference exercises these same primitives and its existing keyboard journeys;
+catalogue notes and agent guidance describe their ownership. No dependency,
+persistence or accessibility interaction change is included.
+
+Three existing compact main-page-header Button selectors now exclude only the
+new results-heading modifier through zero-specificity `:where(:not(...))`. Their
+declarations, media conditions and specificity remain unchanged. This prevents
+main-header icon-only action sizing from affecting the catalogue's ordinary
+create action. Existing default heading behavior is checked separately.
+
+Oxlint now maps the shared Button wrapper to its actual native button element.
+No accessibility rule was disabled or downgraded. The valid shared tab probe
+passes without diagnostics; negative probes retain errors for an unfocusable
+tab, its missing keyboard handling and an invalid noninteractive Button role.
+
+Verification:
+
+- Lint/format, upload-disabled strict production build and Playwright type checks
+  passed. All **366 unit tests** and **38 affected mocked desktop/mobile browser
+  cases** passed, including native keyboard search/clear, category/tab selection,
+  loading/error/empty recovery and local catalogue/saved-item journeys.
+- **58 production baseline comparisons** preserve native tags, text,
+  attribute/value maps, controls, focus, geometry, all standard computed
+  properties and SDK traces. Banner `::before`/`::after` properties are compared
+  too. Serialized DOM canonicalizes attribute order and explicit class renames,
+  including newly assigned primitive classes and the unused marker removal; no
+  wrappers or text are ignored. Initial independent reads use a multiset;
+  subsequent commands/queries retain strict ordering.
+- The 46 desktop/mobile state pairs include native open practical checks,
+  expanded outlines, saves, errors, contributions, moderation, loading, empty
+  search, category selection and keyboard/pointer focus states. Another **12
+  pairs** check both sides of 560px, 650px, 760px, 850px, 900px and 1140px boundaries.
+  All 12 breakpoint PNG pairs are pixel-exact.
+- **53 of 58 PNG pairs are pixel-exact**. The five small differences below remain
+  recorded without masks or an asserted explanation. Their native DOM, geometry,
+  banner pseudo-elements and computed properties match. Final aggregation
+  supersedes the earlier in-progress screenshot count.
+
+| Width | Scene              | Changed pixels | Maximum channel delta |
+| ----- | ------------------ | -------------- | --------------------- |
+| 393   | Native tab focus   | 49             | 19                    |
+| 1280  | Native tab focus   | 12             | 6                     |
+| 1280  | Search clear focus | 4              | 1                     |
+| 1280  | Search input focus | 4              | 6                     |
+| 1280  | Approval           | 13             | 27                    |
+
+- **Ten existing-reference comparisons** preserve poster, saved-item, planning,
+  main-heading/host-shell and plain-child saved-loading markup, geometry and all
+  computed properties at desktop/mobile sizes, with zero backend requests. All
+  **276 prior Button variant/fullWidth/class combinations** produce exact class
+  output. Thirteen coordinator, controller, model/catalogue, type and persistence
+  modules are byte-identical to the committed baseline.
+- **54 legacy selector arms** retired: 44 from HostPlanning and ten from
+  HostTheme. The remaining **230 arms** retain exact declarations, conditions
+  and order; HostPortal, PlayerGame and Globals are byte-identical. Of **1,433
+  prior expanded SCSS projections**, 1,430 retain exact selectors as well as
+  declarations/order; the three explicitly scoped default-heading selector arms
+  retain their declarations/order/conditions after the named exclusion mapping.
+  Evidence lives under `/tmp/phase5v-*`. Older completed-phase JSON snapshots are
+  losslessly gzip-compressed with decompressed SHA-256 verification; their PNGs,
+  scripts and logs remain available.
+
+This exceeds the approximate 800-line review budget. Review the slices separately:
+
+| Review slice                      | Mechanical changes / scrutiny                                                                                                                                | Evidence                                                                                                           |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| Shared presentation contracts     | New banner/art/search/tab frames and extensions of heading, grid, count, filter, loading/error/empty primitives; scrutinize native types, slots and defaults | 58 native DOM/style/SDK comparisons, ten default-reference pairs and 276 unchanged Button outputs                  |
+| Controlled catalogue wiring       | Replace repeated shell/filter markup; retain labels, counts, callbacks and unused-marker removal                                                             | 38 affected browser journeys; thirteen coordinator/model/type/persistence modules unchanged                        |
+| Owned SCSS and retirement         | Promote existing values; preserve gradients, pseudo-elements, breakpoints and effective typography; scrutinize the three new-heading exclusions              | 54 retired/230 retained legacy arms; 1,433 SCSS projections; twelve boundary pairs and recorded raster differences |
+| Lint awareness and local contract | Native Button mapping, accurate catalogue guidance and existing local previews                                                                               | Valid/negative lint probes, zero-backend keyboard journeys and lint/build/unit/type gates                          |
+
+Next: moderation/history and contribution-editor styling, including the retained
+card admin-action arrangement. Then handle native-dialog/tab accessibility and
+concurrency in separate behavior slices, including the verified desktop close
+obstruction. Continue the remaining V2/legacy queue below; full-suite verification
+and the requested final desloppify audit remain pending.
+
 ## Queued phases for the full refactor
 
-Next: catalogue shell/filter, moderation/history and editor styling. Shared card
-frames, badges, controls and details now have owned SCSS; the thin route, focused
-controllers and controlled views are verified. Follow with the separate modal/tab accessibility
+Next: catalogue moderation/history and contribution-editor styling. Shared card
+frames, badges, controls, details, shell and filters now have owned SCSS; the thin
+route, focused controllers and controlled views are verified. Follow with the separate modal/tab accessibility
 and action-concurrency slices. Keep styling and intentional behavior fixes in
 separate verified slices. Continue remaining host utilities/admin and V2 player/
 slideshow presentation, then legacy workflows and obsolete CSS/Tailwind retirement

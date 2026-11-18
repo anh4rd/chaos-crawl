@@ -1,0 +1,13 @@
+@use "../variables/layout";
+
+.catalogue-filters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: layout.$pixel-unit * 3.5;
+  margin-bottom: layout.$pixel-unit * 3.25;
+  @media (max-width: layout.$host-compact-breakpoint) {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

@@ -4,7 +4,7 @@ export default function PanelGrid({
   className = "",
   variant,
   ...props
-}: HTMLAttributes<HTMLDivElement> & { variant?: "collection" }) {
+}: HTMLAttributes<HTMLDivElement> & { variant?: "collection" | "ideas" }) {
   return (
     <div
       {...props}
