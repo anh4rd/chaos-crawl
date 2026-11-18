@@ -73,5 +73,7 @@ export default function ScheduledCountdown({
     return null;
   }
 
-  return <span className="tabular-nums">{formatCountdown(remainingMs)}</span>;
+  return (
+    <span className="scheduled-countdown">{formatCountdown(remainingMs)}</span>
+  );
 }

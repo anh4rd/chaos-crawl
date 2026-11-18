@@ -29,6 +29,8 @@ export default function Note({
     | "console-body"
     | "console-muted"
     | "console-empty"
+    | "workspace-muted"
+    | "workspace-meta"
     | "description"
     | "metadata"
     | "body"

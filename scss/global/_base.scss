@@ -1,0 +1,81 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+:root {
+  --purple: #{colors.$purple};
+  --purple-mid: #{colors.$purple-mid};
+  --purple-dark: #{colors.$purple-dark};
+  --pink: #{colors.$pink};
+  --lime: #{colors.$lime};
+  --yellow: #{colors.$yellow};
+  --black: #{colors.$ink};
+  --white: #{colors.$white};
+
+  font-family: fonts.$family-body;
+  color: var(--black);
+  background-color: var(--purple);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  min-width: layout.$pixel-unit * 80;
+  min-height: 100vh;
+  margin: 0;
+  color: var(--black);
+  font-family: inherit;
+  background-color: var(--purple);
+}
+
+h1 {
+  font-family: fonts.$family-preview-sticker;
+  line-height: 1;
+  font-size: fonts.$size-heading * 2;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+h2 {
+  font-family: fonts.$family-preview-sticker;
+  line-height: 1;
+  font-size: fonts.$size-brand-host;
+  letter-spacing: -(fonts.$tracking-entry-brand);
+  text-transform: uppercase;
+}
+
+h3 {
+  font-family: fonts.$family-preview-sticker;
+  line-height: 1;
+  font-size: fonts.$size-heading * 2;
+}
+
+h1 {
+  margin-block: layout.$legacy-heading-margin;
+  color: var(--black);
+  font-size: fonts.$size-legacy-page-heading;
+  text-shadow: (layout.$pixel-unit * 0.5) (layout.$pixel-unit * 0.5) 0
+    var(--lime);
+}
+
+h2,
+h3 {
+  color: var(--black);
+  letter-spacing: 0;
+}
+
+a {
+  color: var(--black);
+}

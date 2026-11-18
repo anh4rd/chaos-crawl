@@ -14,7 +14,6 @@
 @use "workspace-surface";
 
 @use "playback-marker";
-
 @use "legacy-type";
 
-@use "balanced-row";
+@forward "balanced-row";

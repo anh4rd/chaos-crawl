@@ -1,3 +1,6 @@
+import FeedbackNotice from "../../components/ui/FeedbackNotice";
+import Note from "../../components/ui/Note";
+import Overline from "../../components/ui/Overline";
 import { Field } from "../../components/ui/Field";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
@@ -20,15 +23,17 @@ export default function HostAccessForm({ auth }: { auth: HostAccessState }) {
   } = auth;
   return (
     <section className="host-access-form">
-      <div className="host-eyebrow">HOST HUB</div>
+      <Overline variant="workspace" as="div">
+        HOST HUB
+      </Overline>
       <h1 className="host-access-form__title">
         {mode === "login" ? "Welcome back." : "Make some chaos."}
       </h1>
-      <p className="host-muted host-access-form__description">
+      <Note variant="workspace-muted" className="host-access-form__description">
         {mode === "login"
           ? "Log in to manage your games, save favourite tasks and plan your next event."
           : "Create a host account to save game plans and build your own ridiculous party."}
-      </p>
+      </Note>
 
       <div
         className="host-access-form__modes"
@@ -104,14 +109,14 @@ export default function HostAccessForm({ auth }: { auth: HostAccessState }) {
         </Field>
 
         {error && (
-          <div className="host-alert host-alert--error" role="alert">
+          <FeedbackNotice tone="error" role="alert">
             {error}
-          </div>
+          </FeedbackNotice>
         )}
         {notice && (
-          <div className="host-alert host-alert--success" role="status">
+          <FeedbackNotice tone="success" role="status">
             {notice}
-          </div>
+          </FeedbackNotice>
         )}
 
         <Button

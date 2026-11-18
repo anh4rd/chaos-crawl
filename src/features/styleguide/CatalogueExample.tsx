@@ -14,7 +14,6 @@ import { createChallengeDraft } from "../host-explore/challengeDraft";
 import type { CatalogTab, CatalogTask } from "../host-explore/types";
 import { Example } from "./Example";
 import HostPatternPreview from "./HostPatternPreview";
-import "../../styles/HostPlanning.css";
 
 const sampleTasks = tasks.slice(0, 2),
   sampleLocations = locations.slice(0, 1),

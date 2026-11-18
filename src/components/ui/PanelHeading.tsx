@@ -14,7 +14,8 @@ export default function PanelHeading({
     | "overview"
     | "console"
     | "console-section"
-    | "console-card";
+    | "console-card"
+    | "workspace";
   dismissible?: boolean;
 }) {
   return (

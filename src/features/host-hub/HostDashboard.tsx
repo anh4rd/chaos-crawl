@@ -1,3 +1,10 @@
+import PanelGrid from "../../components/ui/PanelGrid";
+import EmptyState from "../../components/ui/EmptyState";
+import PanelHeading from "../../components/ui/PanelHeading";
+import CountBadge from "../../components/ui/CountBadge";
+import TabList from "../../components/ui/TabList";
+import FeedbackNotice from "../../components/ui/FeedbackNotice";
+import ContentPanel from "../../components/ui/ContentPanel";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
 import StatTile from "../../components/ui/StatTile";
@@ -7,9 +14,6 @@ import GameContext from "./GameContext";
 import HostDirectory from "./HostDirectory";
 import { GameCard } from "./GameCard";
 import { useHostHub } from "./useHostHub";
-import "../../styles/HostPortal.css";
-import "../../styles/HostPlanning.css";
-import "../../styles/HostTheme.css";
 export default function HostDashboard({
   view,
   viewAsHostId,
@@ -68,7 +72,7 @@ export default function HostDashboard({
     >
       <div className="host-dashboard">
         {viewAsHostId && (
-          <div className="host-preview-banner">
+          <ContentPanel variant="workspace-preview" as="div">
             <div>
               <strong>
                 Viewing as{" "}
@@ -87,21 +91,23 @@ export default function HostDashboard({
             >
               Return to your Host Hub
             </Button>
-          </div>
+          </ContentPanel>
         )}
         {created && (
-          <div className="host-alert host-alert--success">
+          <FeedbackNotice tone="success">
             Game plan saved. You can edit it any time before the event.
-          </div>
+          </FeedbackNotice>
         )}
-        {error && <div className="host-alert host-alert--error">{error}</div>}
+        {error && <FeedbackNotice tone="error">{error}</FeedbackNotice>}
 
-        <div className="host-tabs" role="tablist" aria-label="Game list view">
-          <button
+        <TabList label="Game list view" variant="workspace" navigation="native">
+          <Button
+            variant="workspace-tab"
+            fullWidth={false}
             type="button"
             role="tab"
             aria-selected={view === "home"}
-            className={view === "home" ? "is-active" : ""}
+            className={view === "home" ? "btn--workspace-selected" : ""}
             onClick={() =>
               navigate(
                 viewAsHostId
@@ -111,12 +117,14 @@ export default function HostDashboard({
             }
           >
             Overview
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="workspace-tab"
+            fullWidth={false}
             type="button"
             role="tab"
             aria-selected={view === "games"}
-            className={view === "games" ? "is-active" : ""}
+            className={view === "games" ? "btn--workspace-selected" : ""}
             onClick={() =>
               navigate(
                 viewAsHostId
@@ -125,9 +133,10 @@ export default function HostDashboard({
               )
             }
           >
-            Your games <span className="host-tab-count">{games.length}</span>
-          </button>
-        </div>
+            {"Your games "}
+            <CountBadge variant="workspace">{games.length}</CountBadge>
+          </Button>
+        </TabList>
 
         <section className="stat-grid" aria-label="Host Hub summary">
           <StatTile
@@ -152,8 +161,8 @@ export default function HostDashboard({
           />
         </section>
 
-        <section className="host-list-section">
-          <div className="host-section-heading">
+        <section className="host-dashboard__section">
+          <PanelHeading variant="workspace">
             <div>
               <h2>{view === "home" ? "Upcoming games" : "All plans"}</h2>
               <p>
@@ -163,20 +172,23 @@ export default function HostDashboard({
               </p>
             </div>
             {view === "home" && (
-              <button
+              <Button
                 type="button"
-                className="host-text-button"
+                variant="workspace-link"
+                fullWidth={false}
                 onClick={() => navigate("/host/games")}
               >
                 View all →
-              </button>
+              </Button>
             )}
-          </div>
+          </PanelHeading>
           {loading ? (
-            <div className="host-empty-state">Loading your games…</div>
+            <EmptyState variant="workspace-panel">
+              Loading your games…
+            </EmptyState>
           ) : view === "games" ? (
             games.length ? (
-              <div className="host-game-grid">
+              <PanelGrid variant="games">
                 {games.map((game) => (
                   <GameCard
                     key={game.id}
@@ -187,9 +199,9 @@ export default function HostDashboard({
                     readOnly={Boolean(viewAsHostId)}
                   />
                 ))}
-              </div>
+              </PanelGrid>
             ) : (
-              <div className="host-empty-state">
+              <EmptyState variant="workspace-panel">
                 <Icon name="sparkles" className="icon--size-25" />
                 <h3>No games yet</h3>
                 <p>Your saved game plans will appear here.</p>
@@ -204,10 +216,10 @@ export default function HostDashboard({
                     first game
                   </Button>
                 )}
-              </div>
+              </EmptyState>
             )
           ) : upcoming.length ? (
-            <div className="host-game-grid">
+            <PanelGrid variant="games">
               {upcoming.slice(0, 3).map((game) => (
                 <GameCard
                   key={game.id}
@@ -218,9 +230,9 @@ export default function HostDashboard({
                   readOnly={Boolean(viewAsHostId)}
                 />
               ))}
-            </div>
+            </PanelGrid>
           ) : (
-            <div className="host-empty-state">
+            <EmptyState variant="workspace-panel">
               <Icon name="sparkles" className="icon--size-25" />
               <h3>It's quiet… suspiciously quiet.</h3>
               <p>
@@ -237,19 +249,19 @@ export default function HostDashboard({
                   first game
                 </Button>
               )}
-            </div>
+            </EmptyState>
           )}
         </section>
 
         {view === "home" && past.length > 0 && (
-          <section className="host-list-section">
-            <div className="host-section-heading">
+          <section className="host-dashboard__section">
+            <PanelHeading variant="workspace">
               <div>
                 <h2>Past games</h2>
                 <p>Previous plans and results.</p>
               </div>
-            </div>
-            <div className="host-game-grid">
+            </PanelHeading>
+            <PanelGrid variant="games">
               {past.slice(0, 3).map((game) => (
                 <GameCard
                   key={game.id}
@@ -260,12 +272,13 @@ export default function HostDashboard({
                   readOnly={Boolean(viewAsHostId)}
                 />
               ))}
-            </div>
+            </PanelGrid>
           </section>
         )}
 
         {isPlatformAdmin && !viewAsHostId && (
           <HostDirectory
+            className="host-dashboard__section"
             hosts={hostDirectory}
             onPreview={(hostId) =>
               navigate(`/host?viewAs=${encodeURIComponent(hostId)}`)

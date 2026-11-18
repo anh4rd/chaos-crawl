@@ -313,3 +313,15 @@ p.note--console-muted {
     font-weight: fonts.$weight-bold;
   }
 }
+
+.note {
+  &--workspace-muted,
+  &--workspace-meta {
+    color: colors.$workspace-muted;
+  }
+  &--workspace-meta {
+    margin: 0;
+    font-size: fonts.$size-caption;
+    font-weight: inherit;
+  }
+}

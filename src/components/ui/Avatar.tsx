@@ -9,7 +9,14 @@ export default function Avatar({
 }: HTMLAttributes<HTMLElement> & {
   name: string;
   imageSrc?: string | null;
-  variant?: "account" | "roster" | "compact" | "member" | "choice" | "console";
+  variant?:
+    | "account"
+    | "roster"
+    | "compact"
+    | "member"
+    | "choice"
+    | "console"
+    | "directory";
   as?: "span" | "div";
 }) {
   return (

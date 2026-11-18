@@ -27,3 +27,23 @@
     margin-top: (layout.$pixel-unit * 1);
   }
 }
+
+.content-copy {
+  &--directory {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    gap: layout.$pixel-unit * 0.75;
+    strong {
+      color: colors.$collection-ink;
+      font-size: fonts.$size-small;
+      font-weight: fonts.$weight-heading;
+    }
+    span,
+    small {
+      color: colors.$search-field-icon;
+      font-size: fonts.$size-micro;
+      overflow-wrap: anywhere;
+    }
+  }
+}

@@ -1,3 +1,5 @@
+import FeedbackNotice from "../../components/ui/FeedbackNotice";
+import EmptyState from "../../components/ui/EmptyState";
 import PlanBuilder from "./PlanBuilder";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -24,9 +26,6 @@ import { usePlanPhoto } from "./usePlanPhoto";
 import { derivePlan } from "./planModel";
 import { defaultForm, tabItems } from "./catalog";
 import type { BuilderTab, SetupForm, TaskKind } from "./types";
-import "../../styles/HostPortal.css";
-import "../../styles/HostPlanning.css";
-import "../../styles/HostTheme.css";
 export default function PlanEditor({
   id,
   communityTaskId,
@@ -125,7 +124,7 @@ export default function PlanEditor({
         subtitle="Getting your setup ready…"
         showCreate={false}
       >
-        <div className="host-empty-state">Loading…</div>
+        <EmptyState variant="workspace-panel">Loading…</EmptyState>
       </HostWorkspace>
     );
   const header =
@@ -212,14 +211,14 @@ export default function PlanEditor({
       }
     >
       {error && (
-        <div className="host-alert host-alert--error" role="alert">
+        <FeedbackNotice tone="error" role="alert">
           {error}
-        </div>
+        </FeedbackNotice>
       )}
       {notice && (
-        <div className="host-alert host-alert--success" role="status">
+        <FeedbackNotice tone="success" role="status">
           {notice}
-        </div>
+        </FeedbackNotice>
       )}
       {stage === "create" ? (
         <GameBasicsForm

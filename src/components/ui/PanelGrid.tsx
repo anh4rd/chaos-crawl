@@ -14,6 +14,8 @@ export default function PanelGrid({
     | "console-list"
     | "console-ranking"
     | "console-roster"
+    | "games"
+    | "directory"
     | "feed"
     | "feed-tight"
     | "feed-page"

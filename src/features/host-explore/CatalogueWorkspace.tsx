@@ -15,9 +15,6 @@ import { useExploreModeration } from "./useExploreModeration";
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import HostWorkspace from "../host-workspace/HostWorkspace";
-import "../../styles/HostPortal.css";
-import "../../styles/HostPlanning.css";
-import "../../styles/HostTheme.css";
 
 import CatalogueView from "./CatalogueView";
 import ChallengeContributionDialog from "./ChallengeContributionDialog";

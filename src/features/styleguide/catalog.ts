@@ -116,29 +116,29 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     dependencies:
       "Owned SCSS; native children and class props only, no backend or route state.",
   },
-  ChallengeReviewHeader: {
-    usage:
-      "Controlled legacy review heading accepting a challenge presentation or a supplied invalid-parameter message.",
-    dependencies:
-      "Card and owned review-heading SCSS; parsing, route parameters and review queries stay in its route adapter.",
-  },
   PlayerRecovery: {
     usage:
       "Controlled legacy missing-player recovery with a supplied join callback. Keeps the compact native page and original copy.",
     dependencies:
       "PageFrame, Button and owned player-recovery SCSS; no credential reads, navigation or queries.",
   },
-  ScreenIntro: {
+  ChallengeReviewHeader: {
     usage:
-      "Shared title-and-copy card for legacy leaderboard and published vote results. Local legacy player screens supplies local copy.",
+      "Controlled legacy review heading accepting a challenge presentation or a supplied invalid-parameter message.",
     dependencies:
-      "Card and owned screen-intro SCSS; retains the native heading cascade and does not select result publication.",
+      "Card and owned review-heading SCSS; parsing, route parameters and review queries stay in its route adapter.",
   },
   BrandArtwork: {
     usage:
       "Shared native title image for legacy join and gameplay. Local legacy player screens demonstrates it through the controlled join view.",
     dependencies:
       "Existing Title.png and the application base path; owned brand-artwork SCSS. No routing or state.",
+  },
+  ScreenIntro: {
+    usage:
+      "Shared title-and-copy card for legacy leaderboard and published vote results. Local legacy player screens supplies local copy.",
+    dependencies:
+      "Card and owned screen-intro SCSS; retains the native heading cascade and does not select result publication.",
   },
   LegacyJoinView: {
     usage:

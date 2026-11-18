@@ -4390,3 +4390,36 @@ All36 isolated integrated admin browser cases pass at393/1280, including deferre
 response races and unchanged label/workflow/local-reference journeys. The complete
 working-tree review command reports unfinished independent changes as well; its
 numbers are retained in /tmp/finishing-admin-lifecycle-review-load.log.
+
+## Final host and global presentation ownership
+
+Host furniture now composes shared workspace variants and FeedbackNotice,
+HostDirectory and PlusMark blocks. Route shells retain arrangement; the remaining
+HostPortal, HostTheme and HostPlanning files/imports are retired. Global font/base
+rules move to owned SCSS while the native Tailwind reset remains temporarily for
+the subsequent independent removal slice. The loading shell uses PageFrame;
+ScheduledCountdown owns its final tabular-number styling. No utility consumers
+remain in maintained runtime markup (388TSXfiles/1038classattributes audited).
+
+Fourteen compiled global rules and font/import contracts are exact. Corrected
+host comparisons preserve actual account/hub/planning/catalogue/saved/join/loading
+states at393/800/1280. Twelve account pairs are pixel-exact. Local Foundation
+page-height/pixels differ with added reference content; these raw differences are
+retained rather than claimed neutral. Inert navigation grid declarations are
+explicitly removed: navigation remains flex/hidden at their breakpoints. The
+corrected directory/account mobile selector retains the original context.
+Evidence: /tmp/host-furniture-corrected-parity-summary.json,
+/tmp/host-furniture-login-proof.json and /tmp/host-foundation-all-neutral-paths.json.
+
+The isolated assembled neutral tree passes571units, forced app/browser types,
+full lint, production build and16mocked foundation/hub browser cases. The separate
+full-current keyboard snapshot passes575units and28account/hub/foundation/local
+browser cases, app/browser types and build; its countdown formatting failure was
+corrected in the neutral assembly without a runtime change.
+
+Review map: existing-value global/font tokens; shared workspace/native props;
+owned directory/decoration/furniture blocks; route arrangement and CSS retirement;
+backend-free local reference; counted runtime utility audit. Source delta before
+documentation is63review-relevant files,+1010/-682=1692lines. Scrutinize selector
+contexts and native prop/default behavior. Reset/tooling removal and tab keyboard
+changes remain separate slices; the whole-tree reviewer load includes both.

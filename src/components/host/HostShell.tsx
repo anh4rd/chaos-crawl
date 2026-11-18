@@ -5,7 +5,6 @@ import type { HostShellProps } from "./types";
 import HostHeader from "./HostHeader";
 import HostMobileNavigation from "./HostMobileNavigation";
 import Icon from "../ui/Icon";
-import "../../styles/HostTheme.css";
 export default function HostShell({
   children,
   title,

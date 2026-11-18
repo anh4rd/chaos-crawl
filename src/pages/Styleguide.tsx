@@ -1,5 +1,3 @@
-import SessionStatusExample from "../features/styleguide/SessionStatusExample";
-import LegacyHostExample from "../features/styleguide/LegacyHostExample";
 import { useState } from "react";
 import StyleguideShell from "../features/styleguide/StyleguideShell";
 import StyleguideIntro from "../features/styleguide/StyleguideIntro";
@@ -21,13 +19,13 @@ import PrivateMissionExample from "../features/styleguide/PrivateMissionExample"
 import SlideshowExample from "../features/styleguide/SlideshowExample";
 import LegacySlideshowExample from "../features/styleguide/LegacySlideshowExample";
 import LegacyPlayerExample from "../features/styleguide/LegacyPlayerExample";
+import LegacyHostExample from "../features/styleguide/LegacyHostExample";
+import SessionStatusExample from "../features/styleguide/SessionStatusExample";
 import { ParticipationExamples } from "../features/styleguide/ParticipationExamples";
 import { FeedbackExamples } from "../features/styleguide/FeedbackExamples";
 import HostExamples from "../features/styleguide/HostExamples";
 import { Catalog } from "../features/styleguide/Catalog";
 import { Section } from "../features/styleguide/Section";
-import "../styles/HostPortal.css";
-import "../styles/HostTheme.css";
 export default function Styleguide() {
   const [name, setName] = useState("Team Chaos");
   return (

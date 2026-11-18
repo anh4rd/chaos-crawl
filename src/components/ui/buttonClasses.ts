@@ -1,4 +1,6 @@
 export type ButtonVariant =
+  | "workspace-tab"
+  | "workspace-link"
   | "navigation-tab"
   | "participant-rejoin"
   | "participant-leaderboard"

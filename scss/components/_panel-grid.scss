@@ -1,3 +1,4 @@
+@use "../variables/colors";
 @use "../variables/layout";
 
 .panel-grid {
@@ -125,5 +126,30 @@
   }
   &--feed-feedback > :where(:not(:last-child)) {
     margin-block: 0 layout.$spacing-unit * 2;
+  }
+}
+
+.panel-grid {
+  &--games {
+    display: grid;
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(layout.$invite-copy-width, 1fr)
+    );
+    gap: layout.$pixel-unit * 4.5;
+    align-items: normal;
+    @media (max-width: layout.$host-mobile-breakpoint) {
+      grid-template-columns: 1fr;
+    }
+  }
+  &--directory {
+    display: grid;
+    grid-template-columns: none;
+    align-items: normal;
+    gap: layout.$pixel-unit * 2.25;
+    border: (layout.$pixel-unit * 0.5) solid colors.$comic-ink;
+    border-radius: layout.$pixel-unit * 4.75;
+    box-shadow: (layout.$pixel-unit * 0.75) (layout.$pixel-unit * 0.75) 0
+      colors.$purple-dark;
   }
 }

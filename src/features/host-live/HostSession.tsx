@@ -57,7 +57,6 @@ import GuidedTour from "../../components/tour/GuidedTour";
 import { upcomingStageModel } from "./upcomingStageModel";
 import StagePreview from "../../components/session/StagePreview";
 import RoundPlan from "../../components/session/RoundPlan";
-import "../../styles/HostPortal.css";
 import PanelGrid from "../../components/ui/PanelGrid";
 
 export default function HostSession({ sessionId }: { sessionId: string }) {

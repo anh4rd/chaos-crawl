@@ -178,3 +178,18 @@
     background: colors.$accent-soft;
   }
 }
+
+.count-badge {
+  &--workspace {
+    display: inline-grid;
+    place-items: center;
+    min-width: layout.$pixel-unit * 5;
+    height: layout.$pixel-unit * 5;
+    padding: 0 (layout.$pixel-unit * 1.25);
+    border-radius: layout.$pixel-unit * 5;
+    background: colors.$reference-hover;
+    color: var(--host-purple);
+    font-size: fonts.$size-micro;
+    font-weight: inherit;
+  }
+}

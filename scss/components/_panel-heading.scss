@@ -173,3 +173,32 @@
     font-weight: fonts.$weight-heading;
   }
 }
+
+.panel-heading {
+  &--workspace {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: layout.$pixel-unit * 4;
+    margin-bottom: layout.$pixel-unit * 3.5;
+  }
+  &--workspace h2 {
+    margin: 0;
+    color: colors.$white;
+    font: fonts.$weight-heavy fonts.$size-heading fonts.$family-type-sample;
+    letter-spacing: -(layout.$pixel-unit * 0.125);
+    -webkit-text-stroke: (layout.$pixel-unit * 0.25) colors.$comic-ink;
+    text-shadow:
+      (layout.$pixel-unit * 0.75) (layout.$pixel-unit * 0.75) 0
+        colors.$comic-ink,
+      (layout.$pixel-unit * 1.25) (layout.$pixel-unit * 1.25) 0
+        colors.$purple-dark;
+  }
+  &--workspace p {
+    margin: (layout.$pixel-unit * 1.25) 0 0;
+    color: colors.$heading-inverse-copy;
+    font-size: fonts.$size-small;
+    text-shadow: (layout.$pixel-unit * 0.25) (layout.$pixel-unit * 0.5) 0
+      colors.$heading-inverse-shadow;
+  }
+}

@@ -170,3 +170,22 @@
     color: colors.$legacy-pink-light;
   }
 }
+
+.overline {
+  &--workspace {
+    display: inline-flex;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-workspace-label;
+    text-transform: uppercase;
+    color: var(--host-purple);
+  }
+  &--directory {
+    display: inline-block;
+    margin-bottom: layout.$pixel-unit;
+    color: colors.$purple;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-overline;
+  }
+}

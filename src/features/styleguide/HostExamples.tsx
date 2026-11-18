@@ -1,10 +1,11 @@
-import LegacyAdminExample from "./LegacyAdminExample";
 import ModerationExample from "./ModerationExample";
 import IdeaCardExample from "./IdeaCardExample";
 import CatalogueExample from "./CatalogueExample";
 import SavedItemsExample from "./SavedItemsExample";
 import FilterToolbarExample from "./FilterToolbarExample";
 import PlatformGamesExample from "./PlatformGamesExample";
+import LegacyAdminExample from "./LegacyAdminExample";
+import HostFoundationExample from "./HostFoundationExample";
 import StagePlanExample from "./StagePlanExample";
 import OverlayPanelExample from "./OverlayPanelExample";
 import RewardPrimitivesExample from "./RewardPrimitivesExample";
@@ -123,6 +124,7 @@ export default function HostExamples() {
       <FilterToolbarExample />
       <PlatformGamesExample />
       <LegacyAdminExample />
+      <HostFoundationExample />
       <PlanningPrimitivesExample />
       <LobbyPrimitivesExample />
       <HostChromeExample />

@@ -1,3 +1,4 @@
+import Note from "../../components/ui/Note";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
 
@@ -60,7 +61,9 @@ export function GameCard({
           <StatusPill tone={game.status}>
             {statusLabels[game.status]}
           </StatusPill>
-          <span className="host-muted host-small">{ownershipLabel}</span>
+          <Note variant="workspace-meta" as="span">
+            {ownershipLabel}
+          </Note>
         </div>
         <h3>{game.name}</h3>
         <ChallengeIcons tasks={challengeTasks} />

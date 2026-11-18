@@ -1,3 +1,4 @@
+import PageFrame from "./components/ui/PageFrame";
 import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 
@@ -36,9 +37,9 @@ export default function App() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-screen items-center justify-center p-6">
+        <PageFrame variant="suspense">
           <p>Loading chaos...</p>
-        </main>
+        </PageFrame>
       }
     >
       <Routes>

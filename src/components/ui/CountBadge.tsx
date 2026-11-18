@@ -18,7 +18,8 @@ export default function CountBadge({
     | "moderation"
     | "console"
     | "console-rank"
-    | "console-rank-first";
+    | "console-rank-first"
+    | "workspace";
 }) {
   return (
     <Container

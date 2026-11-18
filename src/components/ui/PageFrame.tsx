@@ -8,7 +8,7 @@ export default function PageFrame({
   ...props
 }: HTMLAttributes<HTMLElement> & {
   as?: "main" | "div" | "section";
-  variant?: "stack" | "compact" | "loading" | "content" | "bare";
+  variant?: "stack" | "compact" | "loading" | "content" | "suspense" | "bare";
 }) {
   const modifier = variant === "bare" ? "" : ` page-frame--${variant}`;
   return (

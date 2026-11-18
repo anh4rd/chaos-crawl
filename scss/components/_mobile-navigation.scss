@@ -10,7 +10,6 @@
     right: 0;
     bottom: 0;
     left: 0;
-    grid-template-columns: repeat(3, 1fr);
     padding: (layout.$pixel-unit * 2) (layout.$pixel-unit * 2)
       max((layout.$pixel-unit * 2), env(safe-area-inset-bottom));
     border-top: (layout.$pixel-unit * 0.25) solid var(--host-line);

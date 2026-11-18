@@ -1,35 +1,45 @@
+import Avatar from "../../components/ui/Avatar";
+import EmptyState from "../../components/ui/EmptyState";
+import ContentCopy from "../../components/ui/ContentCopy";
+import ContentPanel from "../../components/ui/ContentPanel";
+import PanelGrid from "../../components/ui/PanelGrid";
+import CountBadge from "../../components/ui/CountBadge";
+import Overline from "../../components/ui/Overline";
+import PanelHeading from "../../components/ui/PanelHeading";
 import Button from "../../components/ui/Button";
 import type { HostDirectoryEntry } from "../../types/hostHub";
 export default function HostDirectory({
+  className = "",
   hosts,
   onPreview,
 }: {
+  className?: string;
   hosts: HostDirectoryEntry[];
   onPreview: (hostId: string) => void;
 }) {
   return (
-    <section className="host-list-section host-platform-admin-section">
-      <div className="host-section-heading">
+    <section className={`host-directory ${className}`.trim()}>
+      <PanelHeading variant="workspace">
         <div>
-          <span className="host-admin-kicker">PLATFORM ADMIN</span>
+          <Overline variant="directory">PLATFORM ADMIN</Overline>
           <h2>Host accounts</h2>
           <p>
             Open a read-only Host Hub dashboard view to see the games another
             host sees.
           </p>
         </div>
-        <span className="host-tab-count">{hosts.length} hosts</span>
-      </div>
+        <CountBadge variant="workspace">{hosts.length} hosts</CountBadge>
+      </PanelHeading>
       {hosts.length ? (
-        <div className="host-admin-host-list">
+        <PanelGrid variant="directory">
           {hosts.map((host) => (
-            <article className="host-admin-host-row" key={host.host_id}>
-              <div className="host-admin-avatar">
-                {(host.display_name || host.email || "H")
-                  .slice(0, 1)
-                  .toUpperCase()}
-              </div>
-              <div className="host-admin-host-copy">
+            <ContentPanel variant="account" as="article" key={host.host_id}>
+              <Avatar
+                variant="directory"
+                as="div"
+                name={host.display_name || host.email || "H"}
+              />
+              <ContentCopy variant="directory">
                 <strong>
                   {host.display_name || host.email || "Host account"}
                 </strong>
@@ -38,7 +48,7 @@ export default function HostDirectory({
                   {host.game_count} {host.game_count === 1 ? "game" : "games"} ·
                   joined {new Date(host.created_at).toLocaleDateString()}
                 </small>
-              </div>
+              </ContentCopy>
               <Button
                 type="button"
                 variant="comic-secondary"
@@ -47,11 +57,13 @@ export default function HostDirectory({
               >
                 View Host Hub
               </Button>
-            </article>
+            </ContentPanel>
           ))}
-        </div>
+        </PanelGrid>
       ) : (
-        <div className="host-empty-state">No host accounts found.</div>
+        <EmptyState variant="workspace-panel">
+          No host accounts found.
+        </EmptyState>
       )}
     </section>
   );

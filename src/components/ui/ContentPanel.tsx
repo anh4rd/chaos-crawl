@@ -34,6 +34,8 @@ export default function ContentPanel({
     | "console-white"
     | "console-tint"
     | "console-card"
+    | "workspace-preview"
+    | "account"
     | "ledger"
     | "scheduled"
     | "ranking"

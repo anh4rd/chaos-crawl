@@ -1,56 +1,25 @@
+import { handleTabListKeyDown } from "./tabListNavigation";
 import type { ReactNode } from "react";
 
 export default function TabList({
   label,
+  variant,
+  navigation = "arrows",
   children,
 }: {
   label: string;
+  variant?: "workspace";
+  navigation?: "arrows" | "native";
   children: ReactNode;
 }) {
   return (
     <div
-      className="tab-list"
+      className={`tab-list${variant ? ` tab-list--${variant}` : ""}`}
       role="tablist"
-      tabIndex={-1}
+      tabIndex={navigation === "native" ? undefined : -1}
       aria-label={label}
-      aria-orientation="horizontal"
-      onKeyDown={(event) => {
-        const current = event.target;
-        if (
-          !(current instanceof HTMLButtonElement) ||
-          current.getAttribute("role") !== "tab"
-        )
-          return;
-        const tabs = [
-          ...event.currentTarget.querySelectorAll<HTMLButtonElement>(
-            'button[role="tab"]:not(:disabled):not([aria-disabled="true"])',
-          ),
-        ].filter(
-          (tab) => tab.closest('[role="tablist"]') === event.currentTarget,
-        );
-        const index = tabs.indexOf(current);
-        if (index < 0) return;
-        let next = index;
-        switch (event.key) {
-          case "ArrowLeft":
-            next = (index - 1 + tabs.length) % tabs.length;
-            break;
-          case "ArrowRight":
-            next = (index + 1) % tabs.length;
-            break;
-          case "Home":
-            next = 0;
-            break;
-          case "End":
-            next = tabs.length - 1;
-            break;
-          default:
-            return;
-        }
-        event.preventDefault();
-        tabs[next]?.focus();
-        tabs[next]?.click();
-      }}
+      aria-orientation={navigation === "native" ? undefined : "horizontal"}
+      onKeyDown={navigation === "native" ? undefined : handleTabListKeyDown}
     >
       {children}
     </div>

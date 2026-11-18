@@ -21,6 +21,8 @@ export default function Overline({
     | "inverse"
     | "console"
     | "console-eyebrow"
+    | "workspace"
+    | "directory"
     | "plain"
     | "plain-strong"
     | "plain-accent";

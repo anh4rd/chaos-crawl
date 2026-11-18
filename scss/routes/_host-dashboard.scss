@@ -19,31 +19,12 @@
       (layout.$pixel-unit * 1.25) (layout.$pixel-unit * 1.25) 0
         colors.$purple-dark;
   }
-  .host-portal.host-portal--app:has(&) .host-section-heading h2 {
-    color: colors.$white;
-    -webkit-text-stroke: (layout.$pixel-unit * 0.25) colors.$comic-ink;
-    text-shadow:
-      (layout.$pixel-unit * 0.75) (layout.$pixel-unit * 0.75) 0
-        colors.$comic-ink,
-      (layout.$pixel-unit * 1.25) (layout.$pixel-unit * 1.25) 0
-        colors.$purple-dark;
-  }
   .host-portal.host-portal--app:has(&) .page-heading p {
     color: colors.$heading-inverse-copy;
     text-shadow: (layout.$pixel-unit * 0.25) (layout.$pixel-unit * 0.5) 0
       colors.$heading-inverse-shadow;
   }
-  .host-portal.host-portal--app:has(&) .host-section-heading p {
-    color: colors.$heading-inverse-copy;
-    text-shadow: (layout.$pixel-unit * 0.25) (layout.$pixel-unit * 0.5) 0
-      colors.$heading-inverse-shadow;
-  }
-  .host-portal.host-portal--app:has(&) .host-section-heading .host-text-button {
-    color: colors.$accent-soft;
-    text-shadow: (layout.$pixel-unit * 0.25) (layout.$pixel-unit * 0.5) 0
-      colors.$purple-dark;
-  }
-  & .host-list-section {
+  & .host-dashboard__section {
     margin-top: (layout.$pixel-unit * 5.75);
   }
 }

@@ -1,8 +1,6 @@
 import HostWorkspace from "../host-workspace/HostWorkspace";
 import SavedItemsView from "./SavedItemsView";
 import { useSavedItems } from "./useSavedItems";
-import "../../styles/HostPortal.css";
-import "../../styles/HostTheme.css";
 export default function SavedItemsWorkspace() {
   const saved = useSavedItems();
   return (

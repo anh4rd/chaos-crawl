@@ -85,3 +85,18 @@
     box-shadow: 0 0 0 (layout.$pixel-unit * 0.5) colors.$accent-soft;
   }
 }
+
+.avatar {
+  &--directory {
+    display: grid;
+    place-items: center;
+    flex: 0 0 (layout.$pixel-unit * 9.5);
+    width: layout.$pixel-unit * 9.5;
+    height: layout.$pixel-unit * 9.5;
+    border-radius: layout.$pixel-unit * 3.25;
+    color: colors.$white;
+    background: colors.$purple;
+    font-size: fonts.$size-intro;
+    font-weight: fonts.$weight-heavy;
+  }
+}

@@ -4,7 +4,6 @@ import HostWorkspace from "../host-workspace/HostWorkspace";
 import PlatformGamesView from "./PlatformGamesView";
 import { usePlatformGames } from "./usePlatformGames";
 import { useGameInspector } from "./useGameInspector";
-import "../../styles/HostPlanning.css";
 
 export default function PlatformGames() {
   const [queryError, setQueryError] = useState("");

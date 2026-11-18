@@ -14,3 +14,19 @@
     justify-content: stretch;
   }
 }
+
+.tab-list {
+  &--workspace {
+    display: flex;
+    justify-content: normal;
+    flex-wrap: wrap;
+    gap: layout.$pixel-unit * 1.5;
+    margin-bottom: layout.$pixel-unit * 5.5;
+    padding: layout.$pixel-unit * 1.25;
+    border: (layout.$pixel-unit * 0.5) solid colors.$purple-dark;
+    border-radius: layout.$pixel-unit * 4;
+    background: colors.$filter-surface;
+    width: fit-content;
+    max-width: 100%;
+  }
+}
