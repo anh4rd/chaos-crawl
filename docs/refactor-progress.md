@@ -2808,6 +2808,48 @@ models, persistence/controllers and presentation. Its current route is roughly
 1,900 lines; split boundary moves and styling into reviewable checkpoints rather
 than combining the whole conversion.
 
+## Phase 5m — HostExplore regression baseline
+
+Nine browser journeys now run against the unchanged HostExplore route on desktop
+and mobile: **18 passing cases**. They cover host-scoped favourites and ordered
+community reads; approved/public versus own pending/rejected visibility; native
+search, category and tab interactions; location disclosures and route outlines;
+task/venue/route saves; pending save controls and failed deletion/retry; creation
+bounds, eight-tag limits and trimmed submission payloads; admin approval/rejection
+and retry; approved editing and cancelled/confirmed deletion; and built-in,
+community and venue imports into the planning route.
+
+Assertions inspect actual mocked SDK request bodies and query strings, including
+separate item types, id/status filters, reviewer identity/time and selected-tag
+insertion order. The isolated Explore helper reuses the existing session backend;
+only explicitly expected community writes are fulfilled by their individual
+tests. Unexpected backend operations still fail verification. The import journey
+waits for the lazy planning destination to mount before returning, rather than
+mistaking a changed URL for a completed transition. Native combobox names identify
+select controls; no production labels or behavior changed to satisfy the tests.
+
+Application source, styles and dependency manifests remain identical to a83683b,
+whose 346 unit/component tests and production build passed. New Playwright types,
+lint/formatting and all eighteen affected browser cases pass. Source/documentation
+were frozen during each browser run; all traffic was mocked, with no live writes.
+This checkpoint establishes a behavioral baseline; extraction and rendered parity
+proof are still required in the following slices. Existing modal focus/dismissal
+and tab arrow-key concerns remain separate accessibility work, not silently fixed
+or asserted accessible by these regressions.
+
+The regression checkpoint is near/above the approximate 800-line review budget.
+Review it separately from the upcoming route extraction:
+
+| Review slice                 | Scrutiny                                                           | Evidence                                                                    |
+| ---------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| Browsing and favourites      | Filtering, pending state, exact saved-item payloads and retry      | First three journeys, both viewports                                        |
+| Contributions and moderation | Form bounds, tags/order, status filters, cancellation and feedback | Creation/approve/reject/edit/delete journeys                                |
+| Import integration           | Built-in JSON versus community ID versus venue ID query contracts  | Native action through settled planning destination                          |
+| Test support                 | Local records, captured requests and narrowly fulfilled writes     | No application changes; existing unexpected-operation verification retained |
+
+Continue with catalogue contracts/data and focused persistence/controller/view
+boundaries, preserving this baseline before separately migrating styling.
+
 ## Queued phases for the full refactor
 
 Next: HostExplore regressions, then focused catalogue models, typed persistence,
