@@ -10,7 +10,7 @@ export default function GameControlTabs({
 }: {
   activeTab: "live" | "tonight" | "screens";
 }) {
-  const controls = useGameControls();
+  const controls = useGameControls(activeTab);
   const game = controls.game;
   return (
     <QueryPanel

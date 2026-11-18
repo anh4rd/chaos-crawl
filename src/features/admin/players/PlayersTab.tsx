@@ -2,7 +2,7 @@ import QueryPanel from "../QueryPanel";
 import { buildLeaderboards } from "../../../lib/leaderboard";
 import { useScoreEvents } from "../../../game/hooks/useScoreEvents";
 import { usePlayers } from "../../../game/hooks/usePlayers";
-import { deletePlayer } from "../../../lib/playerApi";
+import { usePlayerRemoval } from "./usePlayerRemoval";
 import PlayerNameEditor from "./PlayerNameEditor";
 
 import PlayersView from "./PlayersView";
@@ -19,15 +19,7 @@ export default function PlayersTab() {
     ]),
   );
   const { savingPlayerId, changePoints } = usePlayerScoreControls(reloadScores);
-  async function remove(id: string, name: string) {
-    if (!window.confirm(`Delete ${name}?`)) return;
-    const { error } = await deletePlayer(id);
-    if (error) {
-      alert(`Could not delete player: ${error.message}`);
-      return;
-    }
-    await reload();
-  }
+  const remove = usePlayerRemoval(reload);
   return (
     <QueryPanel
       queries={[playersQuery, scoresQuery]}

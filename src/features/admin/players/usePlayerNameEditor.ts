@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { renamePlayer } from "../../../lib/playerApi";
+import { useAdminLifetime } from "../useAdminLifetime";
 export function usePlayerNameEditor({
   playerId,
   name,
@@ -9,6 +10,7 @@ export function usePlayerNameEditor({
   name: string;
   reload: () => Promise<void>;
 }) {
+  const captureLifetime = useAdminLifetime();
   const [editor, setEditor] = useState({ draft: name, saved: name });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +24,8 @@ export function usePlayerNameEditor({
   }, [name]);
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (pending.current) return;
+    const current = captureLifetime();
+    if (!current() || pending.current) return;
     const cleanName = editor.draft.trim();
     if (!cleanName) {
       setError("Enter a player name.");
@@ -34,16 +37,20 @@ export function usePlayerNameEditor({
     setError(null);
     try {
       const { error: failure } = await renamePlayer(playerId, cleanName);
+      if (!current()) return;
       if (failure) throw new Error(failure.message);
       setEditor({ draft: cleanName, saved: cleanName });
       await reload();
     } catch (cause) {
+      if (!current()) return;
       setError(
         `Could not rename player: ${cause instanceof Error ? cause.message : "Unexpected error"}`,
       );
     } finally {
-      pending.current = false;
-      setSaving(false);
+      if (current()) {
+        pending.current = false;
+        setSaving(false);
+      }
     }
   }
   return {

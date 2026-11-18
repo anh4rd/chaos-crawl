@@ -6,10 +6,16 @@ import { tallyPlayerVotes, tallyTeamVotes } from "../../../lib/voteResults";
 import { useGameState } from "../../../game/hooks/useGameState";
 import { usePlayers } from "../../../game/hooks/usePlayers";
 import { useTeams } from "../../../game/hooks/useTeams";
-import { openVoting, closeVoting, closeResults } from "./votingControls";
+import * as commands from "./votingControls";
+import { useAdminOperation } from "../useAdminOperation";
 
 import VotingView from "./VotingView";
 export default function VotingTab() {
+  const run = useAdminOperation();
+  const onFailure = (cause: unknown) =>
+    alert(
+      `Could not update voting: ${cause instanceof Error ? cause.message : "Unexpected error"}`,
+    );
   const gameQuery = useGameState();
   const { data: game } = gameQuery;
   const playersQuery = usePlayers();
@@ -25,8 +31,11 @@ export default function VotingTab() {
       : tallyPlayerVotes(votes, players);
   async function changeTarget(value: string) {
     if (value !== "player" && value !== "team") return;
-    const { error } = await updateGameState({ voting_target: value });
-    if (error) alert(`Could not change voting target: ${error.message}`);
+    await run(async (current) => {
+      const { error } = await updateGameState({ voting_target: value });
+      if (current() && error)
+        alert(`Could not change voting target: ${error.message}`);
+    }, onFailure);
   }
   return (
     <QueryPanel
@@ -37,9 +46,9 @@ export default function VotingTab() {
         game={game}
         liveResults={liveResults}
         onTarget={changeTarget}
-        onOpenVoting={openVoting}
-        onCloseVoting={closeVoting}
-        onCloseResults={closeResults}
+        onOpenVoting={() => run(commands.openVoting, onFailure)}
+        onCloseVoting={() => run(commands.closeVoting, onFailure)}
+        onCloseResults={() => run(commands.closeResults, onFailure)}
         onNavigate={navigate}
       />
     </QueryPanel>

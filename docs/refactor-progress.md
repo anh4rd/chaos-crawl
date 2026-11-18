@@ -4363,3 +4363,30 @@ interpreting that combined number as a single small patch.
 All20 isolated integrated label browser cases pass at393/1280. The label slice
 contains seven source/test files,+321/-6 before this evidence note; review native
 associations and the two intended visible-label flow changes.
+
+## Legacy administrator operation lifetimes
+
+A separate controller-only repair scopes late feedback/navigation/reloads to the
+mounted tab generation and keeps fresh synchronous locks independent of old
+responses. Player assignments and removals retain per-player concurrency. Issued
+requests may complete; the client does not roll back writes. Twenty-five focused
+regressions cover stale slideshow navigation, tab/form races, transport recovery,
+duplicate voting and independent player operations. Twelve steady-state pairs
+are exact for DOM, styles, focus, geometry, pixels and query multisets; twelve
+SDK argument ASTs and four persistence modules retain their original bytes/order.
+The isolated integrated tree passes571units, forced app/browser types, full lint
+and production build. Focused desktop/mobile browser completion follows below.
+Evidence: /tmp/legacy-admin-behavior-handoff.md,
+/tmp/legacy-admin-lifecycle-parity.json and
+/tmp/legacy-admin-command-payload-proof.json.
+
+This slice is15files,+1022/-43=1065review-relevant lines before documentation.
+Review map: focused lifetime/operation hooks; current-tab command guards and
+navigation; per-player mutation locks; before-failing deferred-response fixtures.
+Scrutinize scope generation, fresh-lock release and confirmation/error branches;
+steady-state presentation and issued persistence payloads are mechanically proven.
+
+All36 isolated integrated admin browser cases pass at393/1280, including deferred
+response races and unchanged label/workflow/local-reference journeys. The complete
+working-tree review command reports unfinished independent changes as well; its
+numbers are retained in /tmp/finishing-admin-lifecycle-review-load.log.

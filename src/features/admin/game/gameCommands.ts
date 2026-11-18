@@ -6,7 +6,11 @@ type RevealChallenge = Pick<
   "id" | "title" | "description" | "reveal_order"
 >;
 
-export async function revealRoundChallenge(challenge: RevealChallenge) {
+export async function revealRoundChallenge(
+  challenge: RevealChallenge,
+  current: () => boolean = () => true,
+) {
+  if (!current()) return;
   if (!window.confirm(`Reveal "${challenge.title}" to everyone?`)) return;
   const { error } = await updateGameState({
     current_challenge_id: challenge.id,
@@ -17,13 +21,16 @@ export async function revealRoundChallenge(challenge: RevealChallenge) {
     show_vote_results: false,
     slideshow_open: false,
   });
+  if (!current()) return;
   if (error) alert(`Could not reveal challenge: ${error.message}`);
 }
 
 export async function scheduleChallenge(
   challenge: Pick<Challenge, "id" | "title">,
   minutesText: string,
+  current: () => boolean = () => true,
 ) {
+  if (!current()) return;
   const minutes = Number(minutesText);
   if (!Number.isFinite(minutes) || minutes <= 0) {
     alert("Enter a valid number of minutes.");
@@ -39,6 +46,7 @@ export async function scheduleChallenge(
     scheduled_challenge_id: challenge.id,
     scheduled_reveal_at: revealAt,
   });
+  if (!current()) return;
   if (error) {
     alert(`Could not schedule challenge: ${error.message}`);
     return;
@@ -48,20 +56,28 @@ export async function scheduleChallenge(
   );
 }
 
-export async function cancelScheduledReveal() {
+export async function cancelScheduledReveal(
+  current: () => boolean = () => true,
+) {
+  if (!current()) return;
   const { error } = await updateGameState({
     scheduled_challenge_id: null,
     scheduled_reveal_at: null,
   });
+  if (!current()) return;
   if (error) alert(`Could not cancel schedule: ${error.message}`);
 }
 
-export async function returnEveryoneToGame() {
+export async function returnEveryoneToGame(
+  current: () => boolean = () => true,
+) {
+  if (!current()) return;
   const { error } = await updateGameState({
     voting_open: false,
     show_vote_results: false,
     slideshow_open: false,
   });
+  if (!current()) return;
   if (error) alert(`Could not return everyone: ${error.message}`);
 }
 
@@ -69,7 +85,9 @@ export async function publishLiveGame(
   pubName: string,
   challengeTitle: string,
   challenge: Challenge | undefined,
+  current: () => boolean = () => true,
 ) {
+  if (!current()) return;
   if (!pubName) {
     alert("Select a pub first.");
     return;
@@ -88,6 +106,7 @@ export async function publishLiveGame(
     show_vote_results: false,
     slideshow_open: false,
   });
+  if (!current()) return;
   if (error) {
     alert(`Could not update game: ${error.message}`);
     return;
@@ -98,7 +117,9 @@ export async function publishLiveGame(
 export async function moveRound(
   pub: Pub | undefined,
   challenge: Challenge | undefined,
+  current: () => boolean = () => true,
 ) {
+  if (!current()) return false;
   if (!pub) {
     alert("There is no next pub.");
     return false;
@@ -113,6 +134,7 @@ export async function moveRound(
     show_vote_results: false,
     slideshow_open: false,
   });
+  if (!current()) return false;
   if (error) {
     alert(`Could not change pub: ${error.message}`);
     return false;
@@ -120,13 +142,15 @@ export async function moveRound(
   return true;
 }
 
-export async function startSlideshow() {
+export async function startSlideshow(current: () => boolean = () => true) {
+  if (!current()) return false;
   if (!window.confirm("Start the slideshow for everyone?")) return false;
   const { error } = await updateGameState({
     slideshow_open: true,
     voting_open: false,
     show_vote_results: false,
   });
+  if (!current()) return false;
   if (error) {
     alert(`Could not start slideshow: ${error.message}`);
     return false;
@@ -134,8 +158,10 @@ export async function startSlideshow() {
   return true;
 }
 
-export async function stopSlideshow() {
+export async function stopSlideshow(current: () => boolean = () => true) {
+  if (!current()) return;
   if (!window.confirm("End slideshow for everyone?")) return;
   const { error } = await updateGameState({ slideshow_open: false });
+  if (!current()) return;
   if (error) alert(`Could not end slideshow: ${error.message}`);
 }
