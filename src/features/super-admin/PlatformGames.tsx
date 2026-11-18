@@ -1,3 +1,4 @@
+import SessionFeedback from "../../components/session/SessionFeedback";
 import { useMemo, useState } from "react";
 import HostWorkspace from "../host-workspace/HostWorkspace";
 import PlatformGamesView from "./PlatformGamesView";
@@ -7,12 +8,18 @@ import "../../styles/HostPortal.css";
 import "../../styles/HostPlanning.css";
 
 export default function PlatformGames() {
-  const [error, setError] = useState("");
+  const [queryError, setQueryError] = useState("");
+  const [detailError, setDetailError] = useState("");
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
-  const { games, loading, denied, load } = usePlatformGames(setError);
-  const { selected, detailLoading, openGame, close } =
-    useGameInspector(setError);
+  const { games, loading, denied, load } = usePlatformGames(setQueryError);
+  const { selected, detailLoading, isOpen, openGame, close, retry } =
+    useGameInspector(setDetailError);
+  const error = detailError || queryError;
+  function clearFeedback() {
+    setQueryError("");
+    setDetailError("");
+  }
   const filtered = useMemo(
     () =>
       games.filter(
@@ -30,7 +37,17 @@ export default function PlatformGames() {
         games={games}
         filtered={filtered}
         loading={loading}
-        error={error}
+        error={isOpen ? "" : error}
+        inspectorOpen={isOpen}
+        inspectorFeedback={
+          error ? (
+            <SessionFeedback message={error} onDismiss={clearFeedback} />
+          ) : undefined
+        }
+        onRetryInspection={() => {
+          clearFeedback();
+          void retry();
+        }}
         denied={denied}
         query={query}
         status={status}
@@ -39,7 +56,10 @@ export default function PlatformGames() {
         onRefresh={() => void load()}
         onQueryChange={setQuery}
         onStatusChange={setStatus}
-        onInspect={(id) => void openGame(id)}
+        onInspect={(id) => {
+          clearFeedback();
+          void openGame(id);
+        }}
         onCloseInspector={close}
       />
     </HostWorkspace>

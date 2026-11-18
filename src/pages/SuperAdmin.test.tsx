@@ -208,7 +208,7 @@ it("renders inspector loading before a pending detail reply and keeps existing f
   expect(within(dialog).getByText("Host: Unknown")).toBeTruthy();
 });
 
-it("surfaces detail errors on the page and permits a fresh inspection retry", async () => {
+it("keeps detail errors inside the inspector and permits a current-id retry", async () => {
   rpc.mockImplementation((name: string) =>
     Promise.resolve({
       data: name === "cc_super_admin_list_games" ? games : null,
@@ -222,9 +222,31 @@ it("surfaces detail errors on the page and permits a fresh inspection retry", as
   await screen.findByText("Garden chaos");
   fireEvent.click(screen.getAllByRole("button", { name: "Inspect" })[0]);
   await screen.findByText("Inspector unavailable");
-  expect(screen.queryByRole("dialog")).toBeNull();
+  const dialog = screen.getByRole("dialog", { name: "Game inspector" });
+  expect(within(dialog).getByRole("alert").textContent).toBe(
+    "Inspector unavailable",
+  );
+  rpc.mockResolvedValueOnce({ data: detail, error: null });
+  fireEvent.click(
+    within(dialog).getByRole("button", { name: "Retry inspection" }),
+  );
+  await within(dialog).findByRole("heading", { name: "Garden chaos" });
+  expect(screen.queryByText("Inspector unavailable")).toBeNull();
+});
+
+it("a new inspection clears earlier list feedback while retaining the loaded collection", async () => {
+  renderPage();
+  await screen.findByText("Garden chaos");
+  rpc.mockResolvedValueOnce({
+    data: null,
+    error: { message: "List unavailable" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Refresh" }));
+  await screen.findByText("List unavailable");
   rpc.mockResolvedValueOnce({ data: detail, error: null });
   fireEvent.click(screen.getAllByRole("button", { name: "Inspect" })[0]);
-  await screen.findByRole("dialog", { name: "Game inspector" });
-  expect(screen.queryByText("Inspector unavailable")).toBeNull();
+  const dialog = screen.getByRole("dialog", { name: "Game inspector" });
+  await within(dialog).findByRole("heading", { name: "Garden chaos" });
+  expect(screen.queryByText("List unavailable")).toBeNull();
+  expect(screen.getAllByRole("row")).toHaveLength(4);
 });

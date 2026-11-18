@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
@@ -15,6 +16,9 @@ export default function PlatformGamesView({
   status,
   selected,
   detailLoading,
+  inspectorOpen,
+  inspectorFeedback,
+  onRetryInspection,
   onRefresh,
   onQueryChange,
   onStatusChange,
@@ -30,6 +34,9 @@ export default function PlatformGamesView({
   status: string;
   selected: PlatformGameDetail | null;
   detailLoading: boolean;
+  inspectorOpen: boolean;
+  inspectorFeedback?: ReactNode;
+  onRetryInspection: () => void;
   onRefresh: () => void;
   onQueryChange: (value: string) => void;
   onStatusChange: (value: string) => void;
@@ -114,11 +121,13 @@ export default function PlatformGamesView({
       <Link className="sa-back" to="/host">
         <Icon name="arrow-left" className="icon--size-15" /> Back to Host Hub
       </Link>
-      {(selected || detailLoading) && (
+      {inspectorOpen && (
         <GameInspector
           selected={selected}
           detailLoading={detailLoading}
           onClose={onCloseInspector}
+          feedback={inspectorFeedback}
+          onRetry={onRetryInspection}
         />
       )}
     </>
