@@ -4498,3 +4498,14 @@ protection, not evidence of deployed legacy database authorization.
 Evidence: /tmp/legacy-review-auth-{unit-red-complete,browser-red,allunit,types,
 pwtypes,lint,build,browser-green}.log. Review the guard membership and the updated
 anonymous smoke expectation; active authenticated workflows are unchanged.
+
+## Remove obsolete alternate launch orchestration
+
+Deleted the375-line launchHostGame module after repository source/test/script/doc
+reference checks found only its own exported declaration. The active dashboard
+launch remains createOrGetHostGameSession; routed legacy controllers remain.
+This removes an unused alternative global-table write path, not a live backend
+migration. No tests were added solely for deleted code. The isolated slice passes
+full lint/build and four mocked desktop/mobile dashboard listing/failed-launch
+journeys. Evidence: /tmp/dead-launcher-reference-proof.txt and
+/tmp/dead-launcher-{lint,build,browser}.log. Its source diff is one375-line deletion.
