@@ -165,8 +165,20 @@ commands; useExploreModeration owns review/delete confirmation and commands.
 Each keeps its own mount lifetime and receives scoped feedback callbacks; the
 route coordinates query/action precedence and navigation. Do not combine these
 external concerns into one large hook or duplicate their reads in view panels.
-Connected controllers never run in local styleguide demos. Route markup remains
-a migration exception until its controlled-view slice; do not expand it.
+HostExplore now adapts its route to CatalogueWorkspace, which owns local filters,
+feedback/navigation and presentation adapters. CatalogueView composes controlled
+filters, task/location/route cards, review rows, submission history and a supplied
+contribution slot. Views accept presentation values/callbacks and never resolve
+permissions, database records, persistence or route imports. Workspace retains
+publication/identity filtering, dates, fallback copy and action binding. The local
+catalogue reference mounts only controlled views and state, including pending,
+loading, error and moderation examples; connected controllers never run there.
+ChallengeContributionDialog retains its legacy frame/dismissal behavior pending
+the separate native-dialog accessibility slice. PlusMark is a retained decorative
+text glyph for parity, not a new shared icon pattern. Legacy catalogue classes
+remain until the owned-style slice; do not expand them or introduce new CSS
+there. Keep native types, bounds, labels and the current editable-while-pending
+form contract during subsequent styling moves.
 
 Supabase auth is shared by the legacy and session clients. Legacy player IDs and V2 session-player credentials use different storage keys and are not interchangeable. Preserve RPC payloads, storage paths, query ordering, score semantics, subscription cleanup, timer behavior, error handling, and route/query parameters. Client storage is not an authorization boundary; policies and atomic awards require server enforcement.
 

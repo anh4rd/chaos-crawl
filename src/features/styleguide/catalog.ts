@@ -1,5 +1,77 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
+  CatalogueWorkspace: {
+    usage:
+      "Connected Explore coordinator mounted by HostExplore. Composes focused controllers and adapts filtered domain data into controlled presentation values/callbacks.",
+    dependencies:
+      "HostWorkspace, four useExplore controllers, catalogue/draft models and legacy host styling. Never mount in local examples; consumed database shapes are not deployed schema types.",
+  },
+  CatalogueView: {
+    usage:
+      "Controlled catalogue composition. Receive selected records, counts, filters, feedback, action callbacks and an optional contribution slot. Local catalogue demonstrates local navigation, saves, moderation, busy/loading/error and forms.",
+    dependencies:
+      "CatalogueFilters, TaskCard, LocationCard, RouteCard, CommunityReviewQueue, SubmissionHistory and shared Button/Icon. No routes, auth, storage or persistence.",
+  },
+  CatalogueFilters: {
+    usage:
+      "Controlled native catalogue tabs, search and category buttons. Caller owns selection, category reset and filtering; counts arrive explicitly.",
+    dependencies:
+      "CatalogueFiltersModel, shared Icon and retained Explore styles. Local catalogue uses state only. Existing tab arrow-key behavior remains separate accessibility work.",
+  },
+  TaskCard: {
+    usage:
+      "Task idea with supplied saved/busy values, optional admin actions and main/side callbacks. The caller decides availability and resolves community records.",
+    dependencies:
+      "TaskCardModel, Button/Icon and the retained PlusMark. See Local catalogue; no SDK access or navigation.",
+  },
+  LocationCard: {
+    usage:
+      "Location idea with native practical-check disclosure and supplied save/use callbacks. Local catalogue demonstrates its controlled values.",
+    dependencies:
+      "LocationCardModel and Button/Icon; caller owns persistence and planning navigation.",
+  },
+  RouteCard: {
+    usage:
+      "Route template with caller-owned expansion and save state. Preserves existing icon-button busy and footer-action contracts; Local catalogue demonstrates both.",
+    dependencies:
+      "RouteCardModel and Button/Icon. No route selection, live maps or queries.",
+  },
+  CommunityReviewQueue: {
+    usage:
+      "Groups already-selected pending-review presentation rows in caller order. Local catalogue supplies a local queue; this view never chooses publishable records.",
+    dependencies:
+      "CommunityReviewItem, shared Icon and explicit review models/callbacks.",
+  },
+  CommunityReviewItem: {
+    usage:
+      "Controlled review row with supplied date/detail strings, busy state and approve/reject callbacks. Local catalogue exercises its actions without a backend.",
+    dependencies:
+      "ReviewItemModel and Button/Icon; permissions, filtering, formatting and commands stay in the coordinator.",
+  },
+  SubmissionHistory: {
+    usage:
+      "Presentation of caller-selected history rows, supplied dates/status/notes and incoming order. Local catalogue provides a sample pending record.",
+    dependencies:
+      "SubmissionHistoryItem presentation values only. Never selects records by user identity or queries submissions.",
+  },
+  ChallengeContributionDialog: {
+    usage:
+      "Controlled legacy contribution frame with supplied editing flag, close/backdrop callbacks and form slot. Local catalogue opens local content only.",
+    dependencies:
+      "Shared Icon and retained native div/section markup. Native Dialog/focus/dismissal migration remains a separately tested accessibility slice; preserve current callbacks meanwhile.",
+  },
+  ChallengeContributionForm: {
+    usage:
+      "Controlled native contribution form. Supply draft, editing/busy values, draft patches, tag/submit/cancel callbacks. Retains required/length/numeric bounds and the eight-tag disabled state. Local catalogue submits local state only.",
+    dependencies:
+      "ContributionFormModel, static tag choices, Button/Icon and PlusMark. Only submit disables while busy; other fields/cancel remain editable. No persistence or trimming policy.",
+  },
+  PlusMark: {
+    usage:
+      "Retained decorative Explore text-plus glyph for structural parity. Feature-local compatibility only; replace during the separate semantic-icon/styling slice rather than copying it elsewhere.",
+    dependencies:
+      "Existing host-explore-plus styling. Used by task and contribution views in Local catalogue.",
+  },
   FilterGroup: {
     usage:
       "Native div grouping explicit filter controls; caller supplies labels, roles and buttons. Local saved items demonstrates filtering without backend access.",

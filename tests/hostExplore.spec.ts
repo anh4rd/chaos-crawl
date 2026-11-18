@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { activateByKeyboard } from "./support/keyboard";
+import { activateByKeyboard, tabTo } from "./support/keyboard";
 import {
   exploreSubmissions,
   installExploreBackend,
@@ -719,5 +719,124 @@ test("built-in, community and venue plan imports preserve route query contracts"
     /#\/host\/games\/new\?venueIdea=loc-community-hall$/,
   );
   await expect(page.getByLabel("Game name", { exact: true })).toBeVisible();
+  backend.verify();
+});
+
+test("local catalogue uses controlled views for saves, moderation and forms without backend access", async ({
+  page,
+}) => {
+  const { backend } = await installExploreBackend(page);
+  await page.goto("#/styleguide");
+  const example = page.locator(".component-example").filter({
+    has: page.getByRole("heading", { name: "Local catalogue", exact: true }),
+  });
+  await activateByKeyboard(
+    page,
+    example.getByRole("button", {
+      name: "Save Obtain the best thing",
+      exact: true,
+    }),
+  );
+  await expect(
+    example.getByRole("button", {
+      name: "Unsave Obtain the best thing",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await activateByKeyboard(
+    page,
+    example
+      .locator(".host-explore-card")
+      .filter({
+        has: page.getByRole("heading", {
+          name: "Obtain the best thing",
+          exact: true,
+        }),
+      })
+      .getByRole("button", { name: "Add as side", exact: true }),
+  );
+  await expect(example.getByRole("status")).toHaveText(
+    "Selected Obtain the best thing as side locally.",
+  );
+  await expect(page).toHaveURL(/#\/styleguide$/);
+  const moderation = example.getByRole("checkbox", {
+    name: "Show catalogue moderation",
+    exact: true,
+  });
+  await tabTo(page, moderation, "backward");
+  await page.keyboard.press("Space");
+  await activateByKeyboard(
+    page,
+    example.getByRole("button", { name: "Approve", exact: true }),
+  );
+  await expect(
+    example.getByRole("heading", {
+      name: "Local pending contribution",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await activateByKeyboard(
+    page,
+    example.getByRole("button", { name: "Create challenge", exact: true }),
+  );
+  const dialog = example.getByRole("dialog", {
+    name: "Create a challenge",
+    exact: true,
+  });
+  await tabTo(
+    page,
+    dialog.getByRole("textbox", { name: "Challenge title", exact: true }),
+  );
+  await page.keyboard.type("Local paper dance");
+  await page.keyboard.press("Tab");
+  await page.keyboard.type("Make paper dance together.");
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Submit for review", exact: true }),
+  );
+  await expect(dialog).toHaveCount(0);
+  await expect(example.getByRole("status")).toHaveText(
+    "Contribution saved locally.",
+  );
+  const pending = example.getByRole("checkbox", {
+    name: "Simulate catalogue action pending",
+    exact: true,
+  });
+  await tabTo(page, pending, "backward");
+  await page.keyboard.press("Space");
+  await expect(
+    example.getByRole("button", {
+      name: "Unsave Obtain the best thing",
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await activateByKeyboard(
+    page,
+    example.getByRole("button", { name: "Create challenge", exact: true }),
+  );
+  await expect(
+    dialog.getByRole("button", { name: "Submitting…", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    dialog.getByRole("textbox", { name: "Challenge title", exact: true }),
+  ).toBeEnabled();
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Cancel", exact: true }),
+  );
+  const loading = example.getByRole("checkbox", {
+    name: "Simulate catalogue loading",
+    exact: true,
+  });
+  await tabTo(page, loading, "backward");
+  await page.keyboard.press("Space");
+  await expect(
+    example.getByText("Checking your saved items…", { exact: true }),
+  ).toBeVisible();
+  await page.keyboard.press("Space");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Space");
+  await expect(example.getByRole("alert")).toHaveText("Local catalogue error");
+  expect(backend.requests).toEqual([]);
   backend.verify();
 });

@@ -3060,10 +3060,91 @@ Next: controlled catalogue cards, forms and sections, a thin route/feature
 coordinator and local backend-free examples. Then migrate owned/shared styling;
 keep pending concurrency and modal/tab accessibility fixes in their own slices.
 
+## Phase 5r — controlled catalogue views and thin route
+
+HostExplore is now a thin adapter to CatalogueWorkspace. The feature coordinator
+retains filters, navigation, feedback and all existing controller calls, then
+projects domain records into explicit presentation values/callbacks. It selects
+admin actions, private history and pending review records; resolves dates/detail
+fallbacks; and binds exact task/venue/route actions. Presentation types live in
+viewTypes.ts and do not depend on the page or connected controllers.
+
+CatalogueView composes controlled CatalogueFilters, TaskCard, LocationCard,
+RouteCard, CommunityReviewQueue/CommunityReviewItem and SubmissionHistory. Its
+contribution slot composes ChallengeContributionDialog and
+ChallengeContributionForm. Views do not read routes, auth, storage or persistence,
+and never decide which records the user may see. Native tags, labels, validation
+bounds, saved/busy state, disclosure/route expansion and action order are retained.
+The form accepts typed draft patches and tag/submit/cancel callbacks; checked
+native option values replace the old assertions. Nested presentation labels are
+derived above JSX. The now-unconsumed TaskKind export is module-private.
+
+The contribution frame deliberately retains its legacy focus/dismissal contract
+for the separate native-dialog accessibility slice. Only submit disables while
+busy; fields/cancel remain editable. Backdrop versus explicit close callbacks
+retain their original state behavior. The feature-local PlusMark retains the
+native decorative text glyph for parity, rather than introducing a new shared
+icon pattern. Existing legacy classes remain pending owned/shared styling.
+
+Local catalogue demonstrates the same controlled views with state only: saves,
+selection notices, review actions, history, forms and pending/loading/error flags.
+It never mounts CatalogueWorkspace or any connected controller. The catalogue
+notes document every new component and its ownership. The reference imports the
+existing legacy stylesheet to show the current catalogue appearance.
+
+Verification with source/documentation frozen during browser jobs:
+
+- All **366 unit/component tests**, lint/formatting, strict production build and
+  Playwright type checks pass. Existing lifetime/feedback and save-retry tests
+  remain passing. Sentry uploads were disabled.
+- **36 affected browser cases pass** across desktop/mobile: the 34 existing
+  catalogue/saved-item cases plus two new local-catalogue keyboard journeys.
+  The new journey verifies save state, local add/moderation callbacks, native
+  contribution submission, pending controls, editable fields, loading/error and
+  zero backend requests. Its corrected pending-label assertion was rerun on both
+  viewports; the production behavior did not change to satisfy the test.
+- **24 production comparisons** at 1280/393px retain exact native outerHTML,
+  element text/attributes, control values/checked/open state, focused element,
+  geometry, every standard computed property and viewport PNGs, without masks
+  or class normalization. Cases include optional prep/performance timings and
+  venue reviews alongside read/write/error/create/edit/moderation states.
+  Explicit legacy text runs preserve date-label measurements after JSX moves.
+- SDK methods, URLs, Accept headers and bodies match in those twenty-four cases.
+  Independent mount GETs are compared as a multiset; subsequent commands and
+  reloads retain strict ordering and the guarded baseline's request counts.
+- **24 retained-reference comparisons** cover four existing examples at six
+  widths (393/760/761/850/851/1280px). Three examples retain exact markup,
+  geometry and styles. HostShell markup/geometry and all other styles also match;
+  the legacy import's sole outside selector sets dormant mobile-navigation grid
+  tracks at widths up to 850px. It remains flex or hidden at every boundary, with
+  no layout effect. The raw property difference is recorded, not normalized out;
+  retire this obsolete declaration with the legacy stylesheet work.
+- All original coordinator statements before the new adapters remain
+  byte-identical, as do all existing Explore controllers/runtime models and
+  **221 stylesheet files**. No dependency, live write, schema migration or
+  deployment occurred. Source styles are unchanged; the reference's new import
+  and dormant property difference above are explicitly accounted for.
+
+This exceeds the approximate 800-line review budget. Most source delta is moved
+markup; review the structural slices separately from adapter decisions:
+
+| Review slice                  | Mechanical / scrutiny                                                                                                    | Evidence                                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| Route and coordinator         | Thin route; original state/controllers/navigation retained; scrutinize record selection and callback binding in adapters | Byte comparison of all original coordinator statements; SDK traces and existing journeys        |
+| Controlled cards and sections | Native markup moved without added wrappers; dates/detail values now supplied                                             | Twenty-four exact production markup/control/style/PNG comparisons                               |
+| Contribution composition      | Form/dialog slot, typed patches, option guards and original busy/dismissal contract                                      | Native form bounds, exact create/edit payloads, lifecycle tests and local keyboard form journey |
+| Local reference/catalogue     | State-only examples, accurate ownership notes and legacy stylesheet import                                               | Zero backend traffic; existing-reference/selector audit at six widths                           |
+| Retained exceptions           | Legacy styles, decorative PlusMark and modal/tab behavior await separate slices                                          | No palette/CSS-source changes; dormant grid declaration recorded explicitly                     |
+
+Next: migrate catalogue styling into owned SCSS and shared primitives, then the
+separately tested modal/tab accessibility and action-concurrency findings. Keep
+private/public selection and callback contracts in the coordinator/controllers.
+
 ## Queued phases for the full refactor
 
-Next: controlled HostExplore views and a thin route/feature coordinator. Catalogue
-models, typed persistence, focused controllers and their regressions are verified. Keep styling and intentional behavior fixes in
+Next: owned/shared HostExplore styling. Its thin route, focused controllers and
+controlled views are verified. Follow with the separate modal/tab accessibility
+and action-concurrency slices. Keep styling and intentional behavior fixes in
 separate verified slices. Continue remaining host utilities/admin and V2 player/
 slideshow presentation, then legacy workflows and obsolete CSS/Tailwind retirement
 once their final consumers migrate. Preserve the shared host/player session base,

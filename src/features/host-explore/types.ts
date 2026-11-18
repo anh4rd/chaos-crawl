@@ -1,7 +1,7 @@
 import type { CommunityChallengePayload } from "../../types/hostExplore";
 
 export type CatalogTab = "tasks" | "locations" | "routes";
-export type TaskKind = CommunityChallengePayload["kind"];
+type TaskKind = CommunityChallengePayload["kind"];
 export interface CatalogTask {
   id: string;
   title: string;
