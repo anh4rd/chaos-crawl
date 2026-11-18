@@ -70,10 +70,10 @@ export default function TaskCard({
         ))}
       </TagList>
       {adminActions && (
-        <div className="host-community-review-actions host-explore-admin-actions">
+        <ControlRow variant="moderation">
           <Button
             type="button"
-            variant="comic-secondary"
+            variant="moderation-secondary"
             fullWidth={false}
             onClick={() => adminActions.onEdit()}
           >
@@ -81,14 +81,14 @@ export default function TaskCard({
           </Button>
           <Button
             type="button"
-            variant="comic-secondary"
+            variant="moderation-secondary"
             fullWidth={false}
             disabled={adminActions.busy}
             onClick={() => adminActions.onDelete()}
           >
             Delete
           </Button>
-        </div>
+        </ControlRow>
       )}
       <ControlRow variant="idea-actions">
         <Button

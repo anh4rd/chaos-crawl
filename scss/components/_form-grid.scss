@@ -28,3 +28,14 @@
     margin: 0;
   }
 }
+
+.form-grid {
+  &--contribution {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: layout.$pixel-unit * 3;
+    margin: 0;
+    @media (max-width: layout.$reward-compact-breakpoint) {
+      grid-template-columns: 1fr;
+    }
+  }
+}

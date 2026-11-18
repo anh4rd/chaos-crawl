@@ -22,6 +22,7 @@ export default function Badge({
     | "stage"
     | "stage-break"
     | "reveal"
+    | "moderation-type"
     | "tag"
     | "entity"
     | "idea"

@@ -11,12 +11,13 @@ export default function ControlRow({
     | "review"
     | "reward"
     | "idea-actions"
-    | "heading-actions";
+    | "heading-actions"
+    | "moderation";
 }) {
   return (
     <div
       {...props}
-      className={`control-row${variant === "timer" || variant === "break" ? " control-row--timer" : ""}${variant === "review" ? " control-row--review" : ""}${variant === "reward" ? " control-row--reward" : ""}${variant === "break" ? " control-row--break" : ""}${variant === "idea-actions" ? " control-row--idea-actions" : ""}${variant === "heading-actions" ? " control-row--heading-actions" : ""} ${className}`.trim()}
+      className={`control-row${variant === "timer" || variant === "break" ? " control-row--timer" : ""}${variant === "review" ? " control-row--review" : ""}${variant === "reward" ? " control-row--reward" : ""}${variant === "break" ? " control-row--break" : ""}${variant === "idea-actions" ? " control-row--idea-actions" : ""}${variant === "heading-actions" ? " control-row--heading-actions" : ""}${variant === "moderation" ? " control-row--moderation" : ""} ${className}`.trim()}
     />
   );
 }

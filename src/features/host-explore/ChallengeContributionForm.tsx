@@ -1,3 +1,9 @@
+import FormStack from "../../components/ui/FormStack";
+import FormLabel from "../../components/ui/FormLabel";
+import FormGrid from "../../components/ui/FormGrid";
+import DialogActions from "../../components/ui/DialogActions";
+import Explainer from "../../components/ui/Explainer";
+import TagPicker from "../../components/ui/TagPicker";
 import type { ReactNode } from "react";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
@@ -31,11 +37,11 @@ export default function ChallengeContributionForm({
     );
 
   return (
-    <form
-      className="host-community-form"
+    <FormStack
+      variant="contribution"
       onSubmit={(event) => void onSubmit(event)}
     >
-      <label>
+      <FormLabel variant="contribution">
         <span>Challenge title</span>
         <input
           required
@@ -44,8 +50,8 @@ export default function ChallengeContributionForm({
           onChange={(event) => onDraftChange({ title: event.target.value })}
           placeholder="Give it a memorable name"
         />
-      </label>
-      <label>
+      </FormLabel>
+      <FormLabel variant="contribution">
         <span>How does it work?</span>
         <textarea
           required
@@ -57,9 +63,9 @@ export default function ChallengeContributionForm({
           }
           placeholder="Explain the challenge and any rules or safety considerations."
         />
-      </label>
-      <div className="host-community-form-grid">
-        <label>
+      </FormLabel>
+      <FormGrid variant="contribution">
+        <FormLabel variant="contribution">
           <span>Challenge type</span>
           <select
             value={draft.kind}
@@ -73,8 +79,8 @@ export default function ChallengeContributionForm({
             <option value="side">Side challenge</option>
             <option value="secret">Secret mission</option>
           </select>
-        </label>
-        <label>
+        </FormLabel>
+        <FormLabel variant="contribution">
           <span>Points</span>
           <input
             type="number"
@@ -85,8 +91,8 @@ export default function ChallengeContributionForm({
               onDraftChange({ points: Number(event.target.value) })
             }
           />
-        </label>
-        <label>
+        </FormLabel>
+        <FormLabel variant="contribution">
           <span>Minutes</span>
           <input
             type="number"
@@ -97,8 +103,8 @@ export default function ChallengeContributionForm({
               onDraftChange({ minutes: Number(event.target.value) })
             }
           />
-        </label>
-        <label>
+        </FormLabel>
+        <FormLabel variant="contribution">
           <span>Player prep (optional)</span>
           <input
             type="number"
@@ -109,8 +115,8 @@ export default function ChallengeContributionForm({
               onDraftChange({ prepMinutes: Number(event.target.value) })
             }
           />
-        </label>
-        <label>
+        </FormLabel>
+        <FormLabel variant="contribution">
           <span>Player performance (optional)</span>
           <input
             type="number"
@@ -121,8 +127,8 @@ export default function ChallengeContributionForm({
               onDraftChange({ performanceMinutes: Number(event.target.value) })
             }
           />
-        </label>
-        <label>
+        </FormLabel>
+        <FormLabel variant="contribution">
           <span>Equipment</span>
           <select
             value={draft.setup}
@@ -136,52 +142,49 @@ export default function ChallengeContributionForm({
             <option value="basic">Basic kit</option>
             <option value="some">Some prep</option>
           </select>
-        </label>
-      </div>
-      <fieldset className="host-community-tag-fieldset">
-        <legend>
-          Tags <small>Choose up to 8 that describe your challenge</small>
-        </legend>
-        <div className="host-community-tag-options">
-          {CHALLENGE_TAG_OPTIONS.map((tag) => {
-            const selected = draft.tags.includes(tag);
-            const disabled = !selected && draft.tags.length >= 8;
-            return (
-              <button
-                key={tag}
-                type="button"
-                className={`host-community-tag-option${selected ? " is-selected" : ""}`}
-                aria-pressed={selected}
-                disabled={disabled}
-                onClick={() => onToggleTag(tag, selected)}
-              >
-                {selected ? (
-                  <Icon name="check" className="icon--size-13" />
-                ) : (
-                  <PlusMark />
-                )}
-                {tag}
-              </button>
-            );
-          })}
-        </div>
-        <small className="host-community-tag-count">
-          {draft.tags.length}/8 selected
-        </small>
-      </fieldset>
+        </FormLabel>
+      </FormGrid>
+      <TagPicker
+        label="Tags"
+        hint="Choose up to 8 that describe your challenge"
+        count={<>{draft.tags.length}/8 selected</>}
+      >
+        {CHALLENGE_TAG_OPTIONS.map((tag) => {
+          const selected = draft.tags.includes(tag);
+          const disabled = !selected && draft.tags.length >= 8;
+          return (
+            <Button
+              variant="tag-option"
+              fullWidth={false}
+              key={tag}
+              type="button"
+              aria-pressed={selected}
+              disabled={disabled}
+              onClick={() => onToggleTag(tag, selected)}
+            >
+              {selected ? (
+                <Icon name="check" className="icon--size-13" />
+              ) : (
+                <PlusMark />
+              )}
+              {tag}
+            </Button>
+          );
+        })}
+      </TagPicker>
       {!editing && (
-        <div className="host-community-submit-note">
+        <Explainer variant="contribution">
           <Icon name="shield-check" className="icon--size-16" />
           <span>
             Submissions are private until approved by the Chaos Crawl team.
             Approved challenges become visible to all hosts.
           </span>
-        </div>
+        </Explainer>
       )}
-      <div className="host-community-modal-actions">
+      <DialogActions variant="contribution">
         <Button
           type="button"
-          variant="comic-secondary"
+          variant="editor-secondary"
           fullWidth={false}
           onClick={onCancel}
         >
@@ -189,13 +192,13 @@ export default function ChallengeContributionForm({
         </Button>
         <Button
           type="submit"
-          variant="comic-primary"
+          variant="editor-primary"
           fullWidth={false}
           disabled={busy}
         >
           {submitLabel}
         </Button>
-      </div>
-    </form>
+      </DialogActions>
+    </FormStack>
   );
 }

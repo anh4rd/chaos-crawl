@@ -1,3 +1,6 @@
+import DialogPanel from "../../components/ui/DialogPanel";
+import PanelHeading from "../../components/ui/PanelHeading";
+import Overline from "../../components/ui/Overline";
 import type { ReactNode } from "react";
 import IconButton from "../../components/ui/IconButton";
 
@@ -20,17 +23,17 @@ export default function ChallengeContributionDialog({
         if (event.target === event.currentTarget) onBackdropDismiss();
       }}
     >
-      <section
-        className="host-community-modal"
+      <DialogPanel
+        variant="contribution"
         role="dialog"
         aria-modal="true"
         aria-labelledby="host-create-challenge-title"
       >
-        <div className="host-community-modal-heading">
+        <PanelHeading variant="contribution">
           <div>
-            <span className="host-community-kicker">
+            <Overline variant="moderation">
               {editing ? "PLATFORM ADMIN" : "COMMUNITY CONTRIBUTION"}
-            </span>
+            </Overline>
             <h2 id="host-create-challenge-title">
               {editing ? "Edit challenge" : "Create a challenge"}
             </h2>
@@ -47,9 +50,9 @@ export default function ChallengeContributionDialog({
             onClick={onClose}
             label="Close"
           />
-        </div>
+        </PanelHeading>
         {children}
-      </section>
+      </DialogPanel>
     </div>
   );
 }

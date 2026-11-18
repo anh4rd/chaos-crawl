@@ -8,7 +8,14 @@ export default function Overline({
   ...props
 }: ComponentPropsWithoutRef<"span"> & {
   tone?: "primary" | "pink";
-  variant?: "session" | "review" | "choice" | "reveal" | "workspace" | "banner";
+  variant?:
+    | "session"
+    | "review"
+    | "choice"
+    | "reveal"
+    | "workspace"
+    | "banner"
+    | "moderation";
   withIcon?: boolean;
   as?: "span" | "div" | "strong";
 }) {

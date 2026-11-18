@@ -153,6 +153,19 @@ only. Preserve the 850px collection breakpoint and mobile icon dimensions.
 Do not restore retired saved-item selectors or tie button appearance to a route
 class; keep retained host CSS only for its remaining consumers.
 
+Catalogue moderation/history compose ContentPanel moderation/history/item,
+PanelHeading moderation, Overline/CountBadge moderation, Badge moderation-type,
+PanelGrid stack, ControlRow/Button moderation and HistoryRow/StatusPill history.
+The feature retains publication visibility, dates, details, sorting and callbacks;
+shared views preserve caller order and never read a backend. Contribution bodies
+compose DialogPanel/PanelHeading contribution, FormStack/FormLabel/FormGrid,
+TagPicker/Button tag-option, Explainer and DialogActions/Button editor variants.
+Keep native form types, bounds, IDs, tag limits/order and editable-while-pending
+fields unchanged. TagPicker only groups caller-composed controls; feature logic
+owns selection. The local catalogue and Shared review and history references use
+state only. The legacy outer backdrop and decorative PlusMark remain until their
+separate behavior/icon slices; visual frames do not supply modal behavior.
+
 Catalogue presentation composes FeatureBanner/Overline banner and decorative
 StickerArt, PageHeading results with ControlRow heading-actions, PanelGrid ideas,
 ContentPanel workspace-error, EmptyState workspace icon/title/action slots and Note
@@ -199,10 +212,11 @@ permissions, database records, persistence or route imports. Workspace retains
 publication/identity filtering, dates, fallback copy and action binding. The local
 catalogue reference mounts only controlled views and state, including pending,
 loading, error and moderation examples; connected controllers never run there.
-ChallengeContributionDialog retains its legacy frame/dismissal behavior pending
-the separate native-dialog accessibility slice. PlusMark is a retained decorative
-text glyph for parity, not a new shared icon pattern. Legacy catalogue classes remain for moderation/history and the contribution
-editor; do not expand them or restore retired card/shell/filter rules there. Keep native types, bounds, labels and the current editable-while-pending
+ChallengeContributionDialog retains its legacy outer backdrop/dismissal behavior
+pending the separate native-dialog accessibility slice; its body uses shared
+contribution frame, heading and form primitives. PlusMark is a retained decorative
+text glyph for parity, not a new shared icon pattern. Only the legacy outer contribution backdrop and decorative PlusMark remain
+from catalogue styling; do not restore retired catalogue presentation rules. Keep native types, bounds, labels and the current editable-while-pending
 form contract during subsequent styling moves.
 
 Supabase auth is shared by the legacy and session clients. Legacy player IDs and V2 session-player credentials use different storage keys and are not interchangeable. Preserve RPC payloads, storage paths, query ordering, score semantics, subscription cleanup, timer behavior, error handling, and route/query parameters. Client storage is not an authorization boundary; policies and atomic awards require server enforcement.

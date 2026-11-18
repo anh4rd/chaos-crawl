@@ -10,6 +10,11 @@ export type ButtonVariant =
   | "collection-tab"
   | "category"
   | "search-clear"
+  | "moderation-approve"
+  | "moderation-secondary"
+  | "editor-primary"
+  | "editor-secondary"
+  | "tag-option"
   | "filter"
   | "access"
   | "access-back"
@@ -120,6 +125,18 @@ export function buttonClasses({
     variant === "idea-saved" || variant === "idea-close"
       ? " btn--idea-save"
       : "";
+  if (variant === "moderation-approve") appearance = "comic-lime";
+  if (variant === "moderation-secondary" || variant === "editor-secondary")
+    appearance = "comic-secondary";
+  if (variant === "editor-primary") appearance = "comic-primary";
+  const moderationClass =
+    variant === "moderation-approve" || variant === "moderation-secondary"
+      ? " btn--moderation"
+      : "";
+  const editorClass =
+    variant === "editor-primary" || variant === "editor-secondary"
+      ? " btn--editor"
+      : "";
   const chipBase = variant === "round-chip-current" ? " btn--round-chip" : "";
   const comicTone =
     appearance?.startsWith("comic-") && !appearance.startsWith("comic-icon");
@@ -127,5 +144,5 @@ export function buttonClasses({
   const controlBase = variant?.startsWith("control-") ? " btn--control" : "";
   const flowBase = variant === "flow-action" ? " btn--flow" : "";
   const dialogBase = variant === "dialog-primary" ? " btn--dialog" : "";
-  return `btn${ideaActionClass}${ideaSaveClass}${reviewClass}${sessionClass}${variant === "session-send" ? " btn--session-send" : ""}${roundClass}${chipBase}${dialogBase}${controlBase}${flowBase}${comicTone ? " btn--comic" : ""}${appearance === "comic-icon-danger" ? " btn--comic-icon" : ""}${appearance ? ` btn--${appearance}` : ""}${fullWidth ? " btn--block" : ""}${comic && fullWidth ? " btn--comic-block" : ""} ${className}`.trim();
+  return `btn${moderationClass}${editorClass}${ideaActionClass}${ideaSaveClass}${reviewClass}${sessionClass}${variant === "session-send" ? " btn--session-send" : ""}${roundClass}${chipBase}${dialogBase}${controlBase}${flowBase}${comicTone ? " btn--comic" : ""}${appearance === "comic-icon-danger" ? " btn--comic-icon" : ""}${appearance ? ` btn--${appearance}` : ""}${fullWidth ? " btn--block" : ""}${comic && fullWidth ? " btn--comic-block" : ""} ${className}`.trim();
 }

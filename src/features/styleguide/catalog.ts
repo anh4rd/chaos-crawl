@@ -47,6 +47,18 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     dependencies:
       "Icon, IconButton search-clear and owned search-field SCSS. Clear preserves the existing native button type contract; callers own filtering.",
   },
+  HistoryRow: {
+    usage:
+      "Native history entry with caller-supplied title, detail, optional note and status slot. Shared review and history demonstrates all publication states without a backend.",
+    dependencies:
+      "Owned history-row SCSS. Does not format dates, choose visibility, sort or query.",
+  },
+  TagPicker: {
+    usage:
+      "Native fieldset/legend with supplied label, hint, count and choice controls. Local catalogue demonstrates controlled contribution tags.",
+    dependencies:
+      "Owned tag-picker SCSS; caller retains selection limits/order and callbacks. Compose Button tag-option.",
+  },
   CatalogueWorkspace: {
     usage:
       "Connected Explore coordinator mounted by HostExplore. Composes focused controllers and adapts filtered domain data into controlled presentation values/callbacks.",
@@ -165,7 +177,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   FormStack: {
     usage:
-      "Native controlled form with vertical spacing. Pass native form props and caller-composed children; demonstrated in the local join reference.",
+      "Contribution retains the native grid form in Local catalogue. Native controlled form with vertical spacing. Pass native form props and caller-composed children; demonstrated in the local join reference.",
     dependencies:
       "Owned form-stack SCSS; submission and validation belong to the caller.",
   },
@@ -221,7 +233,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   PanelGrid: {
     usage:
-      "Ideas retains the three/two/one-column catalogue layout at 1140px/560px; Local catalogue demonstrates it. Collection supplies equal columns, stacking at 850px; see Local saved items. Two-panel layout with a wider first column, stacking at 900px. The local host frame example composes controls and context without connected controllers.",
+      "Stack groups caller-ordered review/history rows; see Shared review and history. Ideas retains the three/two/one-column catalogue layout at 1140px/560px; Local catalogue demonstrates it. Collection supplies equal columns, stacking at 850px; see Local saved items. Two-panel layout with a wider first column, stacking at 900px. The local host frame example composes controls and context without connected controllers.",
     dependencies:
       "Native div attributes, supplied children and owned panel-grid SCSS. No queries, state or commands.",
   },
@@ -356,30 +368,30 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   ContentPanel: {
     usage:
-      "Entity supports native article cards; workspace-error retains the plain div feedback surface. Both appear in Local saved items. Access variants retain native join markup in the local join/rejoin example. The overlay modifier supplies the shared centered/scrolled reward frame; compose Dialog separately for modal behavior. See Shared reward overlay frame. Section, library, selection, form, workspace, lobby, controls and session panel surfaces. Review-controls is a native div-compatible management well demonstrated locally; review-result supplies its published results surface. Session panels support stacked and compact spacing and appear in Shared session panels and invitation. Pass native props, a variant and optional as=div or as=main for its containing element; examples appear in Planning panels and fields. Choice variant supplies the participant choice surface in the local team reference.",
+      "Moderation/history/moderation-item variants retain catalogue review frames in Shared review and history. Entity supports native article cards; workspace-error retains the plain div feedback surface. Both appear in Local saved items. Access variants retain native join markup in the local join/rejoin example. The overlay modifier supplies the shared centered/scrolled reward frame; compose Dialog separately for modal behavior. See Shared reward overlay frame. Section, library, selection, form, workspace, lobby, controls and session panel surfaces. Review-controls is a native div-compatible management well demonstrated locally; review-result supplies its published results surface. Session panels support stacked and compact spacing and appear in Shared session panels and invitation. Pass native props, a variant and optional as=div or as=main for its containing element; examples appear in Planning panels and fields. Choice variant supplies the participant choice surface in the local team reference.",
     dependencies:
       "SCSS .content-panel; composes caller content without backend access.",
   },
   PanelHeading: {
     usage:
-      "The private-mission local reference demonstrates its reveal variant. dismissible reserves room for an absolutely positioned close action, as demonstrated in Shared reward overlay frame. Title/description and action arrangement inside a panel. Accepts native div props; demonstrated with CountBadge. Session variant retains the live panel heading and mobile arrangement. Choice variant retains the participant heading layout and existing color pending the separate contrast fix; see local team references.",
+      "Moderation and contribution variants retain catalogue section/editor arrangement; see Shared review and history and Local catalogue. The private-mission local reference demonstrates its reveal variant. dismissible reserves room for an absolutely positioned close action, as demonstrated in Shared reward overlay frame. Title/description and action arrangement inside a panel. Accepts native div props; demonstrated with CountBadge. Session variant retains the live panel heading and mobile arrangement. Choice variant retains the participant heading layout and existing color pending the separate contrast fix; see local team references.",
     dependencies:
       "SCSS .panel-heading and the shared panel-title typography fragment.",
   },
   CountBadge: {
     usage:
-      "Tab supplies the native collection counter in Local catalogue. Filter supplies the inline collection count; see Local saved items. Round-index and round-index-current variants retain the detailed option number well; demonstrated in the shared round plan. Compact numeric/content badge accepting native span props. Shown in the planning panel example; session variant appears in Shared session panels and invitation. Choice variant supplies the participant capacity pill in the local team reference.",
+      "Moderation supplies the native review-queue counter; see Shared review and history. Tab supplies the native collection counter in Local catalogue. Filter supplies the inline collection count; see Local saved items. Round-index and round-index-current variants retain the detailed option number well; demonstrated in the shared round plan. Compact numeric/content badge accepting native span props. Shown in the planning panel example; session variant appears in Shared session panels and invitation. Choice variant supplies the participant capacity pill in the local team reference.",
     dependencies: "SCSS .count-badge; caller supplies the count.",
   },
   FormGrid: {
     usage:
-      "Responsive two-column field arrangement accepting native div props. Shown in Planning panels and fields. Review variant retains two action columns at every viewport with zero margin and appears in Shared review and presentation controls. Dialog variant retains two numeric columns at all viewport sizes and appears in Host modal behavior.",
+      "Contribution preserves two columns until 650px in Local catalogue. Responsive two-column field arrangement accepting native div props. Shown in Planning panels and fields. Review variant retains two action columns at every viewport with zero margin and appears in Shared review and presentation controls. Dialog variant retains two numeric columns at all viewport sizes and appears in Host modal behavior.",
     dependencies:
       "SCSS .form-grid; compose shared Field controls through children.",
   },
   Explainer: {
     usage:
-      "Reward variant retains the live award instructions and caller-supplied strong/span copy. Supporting content surface with an optional pink tone. Accepts ordinary div props and children; compose Icon and paragraph content explicitly.",
+      "Contribution retains the private-submission notice in Local catalogue. Reward variant retains the live award instructions and caller-supplied strong/span copy. Supporting content surface with an optional pink tone. Accepts ordinary div props and children; compose Icon and paragraph content explicitly.",
     dependencies: "SCSS .explainer; both tones demonstrated locally.",
   },
   ImageUpload: {
@@ -459,7 +471,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   StatusPill: {
     usage:
-      "Reward variant accepts open/completed tones and preserves sentence case. Pill-shaped planned, draft, live or completed state. Review variant supplies submitted/approved/rejected styles and appears in Shared submission and evidence review. Pass tone and visible children; demonstrated in Host patterns.",
+      "History retains pending/rejected tones and the original plain approved treatment; see Shared review and history. Reward variant accepts open/completed tones and preserves sentence case. Pill-shaped planned, draft, live or completed state. Review variant supplies submitted/approved/rejected styles and appears in Shared submission and evidence review. Pass tone and visible children; demonstrated in Host patterns.",
     dependencies: "SCSS .status-pill; caller supplies state and label.",
   },
   ContextCard: {
@@ -614,7 +626,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Overline: {
     usage:
-      "Banner retains the uppercase lime label in Local catalogue. Workspace supplies the saved-item uppercase label; see Local saved items. The private-mission local reference demonstrates its reveal variant. Small uppercase-style label typography. Review variant supports native strong/span titles in Shared review and presentation controls. Accepts span/div/strong markup, primary/pink tones and an icon arrangement. Session variant appears in Shared session panels and invitation. Examples appear in the styleguide introduction, top bar and foundation panels. Choice variant supplies the participant eyebrow in the local team reference.",
+      "Moderation retains the catalogue kicker in Local catalogue and Shared review and history. Banner retains the uppercase lime label in Local catalogue. Workspace supplies the saved-item uppercase label; see Local saved items. The private-mission local reference demonstrates its reveal variant. Small uppercase-style label typography. Review variant supports native strong/span titles in Shared review and presentation controls. Accepts span/div/strong markup, primary/pink tones and an icon arrangement. Session variant appears in Shared session panels and invitation. Examples appear in the styleguide introduction, top bar and foundation panels. Choice variant supplies the participant eyebrow in the local team reference.",
     dependencies: "SCSS .overline. Text casing belongs to the caller.",
   },
   Note: {
@@ -625,7 +637,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   ControlRow: {
     usage:
-      "Heading-actions supplies result-count/create arrangement in Local catalogue. Idea-actions retains the two-column catalogue action grid; see Local catalogue. Reward variant keeps right-aligned comic actions and a single-column mobile layout. Wrapping row of controls accepting native div props; timer and break variants provide compact clock/action wells. Examples appear in button and session previews.",
+      "Moderation retains review/admin actions and their 650px grid reflow; see Shared review and history. Heading-actions supplies result-count/create arrangement in Local catalogue. Idea-actions retains the two-column catalogue action grid; see Local catalogue. Reward variant keeps right-aligned comic actions and a single-column mobile layout. Wrapping row of controls accepting native div props; timer and break variants provide compact clock/action wells. Examples appear in button and session previews.",
     dependencies: "SCSS .control-row. Compose controls through children.",
   },
   TimerReadout: {
@@ -652,7 +664,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Button: {
     usage:
-      'Collection-tab and category retain controlled tab/filter states in Local catalogue. Native button with poster, text, comic, setup, session, timer/flow, dialog, round/chip, review and access appearances. Idea-use/add variants retain catalogue actions; outline-toggle preserves the controlled expansion icon. Shared idea card and Local catalogue demonstrate them without a backend. Filter supplies controlled collection buttons; see Local saved items. fullWidth defaults to true. Set type="button" outside form submission; keep explicit disabled state and native attributes. Other local references demonstrate their corresponding variants.',
+      'Moderation and editor variants retain comic controls; tag-option preserves controlled choices. See Shared review and history and Local catalogue. Collection-tab and category retain controlled tab/filter states in Local catalogue. Native button with poster, text, comic, setup, session, timer/flow, dialog, round/chip, review and access appearances. Idea-use/add variants retain catalogue actions; outline-toggle preserves the controlled expansion icon. Shared idea card and Local catalogue demonstrate them without a backend. Filter supplies controlled collection buttons; see Local saved items. fullWidth defaults to true. Set type="button" outside form submission; keep explicit disabled state and native attributes. Other local references demonstrate their corresponding variants.',
     dependencies:
       "Owned SCSS .btn and ordinary native button attributes. Feature controllers own actions; local examples use only supplied callbacks/state.",
   },
@@ -711,18 +723,18 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   DialogPanel: {
     usage:
-      "The private-mission local reference demonstrates its reveal variant. Shared editor/confirmation surface. Defaults to section; as=form preserves native form props and typed submission events. Compose the heading, copy and fields through children.",
+      "Contribution keeps the controlled catalogue editor frame, heading copy and 650px padding in Local catalogue; Dialog supplies modal behavior separately. The private-mission local reference demonstrates its reveal variant. Shared editor/confirmation surface. Defaults to section; as=form preserves native form props and typed submission events. Compose the heading, copy and fields through children.",
     dependencies:
       "SCSS .dialog-panel; place inside Dialog. No connected state or persistence. The host dialog reference demonstrates the form variant.",
   },
   DialogActions: {
     usage:
-      "Trailing dialog action row. Compose explicit Button dialog/dialog-primary variants and retain native submit/button types.",
+      "Contribution retains catalogue editor buttons and native form types in Local catalogue. Trailing dialog action row. Compose explicit Button dialog/dialog-primary variants and retain native submit/button types.",
     dependencies: "SCSS .dialog-actions; no state or command behavior.",
   },
   FormLabel: {
     usage:
-      "Access variants retain native join markup in the local join/rejoin example. Reward and award-points variants retain native nested labels, number bounds and disabled controls; demonstrated in local Reward primitives. Review variant preserves direct label text and a native picker; shown in Shared review and presentation controls. Session and session-checkbox variants retain native nested controls and labels; Shared mission form controls demonstrates them. Composable native label preserving direct label text and control markup. spaced adds editor separation; checkbox preserves the existing checkbox layout. Native label attributes pass through, and small children retain editor hint styling; unlike Field, it adds no label span.",
+      "Contribution retains nested native catalogue controls, labels and focus states; see Local catalogue. Access variants retain native join markup in the local join/rejoin example. Reward and award-points variants retain native nested labels, number bounds and disabled controls; demonstrated in local Reward primitives. Review variant preserves direct label text and a native picker; shown in Shared review and presentation controls. Session and session-checkbox variants retain native nested controls and labels; Shared mission form controls demonstrates them. Composable native label preserving direct label text and control markup. spaced adds editor separation; checkbox preserves the existing checkbox layout. Native label attributes pass through, and small children retain editor hint styling; unlike Field, it adds no label span.",
     dependencies:
       "SCSS .form-label. Controls and accessible label text belong to its caller. Demonstrated with FormGrid dialog in the local host dialog.",
   },
@@ -1004,7 +1016,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   Badge: {
     usage:
-      "Tag supplies catalogue chips inside TagList idea in Shared idea card. Idea variants supply category labels in Shared idea card and Local catalogue; callers choose the tone and text. Entity supplies the saved-item points tag; see Local saved items. The private-mission local reference demonstrates its reveal variant. Stage/stage-break variants supply the preview label pill, demonstrated in the local stage/plan reference. Eyebrow, sticker, metadata, outline and subtle badge variants. Vote badges display published names and choices in the local review body example. Optional semantic icon; children supply the label and className can position the badge. Dialog variant supplies the existing editor kicker and appears in Host modal behavior.",
+      "Moderation-type supplies the community item type; see Shared review and history. Tag supplies catalogue chips inside TagList idea in Shared idea card. Idea variants supply category labels in Shared idea card and Local catalogue; callers choose the tone and text. Entity supplies the saved-item points tag; see Local saved items. The private-mission local reference demonstrates its reveal variant. Stage/stage-break variants supply the preview label pill, demonstrated in the local stage/plan reference. Eyebrow, sticker, metadata, outline and subtle badge variants. Vote badges display published names and choices in the local review body example. Optional semantic icon; children supply the label and className can position the badge. Dialog variant supplies the existing editor kicker and appears in Host modal behavior.",
     dependencies:
       "Project SCSS .badge. Poster examples show invitation variants; the introduction and catalog demonstrate outline and subtle.",
   },

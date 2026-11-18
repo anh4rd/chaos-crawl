@@ -10,7 +10,8 @@ export default function CountBadge({
     | "round-index-current"
     | "choice"
     | "filter"
-    | "tab";
+    | "tab"
+    | "moderation";
 }) {
   return (
     <span

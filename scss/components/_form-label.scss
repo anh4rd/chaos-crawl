@@ -162,3 +162,35 @@
     line-height: 1.1;
   }
 }
+
+.form-label {
+  &--contribution {
+    color: colors.$collection-ink;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heading;
+    input,
+    textarea,
+    select {
+      width: 100%;
+      min-width: 0;
+      padding: layout.$pixel-unit * 2.5 layout.$pixel-unit * 2.75;
+      border: layout.$pixel-unit * 0.25 solid colors.$contribution-border;
+      border-radius: layout.$pixel-unit * 2.5;
+      outline: none;
+      color: colors.$collection-ink;
+      background: colors.$white;
+      font: inherit;
+      font-size: fonts.$size-small;
+      font-weight: fonts.$weight-semibold;
+      &:focus {
+        border-color: colors.$purple;
+        box-shadow: 0 0 0 layout.$pixel-unit * 0.75
+          rgba(colors.$purple, effects.$contribution-focus-opacity);
+      }
+    }
+    textarea {
+      resize: vertical;
+      line-height: 1.5;
+    }
+  }
+}

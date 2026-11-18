@@ -96,3 +96,19 @@
     font-weight: inherit;
   }
 }
+
+.count-badge {
+  &--moderation {
+    display: inline-grid;
+    min-width: layout.$pixel-unit * 5.5;
+    height: layout.$pixel-unit * 5.5;
+    margin-left: layout.$pixel-unit * 1.25;
+    padding: 0 layout.$pixel-unit * 1.5;
+    border-radius: layout.$pixel-unit * 5;
+    color: colors.$white;
+    background: colors.$pink;
+    font-size: fonts.$size-micro;
+    font-weight: inherit;
+    vertical-align: middle;
+  }
+}

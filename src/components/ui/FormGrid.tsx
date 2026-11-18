@@ -3,7 +3,9 @@ export default function FormGrid({
   className = "",
   variant,
   ...props
-}: HTMLAttributes<HTMLDivElement> & { variant?: "dialog" | "review" }) {
+}: HTMLAttributes<HTMLDivElement> & {
+  variant?: "dialog" | "review" | "contribution";
+}) {
   return (
     <div
       {...props}

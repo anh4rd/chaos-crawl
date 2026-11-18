@@ -81,3 +81,34 @@
     margin-bottom: layout.$pixel-unit * 0.75;
   }
 }
+
+.panel-heading {
+  &--moderation {
+    align-items: flex-start;
+    gap: layout.$pixel-unit * 3;
+    margin-bottom: layout.$pixel-unit * 3.25;
+    h2,
+    h3 {
+      margin: layout.$pixel-unit 0 layout.$pixel-unit * 1.25;
+      color: colors.$collection-ink;
+      font-weight: fonts.$weight-heavy;
+    }
+    h2 {
+      font-size: fonts.$size-brand-mobile;
+    }
+    h3 {
+      font-size: fonts.$size-body;
+    }
+    p {
+      margin: 0;
+      color: colors.$search-field-icon;
+      font-size: fonts.$size-caption;
+      line-height: 1.5;
+    }
+  }
+  &--contribution {
+    align-items: flex-start;
+    gap: layout.$pixel-unit * 3.5;
+    margin-bottom: layout.$pixel-unit * 4.5;
+  }
+}

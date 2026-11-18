@@ -48,7 +48,7 @@ test("catalogue reads preserve contracts, approved visibility and local search/c
   await expect(
     page.getByRole("heading", { name: "Your submissions", exact: true }),
   ).toBeVisible();
-  await expect(page.locator(".host-my-submission")).toHaveCount(2);
+  await expect(page.locator(".history-row")).toHaveCount(2);
   await expect(
     page.getByText("Please clarify the rules.", { exact: true }),
   ).toBeVisible();
@@ -397,10 +397,10 @@ test("community contribution preserves native form bounds, tag limit, trimmed pa
     );
   }
   await expect(
-    dialog.locator('.host-community-tag-option[aria-pressed="true"]'),
+    dialog.locator('.btn--tag-option[aria-pressed="true"]'),
   ).toHaveCount(8);
   await expect(
-    dialog.locator('.host-community-tag-option[aria-pressed="false"]:enabled'),
+    dialog.locator('.btn--tag-option[aria-pressed="false"]:enabled'),
   ).toHaveCount(0);
   await activateByKeyboard(
     page,
@@ -408,7 +408,7 @@ test("community contribution preserves native form bounds, tag limit, trimmed pa
   );
   await expect(dialog).toHaveCount(0);
   await expect(
-    page.locator(".host-my-submission").filter({ hasText: "New paper dance" }),
+    page.locator(".history-row").filter({ hasText: "New paper dance" }),
   ).toBeVisible();
   expect(requests.find((r) => r.method === "POST")?.body).toEqual({
     item_type: "challenge",
@@ -454,7 +454,7 @@ test("platform moderation preserves pending filters, reviewer timestamp and refr
   );
   await openExplore(page);
   const queue = page
-    .locator(".host-community-review-card")
+    .locator(".content-panel--moderation-item")
     .filter({ hasText: "Pending contribution" });
   await activateByKeyboard(
     page,
@@ -481,7 +481,7 @@ test("moderation failures retain the pending item for a reject retry", async ({
   const { backend, requests } = await installExploreBackend(page, true);
   await openExplore(page);
   const pending = page
-    .locator(".host-community-review-card")
+    .locator(".content-panel--moderation-item")
     .filter({ hasText: "Pending contribution" });
   backend.failures.add("cc_catalog_submissions");
   await activateByKeyboard(
@@ -913,6 +913,49 @@ test("shared idea primitives preserve local save, disclosure, outline and pendin
   await expect(shared.getByRole("status")).toHaveText(
     "Preview close requested.",
   );
+  expect(backend.requests).toEqual([]);
+  backend.verify();
+});
+
+test("local shared review and history preserve keyboard actions, statuses and pending state without a backend", async ({
+  page,
+}) => {
+  const { backend } = await installExploreBackend(page);
+  await page.goto("#/styleguide");
+  const example = page.locator(".component-example").filter({
+    has: page.getByRole("heading", {
+      name: "Shared review and history",
+      exact: true,
+    }),
+  });
+  const approve = example.getByRole("button", {
+    name: "Approve locally",
+    exact: true,
+  });
+  const reject = example.getByRole("button", {
+    name: "Reject locally",
+    exact: true,
+  });
+  await activateByKeyboard(page, approve);
+  await expect(example.getByRole("status")).toHaveText(
+    "Local decision: approved.",
+  );
+  const pending = example.getByRole("checkbox", {
+    name: "Simulate local review pending",
+    exact: true,
+  });
+  await tabTo(page, pending, "backward");
+  await page.keyboard.press("Space");
+  await expect(approve).toBeDisabled();
+  await expect(reject).toBeDisabled();
+  await page.keyboard.press("Space");
+  await activateByKeyboard(page, reject);
+  await expect(example.getByRole("status")).toHaveText(
+    "Local decision: rejected.",
+  );
+  await expect(
+    example.getByText("The caller owns this review note.", { exact: true }),
+  ).toBeVisible();
   expect(backend.requests).toEqual([]);
   backend.verify();
 });

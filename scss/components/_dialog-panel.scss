@@ -81,3 +81,32 @@
     }
   }
 }
+
+.dialog-panel {
+  &--contribution {
+    width: min(100%, layout.$pixel-unit * 155);
+    max-height: layout.$contribution-panel-max-height;
+    overflow: auto;
+    border-color: colors.$purple-dark;
+    color: inherit;
+    box-shadow: layout.$pixel-unit * 2 layout.$pixel-unit * 2 0
+      colors.$purple-dark;
+    h2 {
+      margin: layout.$pixel-unit * 1.5 0 layout.$pixel-unit * 1.25;
+      color: colors.$collection-ink;
+      font-family: fonts.$family-native-heading;
+      font-size: fonts.$size-brand-host;
+      font-weight: fonts.$weight-heavy;
+    }
+    p {
+      max-width: layout.$pixel-unit * 117.5;
+      margin: 0;
+      color: colors.$search-field-icon;
+      font-size: fonts.$size-caption;
+      line-height: 1.5;
+    }
+    @media (max-width: layout.$reward-compact-breakpoint) {
+      padding: layout.$pixel-unit * 4.5;
+    }
+  }
+}

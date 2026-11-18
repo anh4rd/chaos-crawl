@@ -5,7 +5,7 @@ export default function PanelHeading({
   dismissible = false,
   ...props
 }: HTMLAttributes<HTMLDivElement> & {
-  variant?: "session" | "choice" | "reveal";
+  variant?: "session" | "choice" | "reveal" | "moderation" | "contribution";
   dismissible?: boolean;
 }) {
   return (

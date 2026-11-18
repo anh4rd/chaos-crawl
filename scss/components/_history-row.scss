@@ -1,0 +1,24 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+.history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: layout.$pixel-unit * 3;
+  padding: layout.$pixel-unit * 2.5 layout.$pixel-unit * 3;
+  border: layout.$pixel-unit * 0.25 solid colors.$outline-divider;
+  border-radius: layout.$pixel-unit * 2.75;
+  > div {
+    display: grid;
+    gap: layout.$pixel-unit * 0.75;
+  }
+  strong {
+    color: colors.$collection-ink;
+    font-size: fonts.$size-caption;
+  }
+  small {
+    color: colors.$history-meta;
+    font-size: fonts.$size-navigation-caption;
+  }
+}

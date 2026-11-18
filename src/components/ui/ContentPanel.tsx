@@ -22,7 +22,10 @@ export default function ContentPanel({
     | "choice"
     | "access-field"
     | "entity"
-    | "workspace-error";
+    | "workspace-error"
+    | "moderation"
+    | "history"
+    | "moderation-item";
   stacked?: boolean;
   overlay?: boolean;
   compact?: boolean;

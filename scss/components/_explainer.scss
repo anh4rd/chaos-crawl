@@ -54,3 +54,22 @@
     }
   }
 }
+
+.explainer {
+  &--contribution {
+    gap: layout.$pixel-unit * 2;
+    margin: 0;
+    padding: layout.$pixel-unit * 2.5;
+    border: 0;
+    border-style: solid;
+    border-radius: layout.$pixel-unit * 2.5;
+    color: colors.$contribution-copy;
+    background: colors.$contribution-surface;
+    font-size: fonts.$size-micro;
+    line-height: 1.5;
+    svg {
+      margin-top: 0;
+      color: colors.$purple;
+    }
+  }
+}

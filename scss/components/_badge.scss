@@ -183,3 +183,16 @@
     font-weight: fonts.$weight-extra-bold;
   }
 }
+
+.badge {
+  &--moderation-type {
+    display: inline-block;
+    padding: layout.$pixel-unit * 0.75 layout.$pixel-unit * 1.75;
+    border-radius: layout.$pixel-unit * 1.25;
+    color: colors.$purple;
+    background: colors.$moderation-type-surface;
+    font-size: fonts.$size-tiny;
+    font-weight: fonts.$weight-heavy;
+    text-transform: uppercase;
+  }
+}

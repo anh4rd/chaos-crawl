@@ -3400,11 +3400,88 @@ concurrency in separate behavior slices, including the verified desktop close
 obstruction. Continue the remaining V2/legacy queue below; full-suite verification
 and the requested final desloppify audit remain pending.
 
+## Phase 5w — shared moderation, history and contribution editor
+
+Catalogue moderation/history now compose ContentPanel moderation/history/item,
+PanelHeading moderation, Overline/CountBadge moderation, Badge moderation-type,
+PanelGrid stack, ControlRow/Button moderation and HistoryRow/StatusPill history.
+The feature retains visibility, record selection, date/detail copy, ordering and
+callbacks. HistoryRow accepts presentation slots and never chooses publication
+state or formats dates. The unused admin-action marker was removed.
+
+Contribution bodies compose DialogPanel/PanelHeading contribution,
+FormStack/FormLabel/FormGrid contribution, TagPicker/Button tag-option, Explainer
+contribution and DialogActions/Button editor variants. Native elements, heading
+IDs, labels, required/length/numeric bounds, submit/button types and existing
+editable-while-pending fields are retained. TagPicker only groups supplied
+controls; selection, maximum-eight disabling/order and callbacks remain in the
+feature. Existing values were promoted to tokens, with effective inherited tag
+font/disabled styling preserved rather than reviving overridden legacy values.
+
+Owned SCSS replaces the review/history/editor rules. The outer contribution
+backdrop and decorative PlusMark remain explicit legacy exceptions until their
+separate behavior/icon slices. Moving visual frames does not add modal focus,
+Escape/backdrop handling or fix the recorded desktop close obstruction. No
+controller, persistence, dependency or accessibility interaction changed here.
+
+The backend-free Local catalogue continues to demonstrate the actual controlled
+form and review views. New Shared review and history exercises local decisions,
+all three history statuses, optional notes and pending controls. Its new native
+keyboard journey covers approve/reject and checkbox Space activation, with zero
+backend requests. Catalogue notes and agent guidance describe these boundaries.
+
+Verification:
+
+- Lint/format, upload-disabled strict production build and Playwright type checks
+  passed. **366 unit tests** and **40 affected mocked desktop/mobile browser
+  cases** passed, including native form bounds, tag limits, trimmed command
+  payloads, moderation/reloads and the new local review/history keyboard journey.
+- **Forty production/breakpoint comparisons are pixel-exact**, and preserve
+  native tags/text/attribute-value maps, controls, focus, geometry, all standard
+  computed properties and SDK traces. Serialized DOM canonicalizes attribute
+  order and explicit class renames; no wrappers or text are ignored. Initial
+  independent GETs are a multiset; later operations retain strict ordering.
+- Twenty-six desktop/mobile state pairs cover create/edit frames, tag limits,
+  native title focus, review/history, approval/rejection, venue review, create/
+  edit completion and failure, and pending writes. Pending snapshots compare the
+  same in-flight boundary; completion/reload contracts are exercised separately
+  by ordinary scenarios and regressions. Fourteen additional pairs cover create
+  and review views at 560/561, 649/650/651 and 900/901px.
+- **Ten existing-reference pairs** preserve poster, saved-item, planning,
+  main-heading/host-shell and plain-child saved-loading markup, geometry and all
+  computed properties at desktop/mobile sizes, with zero backend traffic. All
+  **288 prior Button variant/fullWidth/class combinations** retain exact class
+  output. Thirteen coordinator/controller/model/catalogue/type/persistence
+  modules are byte-identical to the committed baseline.
+- **59 legacy selector arms** retired from HostPlanning. The remaining **171
+  audited arms** retain exact declarations, conditions and order; HostTheme,
+  HostPortal, PlayerGame and Globals are unchanged. All **1,478 prior expanded
+  SCSS projections** retain exact selectors, declarations and order. Evidence
+  lives under `/tmp/phase5w-*`; the production-state proof combines the completed
+  mobile comparisons and remaining desktop/pending run without changing app
+  source between them.
+
+This exceeds the approximate 800-line review budget. Review the slices separately:
+
+| Review slice                           | Mechanical changes / scrutiny                                                                                                                                         | Evidence                                                                                                                 |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Shared review/history                  | Frames, headings/counts, ordered rows, caller-composed status and comic actions; scrutinize slot boundaries and approved history's original plain treatment           | Forty exact native/style/PNG/SDK pairs; local approve/reject/pending journey; controllers and models unchanged           |
+| Contribution form/frame                | Shared native frame/form/labels/grid, controlled tag slots, notice and explicit submit/cancel variants; scrutinize IDs, bounds, tag selection/order and busy contract | Native form/command regressions, tag-limit/focus/pending comparisons and fourteen responsive pairs                       |
+| SCSS and legacy retirement             | Promote existing values and preserve effective inheritance without expanding route CSS                                                                                | 59 retired/171 retained arms, 1,478 unchanged SCSS projections, default-reference pairs and 288 unchanged Button outputs |
+| Local contract and retained exceptions | State-only reference/catalogue notes; outer backdrop and decorative mark remain explicit                                                                              | Zero-backend keyboard journeys; lint/build/unit/type gates; modal behavior deliberately queued separately                |
+
+Next: separately tested native contribution-dialog lifecycle/feedback and tab
+keyboard semantics, then synchronous action/concurrency guards. Include the
+recorded desktop close obstruction and stale dialog completion risks. Continue
+remaining V2/legacy work below; full-suite verification and final desloppify remain
+pending.
+
 ## Queued phases for the full refactor
 
-Next: catalogue moderation/history and contribution-editor styling. Shared card
-frames, badges, controls, details, shell and filters now have owned SCSS; the thin
-route, focused controllers and controlled views are verified. Follow with the separate modal/tab accessibility
+Next: separate catalogue native-dialog/tab accessibility and action-concurrency
+slices. Catalogue cards, shell, filters, review/history and contribution bodies now
+compose shared primitives with owned SCSS; their thin route, controllers and
+controlled views are verified. Follow with the separate modal/tab accessibility
 and action-concurrency slices. Keep styling and intentional behavior fixes in
 separate verified slices. Continue remaining host utilities/admin and V2 player/
 slideshow presentation, then legacy workflows and obsolete CSS/Tailwind retirement

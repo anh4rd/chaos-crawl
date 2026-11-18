@@ -1,10 +1,13 @@
 import type { ComponentPropsWithoutRef } from "react";
 
 type Props =
-  | ({ as: "form"; variant?: "reveal" } & ComponentPropsWithoutRef<"form">)
+  | ({
+      as: "form";
+      variant?: "reveal" | "contribution";
+    } & ComponentPropsWithoutRef<"form">)
   | ({
       as?: "section";
-      variant?: "reveal";
+      variant?: "reveal" | "contribution";
     } & ComponentPropsWithoutRef<"section">);
 
 export default function DialogPanel({

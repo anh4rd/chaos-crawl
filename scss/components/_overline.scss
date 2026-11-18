@@ -78,3 +78,15 @@
     color: colors.$accent-soft;
   }
 }
+
+.overline {
+  &--moderation {
+    display: inline-flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.25;
+    color: colors.$purple;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-overline;
+  }
+}

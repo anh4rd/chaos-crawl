@@ -4,7 +4,10 @@ export default function Explainer({
   variant,
   className = "",
   ...props
-}: HTMLAttributes<HTMLDivElement> & { tone?: "pink"; variant?: "reward" }) {
+}: HTMLAttributes<HTMLDivElement> & {
+  tone?: "pink";
+  variant?: "reward" | "contribution";
+}) {
   return (
     <div
       {...props}

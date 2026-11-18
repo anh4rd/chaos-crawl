@@ -70,3 +70,16 @@
     }
   }
 }
+
+.control-row {
+  &--moderation {
+    flex: 0 0 auto;
+    align-items: normal;
+    flex-wrap: nowrap;
+    gap: layout.$pixel-unit * 1.75;
+    @media (max-width: layout.$reward-compact-breakpoint) {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+}

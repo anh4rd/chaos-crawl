@@ -1,3 +1,6 @@
+import ContentPanel from "../../components/ui/ContentPanel";
+import ControlRow from "../../components/ui/ControlRow";
+import Badge from "../../components/ui/Badge";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
 
@@ -9,9 +12,9 @@ export default function CommunityReviewItem({
   item: ReviewItemModel;
 }) {
   return (
-    <article className="host-community-review-card">
+    <ContentPanel as="article" variant="moderation-item">
       <div>
-        <span className="host-community-type">{item.itemType}</span>
+        <Badge variant="moderation-type">{item.itemType}</Badge>
         <h3>{item.title}</h3>
         <p>{item.description}</p>
         {item.details && (
@@ -26,10 +29,10 @@ export default function CommunityReviewItem({
           {"Submitted"} {item.submittedDate}
         </small>
       </div>
-      <div className="host-community-review-actions">
+      <ControlRow variant="moderation">
         <Button
           type="button"
-          variant="comic-lime"
+          variant="moderation-approve"
           fullWidth={false}
           disabled={item.busy}
           onClick={() => item.onApprove()}
@@ -38,14 +41,14 @@ export default function CommunityReviewItem({
         </Button>
         <Button
           type="button"
-          variant="comic-secondary"
+          variant="moderation-secondary"
           fullWidth={false}
           disabled={item.busy}
           onClick={() => item.onReject()}
         >
           <Icon name="x-circle" className="icon--size-15" /> Reject
         </Button>
-      </div>
-    </article>
+      </ControlRow>
+    </ContentPanel>
   );
 }
