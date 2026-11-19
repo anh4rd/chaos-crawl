@@ -1,4 +1,7 @@
-import type { PlannedTaskInfo } from "../types/hostSession";
+import type {
+  HostSessionSettings,
+  PlannedTaskInfo,
+} from "../types/hostSession";
 
 import { runApi, type ApiResult } from "./apiResult";
 import { supabase } from "./sessionSupabase";
@@ -42,6 +45,18 @@ export function hostCompleteGameSession(parameters: {
 }): Promise<ApiResult<unknown>> {
   return runApi<unknown>(() =>
     supabase.rpc("cc_host_complete_game_session", parameters),
+  );
+}
+
+export function updateHostSessionSettings({
+  values,
+  sessionId,
+}: {
+  values: HostSessionSettings;
+  sessionId: string;
+}): Promise<ApiResult<unknown>> {
+  return runApi<unknown>(() =>
+    supabase.from("cc_game_sessions").update(values).eq("id", sessionId),
   );
 }
 

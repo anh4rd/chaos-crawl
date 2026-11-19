@@ -7,7 +7,9 @@ import type { GameSession, SessionChallenge } from "./types";
 import type { SetHostBusy } from "./useHostOperation";
 
 interface Options {
+  nextBreakChallenge: SessionChallenge | undefined;
   nextBreakTask: PlannedTaskInfo | undefined;
+  plannedTasks: PlannedTaskInfo[];
   session: GameSession | null;
   setBusy: SetHostBusy;
   setError: Dispatch<SetStateAction<string>>;
@@ -16,7 +18,9 @@ interface Options {
   load: () => Promise<void>;
 }
 export function useHostChallengeEditor({
+  nextBreakChallenge,
   nextBreakTask,
+  plannedTasks,
   session,
   setBusy,
   setError,
@@ -39,11 +43,20 @@ export function useHostChallengeEditor({
 
   const [editChallengeEvidence, setEditChallengeEvidence] = useState(false);
 
+  function plannedTaskFor(challenge: SessionChallenge) {
+    return (
+      plannedTasks.find((task) => task.id === challenge.id) ??
+      (nextBreakChallenge?.id === challenge.id ? nextBreakTask : undefined)
+    );
+  }
+
   function openBreakChallengeEditor(challenge: SessionChallenge) {
     setEditingBreakChallenge(challenge);
     setEditChallengeTitle(challenge.title);
     setEditChallengeDescription(challenge.description);
-    setEditChallengeEquipment((nextBreakTask?.equipment ?? []).join(", "));
+    setEditChallengeEquipment(
+      (plannedTaskFor(challenge)?.equipment ?? []).join(", "),
+    );
     setEditChallengeDuration(Math.max(1, challenge.duration_minutes || 15));
     setEditChallengePoints(Math.max(0, challenge.points || 0));
     setEditChallengeEvidence(challenge.allow_photo_upload);
@@ -77,13 +90,14 @@ export function useHostChallengeEditor({
       setError(`Couldn't update this challenge: ${challengeError.message}`);
       return;
     }
+    const editingTask = plannedTaskFor(editingBreakChallenge);
     let saveNotice = `Round ${editingBreakChallenge.round_number} updated.`;
-    if (session.host_game_id && nextBreakTask?.id) {
+    if (session.host_game_id && editingTask?.id) {
       const { data: gameData, error: readError } =
         await hostSessionCommands.readHostPlan(session.host_game_id);
       const update = readError
         ? null
-        : patchLiveHostPlanTask(gameData?.plan_data, nextBreakTask.id, {
+        : patchLiveHostPlanTask(gameData?.plan_data, editingTask.id, {
             title: editChallengeTitle.trim(),
             description: editChallengeDescription.trim(),
             minutes: Math.max(1, Number(editChallengeDuration) || 1),

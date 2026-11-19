@@ -22,7 +22,9 @@ beforeEach(() => {
 });
 function options(): Parameters<typeof useHostChallengeEditor>[0] {
   return {
+    nextBreakChallenge: hostChallengeFixture(),
     nextBreakTask: { id: "task", equipment: ["Old"] },
+    plannedTasks: [],
     session: hostSessionFixture(),
     setBusy: vi.fn(() => true),
     setError: vi.fn(),

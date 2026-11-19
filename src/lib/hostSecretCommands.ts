@@ -32,6 +32,27 @@ export function hostAssignSecretMission(parameters: {
   );
 }
 
+export function updateScheduledSecretMission({
+  assignmentId,
+  scheduledAt,
+  sessionId,
+}: {
+  assignmentId: string;
+  scheduledAt: string;
+  sessionId: string;
+}): Promise<ApiResult<{ id: string } | null>> {
+  return runApi<{ id: string } | null>(() =>
+    supabase
+      .from("cc_game_session_secret_assignments")
+      .update({ scheduled_at: scheduledAt })
+      .eq("id", assignmentId)
+      .eq("session_id", sessionId)
+      .eq("status", "scheduled")
+      .select("id")
+      .maybeSingle(),
+  );
+}
+
 export function hostSelectSecretReviewAssignment(parameters: {
   p_session_id: string;
   p_assignment_id: string;

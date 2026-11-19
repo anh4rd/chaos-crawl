@@ -124,6 +124,43 @@ export function useHostSecretMissions({
     );
     await load();
   }
+
+  async function rescheduleSecretMission(
+    assignmentId: string,
+    localSchedule: string,
+  ): Promise<boolean> {
+    if (!session || session.status === "completed") return false;
+    const scheduledDate = new Date(localSchedule);
+    if (!localSchedule || Number.isNaN(scheduledDate.getTime())) {
+      setError("Choose a valid delivery date and time.");
+      return false;
+    }
+    if (!setBusy(true)) return false;
+    setError("");
+    setNotice("");
+    const { data, error: scheduleError } =
+      await hostSecretCommands.updateScheduledSecretMission({
+        assignmentId,
+        scheduledAt: scheduledDate.toISOString(),
+        sessionId: session.id,
+      });
+    setBusy(false);
+    if (scheduleError) {
+      setError(
+        `Couldn't update the secret mission schedule: ${scheduleError.message}`,
+      );
+      return false;
+    }
+    if (!data) {
+      setError("This mission is no longer scheduled and can't be edited.");
+      await load();
+      return false;
+    }
+    setNotice("Secret mission delivery time updated.");
+    await load();
+    return true;
+  }
+
   return {
     selectedSecretPlayerId,
     setSelectedSecretPlayerId,
@@ -141,5 +178,6 @@ export function useHostSecretMissions({
     setNewSecretEvidenceRequired,
     createSecretChallenge,
     assignSecretMission,
+    rescheduleSecretMission,
   };
 }

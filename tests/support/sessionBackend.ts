@@ -606,6 +606,20 @@ export async function installSessionBackend(
       if (
         name === "cc_game_sessions" &&
         request.method() === "PATCH" &&
+        typeof body?.name === "string" &&
+        typeof body?.player_limit === "number" &&
+        typeof body?.teams_enabled === "boolean" &&
+        typeof body?.host_chooses_teams === "boolean" &&
+        typeof body?.team_size === "number" &&
+        Array.isArray(body?.reward_methods)
+      ) {
+        Object.assign(fixture.session, body);
+        await respond(null);
+        return;
+      }
+      if (
+        name === "cc_game_sessions" &&
+        request.method() === "PATCH" &&
         typeof body?.team_size === "number"
       ) {
         fixture.session.team_size = body.team_size;
@@ -620,6 +634,26 @@ export async function installSessionBackend(
         fixture.session.host_participates = body.host_participates;
         await respond(null);
         return;
+      }
+      if (
+        name === "cc_game_session_secret_assignments" &&
+        request.method() === "PATCH" &&
+        url.searchParams.get("session_id") === `eq.${fixture.session.id}` &&
+        url.searchParams.get("status") === "eq.scheduled" &&
+        typeof body?.scheduled_at === "string"
+      ) {
+        const assignment = tables.cc_game_session_secret_assignments.find(
+          (item) =>
+            typeof item === "object" &&
+            item !== null &&
+            "id" in item &&
+            `eq.${item.id}` === url.searchParams.get("id"),
+        );
+        if (typeof assignment === "object" && assignment !== null) {
+          Object.assign(assignment, { scheduled_at: body.scheduled_at });
+          await respond({ id: assignment.id });
+          return;
+        }
       }
       if (
         name === "cc_game_session_players" &&

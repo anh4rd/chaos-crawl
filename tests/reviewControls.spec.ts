@@ -32,6 +32,8 @@ for (const kind of ["final", "secret"] as const) {
           exact: true,
         })
         .click();
+      if (kind === "secret")
+        await page.getByRole("tab", { name: "Review", exact: true }).click();
       const picker = page.getByRole("combobox", {
         name:
           kind === "final"

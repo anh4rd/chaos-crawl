@@ -183,7 +183,7 @@ test("challenge editor contains keyboard focus and saves only the selected upcom
   });
   await activateByKeyboard(page, trigger);
   const modal = page.getByRole("dialog", {
-    name: "Update the upcoming challenge",
+    name: "Update challenge",
     exact: true,
   });
   const title = modal.getByRole("textbox", {
@@ -359,7 +359,7 @@ test("challenge save failure stays announced inside the modal and can be retried
   });
   await activateByKeyboard(page, trigger);
   const modal = page.getByRole("dialog", {
-    name: "Update the upcoming challenge",
+    name: "Update challenge",
     exact: true,
   });
   await activateByKeyboard(
@@ -398,7 +398,7 @@ for (const editor of ["break", "challenge"] as const) {
       name:
         editor === "break"
           ? "Edit the time until the next round"
-          : "Update the upcoming challenge",
+          : "Update challenge",
       exact: true,
     });
     backend.failures.add("cc_game_sessions");

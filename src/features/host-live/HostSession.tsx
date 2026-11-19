@@ -10,6 +10,8 @@ import SessionPage from "../../components/session/SessionPage";
 import SessionReview from "../../components/session/SessionReview";
 import SessionRewardRound from "../../components/session/SessionRewardRound";
 import SessionState from "../../components/session/SessionState";
+import TabList from "../../components/ui/TabList";
+import TabPanel from "../../components/ui/TabPanel";
 import Icon from "../../components/ui/Icon";
 import { sessionEvidenceUrl } from "../../lib/sessionMedia";
 import SessionParticipant from "../session-player/SessionParticipant";
@@ -17,6 +19,7 @@ import type { PlayerPage } from "../session-player/types";
 import BreakTimerEditor from "./BreakTimerEditor";
 import ChallengeEditor from "./ChallengeEditor";
 import HostFinalRound from "./HostFinalRound";
+import HostGameSchedule from "./HostGameSchedule";
 import SessionInvite from "../../components/session/SessionInvite";
 import HostLobby from "./HostLobby";
 import HostMainSubmissions from "./HostMainSubmissions";
@@ -24,6 +27,7 @@ import HostManagement from "./HostManagement";
 import HostRewardRound from "./HostRewardRound";
 import HostRoundControls from "./HostRoundControls";
 import HostRoundOverview from "./HostRoundOverview";
+import HostSettings from "./HostSettings";
 import HostSecretMissions from "./HostSecretMissions";
 import HostSecretReview from "./HostSecretReview";
 import HostSecretScreenControls from "./HostSecretScreenControls";
@@ -48,10 +52,11 @@ import { useHostSecretMissions } from "./useHostSecretMissions";
 import { useHostSecretReview } from "./useHostSecretReview";
 import { useHostSessionActions } from "./useHostSessionActions";
 import { useHostSessionData } from "./useHostSessionData";
+import { useHostSettings } from "./useHostSettings";
 import { useHostSubmissionReview } from "./useHostSubmissionReview";
 import { useSlideshowConnection } from "./useSlideshowConnection";
 
-import { useCallback, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { Link } from "react-router-dom";
 import SessionMainChallengeCard from "../../components/session/SessionMainChallengeCard";
 import SessionPreview from "../../components/session/SessionPreview";
@@ -60,6 +65,15 @@ import { upcomingStageModel } from "./upcomingStageModel";
 import StagePreview from "../../components/session/StagePreview";
 import RoundPlan from "../../components/session/RoundPlan";
 import PanelGrid from "../../components/ui/PanelGrid";
+
+const hostManagementSections = [
+  { id: "overrides", label: "Control overrides" },
+  { id: "review", label: "Review" },
+  { id: "schedule", label: "Game schedule" },
+  { id: "secret-missions", label: "Secret mission schedule" },
+  { id: "settings", label: "Settings" },
+] as const;
+type HostManagementSection = (typeof hostManagementSections)[number]["id"];
 
 export default function HostSession({ sessionId }: { sessionId: string }) {
   const {
@@ -94,6 +108,9 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   const [notice, setNotice] = useState("");
   const [actionError, setError] = useState("");
   const [activeTab, setActiveTab] = useState<HostTab>("game");
+  const [activeHostSection, setActiveHostSection] =
+    useState<HostManagementSection>("overrides");
+  const hostManagementId = useId();
   const { navigationRef, restoreFocus } = useNavigationFocus();
   const {
     teamPhotoUrls,
@@ -312,6 +329,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     setNewSecretEvidenceRequired,
     createSecretChallenge,
     assignSecretMission,
+    rescheduleSecretMission,
   } = useHostSecretMissions({
     session,
     setBusy,
@@ -411,6 +429,14 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     setActiveTab,
     load,
   });
+  const { saveSettings } = useHostSettings({
+    session,
+    setBusy,
+    setError,
+    setNotice,
+    setSession,
+    load,
+  });
   const { lobbyStep, goToLobbyStep } = useHostLobbyFlow({ sessionId });
   const {
     open: hostTourOpen,
@@ -482,7 +508,9 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     openBreakChallengeEditor,
     saveBreakChallengeEdit,
   } = useHostChallengeEditor({
+    nextBreakChallenge,
     nextBreakTask,
+    plannedTasks,
     session,
     setBusy,
     setError,
@@ -614,7 +642,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
           disabled={busy}
           onClick={() => openBreakChallengeEditor(nextBreakChallenge)}
         >
-          <Icon name="pencil" className="icon--size-14" /> Edit next challenge
+          <Icon name="pencil" className="icon--size-14" />
         </Button>
       )}
     </StagePreview>
@@ -954,10 +982,10 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
               rankedPlayers={rankedPlayers}
             />
           )}
-          {secretReviewState?.is_open &&
-            selectedSecretReviewAssignment &&
+          {selectedSecretReviewAssignment &&
             selectedSecretReviewChallenge &&
-            (activeTab === "host-controls" ||
+            ((activeTab === "host-controls" &&
+              activeHostSection === "review") ||
               (!canParticipate && activeTab === "game")) && (
               <SessionReview
                 title={selectedSecretReviewChallenge.title}
@@ -991,7 +1019,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                 }
                 busy={busy}
                 onVote={
-                  canParticipate && secretReviewState.voting_open
+                  canParticipate && secretReviewState?.voting_open
                     ? (vote) => void castHostSecretReviewVote(vote)
                     : undefined
                 }
@@ -1022,47 +1050,239 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
             )}
           <HostManagement>
             {activeTab === "host-controls" && (
-              <>
-                {hostRoundControls}
-                {upcomingStagePreview}
-              </>
+              <TabList label="Host management sections" variant="workspace">
+                {hostManagementSections.map((section) => (
+                  <Button
+                    key={section.id}
+                    variant="workspace-tab"
+                    fullWidth={false}
+                    type="button"
+                    role="tab"
+                    id={`${hostManagementId}-tab-${section.id}`}
+                    aria-controls={`${hostManagementId}-panel-${section.id}`}
+                    tabIndex={activeHostSection === section.id ? 0 : -1}
+                    aria-selected={activeHostSection === section.id}
+                    className={
+                      activeHostSection === section.id
+                        ? "btn--workspace-selected"
+                        : ""
+                    }
+                    onClick={() => setActiveHostSection(section.id)}
+                  >
+                    {section.label}
+                  </Button>
+                ))}
+              </TabList>
             )}
-            {activeTab === "host-controls" && (
-              <PanelGrid>
-                <SessionInvite
-                  joinUrl={joinUrl}
-                  onCopy={copyCode}
-                  playerCount={players.length}
-                  playerLimit={session.player_limit}
-                  teamsEnabled={session.teams_enabled}
-                  hostChoosesTeams={session.host_chooses_teams}
-                />
-
-                <HostRoundOverview
-                  session={session}
-                  mainRounds={mainRounds}
-                  currentChallenge={currentChallenge}
-                  busy={busy}
-                  requestMoveToRound={requestMoveToRound}
-                  activeRewardRound={activeRewardRound}
-                  roundTimerHydrated={roundTimerHydrated}
-                  hostBreakActive={hostBreakActive}
-                  currentRoundPointsAwarded={currentRoundPointsAwarded}
-                  enabledRewardMethods={enabledRewardMethods}
-                  openPointReview={openPointReview}
-                  skipTimerAndReview={skipTimerAndReview}
-                  roundClockRunning={roundClockRunning}
-                  breakResumeRound={breakResumeRound}
-                  requestStartBreak={requestStartBreak}
-                  startGameOrToggleTimer={startGameOrToggleTimer}
-                  roundClockSeconds={roundClockSeconds}
-                  restartRoundTimer={restartRoundTimer}
-                  nextBreakChallenge={nextBreakChallenge}
-                  openBreakChallengeEditor={openBreakChallengeEditor}
-                  finishGame={finishGame}
-                />
-              </PanelGrid>
-            )}
+            {hostManagementSections.map((section) => (
+              <TabPanel
+                key={section.id}
+                id={`${hostManagementId}-panel-${section.id}`}
+                labelledBy={`${hostManagementId}-tab-${section.id}`}
+                active={
+                  activeTab === "host-controls" &&
+                  activeHostSection === section.id
+                }
+              >
+                {activeTab === "host-controls" &&
+                  activeHostSection === section.id &&
+                  section.id === "overrides" && (
+                    <>
+                      {hostRoundControls}
+                      {upcomingStagePreview}
+                      <PanelGrid>
+                        <SessionInvite
+                          joinUrl={joinUrl}
+                          onCopy={copyCode}
+                          playerCount={players.length}
+                          playerLimit={session.player_limit}
+                          teamsEnabled={session.teams_enabled}
+                          hostChoosesTeams={session.host_chooses_teams}
+                        />
+                        <HostRoundOverview
+                          session={session}
+                          mainRounds={mainRounds}
+                          currentChallenge={currentChallenge}
+                          busy={busy}
+                          requestMoveToRound={requestMoveToRound}
+                          activeRewardRound={activeRewardRound}
+                          roundTimerHydrated={roundTimerHydrated}
+                          hostBreakActive={hostBreakActive}
+                          currentRoundPointsAwarded={currentRoundPointsAwarded}
+                          enabledRewardMethods={enabledRewardMethods}
+                          openPointReview={openPointReview}
+                          skipTimerAndReview={skipTimerAndReview}
+                          roundClockRunning={roundClockRunning}
+                          breakResumeRound={breakResumeRound}
+                          requestStartBreak={requestStartBreak}
+                          startGameOrToggleTimer={startGameOrToggleTimer}
+                          roundClockSeconds={roundClockSeconds}
+                          restartRoundTimer={restartRoundTimer}
+                          nextBreakChallenge={nextBreakChallenge}
+                          openBreakChallengeEditor={openBreakChallengeEditor}
+                          finishGame={finishGame}
+                        />
+                      </PanelGrid>
+                      <RoundPlan
+                        rounds={mainRounds.map((round) => ({
+                          id: round.id,
+                          round: round.round_number,
+                          title: round.title,
+                          description: round.description,
+                          points: round.points,
+                        }))}
+                        currentRound={session.current_round_number}
+                        interactive={session.status === "live"}
+                        busy={busy}
+                        onSelect={(round) => {
+                          if (session.status === "live")
+                            requestMoveToRound(round);
+                        }}
+                      />
+                    </>
+                  )}
+                {activeTab === "host-controls" &&
+                  activeHostSection === section.id &&
+                  section.id === "review" && (
+                    <>
+                      {secretReviewState?.is_open &&
+                        secretReviewState.current_assignment_id ===
+                          selectedSecretReviewAssignmentId && (
+                          <HostSecretScreenControls
+                            isSecretSlideshowConnected={
+                              isSecretSlideshowConnected
+                            }
+                            busy={busy}
+                            currentSecretReviewEvidenceIndex={
+                              currentSecretReviewEvidenceIndex
+                            }
+                            setSecretReviewEvidence={setSecretReviewEvidence}
+                            selectedSecretReviewEvidence={
+                              selectedSecretReviewEvidence
+                            }
+                            disconnectSecretReviewSlideshow={
+                              disconnectSecretReviewSlideshow
+                            }
+                            castSecretReviewSlideshow={
+                              castSecretReviewSlideshow
+                            }
+                          />
+                        )}
+                      <HostSecretReview
+                        secretReviewOptions={secretReviewOptions}
+                        votingOpen={secretReviewVotingOpen}
+                        selectedSecretReview={selectedSecretReview}
+                        selectedSecretReviewAssignmentId={
+                          selectedSecretReviewAssignmentId
+                        }
+                        busy={busy}
+                        selectSecretReviewAssignment={
+                          selectSecretReviewAssignment
+                        }
+                        challenges={challenges}
+                        secretReviewAssignments={secretReviewAssignments}
+                        players={players}
+                        selectedSecretReviewChallenge={
+                          selectedSecretReviewChallenge
+                        }
+                        selectedSecretReviewAssignment={
+                          selectedSecretReviewAssignment
+                        }
+                        secretReviewVotes={secretReviewVotes}
+                        reopenSecretReviewVote={reopenSecretReviewVote}
+                        advanceSecretReview={advanceSecretReview}
+                        hasPendingSecretReviews={hasPendingSecretReviews}
+                        currentSecretReviewVoteCount={
+                          currentSecretReviewVoteCount
+                        }
+                        closeSecretReviewVote={closeSecretReviewVote}
+                        session={session}
+                        openSecretReviewVote={openSecretReviewVote}
+                      />
+                      <HostMainSubmissions
+                        submissions={submissions}
+                        challengeById={challengeById}
+                        playerById={playerById}
+                        evidenceForChallenge={evidenceForChallenge}
+                        evidenceUrl={evidenceUrl}
+                        busy={busy}
+                        reviewSubmission={reviewSubmission}
+                      />
+                      <HostSideSubmissions
+                        sideSubmissions={sideSubmissions}
+                        playerById={playerById}
+                        challengeById={challengeById}
+                        evidenceForChallenge={evidenceForChallenge}
+                        evidenceUrl={evidenceUrl}
+                      />
+                    </>
+                  )}
+                {activeTab === "host-controls" &&
+                  activeHostSection === section.id &&
+                  section.id === "schedule" && (
+                    <HostGameSchedule
+                      schedule={gameSchedule}
+                      challenges={challenges}
+                      busy={busy}
+                      editable={session.status !== "completed"}
+                      onEdit={openBreakChallengeEditor}
+                    />
+                  )}
+                {activeTab === "host-controls" &&
+                  activeHostSection === section.id &&
+                  section.id === "secret-missions" && (
+                    <HostSecretMissions
+                      secretAssignments={secretAssignments}
+                      votingAssignmentId={
+                        secretReviewVotingOpen
+                          ? selectedSecretReviewAssignmentId
+                          : null
+                      }
+                      session={session}
+                      assignSecretMission={assignSecretMission}
+                      selectedSecretPlayerId={selectedSecretPlayerId}
+                      setSelectedSecretPlayerId={setSelectedSecretPlayerId}
+                      busy={busy}
+                      players={players}
+                      selectedSecretChallengeId={selectedSecretChallengeId}
+                      setSelectedSecretChallengeId={
+                        setSelectedSecretChallengeId
+                      }
+                      secretChallenges={secretChallenges}
+                      secretScheduleAt={secretScheduleAt}
+                      setSecretScheduleAt={setSecretScheduleAt}
+                      createSecretChallenge={createSecretChallenge}
+                      newSecretTitle={newSecretTitle}
+                      setNewSecretTitle={setNewSecretTitle}
+                      newSecretDescription={newSecretDescription}
+                      setNewSecretDescription={setNewSecretDescription}
+                      newSecretPoints={newSecretPoints}
+                      setNewSecretPoints={setNewSecretPoints}
+                      newSecretEvidenceRequired={newSecretEvidenceRequired}
+                      setNewSecretEvidenceRequired={
+                        setNewSecretEvidenceRequired
+                      }
+                      playerById={playerById}
+                      challengeById={challengeById}
+                      evidenceForAssignment={evidenceForAssignment}
+                      evidenceUrl={evidenceUrl}
+                      rescheduleSecretMission={rescheduleSecretMission}
+                    />
+                  )}
+                {activeTab === "host-controls" &&
+                  activeHostSection === section.id &&
+                  section.id === "settings" && (
+                    <HostSettings
+                      key={session.id}
+                      session={session}
+                      playerCount={players.length}
+                      busy={busy}
+                      onSave={saveSettings}
+                      onHostParticipationChange={setHostParticipation}
+                    />
+                  )}
+              </TabPanel>
+            ))}
             {(activeTab === "reward-round" || showRewardOverlay) && (
               <HostRewardRound
                 feedback={showRewardOverlay ? feedback : undefined}
@@ -1102,122 +1322,6 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                 activeRewardAwards={activeRewardAwards}
                 players={players}
                 returnFromRewardRound={returnFromRewardRound}
-              />
-            )}
-            {activeTab === "host-controls" && (
-              <>
-                <HostSecretMissions
-                  secretAssignments={secretAssignments}
-                  votingAssignmentId={
-                    secretReviewVotingOpen
-                      ? selectedSecretReviewAssignmentId
-                      : null
-                  }
-                  session={session}
-                  assignSecretMission={assignSecretMission}
-                  selectedSecretPlayerId={selectedSecretPlayerId}
-                  setSelectedSecretPlayerId={setSelectedSecretPlayerId}
-                  busy={busy}
-                  players={players}
-                  selectedSecretChallengeId={selectedSecretChallengeId}
-                  setSelectedSecretChallengeId={setSelectedSecretChallengeId}
-                  secretChallenges={secretChallenges}
-                  secretScheduleAt={secretScheduleAt}
-                  setSecretScheduleAt={setSecretScheduleAt}
-                  createSecretChallenge={createSecretChallenge}
-                  newSecretTitle={newSecretTitle}
-                  setNewSecretTitle={setNewSecretTitle}
-                  newSecretDescription={newSecretDescription}
-                  setNewSecretDescription={setNewSecretDescription}
-                  newSecretPoints={newSecretPoints}
-                  setNewSecretPoints={setNewSecretPoints}
-                  newSecretEvidenceRequired={newSecretEvidenceRequired}
-                  setNewSecretEvidenceRequired={setNewSecretEvidenceRequired}
-                  playerById={playerById}
-                  challengeById={challengeById}
-                  evidenceForAssignment={evidenceForAssignment}
-                  evidenceUrl={evidenceUrl}
-                />
-                <HostSecretReview
-                  secretReviewOptions={secretReviewOptions}
-                  votingOpen={secretReviewVotingOpen}
-                  selectedSecretReview={selectedSecretReview}
-                  selectedSecretReviewAssignmentId={
-                    selectedSecretReviewAssignmentId
-                  }
-                  busy={busy}
-                  selectSecretReviewAssignment={selectSecretReviewAssignment}
-                  challenges={challenges}
-                  secretReviewAssignments={secretReviewAssignments}
-                  players={players}
-                  selectedSecretReviewChallenge={selectedSecretReviewChallenge}
-                  selectedSecretReviewAssignment={
-                    selectedSecretReviewAssignment
-                  }
-                  secretReviewVotes={secretReviewVotes}
-                  reopenSecretReviewVote={reopenSecretReviewVote}
-                  advanceSecretReview={advanceSecretReview}
-                  hasPendingSecretReviews={hasPendingSecretReviews}
-                  currentSecretReviewVoteCount={currentSecretReviewVoteCount}
-                  closeSecretReviewVote={closeSecretReviewVote}
-                  session={session}
-                  openSecretReviewVote={openSecretReviewVote}
-                />
-              </>
-            )}
-            {activeTab === "host-controls" && (
-              <RoundPlan
-                rounds={mainRounds.map((round) => ({
-                  id: round.id,
-                  round: round.round_number,
-                  title: round.title,
-                  description: round.description,
-                  points: round.points,
-                }))}
-                currentRound={session.current_round_number}
-                interactive={session.status === "live"}
-                busy={busy}
-                onSelect={(round) => {
-                  if (session.status === "live") requestMoveToRound(round);
-                }}
-              />
-            )}
-            {activeTab === "host-controls" &&
-              secretReviewState?.is_open &&
-              secretReviewState.current_assignment_id ===
-                selectedSecretReviewAssignmentId && (
-                <HostSecretScreenControls
-                  isSecretSlideshowConnected={isSecretSlideshowConnected}
-                  busy={busy}
-                  currentSecretReviewEvidenceIndex={
-                    currentSecretReviewEvidenceIndex
-                  }
-                  setSecretReviewEvidence={setSecretReviewEvidence}
-                  selectedSecretReviewEvidence={selectedSecretReviewEvidence}
-                  disconnectSecretReviewSlideshow={
-                    disconnectSecretReviewSlideshow
-                  }
-                  castSecretReviewSlideshow={castSecretReviewSlideshow}
-                />
-              )}
-            {activeTab === "host-controls" && (
-              <HostMainSubmissions
-                submissions={submissions}
-                challengeById={challengeById}
-                playerById={playerById}
-                evidenceForChallenge={evidenceForChallenge}
-                evidenceUrl={evidenceUrl}
-                busy={busy}
-                reviewSubmission={reviewSubmission}
-              />
-            )}
-            {activeTab === "host-controls" && (
-              <HostSideSubmissions
-                sideSubmissions={sideSubmissions}
-                playerById={playerById}
-                challengeById={challengeById}
-                evidenceForChallenge={evidenceForChallenge}
-                evidenceUrl={evidenceUrl}
               />
             )}
           </HostManagement>

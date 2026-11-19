@@ -1,16 +1,18 @@
 import { secretAssignmentStatus } from "./secretAssignmentStatus";
 import MissionAssignmentForm from "./MissionAssignmentForm";
 import MissionCreationForm from "./MissionCreationForm";
+import Button from "../../components/ui/Button";
 import AssignmentList from "../../components/session/AssignmentList";
 import EmptyState from "../../components/ui/EmptyState";
 import AssignmentRow from "../../components/session/AssignmentRow";
 import EvidenceReview from "../../components/session/EvidenceReview";
 import ContentPanel from "../../components/ui/ContentPanel";
+import FormLabel from "../../components/ui/FormLabel";
 import PanelHeading from "../../components/ui/PanelHeading";
 import Overline from "../../components/ui/Overline";
 import CountBadge from "../../components/ui/CountBadge";
 import type { Dispatch, SetStateAction } from "react";
-import { type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import Icon from "../../components/ui/Icon";
 import { challengeIcon } from "../../lib/challengeVisuals";
 import type {
@@ -48,7 +50,20 @@ interface Props {
   challengeById: Map<string, SessionChallenge>;
   evidenceForAssignment: (assignmentId: string) => SessionEvidence[];
   evidenceUrl: (path: string) => string;
+  rescheduleSecretMission: (
+    assignmentId: string,
+    localSchedule: string,
+  ) => Promise<boolean>;
 }
+
+function toDateTimeLocal(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
+    .toISOString()
+    .slice(0, 16);
+}
+
 export default function HostSecretMissions({
   secretAssignments,
   votingAssignmentId,
@@ -76,7 +91,13 @@ export default function HostSecretMissions({
   challengeById,
   evidenceForAssignment,
   evidenceUrl,
+  rescheduleSecretMission,
 }: Props) {
+  const [editingScheduleId, setEditingScheduleId] = useState<string | null>(
+    null,
+  );
+  const [scheduleDraft, setScheduleDraft] = useState("");
+
   return (
     <ContentPanel variant="session" stacked>
       <PanelHeading variant="session">
@@ -149,19 +170,90 @@ export default function HostSecretMissions({
                 recipient={<>For {player?.name ?? "player"}</>}
                 status={statusLabel}
               >
-                <EvidenceReview
-                  items={evidenceForAssignment(assignment.id).map((media) => ({
-                    id: media.id,
-                    url: evidenceUrl(media.storage_path),
-                    mediaType: media.media_type,
-                    description: `Evidence for ${challenge?.title ?? "secret mission"}`,
-                    labels: [
-                      media.media_type === "video"
-                        ? "Video evidence"
-                        : "Photo evidence",
-                    ],
-                  }))}
-                />
+                <>
+                  <EvidenceReview
+                    items={evidenceForAssignment(assignment.id).map(
+                      (media) => ({
+                        id: media.id,
+                        url: evidenceUrl(media.storage_path),
+                        mediaType: media.media_type,
+                        description: `Evidence for ${challenge?.title ?? "secret mission"}`,
+                        labels: [
+                          media.media_type === "video"
+                            ? "Video evidence"
+                            : "Photo evidence",
+                        ],
+                      }),
+                    )}
+                  />
+                  {assignment.status === "scheduled" &&
+                    session.status !== "completed" &&
+                    assignment.id !== votingAssignmentId &&
+                    (editingScheduleId === assignment.id ? (
+                      <form
+                        className="mission-reschedule"
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          void rescheduleSecretMission(
+                            assignment.id,
+                            scheduleDraft,
+                          ).then((updated) => {
+                            if (updated) setEditingScheduleId(null);
+                          });
+                        }}
+                      >
+                        <FormLabel
+                          variant="session"
+                          className="mission-reschedule__time"
+                        >
+                          Delivery time
+                          <input
+                            type="datetime-local"
+                            required
+                            value={scheduleDraft}
+                            onChange={(event) =>
+                              setScheduleDraft(event.target.value)
+                            }
+                            disabled={busy}
+                          />
+                        </FormLabel>
+                        <Button
+                          type="submit"
+                          variant="session-action"
+                          fullWidth={false}
+                          disabled={busy || !scheduleDraft}
+                        >
+                          Save time
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="session-secondary"
+                          fullWidth={false}
+                          disabled={busy}
+                          onClick={() => setEditingScheduleId(null)}
+                        >
+                          Cancel
+                        </Button>
+                      </form>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="session-secondary"
+                        fullWidth={false}
+                        disabled={busy}
+                        aria-label={`Edit schedule for ${challenge?.title ?? "Secret mission"}`}
+                        onClick={() => {
+                          setScheduleDraft(
+                            toDateTimeLocal(assignment.scheduled_at),
+                          );
+                          setEditingScheduleId(assignment.id);
+                        }}
+                      >
+                        <Icon name="calendar-clock" className="icon--size-14" />{" "}
+                        Edit schedule
+                      </Button>
+                    ))}
+                </>
               </AssignmentRow>
             );
           })}

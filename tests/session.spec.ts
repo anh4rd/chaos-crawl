@@ -412,6 +412,9 @@ test("inline host reward voting uses its player credential and leaves host contr
     p_target_team_id: null,
   });
   await page.getByRole("button", { name: "Host", exact: true }).click();
+  await page
+    .getByRole("tab", { name: "Secret mission schedule", exact: true })
+    .click();
   await expect(
     page.getByRole("heading", { name: "Secret missions", exact: true }),
   ).toBeVisible();
@@ -436,6 +439,73 @@ test("player reward results expose both tied winners only after the round closes
     page.getByRole("heading", { name: "Points awarded!" }),
   ).toBeVisible();
   await expect(page.locator(".session-reward-round__winner")).toHaveCount(2);
+  backend.verify();
+});
+
+test("host management tabs expose schedule editing and active-session settings", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.challenges.push({
+    ...backend.challenges[0],
+    id: "round-2",
+    title: "Second entrance",
+    round_number: 2,
+    sort_order: 3,
+  });
+  await page.goto(`#/host/live/${sessionId}`);
+  await page
+    .getByRole("navigation", { name: "Game pages" })
+    .getByRole("button", { name: "Host", exact: true })
+    .click();
+
+  const tabs = page.getByRole("tablist", {
+    name: "Host management sections",
+  });
+  await expect(tabs.getByRole("tab")).toHaveCount(5);
+  await tabs.getByRole("tab", { name: "Game schedule", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Game schedule", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Edit Make an entrance", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Edit Make an entrance", exact: true })
+    .click();
+  const editor = page.getByRole("dialog", {
+    name: "Update challenge",
+    exact: true,
+  });
+  await editor
+    .getByRole("textbox", { name: "Challenge title" })
+    .fill("Updated entrance");
+  await editor.getByRole("button", { name: "Save challenge" }).click();
+  await expect(editor).toHaveCount(0);
+
+  await tabs.getByRole("tab", { name: "Settings", exact: true }).click();
+  await page.getByLabel("Game name").fill("Updated session name");
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Save session settings", exact: true }),
+  );
+  await expect(page.getByRole("status")).toContainText(
+    "Session settings updated.",
+  );
+  expect(
+    backend.requests.find(
+      (request) =>
+        request.name === "cc_game_sessions" &&
+        request.method === "PATCH" &&
+        typeof request.body === "object" &&
+        request.body !== null &&
+        "name" in request.body,
+    )?.body,
+  ).toMatchObject({
+    name: "Updated session name",
+    player_limit: 12,
+    teams_enabled: false,
+  });
   backend.verify();
 });
 
@@ -580,6 +650,9 @@ test("secret review takes precedence over reward UI for an inline host while hos
   });
   await hostNavigation.focus();
   await page.keyboard.press("Enter");
+  await page
+    .getByRole("tab", { name: "Secret mission schedule", exact: true })
+    .click();
   await expect(
     page.getByRole("heading", { name: "Secret missions", exact: true }),
   ).toBeVisible();
@@ -783,6 +856,9 @@ test("inline host final voting uses the host token and keeps one page landmark",
   });
   await expect(page.locator("main")).toHaveCount(1);
   await page.getByRole("button", { name: "Host", exact: true }).click();
+  await page
+    .getByRole("tab", { name: "Secret mission schedule", exact: true })
+    .click();
   await expect(
     page.getByRole("heading", { name: "Secret missions", exact: true }),
   ).toBeVisible();
@@ -846,10 +922,40 @@ test("host and player scores use the same team totals", async ({ page }) => {
       .locator(".session-rank-row")
       .filter({ has: page.getByText(/^Team Chaos(?: · YOU)?$/) })
       .filter({ has: page.getByText("50 pts", { exact: true }) });
-  await expect(teamRow()).toHaveCount(1);
+  const leaderboardTabs = () =>
+    page.getByRole("tablist", { name: "Leaderboard", exact: true });
+
+  const playerTabs = leaderboardTabs();
+  const playersTab = playerTabs.getByRole("tab", {
+    name: "Players",
+    exact: true,
+  });
+  const teamsTab = playerTabs.getByRole("tab", {
+    name: "Teams",
+    exact: true,
+  });
+  await expect(playersTab).toHaveAttribute("aria-selected", "true");
+  await playersTab.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(teamsTab).toBeFocused();
+  await expect(teamsTab).toHaveAttribute("aria-selected", "true");
+  await expect(teamRow()).toBeVisible();
+  await expect(
+    page.getByRole("tabpanel", { name: "Players", exact: true }),
+  ).toBeHidden();
+  await teamsTab.focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(playersTab).toBeFocused();
+  await expect(
+    page.getByRole("tabpanel", { name: "Players", exact: true }),
+  ).toBeVisible();
+
   await page.goto(`#/host/live/${sessionId}`);
   await page.getByRole("button", { name: "Scores", exact: true }).click();
+  const hostTabs = leaderboardTabs();
+  await hostTabs.getByRole("tab", { name: "Teams", exact: true }).click();
   await expect(teamRow()).toHaveCount(1);
+  await expect(teamRow()).toBeVisible();
   backend.verify();
 });
 
@@ -907,6 +1013,7 @@ test("host moderation preserves approval payload and failure feedback", async ({
   backend.responses.cc_host_review_session_submission = null;
   await page.goto(`#/host/live/${sessionId}`);
   await page.getByRole("button", { name: "Host", exact: true }).click();
+  await page.getByRole("tab", { name: "Review", exact: true }).click();
   page.on("dialog", (dialog) => void dialog.accept("15"));
   await page
     .getByRole("button", { name: /Approve/ })
@@ -1586,6 +1693,7 @@ test("host evidence review keeps main, side and secret media contracts and appro
   backend.responses.cc_host_review_session_submission = null;
   await page.goto(`#/host/live/${sessionId}`);
   await page.getByRole("button", { name: "Host", exact: true }).click();
+  await page.getByRole("tab", { name: "Review", exact: true }).click();
   const main = page.locator('[data-tour="host-review"]');
   const side = page.locator('[data-tour="host-side-review"]');
   await expect(main.getByText("Needs review", { exact: true })).toBeVisible();
@@ -1721,6 +1829,9 @@ test("custom secret mission creation and immediate/scheduled assignment preserve
   backend.responses.cc_host_assign_secret_mission = null;
   await page.goto(`#/host/live/${sessionId}`);
   await page.getByRole("button", { name: "Host", exact: true }).click();
+  await page
+    .getByRole("tab", { name: "Secret mission schedule", exact: true })
+    .click();
   const assign = page.getByRole("button", {
     name: "Assign secret mission",
     exact: true,
@@ -1843,6 +1954,63 @@ test("custom secret mission creation and immediate/scheduled assignment preserve
     p_scheduled_at: scheduled,
   });
   await expect(delivery).toHaveValue("");
+  backend.verify();
+});
+
+test("host can reschedule a pending secret mission without changing its assignment", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.challenges.push({
+    ...backend.challenges[0],
+    id: "secret-challenge",
+    kind: "secret",
+    round_number: null,
+    title: "Secret toast",
+  });
+  backend.rows.cc_game_session_secret_assignments = [
+    {
+      id: "secret-assignment",
+      session_id: sessionId,
+      player_id: "test-player",
+      challenge_id: "secret-challenge",
+      status: "scheduled",
+      scheduled_at: "2030-01-01T18:00:00Z",
+      sent_at: null,
+      submitted_at: null,
+      reviewed_at: null,
+      awarded_points: 0,
+      final_review_outcome: null,
+      created_at: "2030-01-01T12:00:00Z",
+    },
+  ];
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Host", exact: true }).click();
+  await page
+    .getByRole("tab", { name: "Secret mission schedule", exact: true })
+    .click();
+  await page
+    .getByRole("button", {
+      name: "Edit schedule for Secret toast",
+      exact: true,
+    })
+    .click();
+  const delivery = page.getByLabel("Delivery time", { exact: true });
+  await delivery.fill("2030-01-03T19:30");
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Save time", exact: true }),
+  );
+  await expect(page.getByRole("status")).toContainText(
+    "Secret mission delivery time updated.",
+  );
+  expect(
+    backend.requests.find(
+      (request) =>
+        request.name === "cc_game_session_secret_assignments" &&
+        request.method === "PATCH",
+    )?.body,
+  ).toEqual({ scheduled_at: new Date("2030-01-03T19:30").toISOString() });
   backend.verify();
 });
 

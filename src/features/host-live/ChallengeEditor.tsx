@@ -54,7 +54,7 @@ export default function ChallengeEditor({
   return (
     <Dialog
       variant="host"
-      label="Update the upcoming challenge"
+      label="Update challenge"
       labelledBy="cc-host-break-edit-title"
       dismissDisabled={busy}
       onClose={() => setEditingBreakChallenge(null)}
@@ -64,9 +64,11 @@ export default function ChallengeEditor({
         onSubmit={(event) => void saveBreakChallengeEdit(event)}
       >
         <Badge variant="dialog">
-          EDIT ROUND {editingBreakChallenge.round_number}
+          {editingBreakChallenge.round_number
+            ? `EDIT ROUND ${editingBreakChallenge.round_number}`
+            : "EDIT CHALLENGE"}
         </Badge>
-        <h2 id="cc-host-break-edit-title">Update the upcoming challenge</h2>
+        <h2 id="cc-host-break-edit-title">Update challenge</h2>
         <FormLabel spaced>
           Challenge title
           <input

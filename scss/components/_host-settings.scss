@@ -1,0 +1,50 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/effects";
+
+.host-settings {
+  &__fields {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  &__rewards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: layout.$pixel-unit * 3;
+    margin: layout.$pixel-unit * 5 0;
+    padding: 0;
+    border: 0;
+  }
+
+  &__rewards legend {
+    width: 100%;
+    margin-bottom: layout.$pixel-unit * 2;
+    font-size: fonts.$size-label;
+    font-weight: fonts.$weight-action;
+  }
+
+  &__rewards label {
+    display: flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.5;
+  }
+
+  &__plan {
+    display: grid;
+    gap: layout.$pixel-unit * 2;
+    margin-top: layout.$pixel-unit * 5;
+    padding-top: layout.$pixel-unit * 4;
+    border-top: layout.$pixel-unit * 0.5 solid
+      rgba(colors.$white, effects.$translucent-border-opacity);
+  }
+
+  &__plan h3,
+  &__plan p {
+    margin: 0;
+  }
+}

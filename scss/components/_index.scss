@@ -28,6 +28,8 @@
 @use "session-reward-round";
 @use "session-review";
 @use "host-management";
+@use "host-game-schedule";
+@use "host-settings";
 @use "session-feedback";
 @use "guided-tour";
 @use "tour-highlight";
@@ -164,6 +166,7 @@
 @use "assignment-list";
 @use "assignment-row";
 @use "mission-assignment";
+@use "mission-reschedule";
 @use "mission-creation";
 @use "disclosure";
 @use "presentation-controls";

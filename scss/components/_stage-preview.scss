@@ -2,7 +2,7 @@
 @use "../variables/layout";
 @use "../variables/fonts";
 .stage-preview {
-  display: grid;
+  display: flex;
   gap: layout.$pixel-unit * 1.5;
   margin-top: 0;
   padding: layout.$pixel-unit * 2.5 layout.$pixel-unit * 2.75;

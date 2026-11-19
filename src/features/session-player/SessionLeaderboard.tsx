@@ -23,6 +23,7 @@ export default function SessionLeaderboard({
         session.status === "completed" ? "Final leaderboard" : "Leaderboard"
       }
       tourTarget="player-leaderboard"
+      teamsEnabled={session.teams_enabled}
       viewerId={player.id}
       viewerTeamId={player.team_id}
       entries={leaderboard.map((entry) => ({

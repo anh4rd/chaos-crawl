@@ -1,0 +1,14 @@
+@use "../variables/layout";
+
+.mission-reschedule {
+  display: flex;
+  flex: 1 0 100%;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: layout.$pixel-unit * 2;
+
+  &__time {
+    flex: 1 1 layout.$pixel-unit * 40;
+    min-width: 0;
+  }
+}

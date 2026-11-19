@@ -34,6 +34,7 @@ export default function HostSessionLeaderboard({
   return (
     <SharedLeaderboard
       tourTarget="host-leaderboard"
+      teamsEnabled={session.teams_enabled}
       viewerId={session.host_player_id}
       entries={ranked.map((player) => ({
         id: player.id,

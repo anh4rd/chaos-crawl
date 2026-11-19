@@ -96,6 +96,7 @@ for (const source of ["state", "row"] as const) {
     });
     await page.goto("#/host/live/test-session");
     await page.getByRole("button", { name: "Host", exact: true }).click();
+    await page.getByRole("tab", { name: "Review", exact: true }).click();
     await expect(page.getByText("SUCCESS", { exact: true })).toHaveCount(0);
     await expect(page.getByText("Pat · success", { exact: true })).toHaveCount(
       0,
@@ -120,6 +121,7 @@ for (const source of ["state", "row"] as const) {
     review.status = "results";
     await page.reload();
     await page.getByRole("button", { name: "Host", exact: true }).click();
+    await page.getByRole("tab", { name: "Review", exact: true }).click();
     await expect(
       page.getByText("Success · +25 pts", { exact: true }),
     ).toBeVisible();

@@ -1179,7 +1179,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionLeaderboard: {
     usage:
-      "Compact variant preserves caller order and displays simple rank/name/score rows; see local review body example. Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+      "Shared host/player leaderboard with Players and Teams tabs for team-enabled sessions; the compact variant preserves caller order and displays simple rank/name/score rows.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },

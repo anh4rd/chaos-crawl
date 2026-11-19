@@ -4742,3 +4742,23 @@ evidence29376cases, scoring4000cases, time17280cases,13type-erased consumers and
 21command execution traces. Human scrutiny should focus on authority/lifetime
 and error precedence, malformed-state fallback, token recovery and named target
 identity choices rather than the proven formatting/style/import moves.
+
+## Host live management sections
+
+HostSession now separates control overrides, review, the editable game schedule,
+secret mission scheduling and settings into nested tabs. Schedule edits use the
+existing challenge command path; active-session settings are saved separately
+from the saved Host Hub plan, whose full editor remains reachable from Settings.
+Submitted secret-mission evidence is visible in Review before voting is opened,
+and pending scheduled assignments can be rescheduled without changing their
+assignment identity.
+
+Verification: strict build, full lint/format gates, and all 738 unit/component
+tests pass. Focused desktop/mobile browser runs pass schedule/settings,
+rescheduling, moderation, secret evidence, mission creation, shared panel and
+start-confirmation cases. Review load versus main is 997 files and 129,280 lines
+across the broader ongoing refactor; this is well above the 800-line reviewer
+nudge. Review map: HostSession tab composition and review visibility; schedule
+and active-session settings adapters; scheduled mission update filters and
+feedback; browser fixtures and keyboard paths. The review-load total is
+repository-wide and should not be attributed to this host-management slice.

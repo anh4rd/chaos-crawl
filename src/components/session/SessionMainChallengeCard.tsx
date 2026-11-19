@@ -53,11 +53,11 @@ export default function SessionMainChallengeCard({
             </div>
           </div>
           <div className="main-challenge__description">{description}</div>
-        <div className="main-challenge__meta">
-          <ControlRow variant="timer">
-            <TimerReadout label={timerCaption} value={timerLabel} />
-          </ControlRow>
-        </div>
+          <div className="main-challenge__meta">
+            <ControlRow variant="timer">
+              <TimerReadout label={timerCaption} value={timerLabel} />
+            </ControlRow>
+          </div>
         </div>
         <div className="main-challenge__summary">
           <span className="main-challenge__round">
@@ -69,8 +69,6 @@ export default function SessionMainChallengeCard({
           </div>
         </div>
       </div>
-      
-      
     </section>
   );
 }

@@ -21,18 +21,20 @@ export default function StagePreview({
     <article
       className={`stage-preview${highlighted ? " stage-preview--highlighted" : ""}`}
     >
-      <Badge variant={highlighted ? "stage-break" : "stage"}>{label}</Badge>
-      <div className="stage-preview__heading">
-        <IconBadge
-          as="b"
-          variant={highlighted ? "stage-break" : "stage"}
-          aria-hidden="true"
-        >
-          {illustration}
-        </IconBadge>
-        <strong className="stage-preview__title">{title}</strong>
+      <div>
+        <Badge variant={highlighted ? "stage-break" : "stage"}>{label}</Badge>
+        <div className="stage-preview__heading">
+          <IconBadge
+            as="b"
+            variant={highlighted ? "stage-break" : "stage"}
+            aria-hidden="true"
+          >
+            {illustration}
+          </IconBadge>
+          <strong className="stage-preview__title">{title}</strong>
+        </div>
+        <small className="stage-preview__description">{description}</small>
       </div>
-      <small className="stage-preview__description">{description}</small>
       {children}
     </article>
   );

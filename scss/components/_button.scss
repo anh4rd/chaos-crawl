@@ -849,8 +849,10 @@
   &--session-edit {
     box-shadow: none;
     text-transform: none;
-    scale: none;
+    height: 44px;
+    width: 44px;
     transition-property: all;
+    color: colors.$pink;
     transition-duration: motion.$duration-none;
     transition-timing-function: motion.$easing-default;
     cursor: pointer;
@@ -885,7 +887,7 @@
     border: layout.$control-border-width solid colors.$session-text;
     border-radius: layout.$control-radius;
     color: colors.$white;
-    background: colors.$purple;
+    background: colors.$pink;
     font: inherit;
     font-size: fonts.$size-caption;
     font-weight: fonts.$weight-heavy;

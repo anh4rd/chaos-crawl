@@ -1,0 +1,45 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/effects";
+
+.host-game-schedule {
+  display: grid;
+  gap: layout.$pixel-unit * 2;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: layout.$pixel-unit * 3;
+    padding: layout.$pixel-unit * 3;
+    border: layout.$pixel-unit * 0.5 solid
+      rgba(colors.$white, effects.$translucent-border-opacity);
+    border-radius: layout.$pixel-unit * 3;
+    background: rgba(colors.$white, effects.$round-choice-surface-opacity);
+  }
+
+  &__copy {
+    display: grid;
+    min-width: 0;
+    gap: layout.$pixel-unit;
+  }
+
+  &__copy strong {
+    overflow-wrap: anywhere;
+    font-size: fonts.$size-label;
+  }
+
+  &__copy span {
+    color: colors.$round-choice-description;
+    font-size: fonts.$size-caption;
+    text-transform: capitalize;
+  }
+
+  @media (max-width: layout.$host-compact-breakpoint) {
+    &__item {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+}
