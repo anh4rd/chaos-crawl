@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import SessionState from "./SessionState";
+import ControlRow from "../ui/ControlRow";
+import TimerReadout from "../ui/TimerReadout";
 
 export default function SessionBreak({
   label,
@@ -12,14 +14,12 @@ export default function SessionBreak({
 }) {
   return (
     <SessionState title="Take a breather" icon="coffee">
-      <p>
-        {running ? "The game will resume in" : "The break timer is paused."}
-      </p>
-      <strong
-        aria-label={running ? `Game resumes in ${label}` : "Break paused"}
-      >
-        {running ? label : "PAUSED"}
-      </strong>
+      <ControlRow variant="timer">
+        <TimerReadout
+          label={running ? "GAME RESUMES IN" : "BREAK TIMER"}
+          value={running ? label : "PAUSED"}
+        />
+      </ControlRow>
       {children}
     </SessionState>
   );

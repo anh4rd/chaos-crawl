@@ -1,63 +1,120 @@
 @use "../variables/colors";
+@use "../variables/fonts";
 @use "../variables/layout";
 .main-challenge {
-  padding: layout.$spacing-unit * 5;
+  padding: layout.$spacing-unit * 3;
   border: layout.$session-border-width solid colors.$ink;
   border-radius: layout.$radius-lg;
   background: colors.$white;
   box-shadow: layout.$spacing-unit layout.$spacing-unit 0 colors.$purple-dark;
   &__heading-row {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    gap: layout.$spacing-unit * 4;
+    gap: layout.$pixel-unit * 1;
   }
   &__heading {
     flex: 1;
     min-width: 0;
   }
+  &__kind {
+    display: inline-block;
+    padding: layout.$pixel-unit * 0.5 layout.$pixel-unit * 1.5;
+    border-radius: layout.$radius-pill;
+    background: colors.$lime;
+    color: colors.$black;
+    font-family: fonts.$family-preview-challenge;
+    font-style: italic;
+    text-transform: uppercase;
+    transform: rotate(-3deg);
+  }
   &__heading h2 {
-    font-size: layout.$session-header-size;
-    margin-block: layout.$spacing-unit * 2;
+    margin: -(layout.$pixel-unit * 2.2) 0 (layout.$pixel-unit * 3);
+    padding-left: layout.$pixel-unit * 0.75;
+    display: grid;
+    font-family: fonts.$family-preview-challenge;
+    font-size: fonts.$size-session-challenge-title;
+    font-weight: fonts.$weight-action;
+    line-height: 0.9;
+    text-transform: uppercase;
+    transform: rotate(-3deg);
+  }
+  &__title-outline,
+  &__title-fill {
+    grid-area: 1 / 1;
+  }
+  &__title-outline {
+    color: colors.$black;
+    text-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75
+      colors.$black;
+    -webkit-text-stroke: layout.$pixel-unit * 0.75 colors.$black;
+  }
+  &__title-fill {
+    color: colors.$white;
+    background: colors.$white;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  &__award {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    padding: layout.$pixel-unit * 1.75 layout.$pixel-unit * 2.5;
+    border-radius: layout.$radius-pill;
+    background: colors.$pink;
+    color: colors.$white;
+    font-size: layout.$session-label-size;
+    font-weight: fonts.$weight-heavy;
   }
   &__kind,
-  &__award,
   &__round {
-    font-size: layout.$session-label-size;
-    font-weight: 900;
+    font-size: layout.$session-small-size;
+    font-weight: fonts.$weight-heavy;
+    padding: layout.$pixel-unit * 0.5 layout.$pixel-unit * 1.5;
+    border-radius: layout.$radius-pill;
   }
   &__summary {
     display: flex;
     flex-direction: column;
     gap: layout.$spacing-unit;
     align-items: flex-end;
+    align-self: stretch;
+    justify-content: space-between;
   }
   &__art {
+    margin-top: auto;
     font-size: layout.$session-avatar-size;
   }
   &__description {
     font-size: layout.$session-copy-size;
+    color: colors.$session-text-2;
+    line-height: 1.5;
+    margin: 0 0 layout.$pixel-unit * 4;
+    white-space: pre-wrap;
   }
   &__bottom {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: layout.$spacing-unit * 4;
-    margin-top: layout.$spacing-unit * 4;
   }
-  &__time {
+  &__meta {
     display: flex;
-    flex-direction: column;
-    font-size: layout.$session-label-size;
-  }
-  &__time strong {
-    display: flex;
+    flex-wrap: wrap;
     align-items: center;
-    gap: layout.$spacing-unit;
-    font-size: layout.$session-header-size;
+    gap: layout.$pixel-unit * 3;
+    color: colors.$purple;
+    font-size: layout.$session-small-size;
+    font-weight: fonts.$weight-extra-bold;
+  }
+  &__meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.25;
   }
   &__actions {
-    flex: 1;
+    flex: fit;
     min-width: 0;
   }
 }

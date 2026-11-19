@@ -4,7 +4,7 @@ import SessionFeedback from "../../components/session/SessionFeedback";
 import type { PlatformGame, PlatformGameDetail } from "../../types/superAdmin";
 import { Example } from "./Example";
 import HostPatternPreview from "./HostPatternPreview";
-import SessionPreview from "./SessionPreview";
+import SessionPreview from "../../components/session/SessionPreview";
 
 const games: PlatformGame[] = [
   {

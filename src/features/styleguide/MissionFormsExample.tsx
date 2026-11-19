@@ -5,7 +5,7 @@ import HostManagement from "../host-live/HostManagement";
 import MissionAssignmentForm from "../host-live/MissionAssignmentForm";
 import MissionCreationForm from "../host-live/MissionCreationForm";
 import { Example } from "./Example";
-import SessionPreview from "./SessionPreview";
+import SessionPreview from "../../components/session/SessionPreview";
 
 export default function MissionFormsExample() {
   const [busy, setBusy] = useState(false);

@@ -2,20 +2,27 @@
 @use "../variables/layout";
 .session-page {
   min-height: 100vh;
-  background: colors.$purple;
+  background-color: colors.$entry-surface;
+  background-image:
+    colors.$entry-shade, colors.$entry-wash, colors.$entry-background;
   color: colors.$ink;
   padding-bottom: calc(
     #{layout.$session-dock-height} + env(safe-area-inset-bottom)
   );
+  .btn:not(.btn--session-tour):not(.btn--timer-menu):not(
+      .btn--control-replay
+    ):not(.btn--dialog-dismiss):not(.btn--text):not(.btn--comic-icon) {
+    border: layout.$session-border-width solid colors.$session-frame-ink;
+    box-shadow: 0 layout.$pixel-unit * 0.75 0 colors.$session-frame-ink;
+  }
   &__heading {
     color: colors.$white;
     font-size: layout.$session-header-size;
     text-shadow: none;
   }
   &__toolbar {
-    width: min(100%, layout.$session-content-width);
-    margin-inline: auto;
-    padding: layout.$spacing-unit * 4;
+    display:flex;
+    justify-content: flex-end;
     color: colors.$white;
   }
   &__content {

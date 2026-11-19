@@ -24,7 +24,7 @@ import SessionStatusExample from "../features/styleguide/SessionStatusExample";
 import { ParticipationExamples } from "../features/styleguide/ParticipationExamples";
 import { FeedbackExamples } from "../features/styleguide/FeedbackExamples";
 import HostExamples from "../features/styleguide/HostExamples";
-import { Catalog } from "../features/styleguide/Catalog";
+import { Catalog } from "../features/styleguide/ComponentCatalog";
 import { Section } from "../features/styleguide/Section";
 export default function Styleguide() {
   const [name, setName] = useState("Team Chaos");

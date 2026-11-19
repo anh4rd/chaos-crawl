@@ -24,7 +24,6 @@ export function SessionGameTitlebar({
       </span>
       <div className="session-titlebar__name">
         <strong>{name}</strong>
-        <small>GAME</small>
       </div>
       <div className="session-titlebar__code">
         <small>GAME CODE</small>

@@ -1,4 +1,6 @@
 @use "../variables/colors";
+@use "../variables/effects";
+@use "../variables/fonts";
 @use "../variables/layout";
 .session-profile {
   display: flex;
@@ -9,6 +11,9 @@
   width: min(100%, layout.$session-content-width);
   margin-inline: auto;
   color: colors.$white;
+  background: colors.$entry-header;
+  box-shadow: 0 layout.$pixel-unit * 0.25 0
+    rgba(colors.$white, effects.$entry-header-shadow-opacity);
   &__avatar {
     display: grid;
     place-items: center;
@@ -56,7 +61,15 @@
     color: colors.$accent-soft;
   }
   &__hub {
+    padding: layout.$pixel-unit * 1.25 layout.$pixel-unit * 2.25;
+    border: layout.$pixel-unit * 0.25 solid colors.$lobby-setup-shadow;
+    border-radius: layout.$radius-pill;
+    background: colors.$pink;
     color: colors.$white;
-    font-size: layout.$session-small-size;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-heavy;
+    text-decoration: none;
+    box-shadow: layout.$pixel-unit * 0.25 layout.$pixel-unit * 0.5
+      colors.$lobby-setup-shadow;
   }
 }

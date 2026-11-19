@@ -9,7 +9,7 @@ import Overline from "../../components/ui/Overline";
 import StatTile from "../../components/ui/StatTile";
 import HostManagement from "../host-live/HostManagement";
 import { Example } from "./Example";
-import SessionPreview from "./SessionPreview";
+import SessionPreview from "../../components/session/SessionPreview";
 
 export default function ReviewControlsExample() {
   const [busy, setBusy] = useState(false);

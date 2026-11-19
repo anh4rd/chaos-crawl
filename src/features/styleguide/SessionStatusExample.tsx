@@ -8,7 +8,7 @@ import PanelGrid from "../../components/ui/PanelGrid";
 import SessionState from "../../components/session/SessionState";
 import SyncStatus from "../../components/session/SyncStatus";
 import { Example } from "./Example";
-import SessionPreview from "./SessionPreview";
+import SessionPreview from "../../components/session/SessionPreview";
 
 export default function SessionStatusExample() {
   const [completed, setCompleted] = useState(false);

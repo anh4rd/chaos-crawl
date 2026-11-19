@@ -48,44 +48,46 @@ export default function SessionSideChallenges({
       {sideChallenges.length === 0 && (
         <SessionState title="No side challenges added" />
       )}
-      {sideChallenges.map((challenge) => {
-        const submission = view.my_submissions.find(
-          (item) => item.challenge_id === challenge.id,
-        );
-        return (
-          <SessionChallengeCard
-            key={challenge.id}
-            id={challenge.id}
-            title={challenge.title}
-            description={challenge.description}
-            points={challenge.points}
-          >
-            <SessionSubmission
-              lockOnSubmit
+      <div className="challenge-list">
+        {sideChallenges.map((challenge) => {
+          const submission = view.my_submissions.find(
+            (item) => item.challenge_id === challenge.id,
+          );
+          return (
+            <SessionChallengeCard
+              key={challenge.id}
+              id={challenge.id}
               title={challenge.title}
-              evidence={evidenceForChallenge(challenge.id).map((item) => ({
-                id: item.id,
-                url: mediaUrl(item.storage_path),
-                mediaType: item.media_type,
-                description: `Evidence for ${challenge.title}`,
-              }))}
-              status={submission?.status}
-              awardedPoints={submission?.awarded_points}
-              busy={busyKey !== null}
-              uploading={busyKey === `upload:${challenge.id}`}
-              disabled={
-                session.status !== "live" ||
-                (session.teams_enabled && !player.team_id)
-              }
-              evidenceRequired
-              onUpload={(event) =>
-                void uploadEvidence(event, { type: "challenge", challenge })
-              }
-              onSubmit={() => void submitChallenge(challenge)}
-            />
-          </SessionChallengeCard>
-        );
-      })}
+              description={challenge.description}
+              points={challenge.points}
+            >
+              <SessionSubmission
+                lockOnSubmit
+                title={challenge.title}
+                evidence={evidenceForChallenge(challenge.id).map((item) => ({
+                  id: item.id,
+                  url: mediaUrl(item.storage_path),
+                  mediaType: item.media_type,
+                  description: `Evidence for ${challenge.title}`,
+                }))}
+                status={submission?.status}
+                awardedPoints={submission?.awarded_points}
+                busy={busyKey !== null}
+                uploading={busyKey === `upload:${challenge.id}`}
+                disabled={
+                  session.status !== "live" ||
+                  (session.teams_enabled && !player.team_id)
+                }
+                evidenceRequired
+                onUpload={(event) =>
+                  void uploadEvidence(event, { type: "challenge", challenge })
+                }
+                onSubmit={() => void submitChallenge(challenge)}
+              />
+            </SessionChallengeCard>
+          );
+        })}
+      </div>
     </section>
   );
 }

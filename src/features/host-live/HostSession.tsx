@@ -54,6 +54,7 @@ import { useSlideshowConnection } from "./useSlideshowConnection";
 import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import SessionMainChallengeCard from "../../components/session/SessionMainChallengeCard";
+import SessionPreview from "../../components/session/SessionPreview";
 import GuidedTour from "../../components/tour/GuidedTour";
 import { upcomingStageModel } from "./upcomingStageModel";
 import StagePreview from "../../components/session/StagePreview";
@@ -603,6 +604,54 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     breakMinutes: upcomingBreakMinutes,
     resumeRound: breakResumeRound,
   });
+  const upcomingStagePreview = upcomingStage && (
+    <StagePreview {...upcomingStage}>
+      {!hostBreakActive && nextBreakChallenge && (
+        <Button
+          type="button"
+          variant="session-edit"
+          fullWidth={false}
+          disabled={busy}
+          onClick={() => openBreakChallengeEditor(nextBreakChallenge)}
+        >
+          <Icon name="pencil" className="icon--size-14" /> Edit next challenge
+        </Button>
+      )}
+    </StagePreview>
+  );
+  const hostRoundControls = (
+    <HostRoundControls
+      session={session}
+      activeRewardRound={activeRewardRound}
+      openPointReview={openPointReview}
+      hostBreakActive={hostBreakActive}
+      currentRoundPointsAwarded={currentRoundPointsAwarded}
+      roundClockText={roundClockText}
+      busy={busy}
+      moveToRound={moveToRound}
+      breakResumeRound={breakResumeRound}
+      openBreakTimerEditor={openBreakTimerEditor}
+      requestMoveToRound={requestMoveToRound}
+      mainRounds={mainRounds}
+      requestStartBreak={requestStartBreak}
+      roundTimerHydrated={roundTimerHydrated}
+      roundClockSeconds={roundClockSeconds}
+      roundClockRunning={roundClockRunning}
+      restartRoundTimer={restartRoundTimer}
+      enabledRewardMethods={enabledRewardMethods}
+      startGameOrToggleTimer={startGameOrToggleTimer}
+      resetRoundTimer={resetRoundTimer}
+      skipTimerAndReview={skipTimerAndReview}
+    />
+  );
+  const gameTabHostControls = (
+    <SessionPreview>
+      <HostManagement>
+        {hostRoundControls}
+        {upcomingStagePreview}
+      </HostManagement>
+    </SessionPreview>
+  );
   const participantSection =
     activeTab === "final-round"
       ? "final"
@@ -745,6 +794,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                 onSectionChange={navigateParticipant}
                 onRecover={() => void openHostPlayerView()}
                 focusChallengeId={focusedHostChallenge}
+                afterMainChallenge={gameTabHostControls}
               />
             )}
           {!canParticipate &&
@@ -784,27 +834,30 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                 )}
               </SessionBreak>
             ) : (
-              <SessionMainChallengeCard
-                viewerRole="host"
-                title={currentChallenge?.title ?? "Challenge not found"}
-                description={
-                  currentChallenge?.description ??
-                  "Check that this session has a main challenge assigned to the current round."
-                }
-                points={currentChallenge?.points ?? 0}
-                round={session.current_round_number}
-                roundCount={mainRounds.length}
-                durationMinutes={currentChallenge?.duration_minutes ?? 0}
-                timerLabel={roundClockText}
-                timerCaption={
-                  hostBreakActive
-                    ? "BREAK"
-                    : roundClockRunning
-                      ? "TIME LEFT"
-                      : "READY"
-                }
-                actionTourTarget="host-round-timer"
-              />
+              <>
+                <SessionMainChallengeCard
+                  viewerRole="host"
+                  title={currentChallenge?.title ?? "Challenge not found"}
+                  description={
+                    currentChallenge?.description ??
+                    "Check that this session has a main challenge assigned to the current round."
+                  }
+                  points={currentChallenge?.points ?? 0}
+                  round={session.current_round_number}
+                  roundCount={mainRounds.length}
+                  durationMinutes={currentChallenge?.duration_minutes ?? 0}
+                  timerLabel={roundClockText}
+                  timerCaption={
+                    hostBreakActive
+                      ? "BREAK"
+                      : roundClockRunning
+                        ? "TIME LEFT"
+                        : "READY"
+                  }
+                  actionTourTarget="host-round-timer"
+                />
+                {gameTabHostControls}
+              </>
             ))}
           {!canParticipate && activeTab === "side-challenges" && (
             <section data-tour="player-side-challenges">
@@ -812,24 +865,28 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
               {sideChallenges.length === 0 && (
                 <SessionState title="No side challenges added" />
               )}
-              {sideChallenges.map((challenge) => (
-                <SessionChallengeCard
-                  key={challenge.id}
-                  id={challenge.id}
-                  title={challenge.title}
-                  description={challenge.description}
-                  points={challenge.points}
-                >
-                  <button
-                    type="button"
-                    className="btn"
-                    disabled={busy || session.status !== "live"}
-                    onClick={() => void openHostSideChallengeUpload(challenge)}
+              <div className="challenge-list">
+                {sideChallenges.map((challenge) => (
+                  <SessionChallengeCard
+                    key={challenge.id}
+                    id={challenge.id}
+                    title={challenge.title}
+                    description={challenge.description}
+                    points={challenge.points}
                   >
-                    Join & upload evidence
-                  </button>
-                </SessionChallengeCard>
-              ))}
+                    <button
+                      type="button"
+                      className="btn"
+                      disabled={busy || session.status !== "live"}
+                      onClick={() =>
+                        void openHostSideChallengeUpload(challenge)
+                      }
+                    >
+                      Join & upload evidence
+                    </button>
+                  </SessionChallengeCard>
+                ))}
+              </div>
             </section>
           )}
           {!canParticipate &&
@@ -966,47 +1023,8 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
           <HostManagement>
             {activeTab === "host-controls" && (
               <>
-                <HostRoundControls
-                  session={session}
-                  activeRewardRound={activeRewardRound}
-                  openPointReview={openPointReview}
-                  hostBreakActive={hostBreakActive}
-                  currentRoundPointsAwarded={currentRoundPointsAwarded}
-                  roundClockText={roundClockText}
-                  busy={busy}
-                  moveToRound={moveToRound}
-                  breakResumeRound={breakResumeRound}
-                  openBreakTimerEditor={openBreakTimerEditor}
-                  requestMoveToRound={requestMoveToRound}
-                  mainRounds={mainRounds}
-                  requestStartBreak={requestStartBreak}
-                  roundTimerHydrated={roundTimerHydrated}
-                  roundClockSeconds={roundClockSeconds}
-                  roundClockRunning={roundClockRunning}
-                  restartRoundTimer={restartRoundTimer}
-                  enabledRewardMethods={enabledRewardMethods}
-                  startGameOrToggleTimer={startGameOrToggleTimer}
-                  resetRoundTimer={resetRoundTimer}
-                  skipTimerAndReview={skipTimerAndReview}
-                />
-                {upcomingStage && (
-                  <StagePreview {...upcomingStage}>
-                    {!hostBreakActive && nextBreakChallenge && (
-                      <Button
-                        type="button"
-                        variant="session-edit"
-                        fullWidth={false}
-                        disabled={busy}
-                        onClick={() =>
-                          openBreakChallengeEditor(nextBreakChallenge)
-                        }
-                      >
-                        <Icon name="pencil" className="icon--size-14" /> Edit
-                        next challenge
-                      </Button>
-                    )}
-                  </StagePreview>
-                )}
+                {hostRoundControls}
+                {upcomingStagePreview}
               </>
             )}
             {activeTab === "host-controls" && (

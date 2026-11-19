@@ -18,7 +18,7 @@ import PlayerNameForm from "../admin/players/PlayerNameForm";
 import TeamsView from "../admin/teams/TeamsView";
 import VotingView from "../admin/voting/VotingView";
 import UploadInput from "../../components/ui/UploadInput";
-import SessionPreview from "./SessionPreview";
+import SessionPreview from "../../components/session/SessionPreview";
 
 const pubs: Pub[] = [
   { id: 1, name: "Garden pub", sort_order: 1 },

@@ -165,7 +165,7 @@ for (const [path, heading] of [
   });
 }
 
-test("styleguide is public, searchable and uses local demo state", async ({
+test("component test page is public, searchable and uses local demo state", async ({
   page,
 }) => {
   const backendRequests: string[] = [];
@@ -174,7 +174,7 @@ test("styleguide is public, searchable and uses local demo state", async ({
       backendRequests.push(request.url());
     }
   });
-  await page.goto("#/styleguide");
+  await page.goto("#/component-test");
   await expect(
     page.getByRole("heading", { name: "Build on the good stuff." }),
   ).toBeVisible();

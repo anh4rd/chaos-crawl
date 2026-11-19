@@ -4,10 +4,8 @@ import { Route, Routes } from "react-router-dom";
 
 const Join = lazy(() => import("./pages/Join"));
 const Game = lazy(() => import("./pages/Game"));
-const Admin = lazy(() => import("./pages/Admin"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const Vote = lazy(() => import("./pages/Vote"));
-const Slideshow = lazy(() => import("./pages/Slideshow"));
 const SessionFinalSlideshow = lazy(
   () => import("./pages/SessionFinalSlideshow"),
 );
@@ -28,9 +26,6 @@ const HostPlanSetup = lazy(() => import("./pages/HostPlanSetup"));
 const HostSaved = lazy(() => import("./pages/HostSaved"));
 const HostExplore = lazy(() => import("./pages/HostExplore"));
 const HostGuard = lazy(() => import("./components/host/HostGuard"));
-
-const LegacyJoin = lazy(() => import("./pages/LegacyJoin"));
-const LegacyAdmin = lazy(() => import("./pages/Admin-legacy"));
 const ChallengeReview = lazy(() => import("./pages/ChallengeReview"));
 
 export default function App() {
@@ -49,13 +44,12 @@ export default function App() {
         <Route path="/invite/:joinCode" element={<InviteLanding />} />
         <Route path="/demo/player" element={<PlayerDemo />} />
         <Route path="/styleguide" element={<Styleguide />} />
-        <Route path="/legacy/join" element={<LegacyJoin />} />
+        <Route path="/component-test" element={<Styleguide />} />
         <Route path="/game" element={<Game />} />
         <Route path="/play/:joinCode" element={<SessionPlayerGame />} />
         <Route path="/play/:joinCode/:page" element={<SessionPlayerGame />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/vote" element={<Vote />} />
-        <Route path="/slideshow" element={<Slideshow />} />
         <Route
           path="/final-slideshow/:sessionId"
           element={<SessionFinalSlideshow />}
@@ -70,8 +64,6 @@ export default function App() {
         <Route path="/host/login" element={<HostLogin />} />
         <Route element={<HostGuard />}>
           <Route path="/challenge-review" element={<ChallengeReview />} />
-          <Route path="/admin-legacy" element={<LegacyAdmin />} />
-          <Route path="/admin" element={<Admin />} />
           <Route path="/host/live/:sessionId" element={<HostLiveSession />} />
           <Route path="/host" element={<HostHub />} />
           <Route path="/host/games/new" element={<HostPlanSetup />} />

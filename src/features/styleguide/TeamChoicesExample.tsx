@@ -5,7 +5,7 @@ import Button from "../../components/ui/Button";
 import Note from "../../components/ui/Note";
 import HostManagement from "../host-live/HostManagement";
 import { Example } from "./Example";
-import SessionPreview from "./SessionPreview";
+import SessionPreview from "../../components/session/SessionPreview";
 import CandidateList from "../../components/session/CandidateList";
 import ContentPanel from "../../components/ui/ContentPanel";
 import PanelHeading from "../../components/ui/PanelHeading";

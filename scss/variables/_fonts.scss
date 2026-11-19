@@ -4,7 +4,7 @@ $size-label: 13px;
 $size-caption: 11px;
 $weight-label: 850;
 $weight-caption: 500;
-$size-body: 14px;
+$size-body: 16px;
 $size-small: 12px;
 $size-micro: 10px;
 $size-subheading: 22px;
@@ -12,8 +12,8 @@ $size-heading: 20px;
 $weight-heavy: 1000;
 $weight-extra-bold: 800;
 $tracking-wide: 0.1em;
-$family-poster: Poppins, system-ui, sans-serif;
-$family-poster-action: Poppins, sans-serif;
+$family-poster: Quicksand, system-ui, sans-serif;
+$family-poster-action: Quicksand, sans-serif;
 $family-display: HardBeat, Impact, sans-serif;
 $size-poster-heading: 26px;
 $size-brand: clamp(30px, 7vw, 52px);
@@ -129,10 +129,11 @@ $tracking-preview-device: 1px;
 $family-preview-sticker: "Hardbeat";
 $family-preview-challenge: "Hardbeat", Impact, sans-serif;
 $size-preview-challenge-art: 54px;
+$size-session-challenge-title: 22px;
 $size-preview-side-art: 29px;
 
 $family-console:
-  Inter,
+  Quicksand,
   ui-sans-serif,
   system-ui,
   -apple-system,

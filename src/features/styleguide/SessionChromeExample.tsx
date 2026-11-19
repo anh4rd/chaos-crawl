@@ -3,7 +3,7 @@ import { SessionGameTitlebar } from "../../components/session/SessionGameTitleba
 import { SessionPlayerProfile } from "../../components/session/SessionPlayerProfile";
 import Note from "../../components/ui/Note";
 import { Example } from "./Example";
-import SessionPreview from "./SessionPreview";
+import SessionPreview from "../../components/session/SessionPreview";
 export default function SessionChromeExample({ name }: { name: string }) {
   const [copied, setCopied] = useState(false);
   const [copyNotice, setCopyNotice] = useState("");

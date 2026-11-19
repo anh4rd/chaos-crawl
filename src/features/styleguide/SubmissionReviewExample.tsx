@@ -8,7 +8,7 @@ import ContentPanel from "../../components/ui/ContentPanel";
 import Note from "../../components/ui/Note";
 import HostManagement from "../host-live/HostManagement";
 import { Example } from "./Example";
-import SessionPreview from "./SessionPreview";
+import SessionPreview from "../../components/session/SessionPreview";
 
 export default function SubmissionReviewExample() {
   const [status, setStatus] = useState<"submitted" | "approved" | "rejected">(

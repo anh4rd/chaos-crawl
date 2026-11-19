@@ -5,7 +5,7 @@ import ContentPanel from "../../components/ui/ContentPanel";
 import EmptyState from "../../components/ui/EmptyState";
 import HostManagement from "../host-live/HostManagement";
 import { Example } from "./Example";
-import SessionPreview from "./SessionPreview";
+import SessionPreview from "../../components/session/SessionPreview";
 
 export default function AssignmentReviewExample() {
   const [empty, setEmpty] = useState(false);

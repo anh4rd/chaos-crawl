@@ -30,6 +30,7 @@ import { usePrivateMissions } from "./usePrivateMissions";
 import { useSessionPlayerData } from "./useSessionPlayerData";
 import { useSessionTimer } from "./useSessionTimer";
 
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import SessionMainChallengeCard from "../../components/session/SessionMainChallengeCard";
@@ -48,6 +49,7 @@ export default function SessionParticipant({
   onSectionChange,
   onRecover,
   focusChallengeId: focusedChallenge,
+  afterMainChallenge,
 }: {
   joinCode: string;
   section: PlayerPage;
@@ -56,6 +58,7 @@ export default function SessionParticipant({
   onSectionChange?: (section: PlayerPage) => void;
   onRecover?: () => void;
   focusChallengeId?: string | null;
+  afterMainChallenge?: ReactNode;
 }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -462,52 +465,55 @@ export default function SessionParticipant({
                       running={sharedTimer.is_running}
                     />
                   ) : challenge ? (
-                    <SessionMainChallengeCard
-                      viewerRole={embedded ? "host" : "player"}
-                      title={challenge.title}
-                      description={challenge.description}
-                      points={challenge.points}
-                      round={session.current_round_number}
-                      roundCount={session.round_count}
-                      durationMinutes={challenge.duration_minutes}
-                      timerLabel={sharedTimerLabel}
-                      timerCaption={
-                        sharedTimer?.is_on_break
-                          ? "BREAK"
-                          : sharedTimer?.is_running
-                            ? "TIME LEFT"
-                            : sharedTimer
-                              ? "READY"
-                              : "TIME"
-                      }
-                      actionTourTarget="player-upload"
-                    >
-                      <SessionSubmission
+                    <>
+                      <SessionMainChallengeCard
+                        viewerRole={embedded ? "host" : "player"}
                         title={challenge.title}
-                        allowUpload={challenge.allow_photo_upload}
-                        evidenceRequired={challenge.allow_photo_upload}
-                        evidence={evidenceForChallenge(challenge.id).map(
-                          (item) => ({
-                            id: item.id,
-                            url: mediaUrl(item.storage_path),
-                            mediaType: item.media_type,
-                            description: `Evidence for ${challenge.title}`,
-                          }),
-                        )}
-                        status={currentSubmission?.status}
-                        awardedPoints={currentSubmission?.awarded_points}
-                        busy={busyKey !== null}
-                        uploading={busyKey === `upload:${challenge.id}`}
-                        disabled={session.teams_enabled && !player.team_id}
-                        onUpload={(event) =>
-                          void uploadEvidence(event, {
-                            type: "challenge",
-                            challenge,
-                          })
+                        description={challenge.description}
+                        points={challenge.points}
+                        round={session.current_round_number}
+                        roundCount={session.round_count}
+                        durationMinutes={challenge.duration_minutes}
+                        timerLabel={sharedTimerLabel}
+                        timerCaption={
+                          sharedTimer?.is_on_break
+                            ? "BREAK"
+                            : sharedTimer?.is_running
+                              ? "TIME LEFT"
+                              : sharedTimer
+                                ? "READY"
+                                : "TIME"
                         }
-                        onSubmit={() => void submitChallenge(challenge)}
-                      />
-                    </SessionMainChallengeCard>
+                        actionTourTarget="player-upload"
+                      >
+                        <SessionSubmission
+                          title={challenge.title}
+                          allowUpload={challenge.allow_photo_upload}
+                          evidenceRequired={challenge.allow_photo_upload}
+                          evidence={evidenceForChallenge(challenge.id).map(
+                            (item) => ({
+                              id: item.id,
+                              url: mediaUrl(item.storage_path),
+                              mediaType: item.media_type,
+                              description: `Evidence for ${challenge.title}`,
+                            }),
+                          )}
+                          status={currentSubmission?.status}
+                          awardedPoints={currentSubmission?.awarded_points}
+                          busy={busyKey !== null}
+                          uploading={busyKey === `upload:${challenge.id}`}
+                          disabled={session.teams_enabled && !player.team_id}
+                          onUpload={(event) =>
+                            void uploadEvidence(event, {
+                              type: "challenge",
+                              challenge,
+                            })
+                          }
+                          onSubmit={() => void submitChallenge(challenge)}
+                        />
+                      </SessionMainChallengeCard>
+                      {afterMainChallenge}
+                    </>
                   ) : (
                     <SessionState title="Challenge not ready yet">
                       <p>Ask the host to select a round.</p>

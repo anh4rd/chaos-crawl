@@ -40,7 +40,10 @@
 
   &__scrim {
     position: fixed;
+    padding: 0;
+    border: 0;
     background: rgba(colors.$tour-scrim-ink, 0.7);
+    cursor: pointer;
     pointer-events: auto;
 
     &--top {

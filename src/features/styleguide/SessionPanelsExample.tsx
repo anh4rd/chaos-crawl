@@ -12,7 +12,7 @@ import Overline from "../../components/ui/Overline";
 import PanelHeading from "../../components/ui/PanelHeading";
 import HostManagement from "../host-live/HostManagement";
 import { Example } from "./Example";
-import SessionPreview from "./SessionPreview";
+import SessionPreview from "../../components/session/SessionPreview";
 
 const rounds = [
   { id: "sample-one", round: 1, title: "Find something purple" },

@@ -39,6 +39,38 @@ test("V2 player retains credentials and can move between game sections", async (
   backend.verify();
 });
 
+test("player and host challenge pages render cards in a two-column grid", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  const expectTwoColumns = async () => {
+    const grid = page.locator(
+      '[data-tour="player-side-challenges"] .challenge-list',
+    );
+    await expect(grid).toBeVisible();
+    const columns = await grid.evaluate(
+      (element) =>
+        getComputedStyle(element).gridTemplateColumns.split(" ").length,
+    );
+    expect(columns).toBe(2);
+  };
+
+  await page.goto(`#/play/${sessionCode}`);
+  await page
+    .getByRole("navigation", { name: "Game pages" })
+    .getByRole("link", { name: "Challenges", exact: true })
+    .click();
+  await expectTwoColumns();
+
+  await page.goto(`#/host/live/${sessionId}`);
+  await page
+    .getByRole("navigation", { name: "Game pages" })
+    .getByRole("button", { name: "Challenges", exact: true })
+    .click();
+  await expectTwoColumns();
+  backend.verify();
+});
+
 test("missing V2 credentials lead to recovery without a player lookup", async ({
   page,
 }) => {
@@ -195,6 +227,14 @@ test("host and player use the shared session frame with role-specific navigation
   page,
 }) => {
   const backend = await installSessionBackend(page, { host: true });
+  backend.session.round_count = 2;
+  backend.challenges.push({
+    ...backend.challenges[0],
+    id: "round-2",
+    title: "Second entrance",
+    round_number: 2,
+    sort_order: 3,
+  });
   await page.goto(`#/play/${sessionCode}`);
   await expect(page.locator('main[data-session-role="player"]')).toBeVisible();
   await expect(
@@ -215,6 +255,14 @@ test("host and player use the shared session frame with role-specific navigation
   await expect(
     page.getByRole("heading", { name: "Make an entrance", exact: true }),
   ).toBeVisible();
+  await expect(
+    page
+      .locator(".main-challenge + .session-preview")
+      .getByRole("region", { name: "Host controls", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.locator(".main-challenge + .session-preview .stage-preview__title"),
+  ).toHaveText("Second entrance");
   expect(
     backend.requests.some(
       (request) => request.name === "cc_host_join_as_player",
@@ -228,11 +276,27 @@ test("host joins explicitly and uploads and submits inline using the host player
   context,
 }) => {
   const backend = await installSessionBackend(page, { host: true });
+  backend.session.round_count = 2;
+  backend.challenges.push({
+    ...backend.challenges[0],
+    id: "round-2",
+    title: "Second entrance",
+    round_number: 2,
+    sort_order: 3,
+  });
   await page.goto(`#/host/live/${sessionId}`);
   await page
     .getByRole("button", { name: "Join and play", exact: true })
     .click();
   await expect(page.locator(".session-profile h1")).toHaveText("Test Host");
+  await expect(
+    page
+      .locator(".main-challenge + .session-preview")
+      .getByRole("region", { name: "Host controls", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.locator(".main-challenge + .session-preview .stage-preview__title"),
+  ).toHaveText("Second entrance");
   await page
     .getByRole("navigation", { name: "Game pages" })
     .getByRole("button", { name: "Challenges", exact: true })
@@ -545,6 +609,71 @@ test("shared participant states cover breaks, completion and host-assigned teams
   backend.verify();
 });
 
+test("live host and player pages use the join page background", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  const readBackground = async (selector: string) =>
+    page.locator(selector).evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        backgroundColor: style.backgroundColor,
+        backgroundImage: style.backgroundImage,
+        beforeBackgroundImage: getComputedStyle(element, "::before")
+          .backgroundImage,
+        afterBackgroundImage: getComputedStyle(element, "::after")
+          .backgroundImage,
+      };
+    });
+
+  await page.goto("#/join");
+  const joinBackground = await readBackground(".player-access");
+  const joinHeaderSurface = await page
+    .locator(".access-header")
+    .evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        backgroundColor: style.backgroundColor,
+        boxShadow: style.boxShadow,
+      };
+    });
+  await page.goto(`#/play/${sessionCode}`);
+  const playerBackground = await readBackground(".session-page");
+  const playerProfileSurface = await page
+    .locator(".session-profile")
+    .evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        backgroundColor: style.backgroundColor,
+        boxShadow: style.boxShadow,
+      };
+    });
+  await page.goto(`#/host/live/${sessionId}`);
+  const hostBackground = await readBackground(".session-page");
+  const hostProfileSurface = await page
+    .locator(".session-profile")
+    .evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        backgroundColor: style.backgroundColor,
+        boxShadow: style.boxShadow,
+      };
+    });
+
+  expect(playerBackground.backgroundColor).toBe(joinBackground.backgroundColor);
+  expect(playerBackground.backgroundImage).toBe(
+    [
+      joinBackground.afterBackgroundImage,
+      joinBackground.beforeBackgroundImage,
+      joinBackground.backgroundImage,
+    ].join(", "),
+  );
+  expect(hostBackground).toEqual(playerBackground);
+  expect(playerProfileSurface).toEqual(joinHeaderSurface);
+  expect(hostProfileSurface).toEqual(joinHeaderSurface);
+  backend.verify();
+});
+
 test("shared challenge DOM and computed styles match between roles", async ({
   page,
 }, testInfo) => {
@@ -574,7 +703,27 @@ test("shared challenge DOM and computed styles match between roles", async ({
         };
       }),
     }));
+  const expectSummaryLayout = async () => {
+    const layout = await card.evaluate((element) => {
+      const bounds = (selector: string) => {
+        const node = element.querySelector(selector);
+        if (!node) throw new Error(`Missing ${selector} in main challenge`);
+        const { top, bottom } = node.getBoundingClientRect();
+        return { top, bottom };
+      };
+      return {
+        summary: bounds(".main-challenge__summary"),
+        round: bounds(".main-challenge__round"),
+        award: bounds(".main-challenge__award"),
+        art: bounds(".main-challenge__art"),
+      };
+    });
+    expect(layout.round.top).toBe(layout.summary.top);
+    expect(layout.award.top).toBeGreaterThan(layout.round.top);
+    expect(layout.art.bottom).toBe(layout.summary.bottom);
+  };
   const player = await snapshot();
+  await expectSummaryLayout();
   await page.screenshot({
     path: testInfo.outputPath("player-session.png"),
     fullPage: true,
@@ -583,6 +732,7 @@ test("shared challenge DOM and computed styles match between roles", async ({
   await expect(card).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
   expect(await snapshot()).toEqual(player);
+  await expectSummaryLayout();
   await expect(page.locator("main")).toHaveCount(1);
   await page.screenshot({
     path: testInfo.outputPath("host-session.png"),

@@ -7,7 +7,7 @@ import Note from "../../components/ui/Note";
 import TimerReadout from "../../components/ui/TimerReadout";
 import RoundFlowControls from "../../components/session/RoundFlowControls";
 import HostManagement from "../host-live/HostManagement";
-import SessionPreview from "./SessionPreview";
+import SessionPreview from "../../components/session/SessionPreview";
 import { Example } from "./Example";
 
 export default function TimerControlsExample() {

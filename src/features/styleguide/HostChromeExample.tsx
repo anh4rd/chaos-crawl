@@ -7,7 +7,7 @@ import ContentPanel from "../../components/ui/ContentPanel";
 import GuidedTour from "../../components/tour/GuidedTour";
 import HostManagement from "../host-live/HostManagement";
 import { Example } from "./Example";
-import SessionPreview from "./SessionPreview";
+import SessionPreview from "../../components/session/SessionPreview";
 
 const steps = [
   {

@@ -10,7 +10,7 @@ import RoundSummary from "../../components/ui/RoundSummary";
 import StatusPill from "../../components/ui/StatusPill";
 import HostManagement from "../host-live/HostManagement";
 import { Example } from "./Example";
-import SessionPreview from "./SessionPreview";
+import SessionPreview from "../../components/session/SessionPreview";
 
 export default function RewardPrimitivesExample() {
   return (

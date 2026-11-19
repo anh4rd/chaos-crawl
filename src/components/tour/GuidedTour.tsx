@@ -159,30 +159,46 @@ export default function GuidedTour({
       className="guided-tour"
       aria-label={`${label}: ${step.title}`}
     >
-      <div
+      <button
+        type="button"
         className="guided-tour__scrim guided-tour__scrim--top"
+        aria-hidden="true"
+        tabIndex={-1}
+        onClick={onClose}
         style={{ height: topHeight }}
       />
       {rect && (
         <>
-          <div
+          <button
+            type="button"
             className="guided-tour__scrim guided-tour__scrim--left"
+            aria-hidden="true"
+            tabIndex={-1}
+            onClick={onClose}
             style={{
               top: rect.top - pad,
               height: rect.height + pad * 2,
               width: leftWidth,
             }}
           />
-          <div
+          <button
+            type="button"
             className="guided-tour__scrim guided-tour__scrim--right"
+            aria-hidden="true"
+            tabIndex={-1}
+            onClick={onClose}
             style={{
               top: rect.top - pad,
               height: rect.height + pad * 2,
               left: rightLeft,
             }}
           />
-          <div
+          <button
+            type="button"
             className="guided-tour__scrim guided-tour__scrim--bottom"
+            aria-hidden="true"
+            tabIndex={-1}
+            onClick={onClose}
             style={{ top: bottomTop, left: 0, right: 0, bottom: 0 }}
           />
         </>

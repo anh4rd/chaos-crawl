@@ -1,13 +1,12 @@
 @use "../variables/colors";
+@use "../variables/fonts";
 @use "../variables/layout";
 .session-titlebar {
   display: flex;
   align-items: center;
   gap: layout.$spacing-unit * 3;
-  padding: layout.$spacing-unit * 4;
-  background: colors.$white;
-  border: layout.$session-border-width solid colors.$ink;
-  border-radius: layout.$radius-lg;
+  padding: layout.$spacing-unit * 0;
+  color: colors.$white;
   &__art {
     display: grid;
     place-items: center;
@@ -27,6 +26,9 @@
     flex: 1;
     min-width: 0;
   }
+  &__name strong {
+    font-family: fonts.$family-preview-challenge;
+  }
   &__name strong,
   &__name small,
   &__code strong,
@@ -43,7 +45,7 @@
     min-height: layout.$session-row-height;
     border: 0;
     background: transparent;
-    color: colors.$purple;
+    color: inherit;
     cursor: pointer;
   }
 }

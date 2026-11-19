@@ -666,12 +666,13 @@
 
 .btn {
   &--session-tour {
-    border: 0;
-    border-radius: 0;
-    padding: layout.$spacing-unit * 2;
-    background: transparent;
+    border: 2px solid colors.$session-frame-ink;
+    border-radius: layout.$badge-radius;
+    padding: layout.$spacing-unit * 1.5;
+    background: colors.$purple-dark;
     color: colors.$white;
-    font: inherit;
+    font-family: inherit;
+    font-size: fonts.$size-small;
     text-transform: none;
     box-shadow: none;
     scale: none;

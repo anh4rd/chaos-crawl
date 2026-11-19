@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { challengeIcon } from "../../lib/challengeVisuals";
-import Icon from "../ui/Icon";
+import ControlRow from "../ui/ControlRow";
+import TimerReadout from "../ui/TimerReadout";
 
 interface SessionMainChallengeCardProps {
   viewerRole: "player" | "host";
@@ -27,9 +28,6 @@ export default function SessionMainChallengeCard({
   durationMinutes,
   timerLabel,
   timerCaption,
-  action,
-  children,
-  actionTourTarget,
 }: SessionMainChallengeCardProps) {
   return (
     <section
@@ -43,10 +41,23 @@ export default function SessionMainChallengeCard({
           <div className="main-challenge__kind-title">
             <span className="main-challenge__kind">MAIN CHALLENGE</span>
             <div>
-              <h2>{title}</h2>
+              <h2>
+                <span
+                  className="main-challenge__title-outline"
+                  aria-hidden="true"
+                >
+                  {title}
+                </span>
+                <span className="main-challenge__title-fill">{title}</span>
+              </h2>
             </div>
           </div>
           <div className="main-challenge__description">{description}</div>
+        <div className="main-challenge__meta">
+          <ControlRow variant="timer">
+            <TimerReadout label={timerCaption} value={timerLabel} />
+          </ControlRow>
+        </div>
         </div>
         <div className="main-challenge__summary">
           <span className="main-challenge__round">
@@ -58,20 +69,8 @@ export default function SessionMainChallengeCard({
           </div>
         </div>
       </div>
-      <div className="main-challenge__bottom">
-        <div className="main-challenge__meta">
-          <span className="main-challenge__time">
-            <span>{timerCaption}</span>
-            <strong>
-              <Icon name="clock3" className="icon--size-15" />
-              {timerLabel}
-            </strong>
-          </span>
-        </div>
-        <div className="main-challenge__actions" data-tour={actionTourTarget}>
-          {action ?? children}
-        </div>
-      </div>
+      
+      
     </section>
   );
 }

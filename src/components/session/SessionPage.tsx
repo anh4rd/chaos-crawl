@@ -31,10 +31,10 @@ export default function SessionPage({
       className={`session-page${Container === "section" ? " session-page--preview" : ""}`}
       data-session-role={viewerRole}
     >
-      {toolbar && <div className="session-page__toolbar">{toolbar}</div>}
       {profile && <SessionPlayerProfile viewerRole={viewerRole} {...profile} />}
       <div className="session-page__content" data-tour={contentTourTarget}>
         {game && <SessionGameTitlebar {...game} />}
+        {toolbar && <div className="session-page__toolbar">{toolbar}</div>}
         {feedback}
         {children}
       </div>

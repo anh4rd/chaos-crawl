@@ -32,7 +32,7 @@ import Note from "../../components/ui/Note";
 import BrandLink from "../../components/ui/BrandLink";
 import InputIcon from "../../components/ui/InputIcon";
 import { Field } from "../../components/ui/Field";
-import SessionPreview from "./SessionPreview";
+import SessionPreview from "../../components/session/SessionPreview";
 import { Example } from "./Example";
 import HostPatternPreview from "./HostPatternPreview";
 import { Section } from "./Section";

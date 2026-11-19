@@ -1,5 +1,10 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
+  SessionPreview: {
+    usage: "Purple session surface for grouping related session content.",
+    dependencies:
+      "Children only; presentation wrapper with no state or backend access.",
+  },
   SessionStatusExample: {
     usage:
       "Local participant status, private-feed, recovery and spinner reference.",

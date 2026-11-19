@@ -6,6 +6,7 @@
   border: layout.$session-border-width solid colors.$ink;
   border-radius: layout.$radius-lg;
   background: colors.$white;
+  box-shadow: layout.$spacing-unit layout.$spacing-unit 0 colors.$purple-dark;
   &__heading {
     display: flex;
     align-items: center;

@@ -6,9 +6,6 @@
   display: grid;
   gap: layout.$pixel-unit * 1.75;
   padding: layout.$pixel-unit * 2.5;
-  border: layout.$control-border-width solid colors.$flow-outline;
-  border-radius: layout.$pixel-unit * 3.5;
-  background: colors.$host-control-paper;
 
   &__heading {
     color: colors.$purple;
