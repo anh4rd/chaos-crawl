@@ -1,0 +1,43 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+@use "../variables/effects";
+
+/* Width is the current step ratio, supplied as runtime data.*/
+.step-progress {
+  height: (layout.$pixel-unit * 1.75);
+  overflow: hidden;
+  border: (layout.$pixel-unit * 0.25) solid colors.$lobby-setup-shadow;
+  border-radius: layout.$badge-radius;
+  background: colors.$navigation-surface;
+  & i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: colors.$challenge-icon-glow;
+    transition: width motion.$duration-toggle ease;
+  }
+}
+
+.step-progress {
+  &--console {
+    border: 0;
+    border-style: solid;
+  }
+  &--console {
+    height: (layout.$pixel-unit * 1.75);
+    margin-top: (layout.$pixel-unit * 3.25);
+    overflow: hidden;
+    border-radius: layout.$radius-compact-pill;
+    background: colors.$console-progress-track;
+  }
+  &--console span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: colors.$accent-soft;
+    // Width is the revealed-round ratio supplied by the caller.
+    transition: width motion.$duration-toggle motion.$easing-default;
+  }
+}

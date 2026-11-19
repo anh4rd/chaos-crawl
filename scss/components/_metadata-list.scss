@@ -1,0 +1,9 @@
+@use "../variables/layout";
+
+.metadata-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: layout.$pixel-unit * 1.75 layout.$pixel-unit * 2.5;
+  margin: auto 0 layout.$pixel-unit * 2.75;
+  padding-top: layout.$pixel-unit * 0.75;
+}

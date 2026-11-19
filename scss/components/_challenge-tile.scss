@@ -1,0 +1,40 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.challenge-tile {
+  display: flex;
+  gap: (layout.$pixel-unit * 2.25);
+  align-items: center;
+  padding: (layout.$pixel-unit * 2.75);
+  border: (layout.$pixel-unit * 0.25) solid colors.$challenge-tile-border;
+  border-radius: (layout.$pixel-unit * 3);
+  background: colors.$white;
+  &.challenge-tile--selected {
+    border-color: colors.$challenge-tile-selected-border;
+    background: colors.$challenge-tile-selected-surface;
+  }
+  &__content {
+    min-width: 0;
+    flex: 1;
+  }
+  &__heading {
+    display: flex;
+    justify-content: space-between;
+    gap: (layout.$pixel-unit * 1.5);
+    align-items: center;
+  }
+  &__heading strong {
+    font-size: fonts.$size-small;
+    color: colors.$challenge-tile-heading-text;
+  }
+  & p {
+    margin: (layout.$pixel-unit * 1) 0 (layout.$pixel-unit * 1.75);
+    color: colors.$challenge-tile-text;
+    font-size: fonts.$size-micro;
+    line-height: 1.4;
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    align-items: flex-start;
+  }
+}

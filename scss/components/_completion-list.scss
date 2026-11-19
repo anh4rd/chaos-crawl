@@ -1,0 +1,7 @@
+@use "../variables/layout";
+.completion-list {
+  > :where(:not(:last-child)) {
+    margin-block-start: 0;
+    margin-block-end: layout.$spacing-unit * 4;
+  }
+}

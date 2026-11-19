@@ -1,9 +1,11 @@
+import PlayerRecovery from "../features/game/PlayerRecovery";
+import BrandArtwork from "../components/ui/BrandArtwork";
+import PageFrame from "../components/ui/PageFrame";
 import { useEffect } from "react";
-import type { GameState, Player } from "../types/database";
+import { GameStatus } from "../features/game/GameStatus";
 
 import { useNavigate } from "react-router-dom";
 
-import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 
 import { useGameState } from "../game/hooks/useGameState";
@@ -18,13 +20,12 @@ import { useChallenges } from "../game/hooks/useChallenges";
 
 import { usePlayerSession } from "../game/hooks/usePlayerSession";
 
-import { useChallengeParticipation } from "../game/hooks/useChallengeParticipation";
-import ScheduledCountdown from "../features/ScheduledCountdown";
 import DataError from "../components/ui/DataError";
-import { useScoreEvents } from "../game/hooks/useScoreEvents";
-import { buildLeaderboards } from "../lib/leaderboard";
 import LiveTask from "../features/game/LiveTask";
 import SideChallenges from "../features/game/SideChallenges";
+import { useChallengeParticipation } from "../game/hooks/useChallengeParticipation";
+import { useScoreEvents } from "../game/hooks/useScoreEvents";
+import { buildLeaderboards } from "../lib/leaderboard";
 
 export default function Game() {
   const gameQuery = useGameState();
@@ -54,10 +55,10 @@ export default function Game() {
     completions,
   );
   const { fileInputRef, handleFileSelected } = participation;
-  const screenRoute = game?.show_vote_results
-    ? "/vote-results"
-    : game?.voting_open
-      ? "/vote"
+  const screenRoute = game?.voting_open
+    ? "/vote"
+    : game?.show_vote_results
+      ? "/vote-results"
       : game?.slideshow_open
         ? "/slideshow"
         : null;
@@ -77,29 +78,18 @@ export default function Game() {
     scoresQuery,
   ];
   const failedQuery = queries.find((query) => query.error);
-  if (failedQuery)
-    return <DataError error={failedQuery.error!} retry={failedQuery.reload} />;
+  if (failedQuery?.error)
+    return <DataError error={failedQuery.error} retry={failedQuery.reload} />;
   if (!game || queries.some((query) => query.loading)) {
     return (
-      <main className="p-6">
+      <PageFrame variant="loading">
         <p>Loading game...</p>
-      </main>
+      </PageFrame>
     );
   }
 
   if (!currentPlayer)
-    return (
-      <main className="mx-auto min-h-screen max-w-md space-y-4 p-6">
-        <h1 className="text-2xl font-bold">Join the game to take part</h1>
-        <p>
-          Your player session was not found. Join again to save challenge
-          completions and uploads.
-        </p>
-        <Button type="button" onClick={() => navigate("/legacy/join")}>
-          Join Game
-        </Button>
-      </main>
-    );
+    return <PlayerRecovery onJoin={() => navigate("/legacy/join")} />;
 
   const teamScore = currentPlayer?.team
     ? (buildLeaderboards(players, scoresQuery.data).teams.find(
@@ -114,24 +104,16 @@ export default function Game() {
     challenges.find((challenge) => challenge.title === game.current_challenge);
 
   return (
-    <main className="mx-auto min-h-screen max-w-md space-y-6 p-6">
-      {/* TITLE */}
-
+    <PageFrame className="game-page">
       <header>
-        <img
-          src={`${import.meta.env.BASE_URL}Title.png`}
-          alt="Anna's Chaos Crawl"
-          className="mx-auto mb-4 w-full"
-        />
+        <BrandArtwork />
       </header>
-
-      {/* HIDDEN FILE INPUT */}
 
       <input
         ref={fileInputRef}
         type="file"
         accept="image/*,video/*"
-        className="hidden"
+        className="game-page__file"
         onChange={handleFileSelected}
       />
 
@@ -153,9 +135,7 @@ export default function Game() {
         participation={participation}
       />
 
-      {/* NAVIGATION */}
-
-      <div className="space-y-3">
+      <div className="game-page__navigation">
         <Button
           type="button"
           onClick={() => {
@@ -165,55 +145,6 @@ export default function Game() {
           Leaderboard
         </Button>
       </div>
-    </main>
-  );
-}
-
-function GameStatus({
-  game,
-  currentPlayer,
-  teamScore,
-}: {
-  game: GameState;
-  currentPlayer: Player;
-  teamScore: number | null;
-}) {
-  return (
-    <Card>
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-400">
-        Now
-      </p>
-
-      <h2 className="mt-2 text-4xl font-black leading-none">
-        {game.current_pub}
-      </h2>
-
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-zinc-900 p-3">
-          <p className="text-xs uppercase text-zinc-400">Your team</p>
-
-          <p className="mt-1 font-bold">
-            {currentPlayer?.team ?? "Waiting..."}
-          </p>
-        </div>
-
-        <div className="rounded-2xl bg-zinc-900 p-3">
-          <p className="text-xs uppercase text-zinc-400">Team score</p>
-
-          <p className="mt-1 text-2xl font-black text-yellow-400">
-            {teamScore ?? "—"}
-          </p>
-        </div>
-      </div>
-
-      {game.scheduled_reveal_at && (
-        <div className="mt-3 rounded-2xl border border-pink-500/60 bg-pink-950/30 p-3">
-          <p className="text-xs font-bold uppercase text-pink-300">
-            Next challenge in{" "}
-            <ScheduledCountdown targetTime={game.scheduled_reveal_at} />
-          </p>
-        </div>
-      )}
-    </Card>
+    </PageFrame>
   );
 }

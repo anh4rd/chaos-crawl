@@ -1,0 +1,41 @@
+@use "../variables/colors";
+@use "../variables/effects";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.submission-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: layout.$pixel-unit * 2.75 layout.$pixel-unit * 3.5;
+  padding: layout.$pixel-unit * 3.75;
+  margin: layout.$pixel-unit * 2.5 0;
+  border: layout.$session-border-width solid colors.$session-frame-ink;
+  border-radius: layout.$pixel-unit * 4.25;
+  color: colors.$session-paper-ink;
+  background: colors.$host-control-paper;
+  box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
+    rgba(colors.$session-frame-ink, effects.$submission-shadow-opacity);
+  align-items: center;
+
+  &__info {
+    display: grid;
+    gap: layout.$pixel-unit;
+    min-width: 0;
+    strong {
+      color: colors.$session-paper-ink;
+      font-size: fonts.$size-body;
+    }
+    span {
+      color: colors.$submission-title;
+      font-size: fonts.$size-small;
+      font-weight: fonts.$weight-extra-bold;
+    }
+    small {
+      color: colors.$submission-time;
+      font-size: fonts.$size-micro;
+    }
+  }
+  @media (max-width: layout.$session-compact-breakpoint) {
+    grid-template-columns: 1fr;
+  }
+}

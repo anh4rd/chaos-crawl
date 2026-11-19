@@ -1,0 +1,33 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../tools/dialog-copy";
+
+.dialog-notice {
+  padding: layout.$pixel-unit * 2.5 layout.$pixel-unit * 3;
+  border-left: layout.$border-control solid colors.$pink;
+  border-radius: layout.$pixel-unit * 2;
+  background: colors.$dialog-notice-surface;
+
+  &:where(p) {
+    @include dialog-copy.dialog-copy;
+  }
+  &--warning {
+    color: colors.$navigation-surface;
+    font-weight: fonts.$weight-extra-bold;
+  }
+  &--error {
+    color: colors.$dialog-error-ink;
+    font-weight: fonts.$weight-action;
+  }
+  &--dismissible {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: layout.$pixel-unit * 2;
+    margin: 0;
+  }
+  &__message {
+    flex: 1;
+  }
+}

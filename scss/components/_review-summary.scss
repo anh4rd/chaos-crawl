@@ -1,0 +1,22 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+.review-summary {
+  display: grid;
+  gap: layout.$pixel-unit * 1.25;
+  padding: layout.$pixel-unit * 2.75;
+  border: layout.$pixel-unit * 0.25 solid colors.$review-summary-border;
+  border-radius: layout.$pixel-unit * 3;
+  background: colors.$review-summary-surface;
+  strong {
+    color: colors.$accent-soft;
+    font-size: fonts.$size-body;
+  }
+  span,
+  p {
+    margin: 0;
+    color: colors.$review-summary-copy;
+    font-size: fonts.$size-micro;
+    line-height: 1.45;
+  }
+}

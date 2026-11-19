@@ -1,0 +1,60 @@
+@use "../variables/effects";
+@use "../variables/fonts";
+@use "../variables/colors";
+@use "../variables/layout";
+
+.input-icon {
+  position: relative;
+  & > svg {
+    position: absolute;
+    top: 50%;
+    left: (layout.$pixel-unit * 3.25);
+    color: var(--host-purple);
+    transform: translateY(-50%);
+  }
+  & input {
+    padding-left: (layout.$pixel-unit * 10.5);
+  }
+}
+
+.input-icon {
+  &--access {
+    position: static;
+    display: flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 2.25;
+    min-height: layout.$pixel-unit * 10.75;
+    padding: 0 layout.$pixel-unit * 3.25;
+    border: 0;
+    border-radius: layout.$badge-radius;
+    background: colors.$white;
+    color: colors.$purple;
+    &:focus-within {
+      border-color: colors.$accent-soft;
+      box-shadow: 0 0 0 layout.$pixel-unit * 0.75
+        rgba(colors.$accent-soft, effects.$entry-focus-opacity);
+    }
+    > svg {
+      position: static;
+      top: auto;
+      left: auto;
+      color: inherit;
+      transform: none;
+    }
+    input {
+      min-width: 0;
+      width: 100%;
+      border: 0;
+      outline: 0;
+      padding: 0;
+      background: transparent;
+      color: colors.$ink;
+      font-size: fonts.$size-body;
+      font-weight: fonts.$weight-bold;
+      &::placeholder {
+        color: colors.$entry-placeholder;
+        font-weight: fonts.$weight-bold;
+      }
+    }
+  }
+}

@@ -1,0 +1,38 @@
+@use "../tools/legacy-type";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/colors";
+@use "../variables/effects";
+
+.live-task {
+  &__kicker {
+    @include legacy-type.small;
+    @include legacy-type.bold;
+    text-transform: uppercase;
+    color: colors.$legacy-pink-light;
+  }
+  &__title {
+    margin-top: layout.$spacing-unit * 2;
+    @include legacy-type.bold;
+  }
+  &__copy {
+    margin-top: layout.$spacing-unit * 3;
+  }
+  &__points {
+    margin-top: layout.$spacing-unit * 3;
+    font-size: fonts.$size-legacy-emphasis;
+    line-height: fonts.$line-height-legacy-emphasis;
+    @include legacy-type.bold;
+    color: colors.$legacy-yellow;
+  }
+  &__waiting {
+    margin-top: layout.$spacing-unit * 4;
+    @include legacy-type.small;
+    color: colors.$unavailable-upload-copy;
+  }
+  &__completed {
+    margin-top: layout.$spacing-unit * 4;
+    @include legacy-type.bold;
+    color: colors.$legacy-positive;
+  }
+}

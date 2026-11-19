@@ -1,0 +1,40 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+@use "../variables/effects";
+
+.qr-frame {
+  display: grid;
+  width: fit-content;
+  max-width: 100%;
+  justify-self: center;
+  padding: (layout.$pixel-unit * 2);
+  border: (layout.$pixel-unit * 0.25) solid
+    colors.$setup-sidebar-divider-surface;
+  border-radius: (layout.$pixel-unit * 3.25);
+  background: colors.$white;
+}
+
+.qr-frame {
+  .host-management &--host {
+    display: flex;
+    justify-content: center;
+    justify-self: auto;
+    width: max-content;
+    max-width: 100%;
+    margin: 0 auto layout.$pixel-unit * 3.75;
+    padding: layout.$pixel-unit * 2.25;
+    border: layout.$pixel-unit * 0.75 solid colors.$session-frame-ink;
+    border-radius: layout.$pixel-unit * 4.25;
+    background: colors.$white;
+    box-shadow: layout.$pixel-unit layout.$pixel-unit 0
+      rgba(colors.$host-control-outline, effects.$host-qr-shadow-opacity);
+  }
+  @media (max-width: layout.$session-compact-breakpoint) {
+    .host-management &--host svg {
+      width: layout.$host-qr-compact-size;
+      height: layout.$host-qr-compact-size;
+    }
+  }
+}

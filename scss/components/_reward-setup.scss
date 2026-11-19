@@ -1,0 +1,21 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.reward-setup {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: layout.$pixel-unit * 3.25;
+  padding: layout.$pixel-unit * 4;
+  border: layout.$pixel-unit * 0.25 solid colors.$reward-field-border;
+  border-radius: layout.$pixel-unit * 4;
+  background: colors.$reward-field-surface;
+  color: colors.$white;
+  > .note--session,
+  > .control-row--reward {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+  @media (max-width: layout.$reward-compact-breakpoint) {
+    grid-template-columns: 1fr;
+    padding: layout.$pixel-unit * 3;
+  }
+}

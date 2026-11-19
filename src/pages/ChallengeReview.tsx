@@ -1,5 +1,6 @@
+import PageFrame from "../components/ui/PageFrame";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import Card from "../components/ui/Card";
+import ChallengeReviewHeader from "../features/review/ChallengeReviewHeader";
 import Button from "../components/ui/Button";
 import ChallengeReviewContent from "../features/review/ChallengeReviewContent";
 import type { ChallengeType } from "../types/database";
@@ -19,25 +20,17 @@ export default function ChallengeReview() {
   const validChallenge = challengeType !== null && challengeId !== "";
 
   return (
-    <main className="mx-auto min-h-screen max-w-md space-y-6 p-6">
-      <Card>
-        {validChallenge ? (
-          <>
-            <p className="text-sm uppercase">Challenge Review</p>
-            <h1 className="mt-2 text-3xl font-bold">{challengeTitle}</h1>
-            <p className="mt-2 text-sm">{challengeType}</p>
-          </>
-        ) : (
-          <>
-            <h1 className="text-3xl font-bold">Challenge not found</h1>
-            <p className="mt-3">
-              {!challengeType
-                ? "Choose a main, side or bonus challenge to review."
-                : "No challenge ID was provided."}
-            </p>
-          </>
-        )}
-      </Card>
+    <PageFrame>
+      <ChallengeReviewHeader
+        challenge={
+          validChallenge ? { title: challengeTitle, type: challengeType } : null
+        }
+        error={
+          !challengeType
+            ? "Choose a main, side or bonus challenge to review."
+            : "No challenge ID was provided."
+        }
+      />
       {validChallenge && (
         <ChallengeReviewContent
           key={JSON.stringify([challengeType, challengeId])}
@@ -49,6 +42,6 @@ export default function ChallengeReview() {
       <Button type="button" onClick={() => navigate("/admin")}>
         Back to Admin
       </Button>
-    </main>
+    </PageFrame>
   );
 }

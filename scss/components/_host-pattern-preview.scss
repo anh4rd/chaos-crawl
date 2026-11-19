@@ -1,0 +1,7 @@
+.host-pattern-preview {
+  // Legacy host styles load with routes; this preview reset must outrank them.
+  &.host-portal.host-portal--app {
+    min-height: 0;
+    background: transparent;
+  }
+}

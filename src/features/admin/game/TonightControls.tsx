@@ -1,11 +1,19 @@
+import { useId } from "react";
+import PanelGrid from "../../../components/ui/PanelGrid";
+import ContentPanel from "../../../components/ui/ContentPanel";
+import FormLabel from "../../../components/ui/FormLabel";
+import ControlRow from "../../../components/ui/ControlRow";
+import Note from "../../../components/ui/Note";
+import DisplayHeading from "../../../components/ui/DisplayHeading";
+import Overline from "../../../components/ui/Overline";
 import Card from "../../../components/ui/Card";
 import Button from "../../../components/ui/Button";
 import type { Challenge, GameState, Pub } from "../../../types/database";
 import Input from "../../../components/ui/Input";
-import { openVoting, closeVoting } from "../voting/votingControls";
-
 export interface TonightControlsProps {
   game: GameState;
+  openVoting: () => Promise<void>;
+  closeVoting: () => Promise<void>;
   nextRoundChallenge: Challenge | undefined;
   revealRoundChallenge: (challenge: Challenge) => Promise<void>;
   nextPub: Pub | undefined;
@@ -19,9 +27,10 @@ export interface TonightControlsProps {
   startSlideshow: () => Promise<void>;
   stopSlideshow: () => Promise<void>;
 }
-
 export default function TonightControls({
   game,
+  openVoting,
+  closeVoting,
   nextRoundChallenge,
   revealRoundChallenge,
   nextPub,
@@ -35,20 +44,21 @@ export default function TonightControls({
   startSlideshow,
   stopSlideshow,
 }: TonightControlsProps) {
+  const minutesId = useId();
   return (
     <>
       <Card>
-        <p className="text-xs font-bold uppercase tracking-[0.2em] text-pink-400">
+        <Overline as="p" variant="plain-accent">
           Live right now
-        </p>
+        </Overline>
 
-        <h2 className="mt-2 text-3xl font-black">{game.current_pub}</h2>
+        <DisplayHeading variant="plain-stat">{game.current_pub}</DisplayHeading>
 
-        <p className="mt-3 text-lg font-bold">
+        <Note variant="summary">
           {game.current_challenge || "No live challenge"}
-        </p>
+        </Note>
 
-        <div className="mt-5 grid grid-cols-1 gap-3">
+        <ControlRow variant="single-actions-loose">
           {nextRoundChallenge && (
             <Button
               type="button"
@@ -65,67 +75,65 @@ export default function TonightControls({
           <Button type="button" onClick={returnEveryoneToGame}>
             ↩ Return Everyone to Game
           </Button>
-        </div>
+        </ControlRow>
       </Card>
 
       <Card>
-        <h2 className="text-2xl font-bold">Schedule a Reveal</h2>
+        <DisplayHeading variant="plain">Schedule a Reveal</DisplayHeading>
 
-        <p className="mt-2 text-sm text-zinc-400">
+        <Note variant="description">
           Keep a game or host screen open and connected until reveal time.
           Background tabs may reveal late.
-        </p>
+        </Note>
 
-        <label className="mt-4 block text-sm font-bold">
+        <FormLabel variant="plain-strong" htmlFor={minutesId}>
           Reveal in minutes
-        </label>
+        </FormLabel>
 
         <Input
+          id={minutesId}
           value={scheduleMinutes}
           onChange={(event) => setScheduleMinutes(event.target.value)}
         />
 
         {game.scheduled_reveal_at && (
-          <div className="mt-4 rounded-xl border border-yellow-500/60 bg-yellow-950/20 p-3">
-            <p className="font-bold text-yellow-300">
+          <ContentPanel as="div" variant="scheduled">
+            <Note variant="schedule">
               Scheduled for{" "}
               {new Date(game.scheduled_reveal_at).toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
               })}
-            </p>
+            </Note>
 
             <Button type="button" onClick={cancelScheduledReveal}>
               Cancel Scheduled Reveal
             </Button>
-          </div>
+          </ContentPanel>
         )}
 
-        <div className="mt-4 space-y-3">
+        <PanelGrid variant="feed-tight">
           {currentRoundChallenges.map((challenge) => (
-            <div
-              key={challenge.id}
-              className="rounded-xl border border-zinc-700 bg-black/50 p-4"
-            >
+            <ContentPanel key={challenge.id} as="div" variant="ledger">
               <strong>{challenge.title}</strong>
 
-              <div className="mt-3">
+              <ControlRow variant="slot-tight">
                 <Button
                   type="button"
                   onClick={() => scheduleChallenge(challenge)}
                 >
                   ⏰ Schedule This
                 </Button>
-              </div>
-            </div>
+              </ControlRow>
+            </ContentPanel>
           ))}
-        </div>
+        </PanelGrid>
       </Card>
 
       <Card>
-        <h2 className="text-2xl font-bold">Emergency Controls</h2>
+        <DisplayHeading variant="plain">Emergency Controls</DisplayHeading>
 
-        <div className="mt-4 grid grid-cols-1 gap-3">
+        <ControlRow variant="single-actions">
           {!game.slideshow_open ? (
             <Button type="button" onClick={startSlideshow}>
               📺 Start Slideshow
@@ -145,7 +153,7 @@ export default function TonightControls({
               🏁 Close Voting & Show Results
             </Button>
           )}
-        </div>
+        </ControlRow>
       </Card>
     </>
   );

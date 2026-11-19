@@ -1,0 +1,30 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.challenge-form {
+  & input {
+    width: 100%;
+    border: (layout.$pixel-unit * 0.375) solid colors.$control-border;
+    border-radius: (layout.$pixel-unit * 2.75);
+    padding: (layout.$pixel-unit * 2.5) (layout.$pixel-unit * 3);
+    background: colors.$white;
+    color: colors.$control-text;
+    font: inherit;
+    outline: none;
+  }
+  display: grid;
+  gap: (layout.$pixel-unit * 2);
+  margin-top: (layout.$pixel-unit * 3.5);
+  padding: (layout.$pixel-unit * 3);
+  border: (layout.$pixel-unit * 0.25) dashed colors.$challenge-form-border;
+  border-radius: (layout.$pixel-unit * 3);
+  background: colors.$workspace-gradient-middle;
+  & strong {
+    font-size: fonts.$size-small;
+  }
+  & input {
+    min-height: (layout.$pixel-unit * 9.5);
+    font-size: fonts.$size-caption;
+  }
+}

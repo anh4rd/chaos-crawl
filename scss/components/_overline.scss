@@ -1,0 +1,191 @@
+@use "../variables/effects";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/colors";
+@use "../tools/micro-label";
+
+.overline {
+  @include micro-label.micro-label;
+  &--primary {
+    color: colors.$purple;
+  }
+}
+
+.overline {
+  .host-management &--session {
+    color: colors.$accent-soft;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-overline;
+  }
+  .host-management &--pink {
+    color: colors.$pink;
+  }
+  &--icon {
+    display: flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.5;
+  }
+}
+
+.overline {
+  &--review {
+    color: colors.$pink;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-compact;
+  }
+}
+
+.overline {
+  &--choice {
+    display: block;
+    color: colors.$purple-mid;
+    letter-spacing: fonts.$tracking-choice;
+  }
+}
+
+.overline {
+  &--reveal {
+    margin-bottom: layout.$pixel-unit * 2;
+    color: colors.$reveal-points;
+    font-family: fonts.$family-stage;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-heavy;
+    font-style: italic;
+    letter-spacing: normal;
+    text-transform: uppercase;
+  }
+}
+
+.overline {
+  &--workspace {
+    display: inline-flex;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-workspace-label;
+    text-transform: uppercase;
+    color: colors.$purple;
+  }
+}
+
+.overline {
+  &--banner {
+    display: inline-flex;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-workspace-label;
+    text-transform: uppercase;
+    color: colors.$accent-soft;
+  }
+}
+
+.overline {
+  &--moderation {
+    display: inline-flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.25;
+    color: colors.$purple;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-overline;
+  }
+}
+
+.overline {
+  &--slideshow,
+  &--slideshow-waiting {
+    color: colors.$accent-soft;
+    font-size: fonts.$size-slideshow-label;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-overline;
+    text-transform: uppercase;
+  }
+  &--slideshow-waiting {
+    margin: 0;
+    font-size: fonts.$size-slideshow-message-copy;
+    line-height: 1.5;
+  }
+}
+
+.overline {
+  &--inverse {
+    display: inline-flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.75;
+    color: colors.$accent-soft;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-extra-bold;
+    letter-spacing: fonts.$tracking-wide;
+  }
+}
+
+.overline {
+  &--console {
+    color: inherit;
+    font-weight: fonts.$weight-action;
+    letter-spacing: normal;
+  }
+  &--console-eyebrow {
+    color: inherit;
+    font-weight: fonts.$weight-action;
+    letter-spacing: normal;
+  }
+  &--console-eyebrow {
+    margin: 0 0 (layout.$pixel-unit * 1.25);
+    font-size: fonts.$size-micro;
+    line-height: 1.3;
+    letter-spacing: fonts.$tracking-console-eyebrow;
+    font-weight: fonts.$weight-action;
+    opacity: effects.$console-eyebrow-opacity;
+  }
+  &--console {
+    display: inline-flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 1.5);
+    color: colors.$purple;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heading;
+    letter-spacing: fonts.$tracking-wide;
+  }
+}
+
+.overline {
+  &--plain,
+  &--plain-strong,
+  &--plain-accent {
+    color: colors.$unavailable-upload-copy;
+    font-size: fonts.$size-legacy-caption;
+    line-height: fonts.$line-height-legacy-caption;
+    font-weight: inherit;
+    letter-spacing: normal;
+    text-transform: uppercase;
+  }
+  &--plain-strong,
+  &--plain-accent {
+    font-weight: fonts.$weight-bold;
+  }
+  &--plain-accent {
+    letter-spacing: fonts.$tracking-legacy-kicker;
+    color: colors.$legacy-pink-light;
+  }
+}
+
+.overline {
+  &--workspace {
+    display: inline-flex;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-workspace-label;
+    text-transform: uppercase;
+    color: var(--host-purple);
+  }
+  &--directory {
+    display: inline-block;
+    margin-bottom: layout.$pixel-unit;
+    color: colors.$purple;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-overline;
+  }
+}

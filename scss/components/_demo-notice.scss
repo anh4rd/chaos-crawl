@@ -1,0 +1,27 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.demo-notice {
+  display: flex;
+  align-items: center;
+  gap: layout.$pixel-unit * 2;
+  flex-wrap: wrap;
+  border: layout.$pixel-unit * 0.5 solid colors.$text-violet-ink;
+  border-radius: layout.$pixel-unit * 3.5;
+  background: colors.$pink;
+  color: colors.$text-violet-ink;
+  padding: layout.$pixel-unit * 2.5 layout.$pixel-unit * 3;
+  font-size: fonts.$size-caption;
+  font-weight: fonts.$weight-action;
+
+  button {
+    margin-left: auto;
+    border: 0;
+    border-radius: layout.$pixel-unit * 24.75;
+    background: colors.$purple-dark;
+    color: colors.$white;
+    padding: layout.$pixel-unit * 1.5 layout.$pixel-unit * 2.5;
+    font: inherit;
+  }
+}

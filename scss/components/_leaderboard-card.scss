@@ -1,0 +1,56 @@
+@use "../tools/legacy-type";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/colors";
+@use "../variables/effects";
+
+.leaderboard-card {
+  &__toggle {
+    width: 100%;
+    text-align: left;
+  }
+  &__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: layout.$spacing-unit * 4;
+  }
+  &__identity {
+    display: flex;
+    align-items: center;
+    gap: layout.$spacing-unit * 3;
+  }
+  &__rank {
+    font-size: fonts.$size-legacy-large;
+    line-height: fonts.$line-height-legacy-large;
+  }
+  &__name {
+    @include legacy-type.bold;
+  }
+  &__hint {
+    @include legacy-type.small;
+    opacity: effects.$session-ghost-border-opacity;
+  }
+  &__score {
+    text-align: right;
+  }
+  &__total {
+    font-size: fonts.$size-legacy-total;
+    line-height: fonts.$line-height-legacy-total;
+    @include legacy-type.bold;
+  }
+  &__unit {
+    @include legacy-type.caption;
+    opacity: effects.$session-ghost-border-opacity;
+  }
+  &__history {
+    margin-top: layout.$spacing-unit * 4;
+    border-top-width: layout.$toggle-border-width;
+    border-color: color-mix(in oklab, colors.$white 20%, transparent);
+    padding-top: layout.$spacing-unit * 4;
+    > :where(:not(:last-child)) {
+      margin-block-start: 0;
+      margin-block-end: layout.$spacing-unit * 3;
+    }
+  }
+}

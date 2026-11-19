@@ -1,0 +1,48 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.selected-challenge {
+  display: flex;
+  align-items: center;
+  gap: (layout.$pixel-unit * 2);
+  margin: (layout.$pixel-unit * 2) 0;
+  padding: (layout.$pixel-unit * 2.5);
+  border: (layout.$pixel-unit * 0.25) solid colors.$selected-challenge-border;
+  border-radius: (layout.$pixel-unit * 3);
+  background: colors.$workspace-gradient-middle;
+  &__grip {
+    flex: none;
+    color: colors.$selected-challenge-grip-text;
+  }
+  &__number {
+    display: grid;
+    place-items: center;
+    width: (layout.$pixel-unit * 6.25);
+    height: (layout.$pixel-unit * 6.25);
+    flex: none;
+    border-radius: (layout.$pixel-unit * 2);
+    background: colors.$purple;
+    color: colors.$white;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-action;
+  }
+  &__copy {
+    display: flex;
+    min-width: 0;
+    flex: 1;
+    flex-direction: column;
+    gap: (layout.$pixel-unit * 0.75);
+  }
+  &__copy strong {
+    font-size: fonts.$size-small;
+  }
+  &__copy small {
+    color: colors.$selected-challenge-copy-text;
+    font-size: fonts.$size-micro;
+  }
+  &__actions {
+    display: flex;
+    gap: (layout.$pixel-unit * 0.5);
+  }
+}

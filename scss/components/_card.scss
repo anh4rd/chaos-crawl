@@ -1,0 +1,71 @@
+@use "../variables/motion";
+@use "../variables/fonts";
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/shadows";
+
+@layer utilities {
+  .card {
+    border-radius: layout.$radius-lg;
+    background-color: colors.$white;
+    padding: layout.$spacing-unit * 6;
+    box-shadow: shadows.$surface;
+    backdrop-filter: blur(layout.$surface-blur);
+  }
+}
+
+.card {
+  &--poster {
+    background: colors.$poster-surface;
+    border: layout.$poster-border solid colors.$poster-ink;
+    border-radius: layout.$poster-radius;
+    padding: layout.$poster-padding;
+    box-shadow: 0 layout.$poster-shadow-offset 0 colors.$poster-shadow;
+    margin-bottom: layout.$pixel-unit * 4.5;
+    backdrop-filter: none;
+    font-family: fonts.$family-poster;
+  }
+
+  &--accent {
+    border-color: colors.$pink;
+  }
+}
+
+.card {
+  &--idea {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: layout.$pixel-unit * 4;
+    backdrop-filter: none;
+    transition:
+      transform motion.$duration-interaction motion.$easing-default,
+      box-shadow motion.$duration-interaction motion.$easing-default,
+      border-color motion.$duration-interaction motion.$easing-default;
+    &:hover {
+      transform: translateY(-(layout.$pixel-unit * 0.5));
+      box-shadow: layout.$pixel-unit * 1.25 layout.$pixel-unit * 1.75 0
+        colors.$purple-dark;
+    }
+    h3 {
+      margin: 0 0 layout.$pixel-unit * 2;
+      color: colors.$ink;
+      font: fonts.$weight-heavy #{fonts.$size-example-heading}/ 1.15
+        fonts.$family-type-sample;
+      letter-spacing: fonts.$tracking-entry-brand * -1;
+    }
+    > p {
+      margin: 0 0 layout.$pixel-unit * 3.5;
+      color: colors.$idea-card-copy;
+      font-size: fonts.$size-caption;
+      line-height: 1.5;
+    }
+  }
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: layout.$pixel-unit * 2;
+    margin-bottom: layout.$pixel-unit * 2.75;
+  }
+}

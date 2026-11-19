@@ -1,0 +1,21 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.search-control {
+  width: 100%;
+  border: (layout.$pixel-unit * 0.375) solid colors.$control-border;
+  border-radius: (layout.$pixel-unit * 2.75);
+  padding: (layout.$pixel-unit * 2.5) (layout.$pixel-unit * 3);
+  background: colors.$white;
+  color: colors.$control-text;
+  font: inherit;
+  outline: none;
+  &:focus {
+    border-color: colors.$purple;
+    box-shadow: 0 0 0 (layout.$pixel-unit * 0.75) colors.$control-focus-ring;
+  }
+  margin-bottom: (layout.$pixel-unit * 2.25);
+  min-height: (layout.$pixel-unit * 10);
+  font-size: fonts.$size-small;
+}

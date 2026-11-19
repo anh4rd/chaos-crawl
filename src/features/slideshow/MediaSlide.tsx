@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Media } from "../../types/database";
-import Button from "../../components/ui/Button";
+import UnavailableUpload from "../../components/slideshow/UnavailableUpload";
+import Note from "../../components/ui/Note";
 
 // The parent keys this component by upload identity, so load errors cannot leak
 // into another slide and each video has one playback lifecycle.
@@ -33,46 +34,34 @@ export default function MediaSlide({
     };
   }, [paused, failed, media.media_type]);
 
-  if (failed)
-    return (
-      <div className="max-w-md p-8 text-center text-white">
-        <h2 className="text-2xl font-bold">Could not load this upload</h2>
-        <p className="mt-3 text-zinc-400">
-          The file may be unavailable or use an unsupported format.
-        </p>
-        <div className="mt-6">
-          <Button type="button" onClick={next}>
-            Skip to next
-          </Button>
-        </div>
-      </div>
-    );
+  if (failed) return <UnavailableUpload next={next} />;
   return (
     <>
       {media.media_type === "video" ? (
         <video
           ref={video}
           src={media.image_url}
-          className="h-screen w-screen object-contain"
+          className="playback-media"
           playsInline
           controls
           onEnded={() => {
             if (!paused) next();
           }}
+          onPlaying={() => setPlaybackBlocked(false)}
           onError={() => setFailed(true)}
         />
       ) : (
         <img
           src={media.image_url}
           alt="Chaos Crawl upload"
-          className="h-screen w-screen object-contain"
+          className="playback-media"
           onError={() => setFailed(true)}
         />
       )}
       {playbackBlocked && (
-        <p role="status" className="absolute top-24 bg-black/70 p-3 text-white">
+        <Note role="status" variant="playback-notice">
           Use the video controls to start playback.
-        </p>
+        </Note>
       )}
     </>
   );

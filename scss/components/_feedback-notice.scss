@@ -1,0 +1,21 @@
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/colors";
+
+.feedback-notice {
+  margin-bottom: layout.$pixel-unit * 4;
+  padding: (layout.$pixel-unit * 3.5) (layout.$pixel-unit * 4.25);
+  border: (layout.$pixel-unit * 0.5) solid var(--cc-ink);
+  border-radius: layout.$pixel-unit * 4;
+  background: colors.$white;
+  box-shadow: 0 (layout.$pixel-unit * 0.75) 0 var(--cc-purple-dark);
+  font-size: fonts.$size-small;
+  font-weight: fonts.$weight-bold;
+  line-height: 1.4;
+  &--error {
+    color: colors.$feedback-error;
+  }
+  &--success {
+    color: colors.$feedback-success;
+  }
+}

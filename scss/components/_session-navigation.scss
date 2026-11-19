@@ -1,0 +1,48 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.session-navigation {
+  position: fixed;
+  z-index: 20;
+  bottom: calc(#{layout.$spacing-unit * 3} + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  width: min(
+    calc(100% - #{layout.$spacing-unit * 8}),
+    layout.$session-content-width
+  );
+  padding: layout.$spacing-unit;
+  border: layout.$session-border-width solid colors.$ink;
+  border-radius: layout.$radius-lg;
+  background: colors.$white;
+  box-shadow: layout.$spacing-unit layout.$spacing-unit 0 colors.$purple-dark;
+  &__item {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: layout.$spacing-unit;
+    min-width: 0;
+    min-height: layout.$session-row-height;
+    padding: layout.$spacing-unit * 2;
+    border: 0;
+    border-radius: layout.$radius-lg;
+    background: transparent;
+    color: colors.$purple-dark;
+    font-size: layout.$session-small-size;
+    font-weight: 900;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  &__item--active {
+    background: colors.$purple-dark;
+    color: colors.$accent-soft;
+  }
+  &__count {
+    padding-inline: layout.$spacing-unit;
+    border-radius: layout.$radius-pill;
+    background: colors.$pink;
+    color: colors.$white;
+  }
+}

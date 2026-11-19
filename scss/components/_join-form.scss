@@ -1,0 +1,22 @@
+@use "../tools/legacy-type";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/colors";
+@use "../variables/effects";
+
+.join-form {
+  &__title {
+    @include legacy-type.bold;
+  }
+  &__label {
+    margin-bottom: layout.$spacing-unit * 2;
+    display: block;
+    @include legacy-type.bold;
+  }
+  &__feedback {
+    margin-top: layout.$spacing-unit * 3;
+  }
+  &__actions {
+    margin-top: layout.$spacing-unit * 4;
+  }
+}

@@ -1,0 +1,12 @@
+@use "../variables/layout";
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: (layout.$pixel-unit * 3);
+  margin: (layout.$pixel-unit * 4.5) 0 (layout.$pixel-unit * 1);
+  @media (max-width: layout.$reference-mobile-breakpoint) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: (layout.$pixel-unit * 1.75);
+  }
+}

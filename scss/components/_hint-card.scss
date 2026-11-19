@@ -1,0 +1,29 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.hint-card {
+  border: (layout.$pixel-unit * 0.5) dashed colors.$hint-border;
+  & svg {
+    flex: 0 0 auto;
+    color: colors.$purple;
+  }
+  & strong {
+    color: colors.$purple-dark;
+  }
+  display: flex;
+  gap: (layout.$pixel-unit * 2.5);
+  align-items: flex-start;
+  padding: (layout.$pixel-unit * 3.5);
+  border-radius: (layout.$pixel-unit * 4);
+  background: colors.$hint-surface;
+  color: var(--cc-purple-dark);
+  font-size: fonts.$size-small;
+  line-height: 1.5;
+  @media (max-width: layout.$host-rail-breakpoint) {
+    grid-column: 1/-1;
+  }
+  @media (max-width: layout.$host-mobile-breakpoint) {
+    grid-column: auto;
+  }
+}

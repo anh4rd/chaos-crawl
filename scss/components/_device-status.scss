@@ -1,0 +1,17 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.device-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: #{layout.$pixel-unit * 6.5};
+  color: colors.$white;
+  font-size: fonts.$size-small;
+  font-weight: fonts.$weight-extra-bold;
+  & span:last-child {
+    font-size: fonts.$size-micro;
+    letter-spacing: fonts.$tracking-preview-device;
+  }
+}

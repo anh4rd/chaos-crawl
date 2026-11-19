@@ -1,0 +1,41 @@
+@use "../variables/layout";
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: (layout.$pixel-unit * 4);
+  margin: (layout.$pixel-unit * 5) 0;
+  @media (max-width: layout.$compact-breakpoint) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-grid {
+  &--dialog {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: layout.$pixel-unit * 3;
+    margin: 0;
+    margin-top: layout.$pixel-unit * 3;
+  }
+}
+
+.form-grid {
+  &--review {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: layout.$pixel-unit * 2;
+    margin: 0;
+  }
+}
+
+.form-grid {
+  &--contribution {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: layout.$pixel-unit * 3;
+    margin: 0;
+    @media (max-width: layout.$reward-compact-breakpoint) {
+      grid-template-columns: 1fr;
+    }
+  }
+}

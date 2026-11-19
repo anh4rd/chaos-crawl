@@ -1,0 +1,28 @@
+@use "../variables/layout";
+.form-stack {
+  display: flex;
+  flex-direction: column;
+  gap: layout.$pixel-unit * 2.75;
+  padding-bottom: layout.$pixel-unit * 2;
+}
+
+.form-stack {
+  &--contribution {
+    display: grid;
+    flex-direction: row;
+    gap: layout.$pixel-unit * 3.25;
+    padding-bottom: 0;
+  }
+}
+
+.form-stack {
+  &--native {
+    display: block;
+    flex-direction: row;
+    gap: normal;
+    padding-bottom: 0;
+    > :where(:not(:last-child)) {
+      margin-block: 0 layout.$spacing-unit * 2;
+    }
+  }
+}

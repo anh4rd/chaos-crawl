@@ -1,0 +1,57 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.challenge-library {
+  &__columns {
+    display: grid;
+    grid-template-columns: minmax((layout.$pixel-unit * 62.5), 0.82fr) minmax(
+        (layout.$pixel-unit * 75),
+        1.18fr
+      );
+    gap: (layout.$pixel-unit * 4);
+    align-items: start;
+  }
+  &__filters {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: (layout.$pixel-unit * 2);
+  }
+  &__filters select {
+    min-width: 0;
+    height: (layout.$pixel-unit * 9.5);
+    border: (layout.$pixel-unit * 0.25) solid colors.$setup-filter-border;
+    border-radius: (layout.$pixel-unit * 2.25);
+    padding: (layout.$pixel-unit * 1.25) (layout.$pixel-unit * 2);
+    background: colors.$workspace-gradient-middle;
+    color: colors.$challenge-library-filters-text;
+    font-size: fonts.$size-caption;
+  }
+  &__results {
+    display: flex;
+    max-height: (layout.$pixel-unit * 130);
+    flex-direction: column;
+    gap: (layout.$pixel-unit * 2);
+    overflow: auto;
+    margin-top: (layout.$pixel-unit * 2.5);
+    padding-right: (layout.$pixel-unit * 0.75);
+  }
+  @media (max-width: layout.$host-stacked-breakpoint) {
+    &__columns {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: layout.$host-stacked-breakpoint) {
+    &__results {
+      max-height: (layout.$pixel-unit * 110);
+    }
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    &__filters {
+      grid-template-columns: 1fr;
+    }
+  }
+  &__columns--single {
+    display: block;
+  }
+}

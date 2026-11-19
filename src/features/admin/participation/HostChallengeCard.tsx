@@ -1,39 +1,46 @@
-import { useNavigate } from "react-router-dom";
+import Badge from "../../../components/ui/Badge";
+import Overline from "../../../components/ui/Overline";
+import Note from "../../../components/ui/Note";
+import DisplayHeading from "../../../components/ui/DisplayHeading";
+import ControlRow from "../../../components/ui/ControlRow";
+import ContentPanel from "../../../components/ui/ContentPanel";
 import Button from "../../../components/ui/Button";
 import ChallengeActions, {
   type ChallengeParticipation,
 } from "../../game/ChallengeActions";
 import type { Player, SideChallenge } from "../../../types/database";
-
 export default function HostChallengeCard({
   challenge,
   completedBy,
   participation,
+  onReview,
 }: {
   challenge: SideChallenge;
   completedBy: Player[];
   participation: ChallengeParticipation;
+  onReview: () => void;
 }) {
-  const navigate = useNavigate();
   const completed = participation.hasCompleted("side", challenge.id);
   return (
-    <section
+    <ContentPanel
       aria-label={challenge.title}
-      className={`rounded-2xl border-2 p-4 ${completed ? "border-green-500 bg-green-950/40" : "border-pink-500 bg-black/70"}`}
+      as="section"
+      variant="challenge"
+      state={completed ? "complete" : undefined}
     >
-      <div className="flex justify-between gap-4">
+      <ControlRow variant="spread">
         <div>
-          <h3 className="font-bold">{challenge.title}</h3>
+          <DisplayHeading as="h3" variant="plain-body">
+            {challenge.title}
+          </DisplayHeading>
           {challenge.description && (
-            <p className="mt-1 text-sm text-zinc-300">
-              {challenge.description}
-            </p>
+            <Note variant="secondary">{challenge.description}</Note>
           )}
         </div>
         <strong>+{challenge.points}</strong>
-      </div>
+      </ControlRow>
       {completed ? (
-        <p className="mt-4 font-bold text-green-400">✓ Completed</p>
+        <Note variant="success">✓ Completed</Note>
       ) : (
         <>
           <ChallengeActions
@@ -46,37 +53,29 @@ export default function HostChallengeCard({
             allowMedia
             participation={participation}
           />
-          <div className="mt-2">
-            <Button
-              type="button"
-              onClick={() =>
-                navigate(
-                  `/challenge-review?type=side&id=${encodeURIComponent(String(challenge.id))}&title=${encodeURIComponent(challenge.title)}`,
-                )
-              }
-            >
+          <ControlRow variant="slot-close">
+            <Button type="button" onClick={onReview}>
               Review & Award Points
             </Button>
-          </div>
+          </ControlRow>
         </>
       )}
-      <div className="mt-4">
-        <p className="text-xs uppercase text-zinc-400">Completed by</p>
+      <ControlRow variant="slot">
+        <Overline as="p" variant="plain">
+          Completed by
+        </Overline>
         {completedBy.length === 0 ? (
-          <p className="mt-1 text-sm text-zinc-500">Nobody yet</p>
+          <Note variant="quiet">Nobody yet</Note>
         ) : (
-          <div className="mt-2 flex flex-wrap gap-2">
+          <ControlRow variant="chips-close">
             {completedBy.map((player) => (
-              <span
-                key={player.id}
-                className="rounded-full bg-green-900/60 px-3 py-1 text-sm"
-              >
+              <Badge key={player.id} variant="completion">
                 ✓ {player.name}
-              </span>
+              </Badge>
             ))}
-          </div>
+          </ControlRow>
         )}
-      </div>
-    </section>
+      </ControlRow>
+    </ContentPanel>
   );
 }

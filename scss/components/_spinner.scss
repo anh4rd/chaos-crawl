@@ -1,0 +1,17 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/motion";
+
+.spinner {
+  width: (layout.$pixel-unit * 5);
+  height: (layout.$pixel-unit * 5);
+  border: (layout.$pixel-unit * 0.5) solid colors.$spinner-track;
+  border-top-color: colors.$white;
+  border-radius: 50%;
+  animation: spinner-spin motion.$duration-spinner linear infinite;
+}
+@keyframes spinner-spin {
+  to {
+    transform: rotate(motion.$rotation-full);
+  }
+}

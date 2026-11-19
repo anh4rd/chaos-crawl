@@ -1,0 +1,8 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+
+@mixin poster-copy {
+  font-size: fonts.$size-small;
+  line-height: 1.55;
+  color: colors.$poster-copy;
+}

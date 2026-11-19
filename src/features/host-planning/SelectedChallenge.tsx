@@ -1,0 +1,84 @@
+import type { Dispatch, SetStateAction } from "react";
+import Icon from "../../components/ui/Icon";
+import Button from "../../components/ui/Button";
+import { challengeIcon } from "../../lib/challengeVisuals";
+import type { Task } from "./types";
+export default function SelectedChallenge({
+  task,
+  index,
+  count,
+  tab,
+  setDragged,
+  dropTask,
+  moveTask,
+  selectTask,
+}: {
+  task: Task;
+  index: number;
+  count: number;
+  tab: "main" | "side" | "secret";
+  setDragged: Dispatch<SetStateAction<string | null>>;
+  dropTask: (id: string) => void;
+  moveTask: (id: string, direction: -1 | 1) => void;
+  selectTask: (task: Task) => void;
+}) {
+  return (
+    <article
+      className="selected-challenge"
+      draggable
+      onDragStart={() => setDragged(task.id)}
+      onDragEnd={() => setDragged(null)}
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={() => dropTask(task.id)}
+    >
+      <Icon
+        name="grip-vertical"
+        className="icon--size-17 selected-challenge__grip"
+      />
+      <div className="selected-challenge__number">{index + 1}</div>
+      <span className="selected-challenge__icon" aria-hidden="true">
+        {challengeIcon(task.title, task.description)}
+      </span>
+      <div className="selected-challenge__copy">
+        <strong>{task.title}</strong>
+        <small>
+          {tab === "side"
+            ? `${task.points} pts`
+            : `${task.minutes} min · ${task.points} pts`}
+          {task.preGame ? " · PRE-GAME" : ""}
+        </small>
+      </div>
+      <div className="selected-challenge__actions">
+        <Button
+          variant="setup-move"
+          fullWidth={false}
+          title="Move up"
+          aria-label={`Move ${task.title} up`}
+          disabled={index === 0}
+          onClick={() => moveTask(task.id, -1)}
+        >
+          <Icon name="arrow-up" className="icon--size-14" />
+        </Button>
+        <Button
+          variant="setup-move"
+          fullWidth={false}
+          title="Move down"
+          aria-label={`Move ${task.title} down`}
+          disabled={index === count - 1}
+          onClick={() => moveTask(task.id, 1)}
+        >
+          <Icon name="arrow-down" className="icon--size-14" />
+        </Button>
+      </div>
+      <Button
+        variant="setup-icon"
+        fullWidth={false}
+        title="Remove"
+        aria-label={`Remove ${task.title}`}
+        onClick={() => selectTask(task)}
+      >
+        <Icon name="trash2" className="icon--size-15" />
+      </Button>
+    </article>
+  );
+}

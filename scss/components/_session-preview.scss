@@ -1,0 +1,7 @@
+@use "../variables/layout";
+
+.session-preview {
+  padding: (layout.$pixel-unit * 4.5);
+  border-radius: (layout.$pixel-unit * 4);
+  background: var(--purple);
+}

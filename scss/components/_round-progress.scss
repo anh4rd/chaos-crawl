@@ -1,0 +1,14 @@
+@use "../variables/motion";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/colors";
+
+.round-progress {
+  padding: (layout.$pixel-unit * 0.5) (layout.$pixel-unit * 1)
+    (layout.$pixel-unit * 1);
+  &__number {
+    color: colors.$console-progress-copy;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-action;
+  }
+}

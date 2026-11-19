@@ -1,0 +1,10 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+.slideshow-evidence {
+  display: block;
+  width: 100%;
+  height: layout.$slideshow-height;
+  object-fit: contain;
+  background: colors.$slideshow-surface;
+}

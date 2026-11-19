@@ -1,5 +1,6 @@
 import { updateGameState } from "../../../lib/gameApi";
-export async function openVoting() {
+export async function openVoting(current: () => boolean = () => true) {
+  if (!current()) return;
   const confirmed = window.confirm("Open voting for the current challenge?");
 
   if (!confirmed) {
@@ -14,11 +15,13 @@ export async function openVoting() {
     slideshow_open: false,
   });
 
+  if (!current()) return;
   if (error) {
     alert(`Could not open voting: ${error.message}`);
   }
 }
-export async function closeVoting() {
+export async function closeVoting(current: () => boolean = () => true) {
+  if (!current()) return;
   const confirmed = window.confirm("Close voting and show results?");
 
   if (!confirmed) {
@@ -33,11 +36,13 @@ export async function closeVoting() {
     slideshow_open: false,
   });
 
+  if (!current()) return;
   if (error) {
     alert(`Could not show results: ${error.message}`);
   }
 }
-export async function closeResults() {
+export async function closeResults(current: () => boolean = () => true) {
+  if (!current()) return;
   const confirmed = window.confirm(
     "Close results and return everyone to the game?",
   );
@@ -54,6 +59,7 @@ export async function closeResults() {
     slideshow_open: false,
   });
 
+  if (!current()) return;
   if (error) {
     alert(`Could not close results: ${error.message}`);
   }

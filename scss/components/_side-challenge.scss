@@ -1,0 +1,91 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.side-challenge {
+  align-items: center;
+  justify-content: space-between;
+  gap: #{layout.$pixel-unit * 2.5};
+  & h3 {
+    margin: 0 0 #{layout.$pixel-unit * 1.25};
+    font-weight: fonts.$weight-action;
+  }
+  & p {
+    line-height: 1.4;
+    margin: 0 0 #{layout.$pixel-unit * 2};
+  }
+  & .points-chip {
+    font-size: fonts.$size-micro;
+    padding: #{layout.$pixel-unit * 1.25} #{layout.$pixel-unit * 2};
+  }
+  @media (max-width: #{layout.$pixel-unit * 120}) {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  &__copy {
+    flex: 1;
+    min-width: 0;
+  }
+  &__heading {
+    justify-content: space-between;
+  }
+  &__heading h3 {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  &__heading .points-chip {
+    flex: 0 0 auto;
+  }
+  flex-wrap: wrap;
+  background: colors.$white;
+  color: colors.$lobby-setup-shadow;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: #{layout.$pixel-unit * 2.75};
+  border: 0;
+  border-radius: #{layout.$pixel-unit * 4.5};
+  box-shadow: 0 #{layout.$pixel-unit * 0.75} 0 rgba(colors.$purple-dark, 0.28);
+  & h3 {
+    color: colors.$lobby-setup-shadow;
+    font-size: fonts.$size-example-heading;
+  }
+  & p {
+    color: colors.$preview-description;
+    font-size: fonts.$size-caption;
+  }
+  & .points-chip {
+    color: colors.$purple;
+  }
+  &__heading {
+    display: flex;
+    align-items: flex-start;
+    gap: #{layout.$pixel-unit * 1.75};
+  }
+  &__art {
+    display: grid;
+    flex: 0 0 #{layout.$pixel-unit * 10};
+    width: #{layout.$pixel-unit * 10};
+    height: #{layout.$pixel-unit * 10};
+    place-items: center;
+    border-radius: #{layout.$pixel-unit * 3.25};
+    background: colors.$preview-side-art;
+    filter: drop-shadow(
+      #{layout.$pixel-unit * 0.25} #{layout.$pixel-unit * 0.5} 0
+        colors.$lobby-setup-shadow
+    );
+    font-size: fonts.$size-preview-side-art;
+  }
+  &__heading > div {
+    min-width: 0;
+  }
+  @media (max-width: #{layout.$pixel-unit * 105}) {
+    padding: #{layout.$pixel-unit * 2.25};
+  }
+  @media (max-width: #{layout.$pixel-unit * 105}) {
+    & h3 {
+      font-size: fonts.$size-body;
+    }
+  }
+}

@@ -1,0 +1,51 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+.filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: layout.$pixel-unit * 1.5;
+  margin-bottom: layout.$pixel-unit * 5.5;
+  padding: layout.$pixel-unit * 1.25;
+  border: layout.$pixel-unit * 0.5 solid colors.$purple-dark;
+  border-radius: layout.$pixel-unit * 4;
+  background: colors.$filter-surface;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.filter-group {
+  &--categories {
+    gap: layout.$pixel-unit * 1.75;
+    margin-bottom: layout.$pixel-unit * 6;
+    padding: 0;
+    border: 0;
+    border-style: solid;
+    border-radius: 0;
+    background: transparent;
+    width: auto;
+    max-width: none;
+  }
+}
+
+.filter-group {
+  &--console {
+    flex-wrap: nowrap;
+    border: 0;
+    border-style: solid;
+    width: auto;
+    max-width: none;
+  }
+  &--console {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: (layout.$pixel-unit * 1);
+    margin: (layout.$pixel-unit * 3.25) 0;
+    padding: (layout.$pixel-unit * 1);
+    border-radius: layout.$badge-radius;
+    background: colors.$hint-surface;
+  }
+  &--console-action .btn--console-segment.btn--console-selected {
+    background: colors.$pink;
+  }
+}

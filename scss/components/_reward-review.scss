@@ -1,0 +1,9 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.reward-review {
+  &__content {
+    display: grid;
+    gap: layout.$pixel-unit * 3.75;
+    color: colors.$white;
+  }
+}

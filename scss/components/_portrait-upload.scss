@@ -1,0 +1,36 @@
+@use "../tools/visually-hidden";
+@use "../tools/focus-ring";
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+@use "../variables/effects";
+
+.portrait-upload {
+  display: flex;
+  align-items: center;
+  gap: (layout.$pixel-unit * 2.5);
+  padding: (layout.$pixel-unit * 2.5);
+  border: (layout.$pixel-unit * 0.25) dashed colors.$portrait-upload-border;
+  border-radius: (layout.$pixel-unit * 3.25);
+  background: colors.$portrait-upload-surface;
+  cursor: pointer;
+  & > span:nth-child(2) {
+    display: grid;
+    gap: (layout.$pixel-unit * 0.75);
+  }
+  & strong {
+    color: colors.$purple-dark;
+    font-size: fonts.$size-caption;
+  }
+  & small {
+    color: colors.$portrait-upload-text;
+    font-size: fonts.$size-navigation-caption;
+  }
+  & input {
+    @include visually-hidden.visually-hidden;
+  }
+  &:focus-within {
+    @include focus-ring.focus-ring;
+  }
+}

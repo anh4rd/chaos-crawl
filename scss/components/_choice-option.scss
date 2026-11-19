@@ -1,0 +1,75 @@
+@use "../variables/colors";
+@use "../variables/effects";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.choice-option {
+  display: flex;
+  gap: layout.$pixel-unit * 2.5;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  padding: layout.$pixel-unit * 2.5;
+  border: layout.$pixel-unit * 0.25 solid colors.$choice-lavender;
+  border-radius: layout.$pixel-unit * 3.75;
+  background: colors.$white;
+  color: colors.$ink;
+  font: inherit;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: effects.$setup-disabled-opacity;
+    cursor: not-allowed;
+  }
+
+  &--selected {
+    border: layout.$session-border-width solid colors.$purple;
+    background: colors.$compact-rank-surface;
+  }
+
+  &__copy {
+    display: grid;
+    gap: layout.$pixel-unit * 0.75;
+    flex: 1;
+
+    small {
+      color: colors.$session-empty-copy;
+      font-size: fonts.$size-caption;
+    }
+  }
+
+  > svg {
+    color: colors.$purple;
+  }
+}
+
+.choice-option {
+  &--ballot {
+    display: inline-block;
+    align-items: normal;
+    gap: normal;
+    border: layout.$border-control solid colors.$input-border;
+    border-radius: layout.$radius-lg;
+    background: color-mix(in oklab, colors.$black 80%, transparent);
+    padding: layout.$spacing-unit * 4;
+    color: inherit;
+    cursor: default;
+    &:disabled {
+      opacity: 1;
+      cursor: default;
+    }
+  }
+  &--ballot#{&}--selected {
+    border-color: colors.$legacy-yellow;
+    background: colors.$input-border;
+  }
+  &__label {
+    font-size: fonts.$size-legacy-emphasis;
+    line-height: fonts.$line-height-legacy-emphasis;
+    font-weight: fonts.$weight-bold;
+  }
+  &__description {
+    font-size: fonts.$size-legacy-small;
+    line-height: fonts.$line-height-legacy-small;
+  }
+}

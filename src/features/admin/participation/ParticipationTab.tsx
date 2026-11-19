@@ -1,15 +1,17 @@
+import UploadInput from "../../../components/ui/UploadInput";
 import { useState } from "react";
 import { usePlayers } from "../../../game/hooks/usePlayers";
 import { useGameState } from "../../../game/hooks/useGameState";
 import { useSideChallenges } from "../../../game/hooks/useSideChallenges";
 import { useChallengeCompletions } from "../../../game/hooks/useChallengeCompletions";
 import { useChallengeParticipation } from "../../../game/hooks/useChallengeParticipation";
-import Card from "../../../components/ui/Card";
 import QueryPanel from "../QueryPanel";
 import HostChallengeCard from "./HostChallengeCard";
 import { sideChallengePlayers } from "./completionPlayers";
-
+import { useNavigate } from "react-router-dom";
+import ParticipationView from "./ParticipationView";
 export default function ParticipationTab() {
+  const navigate = useNavigate();
   const playersQuery = usePlayers();
   const gameQuery = useGameState();
   const challengesQuery = useSideChallenges();
@@ -32,61 +34,38 @@ export default function ParticipationTab() {
       queries={[playersQuery, gameQuery, challengesQuery, completionsQuery]}
       loadingText="Loading challenges..."
     >
-      {gameQuery.data ? (
-        <>
-          {participation.error && (
+      <ParticipationView
+        gameAvailable={Boolean(gameQuery.data)}
+        players={playersQuery.data}
+        playerId={playerId}
+        onPlayer={setPlayerId}
+        feedback={
+          participation.error && (
             <p role="alert">{participation.error.message}</p>
-          )}
-          <input
+          )
+        }
+        upload={
+          <UploadInput
             ref={participation.fileInputRef}
-            type="file"
             accept="image/*,video/*"
-            className="hidden"
             onChange={participation.handleFileSelected}
           />
-          <Card>
-            <h2 className="text-xl font-bold">Play as a Player</h2>
-            <p className="mt-2 text-sm text-zinc-400">
-              Choose your joined player account to take part as host.
-            </p>
-            <select
-              aria-label="Play as player"
-              value={playerId}
-              onChange={(event) => setPlayerId(event.target.value)}
-              className="mt-4 w-full rounded-xl border border-zinc-700 bg-zinc-900 p-3 text-white"
-            >
-              <option value="">Select player</option>
-              {playersQuery.data.map((candidate) => (
-                <option key={candidate.id} value={candidate.id}>
-                  {candidate.name}
-                  {candidate.team ? ` • ${candidate.team}` : ""}
-                </option>
-              ))}
-            </select>
-          </Card>
-          <Card>
-            <h2 className="text-2xl font-bold">Chaos Bingo</h2>
-            {!playerId ? (
-              <p className="mt-4 text-yellow-400">
-                Select a player above to take part.
-              </p>
-            ) : (
-              <div className="mt-4 space-y-4">
-                {challengesQuery.data.map((challenge) => (
-                  <HostChallengeCard
-                    key={challenge.id}
-                    challenge={challenge}
-                    completedBy={completedBy.get(String(challenge.id)) ?? []}
-                    participation={participation}
-                  />
-                ))}
-              </div>
-            )}
-          </Card>
-        </>
-      ) : (
-        <p>Waiting for an active game...</p>
-      )}
+        }
+      >
+        {challengesQuery.data.map((challenge) => (
+          <HostChallengeCard
+            key={challenge.id}
+            challenge={challenge}
+            completedBy={completedBy.get(String(challenge.id)) ?? []}
+            participation={participation}
+            onReview={() =>
+              navigate(
+                `/challenge-review?type=side&id=${encodeURIComponent(String(challenge.id))}&title=${encodeURIComponent(challenge.title)}`,
+              )
+            }
+          />
+        ))}
+      </ParticipationView>
     </QueryPanel>
   );
 }

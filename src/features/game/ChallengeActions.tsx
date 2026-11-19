@@ -4,8 +4,14 @@ import type {
   UploadChallenge,
 } from "../../game/hooks/useChallengeParticipation";
 
-export type ChallengeParticipation = ReturnType<
-  typeof useChallengeParticipation
+export type ChallengeParticipation = Pick<
+  ReturnType<typeof useChallengeParticipation>,
+  | "completionKey"
+  | "uploadingKey"
+  | "completingKey"
+  | "hasCompleted"
+  | "complete"
+  | "chooseUpload"
 >;
 
 export default function ChallengeActions({
@@ -21,7 +27,7 @@ export default function ChallengeActions({
   const busy =
     participation.uploadingKey !== null || participation.completingKey !== null;
   return (
-    <div className="mt-4 flex flex-wrap gap-2">
+    <div className="challenge-actions">
       <Button
         type="button"
         disabled={busy}

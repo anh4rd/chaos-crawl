@@ -20,6 +20,7 @@ if (!server || Array.isArray(server)) {
 export default defineConfig({
   ...base,
   testMatch: "**/live/*.spec.ts",
+  testIgnore: [],
   workers: 1,
   webServer: {
     ...server,

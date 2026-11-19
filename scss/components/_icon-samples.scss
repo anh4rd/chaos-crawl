@@ -1,0 +1,14 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.icon-samples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: (layout.$pixel-unit * 3);
+  color: colors.$purple;
+  & > span {
+    font-size: fonts.$size-caption;
+  }
+}

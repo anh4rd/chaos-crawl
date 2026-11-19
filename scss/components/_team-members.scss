@@ -1,0 +1,18 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+@use "../variables/effects";
+
+.team-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: (layout.$pixel-unit * 1.5);
+  min-height: (layout.$pixel-unit * 8);
+  & > p {
+    align-self: center;
+    margin: 0;
+    color: colors.$portrait-upload-text;
+    font-size: fonts.$size-navigation-caption;
+  }
+}

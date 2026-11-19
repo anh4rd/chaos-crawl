@@ -1,0 +1,15 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+.preparation-item {
+  padding: layout.$pixel-unit * 3 0;
+  border-bottom: layout.$pixel-unit * 0.25 solid colors.$preparation-divider;
+
+  &:last-child {
+    border: 0;
+  }
+
+  p {
+    margin: layout.$pixel-unit 0 0;
+  }
+}

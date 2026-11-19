@@ -1,0 +1,88 @@
+@use "../variables/colors";
+@use "../variables/effects";
+@use "../variables/layers";
+@use "../variables/layout";
+
+.dialog {
+  isolation: isolate;
+  inset: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+
+  &[open] {
+    display: grid;
+    place-items: center;
+  }
+
+  &__backdrop {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: transparent;
+  }
+
+  &::backdrop {
+    background: transparent;
+  }
+}
+
+.dialog {
+  &--host {
+    position: fixed;
+    z-index: layers.$host-overlay;
+    padding: layout.$pixel-unit * 4.5;
+    background: rgba(colors.$host-overlay-ink, effects.$host-overlay-opacity);
+    backdrop-filter: blur(layout.$host-overlay-blur);
+  }
+}
+
+.dialog {
+  &--reveal {
+    position: fixed;
+    z-index: layers.$reveal-overlay;
+    display: grid;
+    place-items: center;
+    padding: layout.$pixel-unit * 5.5;
+    background: rgba(colors.$reveal-scrim, effects.$reward-overlay-opacity);
+    backdrop-filter: blur(layout.$control-border-width);
+  }
+}
+
+.dialog {
+  &--contribution {
+    position: fixed;
+    z-index: layers.$reward-overlay;
+    padding: layout.$pixel-unit * 4.5;
+    color: inherit;
+    background: rgba(
+      colors.$contribution-overlay-ink,
+      effects.$contribution-overlay-opacity
+    );
+    overflow: auto;
+    &[open] {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+}
+
+.dialog {
+  &--inspector {
+    position: fixed;
+    z-index: layers.$host-overlay;
+    background: colors.$inspector-overlay;
+    display: grid;
+    place-items: center;
+    padding: layout.$pixel-unit * 4;
+  }
+}

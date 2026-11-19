@@ -1,0 +1,64 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.setup-sidebar {
+  display: grid;
+  align-content: start;
+  gap: (layout.$pixel-unit * 1.5);
+  padding: (layout.$pixel-unit * 3.5);
+  &__title {
+    padding: (layout.$pixel-unit * 0.75) (layout.$pixel-unit * 2)
+      (layout.$pixel-unit * 2.25);
+    color: colors.$purple;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-overline;
+  }
+  &__divider {
+    height: (layout.$pixel-unit * 0.25);
+    margin: (layout.$pixel-unit * 1) (layout.$pixel-unit * 2);
+    background: colors.$setup-sidebar-divider-surface;
+  }
+  &__summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: (layout.$pixel-unit * 1.25);
+    padding: (layout.$pixel-unit * 2) (layout.$pixel-unit * 0.75)
+      (layout.$pixel-unit * 0.5);
+  }
+  &__summary strong {
+    padding: (layout.$pixel-unit * 1.25) (layout.$pixel-unit * 1.75);
+    border-radius: (layout.$pixel-unit * 2);
+    color: colors.$white;
+    background: colors.$purple;
+    font-size: fonts.$size-navigation-caption;
+  }
+  @media (max-width: layout.$host-stacked-breakpoint) {
+    display: flex;
+    align-items: stretch;
+    gap: (layout.$pixel-unit * 1.5);
+    overflow-x: auto;
+    padding: (layout.$pixel-unit * 2);
+    border: (layout.$pixel-unit * 0.5) solid colors.$comic-ink;
+    border-radius: (layout.$pixel-unit * 3.75);
+    background: colors.$navigation-backdrop;
+    box-shadow: (layout.$pixel-unit * 0.75) (layout.$pixel-unit * 0.75) 0
+      colors.$purple-dark;
+  }
+  @media (max-width: layout.$host-stacked-breakpoint) {
+    &__title {
+      display: none;
+    }
+  }
+  @media (max-width: layout.$host-stacked-breakpoint) {
+    &__divider {
+      display: none;
+    }
+  }
+  @media (max-width: layout.$host-stacked-breakpoint) {
+    &__summary {
+      display: none;
+    }
+  }
+}

@@ -1,0 +1,7 @@
+@use "../variables/layout";
+
+.playback-media {
+  width: layout.$playback-media-width;
+  height: layout.$slideshow-height;
+  object-fit: contain;
+}

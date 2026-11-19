@@ -1,0 +1,30 @@
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/colors";
+
+.ranking-row {
+  display: flex;
+  align-items: center;
+  gap: (layout.$pixel-unit * 3);
+  justify-content: flex-start;
+  min-height: (layout.$pixel-unit * 12.5);
+  padding: (layout.$pixel-unit * 2) (layout.$pixel-unit * 2.5);
+  border-radius: (layout.$pixel-unit * 3.5);
+  background: colors.$portrait-upload-surface;
+  &__name {
+    flex: 1;
+    min-width: 0;
+    color: colors.$ink;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-label;
+    overflow-wrap: anywhere;
+  }
+  & strong {
+    color: colors.$purple-dark;
+    font-size: fonts.$size-body;
+    white-space: nowrap;
+  }
+  & small {
+    font-size: fonts.$size-navigation-caption;
+  }
+}

@@ -1,0 +1,14 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+
+.round-number {
+  font-size: fonts.$size-display;
+  font-weight: fonts.$weight-heavy;
+  color: colors.$purple;
+  line-height: 1;
+  text-shadow: none;
+  span {
+    color: colors.$round-total;
+    font-size: fonts.$size-example-heading;
+  }
+}

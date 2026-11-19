@@ -7,9 +7,13 @@ const baseURL = `http://127.0.0.1:${port}/chaos-crawl/`;
 
 export default defineConfig({
   testDir: "./tests",
-  testMatch: "**/smoke.spec.ts",
+  testMatch: "**/*.spec.ts",
+  testIgnore: "**/live/**",
 
   fullyParallel: false,
+
+  // Full styleguide keyboard journeys traverse hundreds of native controls.
+  timeout: 60_000,
 
   retries: 0,
 
@@ -54,12 +58,16 @@ export default defineConfig({
   ],
 
   webServer: {
-    env: { VITE_SENTRY_DSN: "" },
+    env: {
+      VITE_SENTRY_DSN: "",
+      VITE_SUPABASE_URL: "https://chaos-crawl-test.supabase.co",
+      VITE_SUPABASE_ANON_KEY: "test-anon-key",
+    },
     command: `npm run dev -- --host 127.0.0.1 --port ${port} --strictPort`,
 
-    url: baseURL,
+    wait: { stdout: /Local:/ },
 
-    reuseExistingServer: true,
+    reuseExistingServer: false,
 
     timeout: 120_000,
   },

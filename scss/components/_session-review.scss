@@ -1,0 +1,32 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.session-review {
+  padding: layout.$spacing-unit * 5;
+  border: layout.$session-border-width solid colors.$ink;
+  border-radius: layout.$radius-lg;
+  background: colors.$white;
+  color: colors.$ink;
+  h2,
+  h3 {
+    font-size: layout.$session-header-size;
+  }
+  &__actions {
+    display: flex;
+    gap: layout.$spacing-unit * 3;
+    margin-block: layout.$spacing-unit * 3;
+  }
+  &__actions button {
+    flex: 1;
+    min-height: layout.$session-row-height;
+    padding: layout.$spacing-unit * 3;
+    border: layout.$session-border-width solid colors.$ink;
+    border-radius: layout.$radius-lg;
+    background: colors.$accent-soft;
+    color: colors.$purple-dark;
+    font-weight: 900;
+  }
+  &__actions button[aria-pressed="true"] {
+    background: colors.$pink;
+    color: colors.$white;
+  }
+}

@@ -1,0 +1,96 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+@mixin outlined-title {
+  color: colors.$white;
+  -webkit-text-stroke: layout.$pixel-unit * 0.25 colors.$comic-ink;
+  text-shadow:
+    layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0 colors.$comic-ink,
+    layout.$pixel-unit * 1.25 layout.$pixel-unit * 1.25 0 colors.$purple-dark;
+}
+
+.page-heading {
+  & h1 {
+    font: fonts.$weight-heavy fonts.$size-page-heading-base/1.1
+      fonts.$family-type-sample;
+  }
+  margin-bottom: (layout.$pixel-unit * 6);
+  & h1 {
+    text-transform: uppercase;
+  }
+  & p {
+    font-size: fonts.$size-body;
+  }
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: (layout.$pixel-unit * 5);
+  margin: 0 0 (layout.$pixel-unit * 6.25);
+  & h1 {
+    font-size: fonts.$size-page-heading;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-page-heading;
+    line-height: 1.05;
+    margin: 0;
+    color: colors.$comic-ink;
+    text-shadow: (layout.$pixel-unit * 0.5) (layout.$pixel-unit * 0.5) 0
+      var(--cc-lime);
+  }
+  & p {
+    margin: (layout.$pixel-unit * 2) 0 0;
+    color: colors.$heading-copy;
+    font-weight: fonts.$weight-bold;
+  }
+  @media (max-width: layout.$host-mobile-breakpoint) {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  @media (max-width: layout.$host-mobile-breakpoint) {
+    & h1 {
+      font-size: fonts.$size-section-heading;
+    }
+  }
+  .host-portal.host-portal--app & h1 {
+    @include outlined-title;
+  }
+  .host-portal.host-portal--app & p {
+    color: colors.$heading-inverse-copy;
+    text-shadow: (layout.$pixel-unit * 0.25) (layout.$pixel-unit * 0.5) 0
+      colors.$heading-inverse-shadow;
+  }
+  @media (max-width: layout.$host-stacked-breakpoint) {
+    .host-portal.host-portal--app & h1 {
+      -webkit-text-stroke-width: (layout.$pixel-unit * 0.175);
+    }
+  }
+}
+
+.page-heading {
+  &--results {
+    align-items: flex-end;
+    flex-direction: row;
+    gap: layout.$pixel-unit * 3.75;
+    margin: 0 0 layout.$pixel-unit * 3.5;
+    h2 {
+      @include outlined-title;
+      margin: 0 0 layout.$pixel-unit * 1.25;
+      font: fonts.$weight-heavy #{fonts.$size-summary-value}/ 1.2
+        fonts.$family-type-sample;
+    }
+    p {
+      max-width: layout.$host-mobile-breakpoint;
+      margin: 0;
+      color: colors.$heading-inverse-copy;
+      font-size: fonts.$size-caption;
+      font-weight: normal;
+      line-height: 1.45;
+      text-shadow: layout.$pixel-unit * 0.25 layout.$pixel-unit * 0.5 0
+        colors.$heading-inverse-shadow;
+    }
+    @media (max-width: layout.$compact-breakpoint) {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+}

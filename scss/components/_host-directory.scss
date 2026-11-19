@@ -1,0 +1,8 @@
+@use "../variables/layout";
+@use "../variables/colors";
+
+.host-directory {
+  margin-top: layout.$pixel-unit * 7.5;
+  padding-top: layout.$pixel-unit * 5.5;
+  border-top: (layout.$pixel-unit * 0.25) solid colors.$directory-border;
+}

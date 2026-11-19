@@ -1,14 +1,14 @@
+import ControlRow from "../../../components/ui/ControlRow";
+import DisplayHeading from "../../../components/ui/DisplayHeading";
 import Card from "../../../components/ui/Card";
 import Button from "../../../components/ui/Button";
 import type { GameState } from "../../../types/database";
-
 export interface ScreenControlsProps {
   game: GameState;
   navigate: (path: string) => void;
   startSlideshow: () => Promise<void>;
   stopSlideshow: () => Promise<void>;
 }
-
 export default function ScreenControls({
   game,
   navigate,
@@ -18,9 +18,9 @@ export default function ScreenControls({
   return (
     <>
       <Card>
-        <h2 className="text-xl font-bold">Host Screens</h2>
+        <DisplayHeading variant="plain-compact">Host Screens</DisplayHeading>
 
-        <div className="mt-4 grid grid-cols-1 gap-3">
+        <ControlRow variant="single-actions">
           <Button type="button" onClick={() => navigate("/leaderboard")}>
             Leaderboard
           </Button>
@@ -43,7 +43,7 @@ export default function ScreenControls({
               </Button>
             </>
           )}
-        </div>
+        </ControlRow>
       </Card>
     </>
   );

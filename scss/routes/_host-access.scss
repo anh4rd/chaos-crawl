@@ -1,0 +1,23 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.host-access {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  padding: (layout.$pixel-unit * 8.5) (layout.$pixel-unit * 4.5);
+  overflow: hidden;
+  background: colors.$host-surface;
+  mask-image: none;
+  &__shell {
+    width: min(100%, layout.$access-width);
+  }
+  &__footer {
+    margin: (layout.$pixel-unit * 5.5) 0 0;
+    color: colors.$host-access-footer;
+    font-size: fonts.$size-small;
+    text-align: center;
+    font-weight: fonts.$weight-bold;
+  }
+}

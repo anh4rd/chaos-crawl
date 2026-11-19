@@ -1,0 +1,54 @@
+@use "../variables/layout";
+@use "../variables/colors";
+@use "../variables/fonts";
+
+.step-outline {
+  margin-bottom: layout.$pixel-unit * 1.5;
+  padding: layout.$pixel-unit * 2.5;
+  border-radius: layout.$pixel-unit * 3;
+  background: colors.$workspace-gradient-middle;
+  &__list {
+    display: grid;
+    gap: layout.$pixel-unit * 2.5;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  &__step {
+    display: flex;
+    align-items: flex-start;
+    gap: layout.$pixel-unit * 2.25;
+  }
+  &__number {
+    display: grid;
+    place-items: center;
+    flex: 0 0 layout.$pixel-unit * 5.5;
+    width: layout.$pixel-unit * 5.5;
+    height: layout.$pixel-unit * 5.5;
+    border-radius: layout.$radius-circle;
+    color: colors.$white;
+    background: colors.$purple;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heavy;
+  }
+  &__copy {
+    display: grid;
+    gap: layout.$pixel-unit * 0.75;
+  }
+  &__title {
+    color: colors.$outline-title;
+    font-size: fonts.$size-micro;
+  }
+  &__detail {
+    color: colors.$outline-detail;
+    font-size: fonts.$size-navigation-caption;
+  }
+  &__note {
+    margin: layout.$pixel-unit * 2.5 0 0;
+    padding-top: layout.$pixel-unit * 2.25;
+    border-top: layout.$pixel-unit * 0.25 solid colors.$outline-note-divider;
+    color: colors.$host-muted;
+    font-size: fonts.$size-micro;
+    line-height: 1.45;
+  }
+}

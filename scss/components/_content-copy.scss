@@ -1,0 +1,49 @@
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/colors";
+
+.content-copy {
+  &--console {
+    flex: 1;
+    min-width: 0;
+  }
+  &--console h2 {
+    margin: 0;
+    color: colors.$ink !important;
+    font-family: fonts.$family-console-display !important;
+    font-size: fonts.$size-heading !important;
+    line-height: fonts.$line-height-console-title !important;
+    letter-spacing: 0 !important;
+    text-shadow: none !important;
+  }
+  &--console p {
+    margin: (layout.$pixel-unit * 1.75) 0 0;
+    color: colors.$console-copy;
+    font-size: fonts.$size-small;
+    line-height: 1.45;
+    font-weight: fonts.$weight-semibold;
+  }
+  &--console-list p {
+    margin-top: (layout.$pixel-unit * 1);
+  }
+}
+
+.content-copy {
+  &--directory {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+    gap: layout.$pixel-unit * 0.75;
+    strong {
+      color: colors.$collection-ink;
+      font-size: fonts.$size-small;
+      font-weight: fonts.$weight-heading;
+    }
+    span,
+    small {
+      color: colors.$search-field-icon;
+      font-size: fonts.$size-micro;
+      overflow-wrap: anywhere;
+    }
+  }
+}

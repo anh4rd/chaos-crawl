@@ -1,0 +1,33 @@
+@use "../tools/legacy-type";
+@use "../variables/layout";
+@use "../variables/colors";
+
+.ballot {
+  &__title {
+    @include legacy-type.bold;
+  }
+  &__copy {
+    margin-top: layout.$spacing-unit * 4;
+  }
+  &__waiting {
+    margin-top: layout.$spacing-unit * 4;
+    @include legacy-type.small;
+    color: colors.$unavailable-upload-copy;
+  }
+  &__header {
+    text-align: center;
+  }
+  &__challenge {
+    margin-top: layout.$spacing-unit * 2;
+  }
+  &__instructions {
+    margin-top: layout.$spacing-unit * 2;
+    @include legacy-type.small;
+  }
+  &__options {
+    > :where(:not(:last-child)) {
+      margin-block-start: 0;
+      margin-block-end: layout.$spacing-unit * 3;
+    }
+  }
+}

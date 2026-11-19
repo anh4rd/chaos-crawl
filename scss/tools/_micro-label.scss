@@ -1,0 +1,6 @@
+@use "../variables/fonts";
+@mixin micro-label {
+  font-size: fonts.$size-caption;
+  font-weight: fonts.$weight-action;
+  letter-spacing: fonts.$tracking-overline;
+}

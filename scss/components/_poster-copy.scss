@@ -1,0 +1,5 @@
+@use "../tools/poster-copy";
+
+.poster-copy {
+  @include poster-copy.poster-copy;
+}

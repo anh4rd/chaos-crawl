@@ -1,0 +1,14 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+@mixin compact-select {
+  min-height: (layout.$pixel-unit * 9.75);
+  padding: (layout.$pixel-unit * 2) (layout.$pixel-unit * 2.5);
+  border: (layout.$pixel-unit * 0.375) solid colors.$field-border;
+  border-radius: (layout.$pixel-unit * 2.5);
+  color: colors.$session-text;
+  background: colors.$white;
+  font: inherit;
+  font-size: fonts.$size-caption;
+}

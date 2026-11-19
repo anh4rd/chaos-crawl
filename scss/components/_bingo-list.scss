@@ -1,0 +1,26 @@
+@use "../tools/legacy-type";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/colors";
+@use "../variables/effects";
+
+.bingo-list {
+  &__title {
+    @include legacy-type.bold;
+  }
+  &__copy {
+    margin-top: layout.$spacing-unit * 2;
+    @include legacy-type.small;
+    color: colors.$unavailable-upload-copy;
+  }
+  &__completed {
+    margin-top: layout.$spacing-unit * 4;
+    color: colors.$legacy-positive;
+  }
+  &__items {
+    margin-top: layout.$spacing-unit * 4;
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: layout.$spacing-unit * 4;
+  }
+}

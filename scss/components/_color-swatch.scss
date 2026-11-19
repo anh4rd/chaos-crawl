@@ -1,0 +1,59 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.color-swatch {
+  background: colors.$white;
+  border: (layout.$pixel-unit * 0.25) solid colors.$reference-border;
+  border-radius: (layout.$pixel-unit * 3);
+  padding: (layout.$pixel-unit * 2) (layout.$pixel-unit * 2)
+    (layout.$pixel-unit * 3);
+  min-width: 0;
+  &__sample {
+    height: layout.$swatch-height;
+    border-radius: (layout.$pixel-unit * 1.75);
+    border: (layout.$pixel-unit * 0.25) solid colors.$reference-swatch-border;
+    margin-bottom: (layout.$pixel-unit * 2.5);
+    &--purple {
+      background: var(--purple);
+    }
+    &--purple-mid {
+      background: var(--purple-mid);
+    }
+    &--purple-dark {
+      background: var(--purple-dark);
+    }
+    &--pink {
+      background: var(--pink);
+    }
+    &--lime {
+      background: var(--lime);
+    }
+    &--yellow {
+      background: var(--yellow);
+    }
+    &--black {
+      background: var(--black);
+    }
+    &--white {
+      background: var(--white);
+    }
+  }
+  &__name {
+    display: block;
+    padding: 0 (layout.$pixel-unit * 1.25);
+    font-size: fonts.$size-label;
+  }
+  &__token {
+    display: block;
+    padding: 0 (layout.$pixel-unit * 1.25);
+    font-size: fonts.$size-caption;
+    color: colors.$reference-swatch-copy;
+  }
+  &__value {
+    display: block;
+    padding: 0 (layout.$pixel-unit * 1.25);
+    font-size: fonts.$size-caption;
+    color: colors.$reference-swatch-copy;
+  }
+}

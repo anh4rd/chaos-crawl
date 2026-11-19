@@ -1,0 +1,7 @@
+@use "../tools/focus-ring";
+
+.tab-panel {
+  &:focus-visible {
+    @include focus-ring.focus-ring;
+  }
+}

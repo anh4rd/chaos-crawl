@@ -1,0 +1,14 @@
+@use "../variables/fonts";
+
+.type-sample {
+  &--display {
+    font-family: fonts.$family-type-sample;
+    font-size: fonts.$size-display;
+    line-height: 1.15;
+  }
+  &--body {
+    font-size: fonts.$size-subheading;
+    font-weight: fonts.$weight-bold;
+    line-height: 1.4;
+  }
+}

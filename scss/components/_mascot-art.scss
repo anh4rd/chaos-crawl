@@ -1,0 +1,8 @@
+@use "../variables/layout";
+.mascot-art {
+  display: block;
+  width: layout.$pixel-unit * 33.75;
+  height: layout.$pixel-unit * 29.5;
+  margin: 0 auto layout.$pixel-unit * 0.25;
+  object-fit: contain;
+}

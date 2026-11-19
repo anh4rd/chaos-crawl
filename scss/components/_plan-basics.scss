@@ -1,0 +1,17 @@
+@use "../tools/setup-heading";
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.plan-basics {
+  max-width: (layout.$pixel-unit * 230);
+  margin: (layout.$pixel-unit * 6) auto;
+  padding: layout.$plan-basics-padding;
+  & h2 {
+    @include setup-heading.setup-heading;
+  }
+  & > p {
+    color: colors.$muted-copy-text;
+    font-size: fonts.$size-body;
+  }
+}

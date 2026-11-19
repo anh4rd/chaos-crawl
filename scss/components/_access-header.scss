@@ -1,0 +1,28 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/effects";
+
+.access-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: layout.$entry-header-height;
+  padding: max(layout.$pixel-unit * 2.25, env(safe-area-inset-top))
+    layout.$pixel-unit * 5.5 layout.$pixel-unit * 3;
+  background: colors.$entry-header;
+  box-shadow: 0 layout.$pixel-unit * 0.25 0
+    rgba(colors.$white, effects.$entry-header-shadow-opacity);
+  &__brand {
+    font-size: fonts.$size-intro;
+    font-weight: fonts.$weight-action;
+    letter-spacing: fonts.$tracking-entry-brand;
+  }
+  &__hint {
+    color: rgba(colors.$white, effects.$reward-overlay-opacity);
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-bold;
+    letter-spacing: fonts.$tracking-compact;
+  }
+}

@@ -1,3 +1,4 @@
+import PageFrame from "./components/ui/PageFrame";
 import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
 
@@ -20,6 +21,7 @@ const HostLiveSession = lazy(() => import("./pages/HostLiveSession"));
 const HostLogin = lazy(() => import("./pages/HostLogin"));
 const InviteLanding = lazy(() => import("./pages/InviteLanding"));
 const PlayerDemo = lazy(() => import("./pages/PlayerDemo"));
+const Styleguide = lazy(() => import("./pages/Styleguide"));
 const SuperAdmin = lazy(() => import("./pages/SuperAdmin"));
 const HostHub = lazy(() => import("./pages/HostHub"));
 const HostPlanSetup = lazy(() => import("./pages/HostPlanSetup"));
@@ -35,9 +37,9 @@ export default function App() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-screen items-center justify-center p-6">
+        <PageFrame variant="suspense">
           <p>Loading chaos...</p>
-        </main>
+        </PageFrame>
       }
     >
       <Routes>
@@ -46,8 +48,8 @@ export default function App() {
         <Route path="/join" element={<Join />} />
         <Route path="/invite/:joinCode" element={<InviteLanding />} />
         <Route path="/demo/player" element={<PlayerDemo />} />
+        <Route path="/styleguide" element={<Styleguide />} />
         <Route path="/legacy/join" element={<LegacyJoin />} />
-        <Route path="/challenge-review" element={<ChallengeReview />} />
         <Route path="/game" element={<Game />} />
         <Route path="/play/:joinCode" element={<SessionPlayerGame />} />
         <Route path="/play/:joinCode/:page" element={<SessionPlayerGame />} />
@@ -67,6 +69,7 @@ export default function App() {
         {/* Host authentication is separate from the player join flow. */}
         <Route path="/host/login" element={<HostLogin />} />
         <Route element={<HostGuard />}>
+          <Route path="/challenge-review" element={<ChallengeReview />} />
           <Route path="/admin-legacy" element={<LegacyAdmin />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/host/live/:sessionId" element={<HostLiveSession />} />

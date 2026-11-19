@@ -1,0 +1,85 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/layers";
+@use "../variables/effects";
+
+.host-header {
+  justify-content: space-between;
+  min-height: (layout.$pixel-unit * 20.5);
+  &__help {
+    color: colors.$white;
+  }
+  @media (max-width: layout.$host-stacked-breakpoint) {
+    flex-wrap: wrap;
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    min-height: (layout.$pixel-unit * 16.5);
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    &__help {
+      display: none;
+    }
+  }
+  height: (layout.$pixel-unit * 22);
+  padding: 0 (layout.$pixel-unit * 7);
+  background: colors.$header-background;
+  border-bottom: (layout.$pixel-unit * 1) solid var(--cc-ink);
+  display: grid;
+  grid-template-columns: minmax((layout.$pixel-unit * 60), 1fr) auto minmax(
+      (layout.$pixel-unit * 60),
+      1fr
+    );
+  align-items: center;
+  gap: (layout.$pixel-unit * 6);
+  color: colors.$white;
+  position: relative;
+  z-index: layers.$host-header;
+  box-shadow: 0 (layout.$pixel-unit * 1) 0 colors.$header-shadow;
+  &__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: (layout.$pixel-unit * 4);
+    color: colors.$white;
+  }
+  &__help {
+    opacity: effects.$header-help-opacity;
+  }
+  @media (max-width: layout.$host-mobile-breakpoint) {
+    height: (layout.$pixel-unit * 17);
+    padding: 0 (layout.$pixel-unit * 3.5);
+    display: flex;
+    justify-content: space-between;
+  }
+  @media (max-width: layout.$host-mobile-breakpoint) {
+    &__help {
+      display: none;
+    }
+  }
+  @media (min-width: (layout.$host-mobile-breakpoint + layout.$pixel-unit * 0.25)) and (max-width: layout.$host-tablet-max) {
+    height: auto;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    gap: (layout.$pixel-unit * 2) (layout.$pixel-unit * 3);
+    padding: (layout.$pixel-unit * 2.5) (layout.$pixel-unit * 4.5);
+  }
+  @media (min-width: (layout.$host-mobile-breakpoint + layout.$pixel-unit * 0.25)) and (max-width: layout.$host-tablet-max) {
+    &__actions {
+      grid-column: 2;
+      grid-row: 1;
+      gap: (layout.$pixel-unit * 2.25);
+    }
+  }
+  @media (min-width: (layout.$host-tablet-max + layout.$pixel-unit * 0.25)) and (max-width: layout.$host-wide-max) {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: (layout.$pixel-unit * 3);
+    padding-inline: (layout.$pixel-unit * 4.5);
+  }
+  @media (min-width: (layout.$host-tablet-max + layout.$pixel-unit * 0.25)) and (max-width: layout.$host-wide-max) {
+    &__actions {
+      min-width: 0;
+      gap: (layout.$pixel-unit * 2.25);
+    }
+  }
+}

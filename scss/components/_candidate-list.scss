@@ -1,0 +1,18 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.candidate-list {
+  display: grid;
+  border: layout.$pixel-unit * 0.25 solid colors.$candidate-list-border;
+  border-radius: layout.$pixel-unit * 3.5;
+  overflow: hidden;
+}
+
+.candidate-list {
+  &--spaced {
+    gap: layout.$pixel-unit * 2;
+    border-width: 0;
+    border-color: currentColor;
+    border-radius: 0;
+    overflow: visible;
+  }
+}

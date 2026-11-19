@@ -1,0 +1,16 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.unavailable-upload {
+  max-width: layout.$content-width;
+  padding: layout.$spacing-unit * 8;
+  text-align: center;
+  color: colors.$white;
+  &__title {
+    font-weight: fonts.$weight-bold;
+  }
+  &__action {
+    margin-top: layout.$spacing-unit * 6;
+  }
+}

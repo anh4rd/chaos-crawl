@@ -148,7 +148,7 @@ for (const [path, heading] of [
   ["/final-slideshow/test-session", "Slideshow is waiting"],
   ["/secret-slideshow/test-session", "Slideshow is waiting"],
   ["/slideshow?host=true", "Anna's Chaos Crawl"],
-  ["/challenge-review?type=main&id=1&title=Dance", "Dance"],
+  ["/challenge-review?type=main&id=1&title=Dance", "Welcome back."],
 ] as const) {
   test(`renders ${path} through HashRouter`, async ({ page }) => {
     const errors: string[] = [];
@@ -164,3 +164,119 @@ for (const [path, heading] of [
     expect(errors).toEqual([]);
   });
 }
+
+test("styleguide is public, searchable and uses local demo state", async ({
+  page,
+}) => {
+  const backendRequests: string[] = [];
+  page.on("request", (request) => {
+    if (/\/rest\/v1\/|\/auth\/v1\/|\/storage\/v1\//.test(request.url())) {
+      backendRequests.push(request.url());
+    }
+  });
+  await page.goto("#/styleguide");
+  await expect(
+    page.getByRole("heading", { name: "Build on the good stuff." }),
+  ).toBeVisible();
+  const catalogSize = await page.locator(".component-catalog__item").count();
+  expect(catalogSize).toBeGreaterThan(0);
+  await page.getByLabel("Team name", { exact: true }).fill("The Trailblazers");
+  await expect(
+    page.locator(".session-preview .session-profile__copy"),
+  ).toContainText("The Trailblazers");
+
+  await page.getByRole("button", { name: "Try again", exact: true }).click();
+  await expect(
+    page
+      .getByRole("status")
+      .filter({ hasText: "Demo recovered successfully." }),
+  ).toBeVisible();
+
+  await page
+    .getByLabel("Search component catalog")
+    .fill("SessionPlayerProfile");
+  await expect(page.locator(".component-catalog__item")).toHaveCount(1);
+  await expect(page.locator(".component-catalog")).toContainText(
+    "SessionPlayerProfile",
+  );
+  await page.getByLabel("Search component catalog").fill("no-such-component");
+  await expect(
+    page.getByText("No components match", { exact: false }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Clear search" }).click();
+  await expect(page.locator(".component-catalog__item")).toHaveCount(
+    catalogSize,
+  );
+
+  await page.getByRole("button", { name: "Preview guided tour" }).click();
+  await expect(
+    page.getByRole("dialog", { name: /STYLEGUIDE TOUR/ }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Close tour" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  expect(backendRequests).toEqual([]);
+});
+
+test("styleguide controls work by keyboard and modal focus returns to its trigger", async ({
+  page,
+}) => {
+  await page.goto("#/styleguide");
+  const checkbox = page.getByRole("checkbox", {
+    name: "Demo challenge timers",
+  });
+  await checkbox.focus();
+  await page.keyboard.press("Space");
+  await expect(checkbox).toBeChecked();
+  const trigger = page.getByRole("button", { name: "Open dialog example" });
+  await trigger.focus();
+  await page.keyboard.press("Enter");
+  const dialog = page.getByRole("dialog", { name: "Styleguide dialog" });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Tab");
+  await expect
+    .poll(() => dialog.evaluate((el) => el.contains(document.activeElement)))
+    .toBe(true);
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  await expect(trigger).toBeFocused();
+});
+
+test("shared session styleguide switches roles and phases without backend access", async ({
+  page,
+}) => {
+  const backendRequests: string[] = [];
+  page.on("request", (request) => {
+    if (/\/rest\/v1\/|\/auth\/v1\/|\/storage\/v1\//.test(request.url()))
+      backendRequests.push(request.url());
+  });
+  await page.goto("#/styleguide");
+  await page.getByLabel("Preview as").selectOption("host");
+  const preview = page.locator(".session-page--preview");
+  await expect(
+    preview.getByRole("button", { name: "Host", exact: true }),
+  ).toBeVisible();
+  await preview.getByRole("button", { name: "Host", exact: true }).click();
+  await preview
+    .getByRole("button", { name: "Return to sample game", exact: true })
+    .click();
+  await expect(
+    preview.getByRole("button", { name: "Game", exact: true }),
+  ).toBeFocused();
+  await page.getByLabel("Phase", { exact: true }).selectOption("review");
+  await expect(
+    preview.getByRole("heading", { name: "Make a dramatic entrance" }),
+  ).toBeVisible();
+  await preview.getByRole("button", { name: "SUCCESS", exact: true }).click();
+  await expect(
+    preview
+      .getByRole("status")
+      .filter({ hasText: "Local success vote recorded." }),
+  ).toContainText("Local success vote recorded.");
+  await expect(page.locator("main main")).toHaveCount(0);
+  expect(backendRequests).toEqual([]);
+});

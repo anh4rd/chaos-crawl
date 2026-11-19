@@ -13,11 +13,11 @@ it("supports compact buttons while preserving native disabled behavior", () => {
     </Button>,
   );
   const button = screen.getByRole("button", { name: "Save" });
-  expect(button.classList.contains("w-full")).toBe(false);
+  expect(button.classList.contains("btn--block")).toBe(false);
   fireEvent.click(button);
   expect(onClick).not.toHaveBeenCalled();
   rerender(<Button onClick={onClick}>Save</Button>);
-  expect(button.classList.contains("w-full")).toBe(true);
+  expect(button.classList.contains("btn--block")).toBe(true);
   fireEvent.click(button);
   expect(onClick).toHaveBeenCalledOnce();
 });
@@ -27,7 +27,7 @@ it("keeps input styling and caller classes with native input events", () => {
   render(<Input aria-label="Name" className="mt-2" onChange={onChange} />);
   const input = screen.getByRole("textbox", { name: "Name" });
   expect(input.classList.contains("mt-2")).toBe(true);
-  expect(input.classList.contains("border-pink-500")).toBe(true);
+  expect(input.classList.contains("input")).toBe(true);
   fireEvent.change(input, { target: { value: "Anna" } });
   expect(onChange).toHaveBeenCalledOnce();
 });

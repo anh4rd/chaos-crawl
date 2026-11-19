@@ -1,8 +1,9 @@
+import PageFrame from "../components/ui/PageFrame";
 import { useEffect } from "react";
 
 import { useNavigate } from "react-router-dom";
 
-import Card from "../components/ui/Card";
+import VoteResultsView from "../features/voting/VoteResultsView";
 
 import { useGameState } from "../game/hooks/useGameState";
 
@@ -12,6 +13,7 @@ import { useTeams } from "../game/hooks/useTeams";
 import { useVotes } from "../game/hooks/useVotes";
 import { tallyPlayerVotes, tallyTeamVotes } from "../lib/voteResults";
 import DataError from "../components/ui/DataError";
+import LoadingScreen from "../components/ui/LoadingScreen";
 
 export default function VoteResults() {
   const gameQuery = useGameState();
@@ -24,32 +26,36 @@ export default function VoteResults() {
   const { data: votes } = votesQuery;
   const navigate = useNavigate();
 
-  // Host closed results:
-  // send everyone back to game
   useEffect(() => {
     if (!game) {
       return;
     }
 
-    if (game.show_vote_results !== true) {
+    if (game.voting_open) {
+      navigate("/vote", { replace: true });
+    } else if (game.show_vote_results !== true) {
       navigate("/game", {
         replace: true,
       });
     }
   }, [game, navigate]);
 
+  if (game && (game.voting_open || game.show_vote_results !== true))
+    return <LoadingScreen>Waiting for published results…</LoadingScreen>;
+
   const failed = [gameQuery, playersQuery, teamsQuery, votesQuery].find(
     (query) => query.error,
   );
-  if (failed) return <DataError error={failed.error!} retry={failed.reload} />;
+  if (failed?.error)
+    return <DataError error={failed.error} retry={failed.reload} />;
   if (
     !game ||
     [playersQuery, teamsQuery, votesQuery].some((query) => query.loading)
   ) {
     return (
-      <main className="mx-auto min-h-screen max-w-md p-6">
+      <PageFrame variant="content">
         <p>Loading results...</p>
-      </main>
+      </PageFrame>
     );
   }
 
@@ -59,30 +65,6 @@ export default function VoteResults() {
       : tallyPlayerVotes(votes, players);
 
   return (
-    <main className="mx-auto min-h-screen max-w-md space-y-6 p-6">
-      <Card>
-        <h1 className="text-4xl font-bold">Voting Results</h1>
-
-        <p className="mt-3">{game.current_challenge}</p>
-      </Card>
-
-      <ol className="space-y-3">
-        {results.map((result, index) => (
-          <li key={result.id}>
-            <Card>
-              <div className="flex items-center justify-between">
-                <div>
-                  <span className="mr-3">{index === 0 ? "👑" : ""}</span>
-
-                  <strong>{result.name}</strong>
-                </div>
-
-                <div className="text-2xl font-bold">{result.votes}</div>
-              </div>
-            </Card>
-          </li>
-        ))}
-      </ol>
-    </main>
+    <VoteResultsView challenge={game.current_challenge} results={results} />
   );
 }

@@ -1,0 +1,110 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.setup-step {
+  display: flex;
+  align-items: flex-start;
+  gap: (layout.$pixel-unit * 2.25);
+  width: 100%;
+  min-width: 0;
+  padding: (layout.$pixel-unit * 2.25) (layout.$pixel-unit * 2);
+  border: (layout.$pixel-unit * 0.5) solid transparent;
+  border-radius: (layout.$pixel-unit * 3.25);
+  color: colors.$purple-dark;
+  background: transparent;
+  text-align: left;
+  &--next {
+    display: flex;
+    align-items: flex-start;
+    gap: (layout.$pixel-unit * 2.25);
+    width: 100%;
+    min-width: 0;
+    padding: (layout.$pixel-unit * 2.25) (layout.$pixel-unit * 2);
+    border: (layout.$pixel-unit * 0.5) solid transparent;
+    border-radius: (layout.$pixel-unit * 3.25);
+    color: colors.$purple-dark;
+    background: transparent;
+    text-align: left;
+  }
+  cursor: pointer;
+  &.setup-step--active {
+    border-color: colors.$comic-ink;
+    background: colors.$accent-soft;
+    box-shadow: (layout.$pixel-unit * 0.5) (layout.$pixel-unit * 0.5) 0
+      colors.$comic-ink;
+    color: colors.$comic-ink;
+  }
+  &.setup-step--done .setup-step__number {
+    border-color: colors.$comic-ink;
+    background: colors.$accent-soft;
+  }
+  & > span:last-child {
+    display: grid;
+    min-width: 0;
+    gap: (layout.$pixel-unit * 0.5);
+  }
+  &--next > span:last-child {
+    display: grid;
+    min-width: 0;
+    gap: (layout.$pixel-unit * 0.5);
+  }
+  & strong {
+    font-size: fonts.$size-small;
+    line-height: 1.25;
+  }
+  &--next strong {
+    font-size: fonts.$size-small;
+    line-height: 1.25;
+  }
+  & small {
+    color: colors.$setup-step-text;
+    font-size: fonts.$size-navigation-caption;
+    line-height: 1.35;
+  }
+  &--next small {
+    color: colors.$setup-step-text;
+    font-size: fonts.$size-navigation-caption;
+    line-height: 1.35;
+  }
+  &.setup-step--active small {
+    color: colors.$context-copy;
+  }
+  &__number {
+    display: grid;
+    flex: 0 0 (layout.$pixel-unit * 6);
+    place-items: center;
+    width: (layout.$pixel-unit * 6);
+    height: (layout.$pixel-unit * 6);
+    border: (layout.$pixel-unit * 0.5) solid colors.$setup-step-number-border;
+    border-radius: 50%;
+    background: colors.$white;
+    color: colors.$context-copy;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heavy;
+  }
+  @media (max-width: layout.$host-stacked-breakpoint) {
+    flex: 0 0 (layout.$pixel-unit * 36.25);
+    align-items: center;
+    width: (layout.$pixel-unit * 36.25);
+    padding: (layout.$pixel-unit * 1.75);
+  }
+  @media (max-width: layout.$host-stacked-breakpoint) {
+    &--next {
+      flex: 0 0 (layout.$pixel-unit * 36.25);
+      align-items: center;
+      width: (layout.$pixel-unit * 36.25);
+      padding: (layout.$pixel-unit * 1.75);
+    }
+  }
+  @media (max-width: layout.$host-stacked-breakpoint) {
+    & small {
+      display: none;
+    }
+  }
+  @media (max-width: layout.$host-stacked-breakpoint) {
+    &--next small {
+      display: none;
+    }
+  }
+}

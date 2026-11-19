@@ -1,0 +1,17 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.invite-placeholder {
+  display: flex;
+  gap: (layout.$pixel-unit * 2.5);
+  padding: (layout.$pixel-unit * 3.25);
+  border-radius: (layout.$pixel-unit * 3);
+  background: colors.$invite-placeholder-surface;
+  color: colors.$invite-placeholder-text;
+  & p {
+    margin: 0;
+    font-size: fonts.$size-caption;
+    line-height: 1.5;
+  }
+}

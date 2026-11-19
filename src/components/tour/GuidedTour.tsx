@@ -1,3 +1,4 @@
+import { useModalDialog } from "../ui/useModalDialog";
 import {
   useCallback,
   useEffect,
@@ -6,8 +7,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, ArrowRight, X } from "lucide-react";
-import "../../styles/GuidedTour.css";
+import Icon from "../ui/Icon";
 
 export interface GuidedTourStep {
   target: string;
@@ -16,9 +16,7 @@ export interface GuidedTourStep {
   page?: string;
 }
 
-type TourPosition = { top: number; left: number; width: number };
-const GAP = 14;
-const EDGE = 14;
+type TourPosition = { top: number; left: number; width: number; pad: number };
 
 export default function GuidedTour({
   steps,
@@ -31,6 +29,7 @@ export default function GuidedTour({
   onClose: () => void;
   label?: string;
 }) {
+  const dialogRef = useModalDialog();
   const [index, setIndex] = useState(0);
   const [position, setPosition] = useState<TourPosition | null>(null);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
@@ -44,28 +43,47 @@ export default function GuidedTour({
     const rect = target.getBoundingClientRect();
     setTargetRect(rect);
     const card = cardRef.current;
-    const cardHeight = card?.getBoundingClientRect().height ?? 230;
-    const width = Math.min(420, window.innerWidth - EDGE * 2);
+    if (!card) return;
+    const settings = getComputedStyle(card);
+    const gap = Number.parseFloat(settings.getPropertyValue("--tour-gap"));
+    const edge = Number.parseFloat(settings.getPropertyValue("--tour-edge"));
+    const maxWidth = Number.parseFloat(
+      settings.getPropertyValue("--tour-width"),
+    );
+    const pad = Number.parseFloat(
+      settings.getPropertyValue("--tour-target-pad"),
+    );
+    const preferredRoom = Number.parseFloat(
+      settings.getPropertyValue("--tour-preferred-room"),
+    );
+    const dockRoom = Number.parseFloat(
+      settings.getPropertyValue("--tour-dock-room"),
+    );
+    const cardHeight = card.getBoundingClientRect().height;
+    const width = Math.min(maxWidth, window.innerWidth - edge * 2);
     const left = Math.max(
-      EDGE,
+      edge,
       Math.min(
         rect.left + rect.width / 2 - width / 2,
-        window.innerWidth - width - EDGE,
+        window.innerWidth - width - edge,
       ),
     );
-    const roomBelow = window.innerHeight - rect.bottom - GAP - EDGE;
-    const roomAbove = rect.top - GAP - EDGE;
+    const roomBelow = window.innerHeight - rect.bottom - gap - edge;
+    const roomAbove = rect.top - gap - edge;
     let top: number;
-    if (roomBelow >= Math.min(cardHeight, 210) || roomBelow >= roomAbove) {
-      top = Math.min(rect.bottom + GAP, window.innerHeight - cardHeight - EDGE);
+    if (
+      roomBelow >= Math.min(cardHeight, preferredRoom) ||
+      roomBelow >= roomAbove
+    ) {
+      top = Math.min(rect.bottom + gap, window.innerHeight - cardHeight - edge);
     } else {
-      top = Math.max(EDGE, rect.top - cardHeight - GAP);
+      top = Math.max(edge, rect.top - cardHeight - gap);
     }
     // If the target is near the bottom and neither side has room, use a bottom dock
     // while keeping a clear visual gap around the highlighted control.
-    if (roomBelow < 150 && roomAbove < 150)
-      top = Math.max(EDGE, window.innerHeight - cardHeight - EDGE);
-    setPosition({ top, left, width });
+    if (roomBelow < dockRoom && roomAbove < dockRoom)
+      top = Math.max(edge, window.innerHeight - cardHeight - edge);
+    setPosition({ top, left, width, pad });
   }, [step]);
 
   useEffect(() => {
@@ -77,8 +95,8 @@ export default function GuidedTour({
       setTargetRect(null);
       setPosition(null);
       document
-        .querySelectorAll(".cc-tour-highlight")
-        .forEach((node) => node.classList.remove("cc-tour-highlight"));
+        .querySelectorAll(".tour-highlight")
+        .forEach((node) => node.classList.remove("tour-highlight"));
       const target = document.querySelector<HTMLElement>(step.target);
       if (target) {
         target.scrollIntoView({
@@ -86,8 +104,8 @@ export default function GuidedTour({
           block: "center",
           inline: "nearest",
         });
-        target.classList.add("cc-tour-highlight");
-        window.setTimeout(measure, 220);
+        target.classList.add("tour-highlight");
+        timer = window.setTimeout(measure, 220);
       } else if (attempts < 20) {
         attempts += 1;
         timer = window.setTimeout(locate, 100);
@@ -98,8 +116,8 @@ export default function GuidedTour({
       window.cancelAnimationFrame(frame);
       window.clearTimeout(timer);
       document
-        .querySelectorAll(".cc-tour-highlight")
-        .forEach((node) => node.classList.remove("cc-tour-highlight"));
+        .querySelectorAll(".tour-highlight")
+        .forEach((node) => node.classList.remove("tour-highlight"));
     };
   }, [index, step?.target, step?.page, onNavigate, measure]);
 
@@ -121,7 +139,7 @@ export default function GuidedTour({
   }, [measure, index]);
 
   if (!step || typeof document === "undefined") return null;
-  const pad = 9;
+  const pad = position?.pad ?? 0;
   const rect = targetRect;
   const topHeight = rect ? Math.max(0, rect.top - pad) : window.innerHeight;
   const leftWidth = rect ? Math.max(0, rect.left - pad) : 0;
@@ -131,20 +149,24 @@ export default function GuidedTour({
   const bottomTop = rect ? Math.min(window.innerHeight, rect.bottom + pad) : 0;
 
   return createPortal(
-    <div
-      className="cc-tour-layer"
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      ref={dialogRef}
+      tabIndex={-1}
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+      className="guided-tour"
       aria-label={`${label}: ${step.title}`}
     >
       <div
-        className="cc-tour-scrim cc-tour-scrim--top"
+        className="guided-tour__scrim guided-tour__scrim--top"
         style={{ height: topHeight }}
       />
       {rect && (
         <>
           <div
-            className="cc-tour-scrim cc-tour-scrim--left"
+            className="guided-tour__scrim guided-tour__scrim--left"
             style={{
               top: rect.top - pad,
               height: rect.height + pad * 2,
@@ -152,7 +174,7 @@ export default function GuidedTour({
             }}
           />
           <div
-            className="cc-tour-scrim cc-tour-scrim--right"
+            className="guided-tour__scrim guided-tour__scrim--right"
             style={{
               top: rect.top - pad,
               height: rect.height + pad * 2,
@@ -160,59 +182,59 @@ export default function GuidedTour({
             }}
           />
           <div
-            className="cc-tour-scrim cc-tour-scrim--bottom"
+            className="guided-tour__scrim guided-tour__scrim--bottom"
             style={{ top: bottomTop, left: 0, right: 0, bottom: 0 }}
           />
         </>
       )}
       <section
         ref={cardRef}
-        className="cc-tour-card"
+        className="guided-tour__card"
         style={
           position
             ? { top: position.top, left: position.left, width: position.width }
             : undefined
         }
       >
-        <div className="cc-tour-card-top">
+        <div className="guided-tour__header">
           <span>
             {label} · {index + 1} OF {steps.length}
           </span>
           <button type="button" onClick={onClose} aria-label="Close tour">
-            <X size={18} />
+            <Icon name="x" className="icon--size-18" />
           </button>
         </div>
-        <div className="cc-tour-progress">
+        <div className="guided-tour__progress">
           {steps.map((item, i) => (
             <i
               key={`${item.title}-${i}`}
-              className={i <= index ? "is-done" : ""}
+              className={`guided-tour__step${i <= index ? " guided-tour__step--done" : ""}`}
             />
           ))}
         </div>
-        <span className="cc-tour-kicker">
+        <span className="guided-tour__kicker">
           {step.page
             ? step.page.replaceAll("-", " ").toUpperCase()
             : "EXPLORE THE GAME"}
         </span>
         <h2>{step.title}</h2>
         <p>{step.body}</p>
-        <div className="cc-tour-actions">
-          <button type="button" className="cc-tour-skip" onClick={onClose}>
+        <div className="guided-tour__actions">
+          <button type="button" className="guided-tour__skip" onClick={onClose}>
             Skip tour
           </button>
           <div>
             <button
               type="button"
-              className="cc-tour-back"
+              className="guided-tour__back"
               disabled={index === 0}
               onClick={() => setIndex((value) => Math.max(0, value - 1))}
             >
-              <ArrowLeft size={16} /> Back
+              <Icon name="arrow-left" className="icon--size-16" /> Back
             </button>
             <button
               type="button"
-              className="cc-tour-next"
+              className="guided-tour__next"
               onClick={() =>
                 index === steps.length - 1
                   ? onClose()
@@ -220,12 +242,12 @@ export default function GuidedTour({
               }
             >
               {index === steps.length - 1 ? "Finish" : "Next"}{" "}
-              <ArrowRight size={16} />
+              <Icon name="arrow-right" className="icon--size-16" />
             </button>
           </div>
         </div>
       </section>
-    </div>,
+    </dialog>,
     document.body,
   );
 }

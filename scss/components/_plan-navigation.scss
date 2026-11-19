@@ -1,0 +1,68 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/effects";
+@use "../variables/layers";
+
+.plan-navigation {
+  position: fixed;
+  z-index: layers.$plan-navigation;
+  right: 50%;
+  bottom: calc((layout.$pixel-unit * 3) + env(safe-area-inset-bottom));
+  display: flex;
+  width: min(
+    calc(100% - (layout.$pixel-unit * 10)),
+    (layout.$pixel-unit * 77.5)
+  );
+  justify-content: space-around;
+  gap: (layout.$pixel-unit * 0.5);
+  padding: (layout.$pixel-unit * 1.25);
+  border: (layout.$pixel-unit * 0.25) solid colors.$plan-navigation-border;
+  border-radius: (layout.$pixel-unit * 4.5);
+  background: colors.$poster-shadow;
+  box-shadow: 0 (layout.$pixel-unit * 1.25) (layout.$pixel-unit * 4.5)
+    colors.$plan-navigation-shadow;
+  transform: translateX(50%);
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: (layout.$pixel-unit * 2.25);
+  }
+  & button {
+    min-height: (layout.$pixel-unit * 10.5);
+  }
+  & button:disabled {
+    opacity: effects.$context-disabled-opacity;
+    cursor: not-allowed;
+  }
+  @media (max-width: layout.$planner-narrow-breakpoint) {
+    display: flex;
+    align-items: stretch;
+    flex-direction: column;
+  }
+  @media (max-width: layout.$planner-narrow-breakpoint) {
+    & > button {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+  @media (max-width: layout.$planner-narrow-breakpoint) {
+    &__actions > button {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+  @media (max-width: layout.$planner-narrow-breakpoint) {
+    &__actions {
+      display: flex;
+    }
+  }
+  @media (max-width: layout.$host-mobile-breakpoint) {
+    .host-portal--app & {
+      bottom: calc(
+        #{layout.$host-mobile-nav-height + layout.$setup-navigation-gap} +
+          env(safe-area-inset-bottom)
+      );
+    }
+  }
+}

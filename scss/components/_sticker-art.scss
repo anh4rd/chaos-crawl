@@ -1,0 +1,50 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+
+.sticker-art {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  flex: 0 0 layout.$pixel-unit * 32;
+  width: layout.$pixel-unit * 32;
+  height: layout.$pixel-unit * 32;
+  transform: rotate(motion.$sticker-art-angle);
+  border: layout.$pixel-unit * 0.75 solid colors.$ink;
+  border-radius: layout.$pixel-unit * 7;
+  background: colors.$accent-soft;
+  color: colors.$purple-dark;
+  box-shadow: layout.$pixel-unit * 1.5 layout.$pixel-unit * 1.5 0 colors.$ink;
+  svg {
+    position: absolute;
+    top: layout.$pixel-unit * 3;
+    right: layout.$pixel-unit * 3;
+    color: colors.$pink;
+  }
+  span {
+    font: fonts.$weight-heavy #{fonts.$size-subheading}/ 0.95
+      fonts.$family-type-sample;
+    letter-spacing: fonts.$tracking-access;
+    text-align: center;
+    text-shadow: layout.$pixel-unit * 0.5 layout.$pixel-unit * 0.5 0
+      colors.$white;
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    flex: 0 0 layout.$pixel-unit * 19;
+    width: layout.$pixel-unit * 19;
+    height: layout.$pixel-unit * 19;
+    border-radius: layout.$pixel-unit * 4.5;
+    box-shadow: layout.$pixel-unit layout.$pixel-unit 0 colors.$ink;
+    span {
+      font-size: fonts.$size-label;
+    }
+    svg {
+      width: fonts.$size-summary-value;
+      height: fonts.$size-summary-value;
+      top: layout.$pixel-unit * 1.75;
+      right: layout.$pixel-unit * 1.75;
+    }
+  }
+}

@@ -1,0 +1,41 @@
+@use "../variables/colors";
+@use "../variables/effects";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.evidence-review-item {
+  overflow: hidden;
+  min-width: 0;
+  border: layout.$control-border-width solid colors.$review-media-border;
+  border-radius: layout.$pixel-unit * 3.25;
+  background: colors.$white;
+  box-shadow: 0 layout.$pixel-unit * 0.5 0
+    rgba(colors.$session-frame-ink, effects.$review-media-shadow-opacity);
+  img,
+  video {
+    display: block;
+    width: 100%;
+    max-height: layout.$pixel-unit * 65;
+    aspect-ratio: 4 / 3;
+    object-fit: contain;
+    background: colors.$review-media-backdrop;
+  }
+  &__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: layout.$pixel-unit * 2;
+    flex-wrap: wrap;
+    padding: layout.$pixel-unit * 2;
+    background: colors.$white;
+    small {
+      color: colors.$review-media-label;
+      font-size: fonts.$size-micro;
+      font-weight: fonts.$weight-extra-bold;
+    }
+    @media (max-width: layout.$review-stack-breakpoint) {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+}

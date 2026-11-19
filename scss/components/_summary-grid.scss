@@ -1,0 +1,33 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: (layout.$pixel-unit * 2.25);
+  margin: (layout.$pixel-unit * 3.5) 0;
+  & > div {
+    display: flex;
+    flex-direction: column;
+    gap: (layout.$pixel-unit * 1.25);
+    padding: (layout.$pixel-unit * 3.25);
+    border: (layout.$pixel-unit * 0.25) solid colors.$summary-grid-border;
+    border-radius: (layout.$pixel-unit * 3);
+    background: colors.$toggle-surface;
+  }
+  & svg {
+    width: (layout.$pixel-unit * 4.75);
+    color: colors.$purple;
+  }
+  & strong {
+    font-size: fonts.$size-small;
+  }
+  & small {
+    font-size: fonts.$size-micro;
+    color: colors.$selected-challenge-copy-text;
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    grid-template-columns: 1fr;
+  }
+}

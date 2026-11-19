@@ -15,22 +15,24 @@ export function buildLeaderboards(
   events: readonly ScoreEvent[],
 ) {
   const personal = new Map(
-    players.map((player) => [
+    players.map((player): [string, LeaderboardEntry] => [
       player.id,
       {
         id: player.id,
         name: player.name,
         score: 0,
-        events: [] as ScoreEvent[],
+        events: [],
       },
     ]),
   );
   const membership = new Map(players.map((player) => [player.id, player.team]));
   const teams = new Map<string, LeaderboardEntry>();
   function teamEntry(name: string) {
-    if (!teams.has(name))
-      teams.set(name, { id: name, name, score: 0, events: [] });
-    return teams.get(name)!;
+    const existing = teams.get(name);
+    if (existing) return existing;
+    const entry: LeaderboardEntry = { id: name, name, score: 0, events: [] };
+    teams.set(name, entry);
+    return entry;
   }
   for (const player of players) if (player.team?.trim()) teamEntry(player.team);
   for (const event of events) {

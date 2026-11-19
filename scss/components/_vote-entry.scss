@@ -1,0 +1,18 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.vote-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: #{layout.$pixel-unit * 2};
+  margin: #{layout.$pixel-unit * 2} 0;
+  padding: #{layout.$pixel-unit * 2.5} #{layout.$pixel-unit * 3.25};
+  border: #{layout.$pixel-unit * 0.25} solid rgba(colors.$white, 0.5);
+  border-radius: #{layout.$pixel-unit * 249.75};
+  background: colors.$challenge-icon-glow;
+  color: colors.$lobby-setup-shadow;
+  font-size: fonts.$size-small;
+  font-weight: fonts.$weight-action;
+  text-decoration: none;
+}

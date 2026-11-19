@@ -1,0 +1,63 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.main-challenge {
+  padding: layout.$spacing-unit * 5;
+  border: layout.$session-border-width solid colors.$ink;
+  border-radius: layout.$radius-lg;
+  background: colors.$white;
+  box-shadow: layout.$spacing-unit layout.$spacing-unit 0 colors.$purple-dark;
+  &__heading-row {
+    display: flex;
+    justify-content: space-between;
+    gap: layout.$spacing-unit * 4;
+  }
+  &__heading {
+    flex: 1;
+    min-width: 0;
+  }
+  &__heading h2 {
+    font-size: layout.$session-header-size;
+    margin-block: layout.$spacing-unit * 2;
+  }
+  &__kind,
+  &__award,
+  &__round {
+    font-size: layout.$session-label-size;
+    font-weight: 900;
+  }
+  &__summary {
+    display: flex;
+    flex-direction: column;
+    gap: layout.$spacing-unit;
+    align-items: flex-end;
+  }
+  &__art {
+    font-size: layout.$session-avatar-size;
+  }
+  &__description {
+    font-size: layout.$session-copy-size;
+  }
+  &__bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: layout.$spacing-unit * 4;
+    margin-top: layout.$spacing-unit * 4;
+  }
+  &__time {
+    display: flex;
+    flex-direction: column;
+    font-size: layout.$session-label-size;
+  }
+  &__time strong {
+    display: flex;
+    align-items: center;
+    gap: layout.$spacing-unit;
+    font-size: layout.$session-header-size;
+  }
+  &__actions {
+    flex: 1;
+    min-width: 0;
+  }
+}

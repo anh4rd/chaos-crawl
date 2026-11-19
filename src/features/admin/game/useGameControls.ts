@@ -6,8 +6,17 @@ import { useChallenges } from "../../../game/hooks/useChallenges";
 import type { Challenge } from "../../../types/database";
 import { deriveRoundControls } from "./roundControls";
 import * as commands from "./gameCommands";
+import * as voting from "../voting/votingControls";
+import { useAdminOperation } from "../useAdminOperation";
 
-export function useGameControls() {
+export function useGameControls(
+  scope: "live" | "tonight" | "screens" = "live",
+) {
+  const run = useAdminOperation(scope);
+  const onFailure = (cause: unknown) =>
+    alert(
+      `Could not update game: ${cause instanceof Error ? cause.message : "Unexpected error"}`,
+    );
   const gameQuery = useGameState();
   const pubsQuery = usePubs();
   const challengesQuery = useChallenges();
@@ -33,23 +42,43 @@ export function useGameControls() {
         item.title === selectedChallenge &&
         String(item.pub_id) === String(pub?.id),
     );
-    await commands.publishLiveGame(selectedPub, selectedChallenge, challenge);
+    await run(async (current) => {
+      await commands.publishLiveGame(
+        selectedPub,
+        selectedChallenge,
+        challenge,
+        current,
+      );
+    }, onFailure);
   }
   async function moveToNextPub() {
     const { nextPub, nextPubChallenge } = round;
-    if ((await commands.moveRound(nextPub, nextPubChallenge)) && nextPub) {
-      setSelectedPub(nextPub.name);
-      setSelectedChallenge(nextPubChallenge?.title ?? "");
-    }
+    await run(async (current) => {
+      if (
+        (await commands.moveRound(nextPub, nextPubChallenge, current)) &&
+        nextPub &&
+        current()
+      ) {
+        setSelectedPub(nextPub.name);
+        setSelectedChallenge(nextPubChallenge?.title ?? "");
+      }
+    }, onFailure);
   }
   async function startSlideshow() {
-    if (await commands.startSlideshow()) navigate("/slideshow?host=true");
+    await run(async (current) => {
+      if ((await commands.startSlideshow(current)) && current())
+        navigate("/slideshow?host=true");
+    }, onFailure);
   }
   function scheduleChallenge(challenge: Pick<Challenge, "id" | "title">) {
-    return commands.scheduleChallenge(challenge, scheduleMinutes);
+    return run(async (current) => {
+      await commands.scheduleChallenge(challenge, scheduleMinutes, current);
+    }, onFailure);
   }
   return {
     game,
+    openVoting: () => run(voting.openVoting, onFailure),
+    closeVoting: () => run(voting.closeVoting, onFailure),
     pubs,
     challenges,
     selectedPub,
@@ -59,14 +88,18 @@ export function useGameControls() {
     scheduleMinutes,
     setScheduleMinutes,
     ...round,
-    revealRoundChallenge: commands.revealRoundChallenge,
+    revealRoundChallenge: (challenge: Challenge) =>
+      run(
+        (current) => commands.revealRoundChallenge(challenge, current),
+        onFailure,
+      ),
     scheduleChallenge,
-    cancelScheduledReveal: commands.cancelScheduledReveal,
-    returnEveryoneToGame: commands.returnEveryoneToGame,
+    cancelScheduledReveal: () => run(commands.cancelScheduledReveal, onFailure),
+    returnEveryoneToGame: () => run(commands.returnEveryoneToGame, onFailure),
     goLive,
     moveToNextPub,
     startSlideshow,
-    stopSlideshow: commands.stopSlideshow,
+    stopSlideshow: () => run(commands.stopSlideshow, onFailure),
     navigate,
     queries: [gameQuery, pubsQuery, challengesQuery],
   };

@@ -1,0 +1,8 @@
+@use "../variables/layout";
+
+@mixin balanced-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: layout.$pixel-unit * 3;
+}

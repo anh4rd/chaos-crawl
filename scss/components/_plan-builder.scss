@@ -1,0 +1,49 @@
+@use "../tools/setup-heading";
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.plan-builder {
+  &__heading h2 {
+    @include setup-heading.setup-heading;
+  }
+  &__heading p {
+    color: colors.$muted-copy-text;
+    font-size: fonts.$size-body;
+  }
+  display: grid;
+  grid-template-columns: (layout.$pixel-unit * 57.5) minmax(0, 1fr);
+  gap: (layout.$pixel-unit * 5);
+  align-items: start;
+  margin-top: (layout.$pixel-unit * 5);
+  &__content {
+    min-width: 0;
+    padding: layout.$plan-builder-padding;
+  }
+  &__heading {
+    display: flex;
+    justify-content: space-between;
+    gap: (layout.$pixel-unit * 3.5);
+    align-items: flex-start;
+    margin-bottom: (layout.$pixel-unit * 5);
+  }
+  &__heading p {
+    margin: (layout.$pixel-unit * 1) 0 0;
+  }
+  @media (max-width: layout.$host-stacked-breakpoint) {
+    grid-template-columns: 1fr;
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    &__content {
+      padding: (layout.$pixel-unit * 3);
+    }
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    &__heading {
+      flex-direction: column;
+    }
+  }
+  .host-portal.host-portal--app & {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,0 +1,45 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.required-feature {
+  display: flex;
+  align-items: center;
+  gap: (layout.$pixel-unit * 2.5);
+  margin: (layout.$pixel-unit * 3.5) 0;
+  padding: (layout.$pixel-unit * 3.5);
+  border: (layout.$pixel-unit * 0.5) solid colors.$required-feature-border;
+  border-radius: (layout.$pixel-unit * 3.25);
+  background: colors.$reference-code-copy;
+  color: colors.$required-feature-text;
+  & > svg {
+    flex: none;
+  }
+  & div {
+    flex: 1;
+  }
+  & strong {
+    font-size: fonts.$size-label;
+  }
+  & p {
+    margin: (layout.$pixel-unit * 0.75) 0 0;
+    font-size: fonts.$size-caption;
+    line-height: 1.4;
+  }
+  & > span {
+    max-width: (layout.$pixel-unit * 28.75);
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-action;
+    text-align: right;
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    & > span {
+      max-width: none;
+      text-align: left;
+    }
+  }
+}

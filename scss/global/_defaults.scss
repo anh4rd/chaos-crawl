@@ -1,0 +1,17 @@
+@use "sass:meta";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+
+@layer theme {
+  :root,
+  :host {
+    --font-sans: #{meta.inspect(fonts.$family-native-sans)};
+    --font-mono: #{meta.inspect(fonts.$family-native-mono)};
+    --spacing: #{layout.$spacing-unit};
+    --default-transition-duration: #{motion.$duration-interaction};
+    --default-transition-timing-function: #{motion.$easing-interaction};
+    --default-font-family: var(--font-sans);
+    --default-mono-font-family: var(--font-mono);
+  }
+}

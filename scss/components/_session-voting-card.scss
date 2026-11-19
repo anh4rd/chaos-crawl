@@ -1,0 +1,40 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.session-voting-card {
+  overflow: hidden;
+  border: layout.$session-border-width solid colors.$ink;
+  border-radius: layout.$radius-lg;
+  background: colors.$white;
+  &--winner {
+    border-color: colors.$pink;
+  }
+  &__copy {
+    display: flex;
+    flex-direction: column;
+    gap: layout.$spacing-unit * 2;
+    padding: layout.$spacing-unit * 4;
+  }
+  &__copy p {
+    margin: 0;
+  }
+  &__vote {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: layout.$spacing-unit * 2;
+    min-height: layout.$session-row-height;
+    border: layout.$session-border-width solid colors.$ink;
+    border-radius: layout.$radius-lg;
+    background: colors.$accent-soft;
+    color: colors.$purple-dark;
+    cursor: pointer;
+  }
+  &__vote[aria-pressed="true"] {
+    background: colors.$pink;
+    color: colors.$white;
+  }
+  &__winner {
+    font-weight: 900;
+    color: colors.$purple;
+  }
+}

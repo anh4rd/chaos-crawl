@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
-import { supabase } from "../../../lib/supabase";
+import { createLegacyAdminTeam } from "../../../lib/legacyAdminCommands";
 import { changeTeam } from "../../../lib/playerApi";
 
+import { useAdminLifetime } from "../useAdminLifetime";
 export function useTeamManagement({
   reloadTeams,
   reloadPlayers,
@@ -9,6 +10,7 @@ export function useTeamManagement({
   reloadTeams: () => Promise<void>;
   reloadPlayers: () => Promise<void>;
 }) {
+  const captureLifetime = useAdminLifetime();
   const [newTeamName, setNewTeamName] = useState("");
   const [creatingTeam, setCreatingTeam] = useState(false);
   const [assigningPlayerIds, setAssigningPlayerIds] = useState<Set<string>>(
@@ -17,12 +19,14 @@ export function useTeamManagement({
   const pendingAssignments = useRef(new Set<string>());
   const creating = useRef(false);
   async function createTeam() {
+    const current = captureLifetime();
     const name = newTeamName.trim();
-    if (!name || creating.current) return;
+    if (!current() || !name || creating.current) return;
     creating.current = true;
     setCreatingTeam(true);
     try {
-      const { error } = await supabase.from("teams").insert({ name });
+      const { error } = await createLegacyAdminTeam(name);
+      if (!current()) return;
       if (error) {
         alert(`Could not create team: ${error.message}`);
         return;
@@ -30,32 +34,40 @@ export function useTeamManagement({
       setNewTeamName("");
       await reloadTeams();
     } catch (cause) {
+      if (!current()) return;
       alert(
         `Could not create team: ${cause instanceof Error ? cause.message : "Unexpected error"}`,
       );
     } finally {
-      creating.current = false;
-      setCreatingTeam(false);
+      if (current()) {
+        creating.current = false;
+        setCreatingTeam(false);
+      }
     }
   }
   async function assignTeam(playerId: string, teamName: string) {
-    if (pendingAssignments.current.has(playerId)) return;
+    const current = captureLifetime();
+    if (!current() || pendingAssignments.current.has(playerId)) return;
     pendingAssignments.current.add(playerId);
     setAssigningPlayerIds(new Set(pendingAssignments.current));
     try {
       const { error } = await changeTeam(playerId, teamName);
+      if (!current()) return;
       if (error) {
         alert(`Could not assign team: ${error.message}`);
         return;
       }
       await reloadPlayers();
     } catch (cause) {
+      if (!current()) return;
       alert(
         `Could not assign team: ${cause instanceof Error ? cause.message : "Unexpected error"}`,
       );
     } finally {
-      pendingAssignments.current.delete(playerId);
-      setAssigningPlayerIds(new Set(pendingAssignments.current));
+      if (current()) {
+        pendingAssignments.current.delete(playerId);
+        setAssigningPlayerIds(new Set(pendingAssignments.current));
+      }
     }
   }
   return {

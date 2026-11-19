@@ -1,0 +1,169 @@
+$spacing-unit: 0.25rem;
+$radius-lg: 1rem;
+$radius-pill: calc(infinity * 1px);
+$border-control: 4px;
+$surface-blur: 12px;
+$field-gap: 7px;
+$control-height: 44px;
+$control-border-width: 1.5px;
+$control-radius: 11px;
+$control-padding: 10px 12px;
+$multiselect-height: 130px;
+$toggle-copy-gap: 4px;
+$toggle-gap: 15px;
+$toggle-margin: 10px;
+$toggle-padding: 13px;
+$toggle-radius: 12px;
+$toggle-border-width: 1px;
+$toggle-track-width: 42px;
+$toggle-track-height: 24px;
+$toggle-track-radius: 20px;
+$toggle-thumb-size: 18px;
+$toggle-thumb-offset: 3px;
+$toggle-thumb-checked-offset: $toggle-track-width - $toggle-thumb-size -
+  $toggle-thumb-offset;
+$focus-ring-width: 3px;
+
+$content-width: 28rem;
+$host-mobile-breakpoint: 760px;
+$host-mobile-nav-height: 72px;
+$setup-navigation-gap: 12px;
+$session-content-width: 980px;
+$session-dock-height: 86px;
+$session-avatar-size: 42px;
+$session-media-height: 220px;
+$session-border-width: 2px;
+$session-header-size: 24px;
+$session-copy-size: 14px;
+$session-label-size: 11px;
+$session-small-size: 12px;
+$session-row-height: 46px;
+
+// Preserve the existing pixel geometry while legacy screens move to this scale.
+$pixel-unit: 4px;
+$small-screen-breakpoint: 520px;
+$tour-mobile-breakpoint: $small-screen-breakpoint;
+$tour-card-max-height: min(70vh, 520px);
+$tour-card-mobile-max-height: 58vh;
+$tour-gap: 14px;
+$tour-edge: 14px;
+$tour-width: 420px;
+$tour-target-pad: 9px;
+$tour-preferred-room: 210px;
+$tour-dock-room: 150px;
+$tour-card-radius: 23px;
+$tour-card-mobile-radius: 19px;
+$invitation-content-width: 760px;
+$compact-breakpoint: 560px;
+$poster-padding: clamp(20px, 5vw, 34px);
+$poster-radius: 26px;
+$poster-border: 3px;
+$poster-shadow-offset: 7px;
+$badge-radius: 999px;
+
+$reference-width: 1520px;
+$reference-sidebar-width: 220px;
+$reference-sidebar-compact-width: 180px;
+$reference-copy-width: 530px;
+$reference-description-width: 720px;
+$swatch-height: 75px;
+$reference-page-gutter: 4%;
+$reference-content-padding: clamp(20px, 4vw, 64px);
+$reference-intro-padding: clamp(25px, 4vw, 56px);
+$reference-breakpoint: 1050px;
+$reference-mobile-breakpoint: 700px;
+$access-width: 475px;
+$access-card-padding: clamp(24px, 5vw, 36px);
+$host-tablet-max: 1120px;
+$host-wide-max: 1450px;
+$host-compact-breakpoint: 850px;
+$host-stacked-breakpoint: 900px;
+$host-rail-breakpoint: 1180px;
+$host-context-breakpoint: 1250px;
+$host-mascot-width: clamp(145px, 17vw, 215px);
+$host-mascot-mobile-width: clamp(125px, 30vw, 165px);
+
+$control-stack-breakpoint: 600px;
+
+$plan-basics-padding: clamp(20px, 4vw, 38px);
+$plan-builder-padding: clamp(15px, 2.5vw, 26px);
+$planner-stack-breakpoint: 720px;
+$planner-narrow-breakpoint: 393px;
+
+$session-compact-breakpoint: 640px;
+
+$timer-readout-min-width: 75px;
+
+$host-overlay-blur: 5px;
+
+$dialog-panel-width: 460px;
+$dialog-form-max-height: min(90vh, 780px);
+
+$session-panel-padding: clamp(17px, 2.1vw, 25px);
+$invite-copy-width: 290px;
+$invite-accent-top: -60px;
+$invite-accent-right: -65px;
+$invite-accent-size: 155px;
+$host-qr-compact-size: 154px;
+
+$review-stack-breakpoint: $small-screen-breakpoint;
+
+$mission-form-breakpoint: 680px;
+
+$session-form-control-height: $pixel-unit * 10.75;
+$mission-points-width: $pixel-unit * 22.5;
+
+$review-control-height: $pixel-unit * 9.75;
+
+$reward-compact-breakpoint: 650px;
+$award-points-min-width: 100px;
+$award-points-max-width: 180px;
+
+$overlay-panel-width: $invitation-content-width;
+$overlay-panel-gutter: $pixel-unit * 7;
+$overlay-panel-vertical-gutter: $pixel-unit * 8;
+$overlay-panel-padding: clamp($pixel-unit * 4, 4vw, $pixel-unit * 7);
+$overlay-scrim-spread: 100vmax;
+$overlay-close-size: $pixel-unit * 8.5;
+$overlay-heading-clearance: $pixel-unit * 9;
+$panel-grid-side-width: $pixel-unit * 63.75;
+
+$player-compact-breakpoint: 480px;
+
+$reveal-width: $pixel-unit * 82.5;
+$reveal-outline-width: $pixel-unit * 0.35;
+
+$entry-content-width: 430px;
+$entry-content-height-offset: 94px;
+$entry-header-height: 42px;
+$entry-code-top: clamp(22px, 5svh, 44px);
+$entry-copy-width: 290px;
+$notice-content-width: 428px;
+
+$radius-circle: 50%;
+
+$banner-padding: clamp(22px, 4vw, 34px);
+$collection-wide-breakpoint: 1140px;
+
+$contribution-panel-max-height: min(90vh, 900px);
+
+$slideshow-height: 100vh;
+$slideshow-caption-padding: clamp($pixel-unit * 5, 4vw, $pixel-unit * 12);
+$slideshow-feedback-width: min($pixel-unit * 125, 80vw);
+
+$inspector-panel-max-height: 85vh;
+
+$playback-marker-radius: 0.75rem;
+$playback-controls-width: 70%;
+
+$playback-media-width: 100vw;
+
+$preview-height: 100svh;
+
+$radius-compact-pill: 99px;
+$console-introduction-width: 44ch;
+
+$legacy-heading-margin: 0.67em;
+
+$native-sub-offset: -0.25em;
+$native-super-offset: -0.5em;

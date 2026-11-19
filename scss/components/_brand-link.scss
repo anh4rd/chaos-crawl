@@ -1,0 +1,89 @@
+@use "../variables/motion";
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.brand-link {
+  font-family: fonts.$family-display;
+  font-size: fonts.$size-brand;
+  line-height: 0.82;
+  color: colors.$white;
+  text-decoration: none;
+  -webkit-text-stroke: layout.$pixel-unit * 0.375 colors.$poster-ink;
+  text-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit 0 colors.$poster-ink;
+  &--compact {
+    display: flex;
+    gap: (layout.$pixel-unit * 2.25);
+    align-items: center;
+    font-weight: fonts.$weight-action;
+    text-decoration: none;
+    letter-spacing: fonts.$tracking-brand;
+    font-size: fonts.$size-heading;
+    font-family: inherit;
+    line-height: inherit;
+    color: var(--black);
+    -webkit-text-stroke: 0 currentColor;
+    text-shadow: none;
+  }
+  &--compact > svg {
+    color: var(--purple);
+  }
+  &__accent {
+    color: var(--purple);
+  }
+  &--host {
+    font-style: italic;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 3);
+    color: colors.$white;
+    text-decoration: none;
+    font-size: fonts.$size-brand-host;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-host-brand;
+    text-shadow: (layout.$pixel-unit * 0.5) (layout.$pixel-unit * 0.5) 0
+      var(--cc-purple-dark);
+    font-family: inherit;
+    line-height: inherit;
+    -webkit-text-stroke: 0 currentColor;
+    @media (max-width: layout.$host-mobile-breakpoint) {
+      font-size: fonts.$size-brand-mobile;
+    }
+    @media (min-width: (layout.$host-mobile-breakpoint + layout.$pixel-unit * 0.25)) and (max-width: layout.$host-tablet-max) {
+      grid-column: 1;
+      grid-row: 1;
+      font-size: fonts.$size-brand-tablet;
+    }
+    @media (min-width: (layout.$host-tablet-max + layout.$pixel-unit * 0.25)) and (max-width: layout.$host-wide-max) {
+      min-width: 0;
+      gap: (layout.$pixel-unit * 2);
+      font-size: fonts.$size-heading;
+      white-space: nowrap;
+    }
+  }
+  &--host .brand-link__accent {
+    color: var(--cc-lime);
+  }
+  &__mark {
+    width: (layout.$pixel-unit * 12);
+    height: (layout.$pixel-unit * 12);
+    border: (layout.$pixel-unit * 0.75) solid var(--cc-ink);
+    border-radius: (layout.$pixel-unit * 3.75);
+    background: var(--cc-lime);
+    color: var(--cc-purple-dark);
+    display: grid;
+    place-items: center;
+    box-shadow: (layout.$pixel-unit * 0.75) (layout.$pixel-unit * 0.75) 0
+      var(--cc-ink);
+    transform: rotate(motion.$brand-mark-angle);
+    @media (max-width: layout.$host-mobile-breakpoint) {
+      width: (layout.$pixel-unit * 9.5);
+      height: (layout.$pixel-unit * 9.5);
+    }
+    @media (min-width: (layout.$host-tablet-max + layout.$pixel-unit * 0.25)) and (max-width: layout.$host-wide-max) {
+      width: (layout.$pixel-unit * 10.5);
+      height: (layout.$pixel-unit * 10.5);
+    }
+  }
+}

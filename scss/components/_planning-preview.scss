@@ -1,0 +1,6 @@
+@use "../variables/layout";
+.planning-preview {
+  transform: translate(0);
+  overflow: hidden;
+  min-height: layout.$host-mobile-nav-height * 4;
+}

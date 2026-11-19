@@ -1,0 +1,11 @@
+@use "../tools/legacy-type";
+@use "../variables/layout";
+
+.screen-intro {
+  &__title {
+    @include legacy-type.bold;
+  }
+  &__description {
+    margin-top: layout.$spacing-unit * 3;
+  }
+}

@@ -15,23 +15,21 @@ export default function LiveTask({
 }) {
   const description = challenge?.description ?? game.challenge_description;
   return (
-    <Card>
-      <p className="text-sm font-bold uppercase text-pink-400">Your Task</p>
-      <h2 className="mt-2 text-3xl font-bold">
+    <Card className="live-task">
+      <p className="live-task__kicker">Your Task</p>
+      <h2 className="live-task__title">
         {challenge?.title ?? game.current_challenge}
       </h2>
-      {description && <p className="mt-3">{description}</p>}
+      {description && <p className="live-task__copy">{description}</p>}
       {challenge && (
-        <p className="mt-3 text-xl font-bold text-yellow-400">
-          +{challenge.points} points
-        </p>
+        <p className="live-task__points">+{challenge.points} points</p>
       )}
       {!challenge ? (
-        <p className="mt-4 text-sm text-zinc-400">
+        <p className="live-task__waiting">
           Waiting for the host to reveal the next challenge...
         </p>
       ) : participation.hasCompleted("main", challenge.id) ? (
-        <p className="mt-4 font-bold text-green-400">✓ Challenge completed</p>
+        <p className="live-task__completed">✓ Challenge completed</p>
       ) : (
         <ChallengeActions
           challenge={{

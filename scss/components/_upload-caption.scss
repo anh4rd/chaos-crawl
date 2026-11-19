@@ -1,0 +1,28 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/layers";
+
+.upload-caption {
+  position: absolute;
+  z-index: layers.$playback-caption;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: layout.$spacing-unit * 6;
+  background: colors.$playback-overlay;
+  color: colors.$white;
+  &__location {
+    font-size: fonts.$size-upload-location;
+    line-height: fonts.$line-height-upload-location;
+    text-transform: uppercase;
+  }
+  &__title {
+    font-weight: fonts.$weight-bold;
+  }
+  &__player {
+    margin-top: layout.$spacing-unit * 2;
+    font-size: fonts.$size-playback-loading;
+    line-height: fonts.$line-height-playback-loading;
+  }
+}

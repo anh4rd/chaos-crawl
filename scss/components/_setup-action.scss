@@ -1,0 +1,27 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.setup-action {
+  min-height: (layout.$pixel-unit * 13);
+  font-size: fonts.$size-label;
+  width: 100%;
+  margin-top: (layout.$pixel-unit * 5);
+  padding: (layout.$pixel-unit * 3.75);
+  border: (layout.$pixel-unit * 0.625) solid var(--cc-ink);
+  border-radius: (layout.$pixel-unit * 3.75);
+  background: var(--cc-pink);
+  color: colors.$white;
+  font-weight: fonts.$weight-heavy;
+  box-shadow: 0 (layout.$pixel-unit * 1) 0 var(--cc-ink);
+  .host-portal--app:has(.host-dashboard) & {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: (layout.$pixel-unit * 2);
+    cursor: pointer;
+  }
+  .host-portal--app:has(.host-dashboard) &:disabled {
+    cursor: not-allowed;
+  }
+}

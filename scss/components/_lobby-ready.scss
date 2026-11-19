@@ -1,0 +1,37 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+@use "../variables/effects";
+
+.lobby-ready {
+  justify-items: center;
+  padding: (layout.$pixel-unit * 4.75) (layout.$pixel-unit * 3.5);
+  text-align: center;
+  &__kicker {
+    color: colors.$purple;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-wide;
+  }
+  & h2 {
+    font-size: fonts.$size-lobby-25;
+  }
+  &__count {
+    color: colors.$purple;
+    font-family: fonts.$family-display;
+    font-size: fonts.$size-example-heading;
+  }
+  & > p {
+    max-width: (layout.$pixel-unit * 80);
+  }
+  &__summary {
+    width: 100%;
+    padding: (layout.$pixel-unit * 2);
+    border-radius: (layout.$pixel-unit * 2.5);
+    color: colors.$navigation-surface;
+    background: colors.$comic-lavender;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-action;
+  }
+}

@@ -1,0 +1,148 @@
+import { act, cleanup, renderHook, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { useSessionPlayerData } from "./useSessionPlayerData";
+
+const { rpc } = vi.hoisted(() => ({ rpc: vi.fn() }));
+vi.mock("../../lib/sessionSupabase", () => ({ supabase: { rpc } }));
+beforeEach(() => {
+  rpc.mockReset();
+  rpc.mockImplementation(() => Promise.resolve({ data: null, error: null }));
+});
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
+
+it("discards a pending view after the participant credential changes", async () => {
+  let resolveOld: (value: unknown) => void = () => {};
+  rpc.mockImplementation((name: string, args: { p_player_token?: string }) =>
+    name === "cc_get_game_session_view"
+      ? args.p_player_token === "old"
+        ? new Promise((resolve) => {
+            resolveOld = resolve;
+          })
+        : Promise.resolve({
+            data: {
+              session: { final_gallery_open: false },
+              player: { id: "new-player" },
+            },
+            error: null,
+          })
+      : Promise.resolve({ data: null, error: null }),
+  );
+  const { result, rerender } = renderHook(
+    ({ token }) => useSessionPlayerData("123456", token, "game"),
+    { initialProps: { token: "old" } },
+  );
+  rerender({ token: "new" });
+  await waitFor(() =>
+    expect(result.current.view?.player.id).toBe("new-player"),
+  );
+  await act(async () => {
+    resolveOld({
+      data: {
+        session: { final_gallery_open: false },
+        player: { id: "old-player" },
+      },
+      error: null,
+    });
+  });
+  expect(result.current.view?.player.id).toBe("new-player");
+  expect(
+    rpc.mock.calls.filter(
+      ([name, args]) =>
+        name === "cc_get_player_secret_missions" &&
+        args.p_player_token === "old",
+    ),
+  ).toHaveLength(0);
+});
+
+it("cleans polling timers and ignores in-flight work on unmount", async () => {
+  vi.useFakeTimers();
+  let resolveView: (value: unknown) => void = () => {};
+  rpc.mockImplementation((name: string) =>
+    name === "cc_get_game_session_view"
+      ? new Promise((resolve) => {
+          resolveView = resolve;
+        })
+      : Promise.resolve({ data: null, error: null }),
+  );
+  const { unmount } = renderHook(() =>
+    useSessionPlayerData("123456", "token", "game"),
+  );
+  unmount();
+  await act(async () => {
+    resolveView({
+      data: { session: { final_gallery_open: false }, player: { id: "late" } },
+      error: null,
+    });
+    vi.advanceTimersByTime(30000);
+  });
+  expect(
+    rpc.mock.calls.filter(([name]) => name === "cc_get_game_session_view"),
+  ).toHaveLength(1);
+  expect(
+    rpc.mock.calls.filter(([name]) => name === "cc_get_player_secret_missions"),
+  ).toHaveLength(0);
+  expect(vi.getTimerCount()).toBe(0);
+});
+
+for (const signal of ["session", "gallery", "status"] as const) {
+  it(`does not promote a completed gallery leaderboard while the ${signal} voting signal is active`, async () => {
+    rpc.mockImplementation((name: string) =>
+      Promise.resolve({
+        data:
+          name === "cc_get_game_session_view"
+            ? {
+                session: {
+                  final_gallery_open: true,
+                  final_voting_open: signal === "session",
+                },
+                player: { id: "player" },
+              }
+            : name === "cc_player_get_session_final_round_gallery"
+              ? {
+                  voting_open: signal === "gallery",
+                  challenge_status: signal === "status" ? "voting" : "results",
+                  voting_completed: true,
+                  leaderboard: [
+                    {
+                      player_id: "unpublished",
+                      name: "Unpublished leader",
+                      score: 777,
+                    },
+                  ],
+                }
+              : null,
+        error: null,
+      }),
+    );
+    const { result } = renderHook(() =>
+      useSessionPlayerData("123456", "token", "final"),
+    );
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.leaderboard).toEqual([]);
+    expect(result.current.finalGallery?.voting_completed).toBe(true);
+  });
+}
+
+it("finishes loading when the gallery RPC has no current gallery", async () => {
+  rpc.mockImplementation((name: string) =>
+    Promise.resolve({
+      data:
+        name === "cc_get_game_session_view"
+          ? {
+              session: { final_gallery_open: true, final_voting_open: false },
+              player: { id: "player" },
+            }
+          : null,
+      error: null,
+    }),
+  );
+  const { result } = renderHook(() =>
+    useSessionPlayerData("123456", "token", "final"),
+  );
+  await waitFor(() => expect(result.current.loading).toBe(false));
+  expect(result.current.finalGallery).toBeNull();
+  expect(result.current.leaderboard).toEqual([]);
+});

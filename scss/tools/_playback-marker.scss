@@ -1,0 +1,9 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+@mixin playback-marker {
+  padding: layout.$spacing-unit * 2 layout.$spacing-unit * 4;
+  border-radius: layout.$playback-marker-radius;
+  background: colors.$playback-overlay;
+  color: colors.$white;
+}

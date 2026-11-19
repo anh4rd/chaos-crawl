@@ -1,0 +1,354 @@
+@use "../tools/balanced-row";
+@use "../variables/layers";
+@use "../variables/fonts";
+@use "../variables/colors";
+@use "../variables/layout";
+
+.control-row {
+  display: flex;
+  gap: layout.$pixel-unit * 3.5;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.control-row {
+  &--timer {
+    display: flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.75;
+    padding: layout.$pixel-unit * 1.25;
+    border-radius: layout.$pixel-unit * 3.5;
+    background: colors.$white;
+    flex-wrap: nowrap;
+  }
+  &--break .btn--control-primary {
+    padding-inline: layout.$pixel-unit * 3.5;
+  }
+}
+
+.control-row {
+  &--review {
+    grid-column: 1 / -1;
+    align-items: normal;
+    gap: layout.$pixel-unit * 2.25;
+    > button {
+      justify-content: center;
+    }
+  }
+}
+
+.control-row {
+  &--reward {
+    justify-content: flex-end;
+    gap: layout.$pixel-unit * 2.25;
+    @media (max-width: layout.$reward-compact-breakpoint) {
+      display: grid;
+      grid-template-columns: 1fr;
+      > button {
+        width: 100%;
+      }
+    }
+  }
+}
+
+.control-row {
+  &--idea-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: layout.$pixel-unit * 2;
+    margin-top: layout.$pixel-unit * 1.5;
+    align-items: normal;
+    flex-wrap: nowrap;
+  }
+}
+
+.control-row {
+  &--heading-actions {
+    justify-content: flex-end;
+    gap: layout.$pixel-unit * 3;
+    flex-wrap: nowrap;
+    @media (max-width: layout.$reward-compact-breakpoint) {
+      align-items: stretch;
+      flex-direction: column;
+    }
+  }
+}
+
+.control-row {
+  &--moderation {
+    flex: 0 0 auto;
+    align-items: normal;
+    flex-wrap: nowrap;
+    gap: layout.$pixel-unit * 1.75;
+    @media (max-width: layout.$reward-compact-breakpoint) {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+}
+
+.control-row {
+  &--filters {
+    gap: layout.$pixel-unit * 2.5;
+    justify-content: space-between;
+    margin-bottom: layout.$pixel-unit * 3.5;
+    flex-wrap: nowrap;
+    align-items: normal;
+    @media (max-width: layout.$control-stack-breakpoint) {
+      flex-direction: column;
+    }
+  }
+}
+
+.control-row {
+  &--record-header,
+  &--score {
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    align-items: normal;
+  }
+  &--record-header {
+    gap: layout.$pixel-unit * 2.5;
+  }
+  &--score {
+    gap: normal;
+    padding: layout.$pixel-unit * 1.75 0;
+    border-top: layout.$pixel-unit * 0.25 solid colors.$score-row-border;
+    font-size: fonts.$size-small;
+    margin-top: layout.$pixel-unit * 2;
+  }
+}
+
+.control-row {
+  &--playback,
+  &--playback-end {
+    position: absolute;
+    top: layout.$spacing-unit * 6;
+    right: layout.$spacing-unit * 6;
+    align-items: normal;
+  }
+  &--playback {
+    z-index: layers.$playback-controls;
+    max-width: layout.$playback-controls-width;
+    justify-content: flex-end;
+    gap: layout.$spacing-unit * 2;
+  }
+  &--playback-end {
+    display: block;
+    flex-wrap: nowrap;
+    gap: normal;
+  }
+}
+
+.control-row {
+  &--console-preview {
+    flex-wrap: nowrap;
+  }
+  &--console-meta {
+    flex-wrap: nowrap;
+  }
+  &--console-actions {
+    flex-wrap: nowrap;
+  }
+  &--console-actions-stack {
+    flex-wrap: nowrap;
+  }
+  &--console-schedule {
+    flex-wrap: nowrap;
+  }
+  &--console-title {
+    flex-wrap: nowrap;
+  }
+  &--console-card-actions {
+    flex-wrap: nowrap;
+  }
+  &--console-add {
+    flex-wrap: nowrap;
+  }
+  &--console-row-actions {
+    flex-wrap: nowrap;
+  }
+  &--console-preview {
+    @include balanced-row.balanced-row;
+  }
+  &--console-meta {
+    @include balanced-row.balanced-row;
+  }
+  &--console-actions {
+    @include balanced-row.balanced-row;
+  }
+  &--console-schedule {
+    @include balanced-row.balanced-row;
+  }
+  &--console-title {
+    @include balanced-row.balanced-row;
+  }
+  &--console-add {
+    @include balanced-row.balanced-row;
+  }
+  &--console-preview {
+    align-items: flex-start;
+    margin-top: (layout.$pixel-unit * 3.75);
+  }
+  &--console-meta {
+    margin-top: (layout.$pixel-unit * 3.75);
+    padding-top: (layout.$pixel-unit * 3.25);
+    border-top: (layout.$pixel-unit * 0.25) solid colors.$outline-divider;
+    color: colors.$console-muted;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-medium-bold;
+  }
+  &--console-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 1.25);
+  }
+  &--console-actions {
+    margin-top: (layout.$pixel-unit * 3.5);
+  }
+  &--console-actions-stack {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  &--console-schedule {
+    justify-content: flex-start;
+    margin-top: (layout.$pixel-unit * 3.25);
+    padding-top: (layout.$pixel-unit * 3.25);
+    border-top: (layout.$pixel-unit * 0.25) solid colors.$outline-divider;
+    color: colors.$console-muted;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-extra-bold;
+  }
+  &--console-schedule input {
+    width: (layout.$pixel-unit * 13.5);
+    padding: (layout.$pixel-unit * 1.75) (layout.$pixel-unit * 1.25);
+    border: (layout.$pixel-unit * 0.25) solid colors.$console-control-border;
+    border-radius: (layout.$pixel-unit * 2.5);
+    background: colors.$reward-field-surface;
+    color: colors.$ink;
+    font: inherit;
+    text-align: center;
+  }
+  &--console-title {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: (layout.$pixel-unit * 1.5);
+  }
+  &--console-title h3 {
+    margin: 0;
+    color: colors.$ink;
+    font-size: fonts.$size-label;
+    font-weight: fonts.$weight-heading;
+  }
+  &--console-add input {
+    width: 100%;
+    min-width: 0;
+    min-height: (layout.$pixel-unit * 10.5);
+    padding: (layout.$pixel-unit * 2.5) (layout.$pixel-unit * 3);
+    border: (layout.$pixel-unit * 0.375) solid colors.$console-control-border;
+    border-radius: (layout.$pixel-unit * 3);
+    background: colors.$white;
+    color: colors.$ink;
+    font: inherit;
+    font-size: fonts.$size-small;
+  }
+  &--console-add {
+    margin-top: (layout.$pixel-unit * 3.25);
+  }
+  &--console-add input {
+    flex: 1;
+  }
+  &--console-row-actions {
+    display: flex;
+    flex-direction: column;
+    gap: (layout.$pixel-unit * 1.5);
+    flex: 0 0 auto;
+  }
+  &--console-card-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: (layout.$pixel-unit * 2);
+    margin-top: (layout.$pixel-unit * 2);
+  }
+}
+
+.control-row {
+  &--console-row-actions {
+    align-items: normal;
+  }
+}
+
+.control-row {
+  &--tabs,
+  &--spread,
+  &--spread-start,
+  &--score-actions,
+  &--single-actions,
+  &--single-actions-loose,
+  &--chips,
+  &--chips-close,
+  &--slot,
+  &--slot-close,
+  &--slot-tight,
+  &--slot-loose {
+    flex-wrap: nowrap;
+    align-items: normal;
+    gap: normal;
+  }
+  &--tabs {
+    gap: layout.$spacing-unit * 2;
+  }
+  &--spread {
+    justify-content: space-between;
+    gap: layout.$spacing-unit * 4;
+  }
+  &--spread-start {
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: layout.$spacing-unit * 3;
+  }
+  &--score-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: layout.$spacing-unit * 2;
+    margin-top: layout.$spacing-unit * 3;
+  }
+  &--single-actions,
+  &--single-actions-loose {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: layout.$spacing-unit * 3;
+    margin-top: layout.$spacing-unit * 4;
+  }
+  &--single-actions-loose {
+    margin-top: layout.$spacing-unit * 5;
+  }
+  &--chips,
+  &--chips-close {
+    flex-wrap: wrap;
+    gap: layout.$spacing-unit * 2;
+    margin-top: layout.$spacing-unit * 4;
+  }
+  &--chips-close {
+    margin-top: layout.$spacing-unit * 2;
+  }
+  &--slot,
+  &--slot-close,
+  &--slot-tight,
+  &--slot-loose {
+    display: block;
+  }
+  &--slot {
+    margin-top: layout.$spacing-unit * 4;
+  }
+  &--slot-close {
+    margin-top: layout.$spacing-unit * 2;
+  }
+  &--slot-tight {
+    margin-top: layout.$spacing-unit * 3;
+  }
+  &--slot-loose {
+    margin-top: layout.$spacing-unit * 6;
+  }
+}

@@ -1,0 +1,24 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+@use "../variables/effects";
+
+.lobby-participation {
+  & h3 {
+    margin: 0;
+    color: colors.$session-text;
+    font-family: fonts.$family-display;
+    font-size: fonts.$size-ribbon;
+    text-align: center;
+  }
+  &__choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: (layout.$pixel-unit * 2);
+  }
+  // Keep the existing success tone above the shared panel paragraph color.
+  &__confirmation {
+    color: colors.$lobby-participation-text !important;
+  }
+}

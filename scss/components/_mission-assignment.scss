@@ -1,0 +1,21 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+.mission-assignment {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: layout.$pixel-unit * 3;
+  padding: layout.$pixel-unit * 3.75;
+  border: layout.$pixel-unit * 0.25 solid colors.$mission-form-border;
+  border-radius: layout.$pixel-unit * 4;
+  background: colors.$mission-form-surface;
+  &__time {
+    grid-column: 1 / 2;
+  }
+  @media (max-width: layout.$mission-form-breakpoint) {
+    grid-template-columns: minmax(0, 1fr);
+    &__time {
+      grid-column: auto;
+    }
+  }
+}

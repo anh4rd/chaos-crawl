@@ -1,0 +1,20 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.duration-control {
+  display: flex;
+  align-items: center;
+  gap: (layout.$pixel-unit * 1.25);
+  color: colors.$duration-control-text;
+  font-size: fonts.$size-navigation-caption;
+  & input {
+    width: (layout.$pixel-unit * 13);
+    padding: (layout.$pixel-unit * 1.5);
+    border: (layout.$pixel-unit * 0.25) solid colors.$duration-control-border;
+    border-radius: (layout.$pixel-unit * 1.75);
+  }
+  @media (max-width: layout.$compact-breakpoint) {
+    grid-column: 2;
+  }
+}

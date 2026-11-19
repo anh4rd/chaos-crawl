@@ -1,0 +1,29 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+@use "../variables/effects";
+
+.invite-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: (layout.$pixel-unit * 2);
+  min-width: 0;
+  padding: (layout.$pixel-unit * 2.25) (layout.$pixel-unit * 2.75);
+  overflow: hidden;
+  border: (layout.$pixel-unit * 0.25) solid colors.$invite-link-border;
+  border-radius: (layout.$pixel-unit * 2.75);
+  color: colors.$navigation-surface;
+  background: colors.$comic-lavender;
+  font-size: fonts.$size-micro;
+  font-weight: fonts.$weight-extra-bold;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  & span {
+    flex: none;
+    color: colors.$purple;
+    font-size: fonts.$size-intro;
+  }
+}

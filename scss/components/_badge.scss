@@ -1,0 +1,285 @@
+@use "../tools/playback-marker";
+@use "../variables/layers";
+@use "../tools/reveal-heading";
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+
+.badge {
+  border-radius: layout.$badge-radius;
+
+  &--eyebrow {
+    display: inline-block;
+    background: colors.$accent-soft;
+    padding: layout.$pixel-unit * 1.25 layout.$pixel-unit * 3;
+    font-size: fonts.$size-caption;
+    font-weight: fonts.$weight-extra-bold;
+    letter-spacing: fonts.$tracking-eyebrow;
+  }
+
+  &--sticker {
+    display: inline-block;
+    background: colors.$pink;
+    border: layout.$poster-border solid colors.$poster-ink;
+    padding: layout.$pixel-unit * 2.25 layout.$pixel-unit * 3.75;
+    font-weight: fonts.$weight-extra-bold;
+    color: colors.$white;
+    transform: rotate(motion.$sticker-angle);
+  }
+
+  &--metadata {
+    display: flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.5;
+    background: colors.$badge-surface;
+    border: layout.$pixel-unit * 0.25 solid colors.$badge-border;
+    padding: layout.$pixel-unit * 2 layout.$pixel-unit * 2.75;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-semibold;
+  }
+  &--outline {
+    display: inline-flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 1.5);
+    padding: (layout.$pixel-unit * 1.25) (layout.$pixel-unit * 2.5);
+    border: (layout.$pixel-unit * 0.25) solid colors.$reference-outline;
+    border-radius: (layout.$pixel-unit * 12.5);
+    font-size: fonts.$size-caption;
+  }
+  &--subtle {
+    display: inline-block;
+    background: colors.$surface-soft;
+    color: colors.$reference-tag;
+    border-radius: (layout.$pixel-unit * 1.25);
+    padding: (layout.$pixel-unit * 0.75) (layout.$pixel-unit * 1.75);
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-extra-bold;
+  }
+}
+
+.badge {
+  &--dialog {
+    display: inline-flex;
+    padding: layout.$pixel-unit * 1.25 layout.$pixel-unit * 2.25;
+    border-radius: layout.$badge-radius;
+    color: colors.$dialog-kicker-ink;
+    background: colors.$challenge-icon-glow;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-compact;
+  }
+}
+
+.badge {
+  .host-management &--round {
+    display: inline-flex;
+    width: fit-content;
+    padding: layout.$pixel-unit * 1.5 layout.$pixel-unit * 2.25;
+    border: layout.$control-border-width solid colors.$session-frame-ink;
+    border-radius: layout.$pixel-unit * 2;
+    color: colors.$round-caption-ink;
+    background: colors.$round-caption-surface;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-round-caption;
+  }
+}
+
+.badge {
+  &--vote {
+    padding: layout.$pixel-unit * 1.25 layout.$pixel-unit * 2;
+    background: colors.$vote-badge-surface;
+    color: colors.$vote-badge-ink;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-action;
+  }
+}
+
+.badge {
+  &--stage,
+  &--stage-break {
+    display: inline-flex;
+    width: fit-content;
+    padding: layout.$pixel-unit layout.$pixel-unit * 1.75;
+    color: colors.$purple-dark;
+    background: colors.$accent-soft;
+    font-family: fonts.$family-stage;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-stage-label;
+  }
+  &--stage-break {
+    color: colors.$white;
+    background: colors.$pink;
+  }
+}
+
+.badge {
+  &--reveal {
+    @include reveal-heading.reveal-heading;
+    border-radius: 0;
+    font-size: fonts.$size-lobby-25;
+    line-height: 0.86;
+    letter-spacing: fonts.$tracking-brand;
+  }
+}
+
+.badge {
+  &--entity {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    padding: layout.$pixel-unit layout.$pixel-unit * 1.75;
+    border-radius: layout.$pixel-unit * 1.75;
+    color: colors.$entity-badge-ink;
+    background: colors.$surface-soft;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-heavy;
+    text-transform: capitalize;
+  }
+}
+
+.badge {
+  &--idea {
+    display: inline-flex;
+    align-items: center;
+    max-width: calc(100% - #{layout.$pixel-unit * 9.75});
+    min-height: layout.$pixel-unit * 6.25;
+    padding: layout.$pixel-unit * 1.25 layout.$pixel-unit * 2;
+    border-radius: layout.$badge-radius;
+    color: colors.$assignment-icon-ink;
+    background: colors.$surface-soft;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-heavy;
+    text-transform: uppercase;
+    letter-spacing: fonts.$tracking-stage-label;
+  }
+  &--idea-main {
+    background: colors.$choice-lavender;
+  }
+  &--idea-side {
+    color: colors.$idea-side-ink;
+    background: colors.$assignment-icon-surface;
+  }
+  &--idea-secret {
+    color: colors.$white;
+    background: colors.$purple-dark;
+  }
+  &--idea-location {
+    color: colors.$idea-location-ink;
+    background: colors.$idea-location-surface;
+  }
+  &--idea-route {
+    background: colors.$idea-route-surface;
+  }
+}
+
+.badge {
+  &.badge--tag {
+    padding: layout.$pixel-unit * 1.25 layout.$pixel-unit * 1.75;
+    border-radius: layout.$pixel-unit * 1.75;
+    color: colors.$idea-tag-ink;
+    background: colors.$idea-tag-surface;
+    font-size: fonts.$size-navigation-caption;
+    font-weight: fonts.$weight-extra-bold;
+  }
+}
+
+.badge {
+  &--moderation-type {
+    display: inline-block;
+    padding: layout.$pixel-unit * 0.75 layout.$pixel-unit * 1.75;
+    border-radius: layout.$pixel-unit * 1.25;
+    color: colors.$purple;
+    background: colors.$moderation-type-surface;
+    font-size: fonts.$size-tiny;
+    font-weight: fonts.$weight-heavy;
+    text-transform: uppercase;
+  }
+}
+
+.badge {
+  &--playback {
+    @include playback-marker.playback-marker;
+    position: absolute;
+    z-index: layers.$playback-controls;
+    top: layout.$spacing-unit * 24;
+    right: layout.$spacing-unit * 6;
+  }
+}
+
+.badge {
+  &--console-status {
+    display: inline-flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 1);
+    padding: (layout.$pixel-unit * 1.25) (layout.$pixel-unit * 2);
+    border-radius: layout.$badge-radius;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-action;
+    white-space: nowrap;
+  }
+  &--console-live {
+    background: colors.$accent-soft;
+    color: colors.$ink;
+  }
+  &--console-scheduled {
+    background: colors.$hint-surface;
+    color: colors.$purple-dark;
+  }
+  &--console-points {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: (layout.$pixel-unit * 1.75) (layout.$pixel-unit * 2.25);
+    border-radius: layout.$badge-radius;
+    background: colors.$pink;
+    color: colors.$white;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heading;
+    white-space: nowrap;
+    box-shadow: 0 (layout.$pixel-unit * 0.75) 0 colors.$console-points-shadow;
+  }
+}
+
+.badge {
+  &--round-live,
+  &--round-passed,
+  &--round-next,
+  &--completion,
+  &--team-name {
+    border-radius: layout.$radius-pill;
+    padding: layout.$spacing-unit layout.$spacing-unit * 3;
+    font-size: fonts.$size-legacy-caption;
+    line-height: fonts.$line-height-legacy-caption;
+    font-weight: fonts.$weight-bold;
+  }
+  &--round-live {
+    color: colors.$black;
+    background-color: colors.$legacy-yellow;
+  }
+  &--round-passed {
+    background-color: colors.$legacy-border;
+  }
+  &--round-next {
+    background-color: colors.$input-border;
+  }
+  &--completion,
+  &--team-name {
+    font-size: fonts.$size-legacy-small;
+    line-height: fonts.$line-height-legacy-small;
+    font-weight: inherit;
+  }
+  &--completion {
+    background-color: color-mix(
+      in oklab,
+      colors.$legacy-completion-surface 60%,
+      transparent
+    );
+  }
+  &--team-name {
+    padding-block: layout.$spacing-unit * 2;
+    background-color: colors.$legacy-dark-surface;
+  }
+}

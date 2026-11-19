@@ -1,0 +1,24 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.item-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: #{layout.$pixel-unit * 1.5};
+  border-radius: #{layout.$pixel-unit * 3};
+  padding: #{layout.$pixel-unit * 2.5} #{layout.$pixel-unit * 3};
+  font: inherit;
+  font-size: fonts.$size-small;
+  font-weight: fonts.$weight-action;
+  cursor: pointer;
+  &:disabled {
+    opacity: colors.$preview-item-disabled-opacity;
+    cursor: not-allowed;
+  }
+  margin-top: auto;
+  border: 0;
+  background: colors.$challenge-icon-glow;
+  color: colors.$lobby-setup-shadow;
+}

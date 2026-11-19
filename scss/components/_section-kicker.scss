@@ -1,0 +1,10 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+
+.section-kicker {
+  display: block;
+  color: colors.$purple-mid;
+  font-weight: fonts.$weight-action;
+  letter-spacing: fonts.$tracking-choice;
+  font-size: fonts.$size-caption;
+}

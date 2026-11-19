@@ -1,0 +1,14 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.vote-guidance {
+  padding: #{layout.$pixel-unit * 3} #{layout.$pixel-unit * 3.5};
+  border: #{layout.$pixel-unit * 0.25} solid colors.$summary-tile-label;
+  border-radius: #{layout.$pixel-unit * 3.5};
+  font-size: fonts.$size-small;
+  line-height: 1.4;
+  font-weight: fonts.$weight-extra-bold;
+  background: rgba(colors.$purple-dark, 0.44);
+  color: colors.$white;
+}

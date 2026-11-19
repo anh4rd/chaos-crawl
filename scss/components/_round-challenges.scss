@@ -1,0 +1,12 @@
+@use "../variables/colors";
+@use "../variables/layout";
+.round-challenges {
+  &__title {
+    margin-top: layout.$spacing-unit;
+  }
+  &__next {
+    margin-top: layout.$spacing-unit * 6;
+    border-top: layout.$pixel-unit * 0.25 solid colors.$legacy-border;
+    padding-top: layout.$spacing-unit * 4;
+  }
+}

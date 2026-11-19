@@ -82,7 +82,7 @@ and [Vite source-map guide](https://docs.sentry.io/platforms/javascript/guides/r
 | `npm run dev`                             | Start the local development server                                   |
 | `npm run build`                           | Check strict TypeScript contracts and build production assets        |
 | `npm run preview`                         | Serve the production build locally                                   |
-| `npm run lint`                            | Check application and unit-test code with Oxlint                     |
+| `npm run lint`                            | Check TypeScript/JS, SCSS and formatting                             |
 | `npm test`                                | Run deterministic unit and component regression tests                |
 | `npm run test:watch`                      | Run unit tests in watch mode                                         |
 | `npm run format`                          | Format source, tests, configuration, and this document               |
@@ -111,15 +111,54 @@ prefix. Setup and cleanup failures fail the test. No live journeys are run by
 `npm run test:e2e`, and no live backend is needed for local unit or default browser
 regressions.
 
+## Agent guidance and styling
+
+[AGENTS.md](AGENTS.md) is the source of coding rules for this repository. Keep
+strict TypeScript and preserve the current routes, Supabase contracts and visual
+identity. [Refactor progress](docs/refactor-progress.md) records completed slices,
+verification evidence, and remaining work.
+
+Application styling uses project-owned SCSS in `scss/`, global BEM classes,
+and shared design tokens. `src/main.tsx` imports `scss/style.scss` exactly once;
+that entry loads the owned native reset/base rules, component blocks, route shells
+and utilities in order. There are no legacy stylesheet imports or Tailwind build
+dependencies. Shared controls, layouts, icons and dialogs own their SCSS blocks;
+preserve the existing reset and cascade when changing them.
+
+`npm run lint` runs Oxlint, Stylelint and formatting checks. Run `npm run lint:js`
+or `npm run lint:scss` for an individual linter. `npm run review:load` reports the
+review-relevant diff against `main`, including uncommitted and untracked source.
+Above roughly 800 changed lines, supply a review map and distinguish mechanical
+verification from behavior needing human review. New runtime dependencies still
+require approval.
+
 ## Application boundaries
+
+Open `/chaos-crawl/#/styleguide` for the component reference (no login required).
+It includes live local demos, usage snippets, foundation colors and typography,
+host CSS patterns, and a searchable catalog of every component module in
+`src/components` and `src/features`. Connected features list their data and auth
+dependencies. Demos use local state and do not read or write game data.
+When adding or changing reusable UI, update the examples in
+`src/pages/Styleguide.tsx` and integration notes in
+`src/features/styleguide/catalog.ts`. New component modules appear in the catalog
+automatically; previews reuse the production components and styles.
 
 - `src/pages` composes routes. Admin tabs, game challenges, voting, slideshow
   playback, and submission review have focused components in `src/features`.
+- The V2 host route keys its feature coordinator by session ID. Focused controllers
+  own lobby, participation, roster, timer, rewards, final voting, secret reviews
+  and moderation. Host polling lives in its read hook, and timer writes are queued.
+- Host and participant persistence commands are typed services in `src/lib`.
+  Shared session UI receives presentation data and callbacks, with no backend access.
 - `src/game/hooks` owns live reads and challenge participation. Read hooks expose
   `{ data, loading, error, reload }`, cancel superseded requests, and refresh from
   the database when Realtime changes arrive.
-- `src/lib` owns persistence commands and pure score/vote projections. Commands
-  return `{ data, error }`, including transport and configuration failures.
+- `src/lib` owns persistence commands and pure score/vote projections. Boundaries
+  using `runApi` return `{ data, error }`, including transport and configuration
+  failures. `hostAuth` and `legacyAdminCommands` preserve their SDK result/error
+  contracts; `gameSessions` returns a launch value or throws. Callers retain the
+  corresponding error handling.
 
 Score displays and host manual adjustments use the `score_events` ledger.
 Personal events count for the player and their current team; direct team events

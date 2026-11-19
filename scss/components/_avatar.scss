@@ -1,0 +1,102 @@
+@use "../tools/image-cover";
+@use "../variables/effects";
+@use "../variables/motion";
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.avatar {
+  &--account {
+    box-shadow: (layout.$pixel-unit * 0.5) (layout.$pixel-unit * 0.5) 0
+      colors.$host-avatar-ink;
+    width: (layout.$pixel-unit * 10.5);
+    height: (layout.$pixel-unit * 10.5);
+    border: (layout.$pixel-unit * 0.75) solid var(--cc-ink);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: var(--cc-lime);
+    color: var(--cc-ink);
+    font-weight: fonts.$weight-heavy;
+  }
+}
+
+.avatar {
+  &--roster,
+  &--compact,
+  &--member {
+    display: grid;
+    width: (layout.$pixel-unit * 7.75);
+    height: (layout.$pixel-unit * 7.75);
+    flex: 0 0 (layout.$pixel-unit * 7.75);
+    place-items: center;
+    overflow: hidden;
+    border: (layout.$pixel-unit * 0.25) solid colors.$session-frame-ink;
+    border-radius: 50%;
+    color: colors.$session-text;
+    background: colors.$challenge-icon-glow;
+    font-size: fonts.$size-micro;
+    font-weight: fonts.$weight-heavy;
+  }
+  &--roster img,
+  &--compact img,
+  &--member img {
+    @include image-cover.image-cover;
+  }
+  &--compact {
+    width: (layout.$pixel-unit * 6.75);
+    height: (layout.$pixel-unit * 6.75);
+    flex-basis: (layout.$pixel-unit * 6.75);
+  }
+  &--member {
+    width: (layout.$pixel-unit * 6.5);
+    height: (layout.$pixel-unit * 6.5);
+    flex-basis: (layout.$pixel-unit * 6.5);
+  }
+}
+
+.avatar {
+  &--choice {
+    display: grid;
+    flex: 0 0 layout.$pixel-unit * 9.25;
+    place-items: center;
+    width: layout.$pixel-unit * 9.25;
+    height: layout.$pixel-unit * 9.25;
+    border-radius: 50%;
+    background: colors.$choice-lavender;
+    color: colors.$assignment-icon-ink;
+    font-weight: fonts.$weight-heavy;
+  }
+}
+
+.avatar {
+  &--console {
+    display: grid;
+    place-items: center;
+    flex: 0 0 (layout.$pixel-unit * 9.5);
+    width: (layout.$pixel-unit * 9.5);
+    height: (layout.$pixel-unit * 9.5);
+    border: (layout.$pixel-unit * 0.75) solid colors.$white;
+    border-radius: layout.$radius-compact-pill;
+    background: colors.$purple;
+    color: colors.$white;
+    font-size: fonts.$size-intro;
+    font-weight: fonts.$weight-heading;
+    box-shadow: 0 0 0 (layout.$pixel-unit * 0.5) colors.$accent-soft;
+  }
+}
+
+.avatar {
+  &--directory {
+    display: grid;
+    place-items: center;
+    flex: 0 0 (layout.$pixel-unit * 9.5);
+    width: layout.$pixel-unit * 9.5;
+    height: layout.$pixel-unit * 9.5;
+    border-radius: layout.$pixel-unit * 3.25;
+    color: colors.$white;
+    background: colors.$purple;
+    font-size: fonts.$size-intro;
+    font-weight: fonts.$weight-heavy;
+  }
+}

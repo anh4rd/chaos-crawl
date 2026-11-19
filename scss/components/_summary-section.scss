@@ -1,0 +1,28 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/fonts";
+
+.summary-section {
+  margin: (layout.$pixel-unit * 4) 0;
+  padding: (layout.$pixel-unit * 3.5);
+  border: (layout.$pixel-unit * 0.25) solid colors.$toggle-border;
+  border-radius: (layout.$pixel-unit * 3.25);
+  background: colors.$toggle-surface;
+  & h3 {
+    margin: 0 0 (layout.$pixel-unit * 2.25);
+    font-size: fonts.$size-body;
+  }
+  & strong {
+    font-size: fonts.$size-small;
+  }
+  & p {
+    color: colors.$challenge-tile-text;
+    font-size: fonts.$size-caption;
+    line-height: 1.5;
+  }
+  & li {
+    color: colors.$challenge-tile-text;
+    font-size: fonts.$size-caption;
+    line-height: 1.5;
+  }
+}

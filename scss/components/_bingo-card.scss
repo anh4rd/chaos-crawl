@@ -1,0 +1,22 @@
+@use "../tools/legacy-type";
+@use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/colors";
+@use "../variables/effects";
+
+.bingo-card {
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: layout.$spacing-unit * 4;
+  }
+  &__title {
+    @include legacy-type.bold;
+  }
+  &__description {
+    margin-top: layout.$spacing-unit * 2;
+    @include legacy-type.small;
+    color: colors.$legacy-muted-light;
+  }
+}

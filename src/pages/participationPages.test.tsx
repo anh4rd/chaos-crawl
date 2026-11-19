@@ -106,7 +106,9 @@ it("joins through an accessible form with a trimmed name and unassigned team", a
     expect(mocks.createPlayer).toHaveBeenCalledWith("Anna", null),
   );
   await waitFor(() => expect(mocks.setPlayerId).toHaveBeenCalledWith("p"));
-  expect(screen.getByLabelText("Location").textContent).toBe("/game");
+  await waitFor(() =>
+    expect(screen.getByLabelText("Location").textContent).toBe("/game"),
+  );
 });
 it("shows validation and permits retry after a thrown join failure", async () => {
   mocks.createPlayer.mockRejectedValueOnce(new Error("Network offline"));

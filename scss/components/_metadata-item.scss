@@ -1,0 +1,12 @@
+@use "../variables/layout";
+@use "../variables/colors";
+@use "../variables/fonts";
+
+.metadata-item {
+  display: inline-flex;
+  align-items: center;
+  gap: layout.$pixel-unit * 1.25;
+  color: colors.$purple;
+  font-size: fonts.$size-micro;
+  font-weight: fonts.$weight-action;
+}

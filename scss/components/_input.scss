@@ -1,0 +1,13 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+@layer utilities {
+  .input {
+    width: 100%;
+    border: layout.$border-control solid colors.$input-border;
+    border-radius: layout.$radius-lg;
+    background-color: colors.$white;
+    padding: layout.$spacing-unit * 4;
+    color: colors.$black;
+  }
+}
