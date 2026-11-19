@@ -17,6 +17,7 @@ export default function SessionSubmission({
   submitLabel = "Mark challenge complete",
   statusMessage,
   allowSubmit = true,
+  variant,
   onUpload,
   onSubmit,
 }: {
@@ -33,17 +34,37 @@ export default function SessionSubmission({
   submitLabel?: string;
   statusMessage?: string;
   allowSubmit?: boolean;
+  variant?: "side-challenge";
   onUpload: (event: ChangeEvent<HTMLInputElement>) => void;
   onSubmit: () => void;
 }) {
   const complete = status === "submitted" || status === "approved";
   return (
-    <div className="session-submission">
+    <div
+      className={`session-submission${variant ? ` session-submission--${variant}` : ""}`}
+    >
       <div className="session-submission__actions">
         {allowUpload && (
           <label className="session-submission__upload">
-            <Icon name="upload" className="icon--size-16" aria-hidden="true" />
-            {uploading ? "Uploading…" : "Upload evidence"}
+            {variant === "side-challenge" ? (
+              <>
+                {uploading ? "Uploading…" : "Upload Evidence"}
+                <Icon
+                  name="check"
+                  className="icon--size-16"
+                  aria-hidden="true"
+                />
+              </>
+            ) : (
+              <>
+                <Icon
+                  name="upload"
+                  className="icon--size-16"
+                  aria-hidden="true"
+                />
+                {uploading ? "Uploading…" : "Upload evidence"}
+              </>
+            )}
             <input
               aria-label={`Upload evidence for ${title}`}
               type="file"
@@ -59,26 +80,30 @@ export default function SessionSubmission({
             />
           </label>
         )}
-        {!complete && allowSubmit && (
-          <button
-            type="button"
-            className="session-submission__submit"
-            disabled={
-              disabled || busy || (evidenceRequired && evidence.length === 0)
-            }
-            onClick={onSubmit}
-          >
-            {submitLabel}
-          </button>
-        )}
+        {!complete &&
+          allowSubmit &&
+          (variant !== "side-challenge" || evidence.length > 0) && (
+            <button
+              type="button"
+              className="session-submission__submit"
+              disabled={
+                disabled || busy || (evidenceRequired && evidence.length === 0)
+              }
+              onClick={onSubmit}
+            >
+              {submitLabel}
+            </button>
+          )}
       </div>
       {evidence.length > 0 && <EvidenceGallery items={evidence} />}
-      {evidenceRequired && evidence.length === 0 && (
-        <p>
-          Upload at least one photo or video before marking this challenge
-          complete.
-        </p>
-      )}
+      {variant !== "side-challenge" &&
+        evidenceRequired &&
+        evidence.length === 0 && (
+          <p>
+            Upload at least one photo or video before marking this challenge
+            complete.
+          </p>
+        )}
       {statusMessage && <output>{statusMessage}</output>}
       {!statusMessage && status === "approved" && (
         <output>Approved · +{awardedPoints} points</output>

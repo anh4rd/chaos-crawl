@@ -6,6 +6,10 @@
   }
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  max-width: calc(
+    layout.$session-side-card-width * 2 + layout.$pixel-unit * 2.25
+  );
   gap: #{layout.$pixel-unit * 2.25};
   @media (max-width: #{layout.$pixel-unit * 105}) {
     gap: #{layout.$pixel-unit * 1.75};

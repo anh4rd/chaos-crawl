@@ -1,0 +1,41 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+.host-side-challenge-add {
+  display: grid;
+  width: 100%;
+  min-height: calc(layout.$session-side-card-width + layout.$pixel-unit);
+  aspect-ratio: 1;
+  place-items: center;
+  padding: layout.$pixel-unit * 3;
+  border: 0;
+  border-radius: layout.$radius-lg;
+  background: colors.$purple-dark;
+  color: colors.$white;
+  cursor: pointer;
+
+  &__icon {
+    display: grid;
+    width: layout.$pixel-unit * 9;
+    height: layout.$pixel-unit * 9;
+    place-items: center;
+    border-radius: layout.$pixel-unit * 3;
+    background: colors.$pink;
+    color: colors.$white;
+    box-shadow: 0 layout.$pixel-unit * 0.5 0 colors.$purple;
+  }
+
+  &:hover:not(:disabled) &__icon {
+    transform: translateY(-(layout.$pixel-unit * 0.5));
+  }
+
+  &:focus-visible {
+    outline: layout.$focus-ring-width solid colors.$lime;
+    outline-offset: layout.$pixel-unit * 0.5;
+  }
+
+  &:disabled {
+    opacity: 0.56;
+    cursor: not-allowed;
+  }
+}

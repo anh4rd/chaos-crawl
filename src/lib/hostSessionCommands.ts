@@ -98,6 +98,26 @@ export function saveBreakChallenge({
   );
 }
 
+export function insertSideChallenge(values: {
+  session_id: string;
+  kind: "side";
+  round_number: null;
+  title: string;
+  description: string;
+  points: number;
+  duration_minutes: number;
+  sort_order: number;
+  allow_photo_upload: boolean;
+}): Promise<ApiResult<{ id: string }>> {
+  return runApi<{ id: string }>(() =>
+    supabase
+      .from("cc_game_session_challenges")
+      .insert(values)
+      .select("id")
+      .single(),
+  );
+}
+
 export function readHostPlan(
   hostGameId: string,
 ): Promise<ApiResult<{ plan_data: unknown }>> {

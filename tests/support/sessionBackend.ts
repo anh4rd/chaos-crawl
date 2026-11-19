@@ -560,7 +560,7 @@ export async function installSessionBackend(
         name === "cc_game_session_challenges" &&
         request.method() === "POST" &&
         body?.session_id === fixture.session.id &&
-        body?.kind === "secret" &&
+        (body?.kind === "secret" || body?.kind === "side") &&
         body?.round_number === null &&
         typeof body?.title === "string" &&
         typeof body?.description === "string" &&
@@ -571,7 +571,7 @@ export async function installSessionBackend(
         Object.keys(body).sort().join(",") ===
           "allow_photo_upload,description,duration_minutes,kind,points,round_number,session_id,sort_order,title"
       ) {
-        const id = `custom-secret-${fixture.challenges.length}`;
+        const id = `custom-${body.kind}-${fixture.challenges.length}`;
         fixture.challenges.push({ ...fixture.challenges[0], ...body, id });
         await respond({ id }, 201);
         return;

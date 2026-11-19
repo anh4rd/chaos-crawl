@@ -50,6 +50,7 @@ export default function SessionParticipant({
   onRecover,
   focusChallengeId: focusedChallenge,
   afterMainChallenge,
+  sideChallengeAddAction,
 }: {
   joinCode: string;
   section: PlayerPage;
@@ -59,6 +60,7 @@ export default function SessionParticipant({
   onRecover?: () => void;
   focusChallengeId?: string | null;
   afterMainChallenge?: ReactNode;
+  sideChallengeAddAction?: ReactNode;
 }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -587,6 +589,7 @@ export default function SessionParticipant({
               player={player}
               submitChallenge={submitChallenge}
               mediaUrl={mediaUrl}
+              addChallengeAction={sideChallengeAddAction}
             />
           )}
 

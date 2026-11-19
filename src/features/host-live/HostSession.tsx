@@ -20,6 +20,8 @@ import BreakTimerEditor from "./BreakTimerEditor";
 import ChallengeEditor from "./ChallengeEditor";
 import HostFinalRound from "./HostFinalRound";
 import HostGameSchedule from "./HostGameSchedule";
+import HostAddSideChallengeCard from "./HostAddSideChallengeCard";
+import HostSideChallengeDialog from "./HostSideChallengeDialog";
 import SessionInvite from "../../components/session/SessionInvite";
 import HostLobby from "./HostLobby";
 import HostMainSubmissions from "./HostMainSubmissions";
@@ -53,6 +55,7 @@ import { useHostSecretReview } from "./useHostSecretReview";
 import { useHostSessionActions } from "./useHostSessionActions";
 import { useHostSessionData } from "./useHostSessionData";
 import { useHostSettings } from "./useHostSettings";
+import { useHostSideChallengeCreator } from "./useHostSideChallengeCreator";
 import { useHostSubmissionReview } from "./useHostSubmissionReview";
 import { useSlideshowConnection } from "./useSlideshowConnection";
 
@@ -518,6 +521,28 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     setPlannedTasks,
     load,
   });
+  const {
+    dialogOpen: sideChallengeDialogOpen,
+    title: newSideChallengeTitle,
+    setTitle: setNewSideChallengeTitle,
+    description: newSideChallengeDescription,
+    setDescription: setNewSideChallengeDescription,
+    points: newSideChallengePoints,
+    setPoints: setNewSideChallengePoints,
+    duration: newSideChallengeDuration,
+    setDuration: setNewSideChallengeDuration,
+    openDialog: openSideChallengeDialog,
+    closeDialog: closeSideChallengeDialog,
+    createSideChallenge,
+  } = useHostSideChallengeCreator({
+    session,
+    challenges,
+    busy,
+    setBusy,
+    setError,
+    setNotice,
+    load,
+  });
   const baseUrl = session
     ? window.location.origin + window.location.pathname
     : "";
@@ -584,6 +609,16 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
       )}
     </>
   );
+  const sideChallengeAddAction =
+    session.status === "completed" ? null : (
+      <HostAddSideChallengeCard
+        disabled={busy}
+        onClick={() => {
+          dismissError();
+          openSideChallengeDialog();
+        }}
+      />
+    );
 
   const lobbyFlow = (
     <HostLobby
@@ -767,6 +802,26 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
               setEditChallengeEvidence={setEditChallengeEvidence}
             />
           )}
+          {sideChallengeDialogOpen && (
+            <HostSideChallengeDialog
+              title={newSideChallengeTitle}
+              setTitle={setNewSideChallengeTitle}
+              description={newSideChallengeDescription}
+              setDescription={setNewSideChallengeDescription}
+              points={newSideChallengePoints}
+              setPoints={setNewSideChallengePoints}
+              duration={newSideChallengeDuration}
+              setDuration={setNewSideChallengeDuration}
+              busy={busy}
+              error={error}
+              onDismissError={dismissError}
+              onClose={() => {
+                closeSideChallengeDialog();
+                dismissError();
+              }}
+              onSubmit={createSideChallenge}
+            />
+          )}
           {editingBreakTimer && (
             <BreakTimerEditor
               busy={busy}
@@ -823,6 +878,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                 onRecover={() => void openHostPlayerView()}
                 focusChallengeId={focusedHostChallenge}
                 afterMainChallenge={gameTabHostControls}
+                sideChallengeAddAction={sideChallengeAddAction}
               />
             )}
           {!canParticipate &&
@@ -900,20 +956,24 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                     id={challenge.id}
                     title={challenge.title}
                     description={challenge.description}
-                    points={challenge.points}
+                    teamsEnabled={session.teams_enabled}
                   >
-                    <button
+                    <Button
                       type="button"
-                      className="btn"
+                      variant="session-action"
+                      className="session-challenge-card__action"
+                      aria-label={`Join and upload evidence for ${challenge.title}`}
                       disabled={busy || session.status !== "live"}
                       onClick={() =>
                         void openHostSideChallengeUpload(challenge)
                       }
                     >
-                      Join & upload evidence
-                    </button>
+                      <span>Upload Evidence</span>
+                      <Icon name="check" className="icon--size-16" />
+                    </Button>
                   </SessionChallengeCard>
                 ))}
+                {sideChallengeAddAction}
               </div>
             </section>
           )}

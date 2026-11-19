@@ -1,4 +1,5 @@
 @use "../variables/colors";
+@use "../variables/fonts";
 @use "../variables/layout";
 .session-submission {
   display: flex;
@@ -43,5 +44,34 @@
   &__submit:disabled {
     opacity: 0.56;
     cursor: not-allowed;
+  }
+
+  &--side-challenge {
+    & .session-submission__actions {
+      display: block;
+    }
+
+    & .session-submission__upload {
+      width: 100%;
+      min-height: layout.$pixel-unit * 9.5;
+      justify-content: space-between;
+      padding: layout.$pixel-unit * 2 layout.$pixel-unit * 3;
+      border: 0;
+      border-radius: layout.$pixel-unit * 3;
+      background: colors.$lime;
+      color: colors.$ink;
+      font-family: fonts.$family-display;
+      font-size: layout.$session-small-size;
+      text-transform: none;
+    }
+
+    & .session-submission__upload:focus-within {
+      outline: layout.$focus-ring-width solid colors.$purple;
+      outline-offset: layout.$pixel-unit * 0.5;
+    }
+
+    & .session-submission__upload .icon {
+      flex: none;
+    }
   }
 }

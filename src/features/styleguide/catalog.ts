@@ -1197,15 +1197,27 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionSubmission: {
     usage:
-      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+      "Shared host/player submission presentation. The side-challenge variant keeps upload as the primary action and reveals submission after evidence is available.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },
   SessionChallengeCard: {
     usage:
-      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+      "Compact side-challenge card shared by host and player views. Teams-enabled sessions show the team label; the host-only add tile is composed by the host feature.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  HostAddSideChallengeCard: {
+    usage:
+      "Host-only add tile composed at the end of side-challenge grids. The host coordinator supplies its disabled state and modal-opening callback.",
+    dependencies:
+      "Button and Icon presentation only; no session reads or writes.",
+  },
+  HostSideChallengeDialog: {
+    usage:
+      "Controlled host dialog for creating a side challenge. The caller owns draft state, submission, persistence and feedback.",
+    dependencies:
+      "Shared Dialog and form primitives; local styleguide preview uses local state only.",
   },
   SessionCandidate: {
     usage:

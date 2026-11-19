@@ -4762,3 +4762,16 @@ nudge. Review map: HostSession tab composition and review visibility; schedule
 and active-session settings adapters; scheduled mission update filters and
 feedback; browser fixtures and keyboard paths. The review-load total is
 repository-wide and should not be attributed to this host-management slice.
+
+## Host and player side-challenge cards
+
+Side challenges use compact title/description/team presentation for players and
+hosts. The host-only add tile appears in both host participation modes and opens
+a controlled dialog to create a challenge with evidence upload enabled. Secret
+missions retain their separate reward/header card treatment.
+
+Verification: strict production build, full lint/format gates, and all 739
+unit/component tests pass. Eight focused desktop/mobile browser checks pass for
+player credentials, challenge-grid rendering, host challenge creation, and
+inline host participation/upload. The repository-wide review load is well above
+the 800-line reviewer nudge; it should not be attributed to this slice.

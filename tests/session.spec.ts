@@ -43,6 +43,7 @@ test("player and host challenge pages render cards in a two-column grid", async 
   page,
 }) => {
   const backend = await installSessionBackend(page, { host: true });
+  backend.session.teams_enabled = true;
   const expectTwoColumns = async () => {
     const grid = page.locator(
       '[data-tour="player-side-challenges"] .challenge-list',
@@ -53,6 +54,13 @@ test("player and host challenge pages render cards in a two-column grid", async 
         getComputedStyle(element).gridTemplateColumns.split(" ").length,
     );
     expect(columns).toBe(2);
+    await expect(grid.locator(".session-challenge-card")).toHaveCSS(
+      "min-height",
+      "174px",
+    );
+    await expect(grid.locator(".session-challenge-card__team-mode")).toHaveText(
+      "Compete in teams",
+    );
   };
 
   await page.goto(`#/play/${sessionCode}`);
@@ -61,6 +69,19 @@ test("player and host challenge pages render cards in a two-column grid", async 
     .getByRole("link", { name: "Challenges", exact: true })
     .click();
   await expectTwoColumns();
+  await expect(
+    page.getByRole("button", { name: "Add side challenge", exact: true }),
+  ).toHaveCount(0);
+  const playerCardStyle = await page
+    .locator(".session-challenge-card")
+    .evaluate((element) => {
+      const style = getComputedStyle(element);
+      return {
+        background: style.backgroundColor,
+        borderRadius: style.borderRadius,
+        width: style.width,
+      };
+    });
 
   await page.goto(`#/host/live/${sessionId}`);
   await page
@@ -68,6 +89,81 @@ test("player and host challenge pages render cards in a two-column grid", async 
     .getByRole("button", { name: "Challenges", exact: true })
     .click();
   await expectTwoColumns();
+  await expect(
+    page.getByRole("button", { name: "Add side challenge", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".session-challenge-card").first()).toHaveCSS(
+    "background-color",
+    playerCardStyle.background,
+  );
+  await expect(page.locator(".session-challenge-card").first()).toHaveCSS(
+    "border-radius",
+    playerCardStyle.borderRadius,
+  );
+  await expect(page.locator(".session-challenge-card").first()).toHaveCSS(
+    "width",
+    playerCardStyle.width,
+  );
+  backend.verify();
+});
+
+test("host can add a side challenge from the challenges grid", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.session.teams_enabled = true;
+  await page.goto(`#/host/live/${sessionId}`);
+  await page
+    .getByRole("navigation", { name: "Game pages" })
+    .getByRole("button", { name: "Challenges", exact: true })
+    .click();
+
+  const grid = page.locator(
+    '[data-tour="player-side-challenges"] .challenge-list',
+  );
+  await expect(
+    grid.getByRole("button", { name: "Add side challenge", exact: true }),
+  ).toBeVisible();
+  await grid
+    .getByRole("button", { name: "Add side challenge", exact: true })
+    .click();
+  const dialog = page.getByRole("dialog", {
+    name: "Add a side challenge",
+    exact: true,
+  });
+  await dialog.getByLabel("Challenge title", { exact: true }).fill("Blue hunt");
+  await dialog
+    .getByLabel("Side task description", { exact: true })
+    .fill("Find and photograph something blue.");
+  await dialog.getByLabel("Final vote bonus", { exact: true }).fill("25");
+  await dialog
+    .getByRole("button", { name: "Add side challenge", exact: true })
+    .click();
+
+  await expect(dialog).toHaveCount(0);
+  expect(
+    backend.requests.find(
+      (request) =>
+        request.name === "cc_game_session_challenges" &&
+        request.method === "POST",
+    )?.body,
+  ).toEqual({
+    session_id: sessionId,
+    kind: "side",
+    round_number: null,
+    title: "Blue hunt",
+    description: "Find and photograph something blue.",
+    points: 25,
+    duration_minutes: 10,
+    sort_order: 3,
+    allow_photo_upload: true,
+  });
+  await expect(
+    grid.getByRole("heading", { name: "Blue hunt", exact: true }),
+  ).toBeVisible();
+  await expect(
+    grid.locator(".session-challenge-card__team-mode").last(),
+  ).toHaveText("Compete in teams");
   backend.verify();
 });
 
@@ -303,6 +399,9 @@ test("host joins explicitly and uploads and submits inline using the host player
     .click();
   await expect(
     page.getByRole("heading", { name: "Find a pineapple", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Add side challenge", exact: true }),
   ).toBeVisible();
   await page
     .getByLabel("Upload evidence for Find a pineapple", { exact: true })

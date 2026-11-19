@@ -12,6 +12,8 @@ import SessionReview from "../../components/session/SessionReview";
 import SessionRewardRound from "../../components/session/SessionRewardRound";
 import SessionState from "../../components/session/SessionState";
 import SessionSubmission from "../../components/session/SessionSubmission";
+import HostAddSideChallengeCard from "../host-live/HostAddSideChallengeCard";
+import HostSideChallengeDialog from "../host-live/HostSideChallengeDialog";
 import type {
   RewardPresentation,
   SessionRole,
@@ -62,6 +64,11 @@ export default function SessionExamples() {
   const [uploaded, setUploaded] = useState(false);
   const [selected, setSelected] = useState(false);
   const [notice, setNotice] = useState("");
+  const [sideChallengeDialogOpen, setSideChallengeDialogOpen] = useState(false);
+  const [sideChallengeTitle, setSideChallengeTitle] = useState("");
+  const [sideChallengeDescription, setSideChallengeDescription] = useState("");
+  const [sideChallengePoints, setSideChallengePoints] = useState(5);
+  const [sideChallengeDuration, setSideChallengeDuration] = useState(10);
   const closed = phase === "results";
   return (
     <>
@@ -74,6 +81,11 @@ export default function SessionExamples() {
           setUploaded(false);
           setSelected(false);
           setNotice("");
+          setSideChallengeDialogOpen(false);
+          setSideChallengeTitle("");
+          setSideChallengeDescription("");
+          setSideChallengePoints(5);
+          setSideChallengeDuration(10);
         }}
       >
         Local demonstration — these controls do not change a real game.
@@ -169,21 +181,30 @@ export default function SessionExamples() {
             viewerId="alex"
           />
         ) : section === "side-challenges" ? (
-          <SessionChallengeCard
-            id="demo"
-            title="Find a pineapple"
-            description="Find the fruit and capture the moment."
-            points={20}
-          >
-            <SessionSubmission
+          <div className="challenge-list">
+            <SessionChallengeCard
+              id="demo"
               title="Find a pineapple"
-              evidence={uploaded ? [media] : []}
-              status={submitted ? "submitted" : null}
-              evidenceRequired
-              onUpload={() => setUploaded(true)}
-              onSubmit={() => setSubmitted(true)}
-            />
-          </SessionChallengeCard>
+              description="Find the fruit and capture the moment."
+              teamsEnabled
+            >
+              <SessionSubmission
+                variant="side-challenge"
+                title="Find a pineapple"
+                evidence={uploaded ? [media] : []}
+                status={submitted ? "submitted" : null}
+                evidenceRequired
+                onUpload={() => setUploaded(true)}
+                onSubmit={() => setSubmitted(true)}
+              />
+            </SessionChallengeCard>
+            {viewerRole === "host" && !closed && phase !== "completed" && (
+              <HostAddSideChallengeCard
+                disabled={false}
+                onClick={() => setSideChallengeDialogOpen(true)}
+              />
+            )}
+          </div>
         ) : section === "final" || phase === "final" || closed ? (
           <SessionFinalRound
             title="Find a pineapple"
@@ -251,6 +272,31 @@ export default function SessionExamples() {
               onSubmit={() => setSubmitted(true)}
             />
           </SessionMainChallengeCard>
+        )}
+        {sideChallengeDialogOpen && (
+          <HostSideChallengeDialog
+            title={sideChallengeTitle}
+            setTitle={setSideChallengeTitle}
+            description={sideChallengeDescription}
+            setDescription={setSideChallengeDescription}
+            points={sideChallengePoints}
+            setPoints={setSideChallengePoints}
+            duration={sideChallengeDuration}
+            setDuration={setSideChallengeDuration}
+            busy={false}
+            error=""
+            onDismissError={() => setNotice("")}
+            onClose={() => setSideChallengeDialogOpen(false)}
+            onSubmit={async (event) => {
+              event.preventDefault();
+              setNotice("Side challenge added locally.");
+              setSideChallengeDialogOpen(false);
+              setSideChallengeTitle("");
+              setSideChallengeDescription("");
+              setSideChallengePoints(5);
+              setSideChallengeDuration(10);
+            }}
+          />
         )}
       </SessionPage>
     </>

@@ -2,12 +2,32 @@ import SessionFinalRound from "./SessionFinalRound";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, expect, it, vi } from "vitest";
+import SessionChallengeCard from "./SessionChallengeCard";
 import SessionNavigation from "./SessionNavigation";
 import SessionRewardRound from "./SessionRewardRound";
 import SessionVotingCard from "./SessionVotingCard";
 import type { RewardPresentation, VotingEntry } from "./types";
 
 afterEach(cleanup);
+
+it("preserves the reward presentation for secret mission cards", () => {
+  const { container } = render(
+    <SessionChallengeCard
+      id="mission-1"
+      kind="secret"
+      title="Find the clue"
+      description="Look under the red table."
+      points={15}
+    >
+      <strong>SECRET MISSION</strong>
+    </SessionChallengeCard>,
+  );
+  expect(
+    container.querySelector("article.session-challenge-card--secret"),
+  ).not.toBeNull();
+  expect(screen.getByText("Mission reward: +15 pts")).toBeTruthy();
+  expect(screen.getByText("SECRET MISSION")).toBeTruthy();
+});
 
 it("exposes host navigation only when requested and preserves link navigation", () => {
   const { rerender } = render(

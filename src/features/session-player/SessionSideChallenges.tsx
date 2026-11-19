@@ -1,4 +1,4 @@
-import type { ChangeEvent } from "react";
+import type { ChangeEvent, ReactNode } from "react";
 import SessionChallengeCard from "../../components/session/SessionChallengeCard";
 import SessionState from "../../components/session/SessionState";
 import SessionSubmission from "../../components/session/SessionSubmission";
@@ -21,6 +21,7 @@ export default function SessionSideChallenges({
   player,
   submitChallenge,
   mediaUrl,
+  addChallengeAction,
 }: {
   sideChallenges: ChallengeInfo[];
   session: SessionInfo;
@@ -36,6 +37,7 @@ export default function SessionSideChallenges({
   player: SessionPlayerInfo;
   submitChallenge: (challenge: ChallengeInfo) => Promise<void>;
   mediaUrl: (path: string) => string;
+  addChallengeAction?: ReactNode;
 }) {
   return (
     <section data-tour="player-side-challenges">
@@ -59,10 +61,11 @@ export default function SessionSideChallenges({
               id={challenge.id}
               title={challenge.title}
               description={challenge.description}
-              points={challenge.points}
+              teamsEnabled={session.teams_enabled}
             >
               <SessionSubmission
                 lockOnSubmit
+                variant="side-challenge"
                 title={challenge.title}
                 evidence={evidenceForChallenge(challenge.id).map((item) => ({
                   id: item.id,
@@ -87,6 +90,7 @@ export default function SessionSideChallenges({
             </SessionChallengeCard>
           );
         })}
+        {addChallengeAction}
       </div>
     </section>
   );
