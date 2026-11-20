@@ -28,6 +28,28 @@ it("restores legacy selected IDs using saved row fields as authoritative values"
     customTasks: [],
   });
 });
+it("preserves challenge artwork URLs in saved plans", () => {
+  const form = hydratePlan({
+    id: "artwork",
+    name: "Artwork plan",
+    event_date: null,
+    start_time: null,
+    end_time: null,
+    player_count: null,
+    venue_name: null,
+    plan_data: {
+      challengeArtUrls: {
+        pineapple: "https://assets.test/pineapple.png",
+      },
+    },
+  });
+  expect(form.challengeArtUrls).toEqual({
+    pineapple: "https://assets.test/pineapple.png",
+  });
+  expect(
+    createPlanWrite(form, "host-one", "planned").plan_data.challengeArtUrls,
+  ).toEqual(form.challengeArtUrls);
+});
 it("persists phased schedule timing separately from the target finish time", () => {
   const form = {
     ...defaultForm,

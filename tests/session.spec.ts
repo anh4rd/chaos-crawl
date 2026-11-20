@@ -1,3 +1,6 @@
+/// <reference types="node" />
+
+import { Buffer } from "node:buffer";
 import { activateByKeyboard, tabTo } from "./support/keyboard";
 import { createInvitationFixture } from "./support/invitation";
 import { expect, test } from "@playwright/test";
@@ -11,11 +14,28 @@ test("V2 player retains credentials and can move between game sections", async (
   page,
 }) => {
   const backend = await installSessionBackend(page);
+  backend.responses.cc_player_get_session_final_round_gallery = null;
+  const challengeArtUrl =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Ccircle cx='4' cy='4' r='4'/%3E%3C/svg%3E";
+  backend.responses.cc_get_public_main_challenge_art = challengeArtUrl;
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(`#/play/${sessionCode}`);
   await expect(
     page.getByRole("heading", { name: "Make an entrance", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".main-challenge__art img")).toHaveAttribute(
+    "src",
+    challengeArtUrl,
+  );
+  const gameNavigation = page.getByRole("navigation", { name: "Game pages" });
+  await expect(
+    gameNavigation.getByRole("link", { name: "Final" }),
+  ).toBeVisible();
+  await gameNavigation.getByRole("link", { name: "Final" }).click();
+  await expect(page).toHaveURL(/\/final$/);
+  await expect(
+    page.getByRole("heading", { name: "The final vote isn't open yet" }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Scores", exact: true }).first().click();
   await expect(page).toHaveURL(/\/leaderboard$/);
@@ -36,6 +56,169 @@ test("V2 player retains credentials and can move between game sections", async (
     backend.requests.find((r) => r.name === "cc_get_game_session_view")?.body,
   ).toEqual({ p_join_code: sessionCode, p_player_token: "test-player-token" });
   expect(errors).toEqual([]);
+  backend.verify();
+});
+
+test("completed players can download their submissions and create a photo reel", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page);
+  backend.session.status = "completed";
+  backend.responses.cc_get_player_session_evidence = [
+    {
+      id: "submitted-photo",
+      session_id: sessionId,
+      player_id: "test-player",
+      challenge_id: "test-side-challenge",
+      secret_assignment_id: null,
+      storage_path: `${sessionId}/test-player/entrance.png`,
+      media_type: "image",
+      saved_for_final: false,
+      created_at: "2030-01-01T12:05:00Z",
+    },
+    {
+      id: "submitted-video",
+      session_id: sessionId,
+      player_id: "test-player",
+      challenge_id: "test-challenge",
+      secret_assignment_id: null,
+      storage_path: `${sessionId}/test-player/celebration.webm`,
+      media_type: "video",
+      saved_for_final: false,
+      created_at: "2030-01-01T12:06:00Z",
+    },
+  ];
+
+  await page.goto(`#/play/${sessionCode}/recap`);
+  await expect(
+    page.getByRole("heading", { name: "Keep your chaos.", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "Game pages" }).getByRole("link", {
+      name: "Memories",
+    }),
+  ).toHaveAttribute("aria-current", "page");
+  expect(
+    await page
+      .getByRole("navigation", { name: "Game pages" })
+      .locator(".session-navigation__item")
+      .evaluateAll((items) =>
+        items.map((item) => item.getAttribute("aria-label")),
+      ),
+  ).toEqual(["Game", "Scores", "Challenges", "Final", "Memories"]);
+  await page
+    .getByRole("navigation", { name: "Game pages" })
+    .getByRole("link", { name: "Game", exact: true })
+    .click();
+  await page.getByRole("link", { name: "Save your game memories →" }).click();
+  await expect(page).toHaveURL(/\/recap$/);
+  await expect(
+    page.getByRole("heading", { name: "Find a pineapple", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Video submission", { exact: true }),
+  ).toBeVisible();
+
+  const originalDownload = page.waitForEvent("download");
+  await page
+    .locator(".session-memories__asset")
+    .first()
+    .getByRole("button", { name: "Download Find a pineapple", exact: true })
+    .click();
+  expect((await originalDownload).suggestedFilename()).toBe(
+    "chaos-crawl-01-find-a-pineapple.png",
+  );
+
+  const videoDownload = page.waitForEvent("download");
+  await page
+    .locator(".session-memories__asset")
+    .nth(1)
+    .getByRole("button", { name: "Download Make an entrance", exact: true })
+    .click();
+  expect((await videoDownload).suggestedFilename()).toBe(
+    "chaos-crawl-02-make-an-entrance.webm",
+  );
+
+  const reelDownload = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Create and download reel", exact: true })
+    .click();
+  expect((await reelDownload).suggestedFilename()).toMatch(
+    /^chaos-crawl-123456-photo-reel\.(mp4|webm)$/,
+  );
+  await expect(page.getByText("Your photo reel is ready.")).toBeVisible();
+  backend.verify();
+});
+
+test("completed host controls provide the full session memories archive", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.session.status = "completed";
+  backend.uploadedEvidence.push({
+    id: "host-archive-photo",
+    session_id: sessionId,
+    player_id: "test-player",
+    challenge_id: "test-side-challenge",
+    secret_assignment_id: null,
+    storage_path: `${sessionId}/test-player/entrance.png`,
+    media_type: "image",
+    saved_for_final: false,
+    created_at: "2030-01-01T12:05:00Z",
+  });
+
+  await page.goto(`#/host/live/${sessionId}`);
+  await page
+    .getByRole("navigation", { name: "Game pages" })
+    .getByRole("button", { name: "Host", exact: true })
+    .click();
+  const tabs = page.getByRole("tablist", {
+    name: "Host management sections",
+  });
+  await expect(tabs.getByRole("tab", { name: "Memories" })).toBeVisible();
+  await tabs.getByRole("tab", { name: "Memories", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Memories from the game.", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Find a pineapple", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Pat", { exact: true }).last()).toBeVisible();
+
+  const download = page.waitForEvent("download");
+  await page
+    .locator(".session-memories__asset")
+    .getByRole("button", { name: "Download Find a pineapple", exact: true })
+    .click();
+  expect((await download).suggestedFilename()).toBe(
+    "chaos-crawl-01-find-a-pineapple.png",
+  );
+
+  const reelDownload = page.waitForEvent("download");
+  await page
+    .getByRole("button", { name: "Create and download reel", exact: true })
+    .click();
+  expect((await reelDownload).suggestedFilename()).toMatch(
+    /^chaos-crawl-123456-photo-reel\.(mp4|webm)$/,
+  );
+  await expect(page.getByText("Your photo reel is ready.")).toBeVisible();
+  backend.verify();
+});
+
+test("players cannot open the memories page before the game is complete", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page);
+  await page.goto(`#/play/${sessionCode}/recap`);
+  await expect(page).toHaveURL(/\/game$/);
+  await expect(
+    page.getByRole("heading", { name: "Keep your chaos.", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("navigation", { name: "Game pages" }).getByRole("link", {
+      name: "Memories",
+    }),
+  ).toHaveCount(0);
   backend.verify();
 });
 
@@ -850,9 +1033,27 @@ test("shared challenge DOM and computed styles match between roles", async ({
   page,
 }, testInfo) => {
   const backend = await installSessionBackend(page, { host: true });
+  const challengeArtUrl =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Ccircle cx='4' cy='4' r='4'/%3E%3C/svg%3E";
+  backend.responses.cc_get_public_main_challenge_art = challengeArtUrl;
+  backend.rows.host_games = [
+    {
+      id: "test-plan",
+      plan_data: {
+        selectedTasks: [
+          { id: "main-task", title: "Make an entrance", kind: "main" },
+        ],
+        challengeArtUrls: { "main-task": challengeArtUrl },
+      },
+    },
+  ];
   await page.goto(`#/play/${sessionCode}`);
   const card = page.locator(".main-challenge");
   await expect(card).toBeVisible();
+  await expect(card.locator(".main-challenge__art img")).toHaveAttribute(
+    "src",
+    challengeArtUrl,
+  );
   await page.evaluate(() => document.fonts.ready);
   const snapshot = () =>
     card.evaluate((element) => ({
@@ -880,19 +1081,67 @@ test("shared challenge DOM and computed styles match between roles", async ({
       const bounds = (selector: string) => {
         const node = element.querySelector(selector);
         if (!node) throw new Error(`Missing ${selector} in main challenge`);
-        const { top, bottom } = node.getBoundingClientRect();
-        return { top, bottom };
+        const { top, right, bottom, left } = node.getBoundingClientRect();
+        return { top, right, bottom, left };
       };
+      const art = element.querySelector(".main-challenge__art");
+      if (!art) throw new Error("Missing challenge art frame");
+      const artwork = art.querySelector("img, span");
+      if (!artwork) throw new Error("Missing challenge artwork");
+      const cardRect = element.getBoundingClientRect();
+      const frameStyle = getComputedStyle(art);
+      const transform = new DOMMatrixReadOnly(
+        getComputedStyle(artwork).transform,
+      );
+      const cardStyle = getComputedStyle(element);
       return {
         summary: bounds(".main-challenge__summary"),
         round: bounds(".main-challenge__round"),
         award: bounds(".main-challenge__award"),
         art: bounds(".main-challenge__art"),
+        card: {
+          right: cardRect.right,
+          bottom: cardRect.bottom,
+          borderRight: Number.parseFloat(cardStyle.borderRightWidth),
+          borderBottom: Number.parseFloat(cardStyle.borderBottomWidth),
+          borderBottomRightRadius: Number.parseFloat(
+            cardStyle.borderBottomRightRadius,
+          ),
+        },
+        frame: {
+          position: frameStyle.position,
+          width: Number.parseFloat(frameStyle.width),
+          height: Number.parseFloat(frameStyle.height),
+          borderBottomRightRadius: Number.parseFloat(
+            frameStyle.borderBottomRightRadius,
+          ),
+          backgroundImage: frameStyle.backgroundImage,
+          artworkRotation:
+            (Math.atan2(transform.b, transform.a) * 180) / Math.PI,
+          artworkScale: Math.hypot(transform.a, transform.b),
+        },
       };
     });
     expect(layout.round.top).toBe(layout.summary.top);
     expect(layout.award.top).toBeGreaterThan(layout.round.top);
-    expect(layout.art.bottom).toBe(layout.summary.bottom);
+    expect(layout.art.right).toBeCloseTo(
+      layout.card.right - layout.card.borderRight,
+      1,
+    );
+    expect(layout.art.bottom).toBeCloseTo(
+      layout.card.bottom - layout.card.borderBottom,
+      1,
+    );
+    expect(layout.frame.position).toBe("absolute");
+    expect(layout.frame.width).toBe(116);
+    expect(layout.frame.height).toBeCloseTo(102.976, 1);
+    expect(layout.frame.borderBottomRightRadius).toBeCloseTo(
+      layout.card.borderBottomRightRadius - layout.card.borderBottom,
+      1,
+    );
+    expect(layout.frame.backgroundImage).toContain("DED6FE");
+    expect(layout.frame.artworkRotation).toBeCloseTo(-7, 1);
+    expect(layout.frame.artworkScale).toBeCloseTo(1.2, 1);
   };
   const player = await snapshot();
   await expectSummaryLayout();
@@ -902,6 +1151,10 @@ test("shared challenge DOM and computed styles match between roles", async ({
   });
   await page.goto(`#/host/live/${sessionId}`);
   await expect(card).toBeVisible();
+  await expect(card.locator(".main-challenge__art img")).toHaveAttribute(
+    "src",
+    challengeArtUrl,
+  );
   await page.evaluate(() => document.fonts.ready);
   expect(await snapshot()).toEqual(player);
   await expectSummaryLayout();

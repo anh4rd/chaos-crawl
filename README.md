@@ -36,8 +36,17 @@ V2 queries share the same lazy Supabase client and auth session through
 `src/lib/sessionSupabase.ts`. Its dynamic schema boundary is separate from the
 legacy `Database` contracts until types can be generated from the deployed V2
 schema. V2 uses `host_games`, `host_favourites`, `cc_game_session_*` tables and
-`cc_*` RPCs, plus `game-assets` and `session-evidence` storage buckets. Local
-migrations are in `supabase/migrations`; merging code does not apply them.
+`cc_*` RPCs, plus `game-assets`, `challenge-icons`, and `session-evidence`
+storage buckets. The main-challenge artwork migration provisions the public-read,
+authenticated-upload `challenge-icons` bucket and its player lookup RPC. Apply
+local migrations from `supabase/migrations` to the backend before using uploaded
+artwork; merging code does not apply them.
+
+Main challenge symbols use OpenMoji 17.0 artwork and metadata to suggest a
+closest emoji from the challenge title and description. Hosts can search and
+select another OpenMoji or upload custom artwork. OpenMoji is licensed under
+[CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/); artwork is
+provided by [OpenMoji](https://openmoji.org/).
 
 ## Error reporting
 

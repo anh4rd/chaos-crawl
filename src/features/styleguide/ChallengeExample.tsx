@@ -35,7 +35,8 @@ export default function ChallengeExample() {
       />
       <Note>
         Static timer label · use ScheduledCountdown when a live countdown is
-        needed.
+        needed. OpenMoji matches the challenge copy; hosts can select a
+        different emoji or supply custom artwork in the schedule.
       </Note>
     </Example>
   );

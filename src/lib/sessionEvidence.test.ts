@@ -1,18 +1,32 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import {
+  downloadSessionEvidence,
   prepareSessionEvidence,
   uploadSessionEvidence,
 } from "./sessionEvidence";
-const mocks = vi.hoisted(() => ({ upload: vi.fn(), rpc: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  upload: vi.fn(),
+  download: vi.fn(),
+  rpc: vi.fn(),
+}));
 vi.mock("./sessionSupabase", () => ({
   supabase: {
-    storage: { from: () => ({ upload: mocks.upload }) },
+    storage: {
+      from: () => ({
+        upload: mocks.upload,
+        download: mocks.download,
+      }),
+    },
     rpc: mocks.rpc,
   },
 }));
 vi.mock("./monitoring", () => ({ reportError: vi.fn() }));
 beforeEach(() => {
   mocks.upload.mockReset().mockResolvedValue({ error: null });
+  mocks.download.mockReset().mockResolvedValue({
+    data: new Blob(["image"]),
+    error: null,
+  });
   mocks.rpc.mockReset().mockResolvedValue({ data: null, error: null });
 });
 it("accepts a mobile MOV without a MIME type and keeps video extensions compatible", () => {
@@ -104,6 +118,14 @@ it("does not register failed storage writes and preserves partial-upload errors"
   expect((await uploadSessionEvidence(args)).error?.message).toContain(
     "file uploaded but couldn't be attached",
   );
+});
+
+it("downloads a participant's original evidence from the session bucket", async () => {
+  const file = new Blob(["image"]);
+  mocks.download.mockResolvedValueOnce({ data: file, error: null });
+  const result = await downloadSessionEvidence("session/player/evidence.png");
+  expect(result).toEqual({ data: file, error: null });
+  expect(mocks.download).toHaveBeenCalledWith("session/player/evidence.png");
 });
 
 it.each([

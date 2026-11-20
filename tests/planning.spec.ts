@@ -1,5 +1,6 @@
 import { tabTo, activateByKeyboard } from "./support/keyboard";
 import { expect, test, type Page } from "@playwright/test";
+import { Buffer } from "node:buffer";
 import { installSessionBackend } from "./support/sessionBackend";
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-11-17T12:00:00Z"));
@@ -57,6 +58,112 @@ test("planning adds and removes scheduled challenges before saving the complete 
       schedule: expect.arrayContaining([
         expect.objectContaining({ taskId: "best-noise", duration: 5 }),
       ]),
+    },
+  });
+  backend.verify();
+});
+test("planning uploads a challenge icon to Supabase and saves its public URL", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  await start(page);
+  await section(page, "Schedule");
+  await page
+    .getByRole("combobox", { name: "Add a challenge", exact: true })
+    .selectOption("pineapple");
+  await page
+    .getByLabel("Upload custom art for Conceal a pineapple")
+    .setInputFiles({
+      name: "pineapple.svg",
+      mimeType: "image/svg+xml",
+      buffer: Buffer.from(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><circle cx="4" cy="4" r="4"/></svg>',
+      ),
+    });
+  await expect(
+    page.getByText("Challenge icon uploaded.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".schedule-item__artwork > img")).toBeVisible();
+  await section(page, "Review & Launch");
+  await page
+    .getByRole("button", { name: "Save game plan", exact: true })
+    .click();
+  await expect(page).toHaveURL(/#\/host\?created=1$/);
+  expect(
+    backend.requests.find(
+      (request) => request.name === "storage:challenge-icons",
+    )?.body,
+  ).toMatchObject({
+    path: expect.stringContaining("/challenge-icons/pineapple/"),
+  });
+  expect(
+    backend.requests.find(
+      (request) => request.name === "host_games" && request.method === "POST",
+    )?.body,
+  ).toMatchObject({
+    plan_data: {
+      challengeArtUrls: {
+        pineapple: expect.stringContaining(
+          "/storage/v1/object/public/challenge-icons/",
+        ),
+      },
+    },
+  });
+  backend.verify();
+});
+test("planning selects and saves an OpenMoji override for a challenge", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  await start(page);
+  await section(page, "Schedule");
+  await page
+    .getByRole("combobox", { name: "Add a challenge", exact: true })
+    .selectOption("pineapple");
+  const pickerSummary = page.locator(".schedule-item__emoji-picker summary");
+  await pickerSummary.focus();
+  await page.keyboard.press("Enter");
+  await page
+    .getByRole("searchbox", {
+      name: "Search OpenMoji for Conceal a pineapple",
+    })
+    .fill("camera");
+  const cameraEmoji = page.getByRole("button", {
+    name: "Select camera emoji",
+  });
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await expect(cameraEmoji).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".schedule-item__artwork > img")).toHaveAttribute(
+    "src",
+    /1F4F7\.svg/,
+  );
+  await expect
+    .poll(() =>
+      page
+        .locator(".schedule-item__artwork > img")
+        .evaluate((image) => (image as HTMLImageElement).naturalWidth),
+    )
+    .toBeGreaterThan(0);
+  await section(page, "Review & Launch");
+  await page
+    .getByRole("button", { name: "Save game plan", exact: true })
+    .click();
+  await expect(page).toHaveURL(/#\/host\?created=1$/);
+  expect(
+    backend.requests.find(
+      (request) => request.name === "host_games" && request.method === "POST",
+    )?.body,
+  ).toMatchObject({
+    plan_data: {
+      challengeArtUrls: { pineapple: "openmoji:1F4F7" },
     },
   });
   backend.verify();

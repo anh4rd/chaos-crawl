@@ -21,6 +21,7 @@ import SecretMissionCard from "./SecretMissionCard";
 import SecretMissionReview from "./SecretMissionReview";
 import SessionFinalGallery from "./SessionFinalGallery";
 import SessionLeaderboard from "./SessionLeaderboard";
+import PlayerMemories from "./PlayerMemories";
 import SessionSideChallenges from "./SessionSideChallenges";
 import type { PlayerPage } from "./types";
 import { useParticipantSubmissions } from "./useParticipantSubmissions";
@@ -82,8 +83,10 @@ export default function SessionParticipant({
     rewardRound,
     loading,
     error,
+    errorWithArt,
     setError,
     gamePhotoUrl,
+    mainChallengeArtUrl,
     lastUpdated,
     loadView,
   } = useSessionPlayerData(code, token, activePage);
@@ -95,18 +98,20 @@ export default function SessionParticipant({
   const [tourOpen, setTourOpen] = useState(false);
   const { sharedTimer, sharedTimerError, timerReceivedAt, timerNow } =
     useSessionTimer(view?.session.id, view?.session.status, activePage);
+  const finalGalleryOpen = view?.session.final_gallery_open;
+  const sessionStatus = view?.session.status;
 
   useEffect(() => {
     setStoredToken(localStorage.getItem(playerStorageKey(code)));
   }, [code]);
 
   useEffect(() => {
-    if (!view) return;
+    if (finalGalleryOpen === undefined || sessionStatus === undefined) return;
     const embeddedQuery = embeddedHostMode ? "?hostEmbed=1" : "";
-    if (view.session.final_gallery_open && activePage !== "final") {
+    if (finalGalleryOpen && activePage !== "final") {
       if (onSectionChange) onSectionChange("final");
       else navigate(`/play/${code}/final${embeddedQuery}`, { replace: true });
-    } else if (!view.session.final_gallery_open && activePage === "final") {
+    } else if (activePage === "recap" && sessionStatus !== "completed") {
       if (onSectionChange) onSectionChange("game");
       else navigate(`/play/${code}/game${embeddedQuery}`, { replace: true });
     }
@@ -114,9 +119,10 @@ export default function SessionParticipant({
     activePage,
     code,
     embeddedHostMode,
+    finalGalleryOpen,
     navigate,
     onSectionChange,
-    view?.session.final_gallery_open,
+    sessionStatus,
   ]);
 
   useEffect(() => {
@@ -210,6 +216,31 @@ export default function SessionParticipant({
     secretMissions,
     setError,
   });
+  const memoryAssets = useMemo(
+    () =>
+      evidence.map((item) => {
+        const mission = item.secret_assignment_id
+          ? secretMissions.find(
+              (candidate) =>
+                candidate.assignment_id === item.secret_assignment_id,
+            )
+          : null;
+        const sideChallenge = view?.side_challenges.find(
+          (candidate) => candidate.id === item.challenge_id,
+        );
+        const mainChallenge =
+          view?.challenge?.id === item.challenge_id ? view.challenge : null;
+        return {
+          ...item,
+          title:
+            mission?.title ??
+            sideChallenge?.title ??
+            mainChallenge?.title ??
+            "Challenge submission",
+        };
+      }),
+    [evidence, secretMissions, view],
+  );
 
   if (embedded && (!token || (!loading && !view)))
     return (
@@ -321,13 +352,21 @@ export default function SessionParticipant({
       body: "Complete a side challenge and upload evidence to receive 5 points automatically. Tied top submissions also receive the challenge bonus.",
       page: "side-challenges",
     },
-    ...(session.final_gallery_open
+    {
+      target: '[data-tour="player-final"]',
+      title: "The final round",
+      body: session.final_gallery_open
+        ? "The host opens one side challenge at a time. Vote for a favourite, then review the results after voting closes."
+        : "Final stays at the end of the game flow. The host opens the final round when it is time to celebrate submissions.",
+      page: "final",
+    },
+    ...(session.status === "completed" && !session.final_gallery_open
       ? [
           {
-            target: '[data-tour="player-final"]',
-            title: "Vote in the final gallery",
-            body: "The host opens one side challenge at a time. Vote for a favourite, then review the vote counts, voter identities and updated leaderboard after the host closes voting.",
-            page: "final",
+            target: '[data-tour="player-memories"]',
+            title: "Keep your memories",
+            body: "Download every photo and video you submitted, or make a vertical photo reel to share.",
+            page: "recap",
           },
         ]
       : []),
@@ -373,8 +412,8 @@ export default function SessionParticipant({
 
   const sessionContent = (
     <>
-      {(error || sharedTimerError) && (
-        <SessionFeedback message={error || sharedTimerError} />
+      {(errorWithArt || sharedTimerError) && (
+        <SessionFeedback message={errorWithArt || sharedTimerError} />
       )}
       {secretReviewTakeover && secretReview && (
         <SecretMissionReview
@@ -387,7 +426,7 @@ export default function SessionParticipant({
       )}
       {!secretReviewTakeover && (
         <>
-          {rewardRound && (
+          {rewardRound && activePage !== "recap" && (
             <PlayerRewardRoundPanel
               rewardRound={rewardRound}
               busyKey={busyKey}
@@ -432,6 +471,23 @@ export default function SessionParticipant({
                   >
                     See the final leaderboard →
                   </ButtonLink>
+                  {!session.final_gallery_open && (
+                    <ButtonLink
+                      variant="participant-leaderboard"
+                      fullWidth={false}
+                      to={`/play/${code}/recap`}
+                      onClick={
+                        onSectionChange
+                          ? (event) => {
+                              event.preventDefault();
+                              onSectionChange("recap");
+                            }
+                          : undefined
+                      }
+                    >
+                      Save your game memories →
+                    </ButtonLink>
+                  )}
                 </SessionState>
               )}
 
@@ -472,6 +528,7 @@ export default function SessionParticipant({
                         viewerRole={embedded ? "host" : "player"}
                         title={challenge.title}
                         description={challenge.description}
+                        artUrl={mainChallengeArtUrl}
                         points={challenge.points}
                         round={session.current_round_number}
                         roundCount={session.round_count}
@@ -606,6 +663,16 @@ export default function SessionParticipant({
             />
           )}
 
+          {activePage === "recap" && session.status === "completed" && (
+            <PlayerMemories
+              assets={memoryAssets}
+              mediaUrl={mediaUrl}
+              sessionName={session.name}
+              playerName={player.name}
+              joinCode={code}
+            />
+          )}
+
           {!embeddedHostMode && !finalRoundTakeover && (
             <SyncStatus>
               Live updates enabled{" "}
@@ -702,7 +769,12 @@ export default function SessionParticipant({
         !embeddedHostMode && !finalRoundTakeover && !secretReviewTakeover ? (
           <SessionNavigation
             active={activePage}
-            showFinal={session.final_gallery_open}
+            showFinal
+            showMemories={
+              session.status === "completed" && !session.final_gallery_open
+            }
+            memoriesActive={activePage === "recap"}
+            memoriesHref={`/play/${code}/recap`}
             challengeCount={sideChallenges.length}
             countLabel={`${sideChallenges.length} available challenges`}
             tourTarget="player-navigation"

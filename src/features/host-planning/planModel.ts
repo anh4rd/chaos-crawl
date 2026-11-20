@@ -6,6 +6,17 @@ import type {
 } from "../../types/hostPlanning";
 import { defaultForm, taskLibrary } from "./catalog";
 import { timePlus, today } from "../../utils/dateTime";
+
+function stringRecord(value: unknown): Record<string, string> {
+  if (typeof value !== "object" || value === null || Array.isArray(value))
+    return {};
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      (entry): entry is [string, string] => typeof entry[1] === "string",
+    ),
+  );
+}
+
 export function derivePlan(form: SetupForm) {
   const allTasks = [...taskLibrary, ...form.customTasks];
   const selectedTasks = allTasks.filter(
@@ -132,6 +143,7 @@ export function hydratePlan(data: StoredPlan): SetupForm {
             taskLibrary.some((t) => t.id === x && t.kind === "main"),
           )
         : defaultForm.selectedMain,
+    challengeArtUrls: stringRecord(p.challengeArtUrls),
     selectedSide: Array.isArray(p.selectedSide)
       ? p.selectedSide
       : defaultForm.selectedSide,

@@ -1,0 +1,260 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.session-memories {
+  display: grid;
+  gap: layout.$spacing-unit * 5;
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: layout.$spacing-unit * 4;
+    padding: layout.$spacing-unit * 5;
+    border: layout.$session-border-width solid colors.$ink;
+    border-radius: layout.$radius-lg;
+    background: colors.$white;
+    box-shadow: layout.$spacing-unit layout.$spacing-unit 0 colors.$purple-dark;
+  }
+
+  &__eyebrow {
+    margin: 0 0 layout.$spacing-unit;
+    color: colors.$purple;
+    font-family: fonts.$family-display;
+    font-size: layout.$session-small-size;
+    font-weight: fonts.$weight-action;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__header h2 {
+    margin: 0;
+    font-size: layout.$session-header-size * 2;
+  }
+
+  &__header p:last-child {
+    max-width: layout.$entry-content-width;
+    margin-bottom: 0;
+    color: colors.$session-text-2;
+  }
+
+  &__count {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: layout.$spacing-unit * 2;
+    padding: layout.$spacing-unit * 2 layout.$spacing-unit * 3;
+    border-radius: layout.$radius-pill;
+    background: colors.$comic-lavender;
+    color: colors.$purple-dark;
+    font-weight: fonts.$weight-action;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+    gap: layout.$spacing-unit * 4;
+  }
+
+  &__asset {
+    min-width: 0;
+    overflow: hidden;
+    border: layout.$session-border-width solid colors.$ink;
+    border-radius: layout.$radius-lg;
+    background: colors.$white;
+    box-shadow: layout.$spacing-unit layout.$spacing-unit 0 colors.$purple-dark;
+  }
+
+  &__preview {
+    position: relative;
+    display: grid;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    place-items: center;
+    background: colors.$purple-dark;
+  }
+
+  &__preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__video {
+    display: grid;
+    justify-items: center;
+    gap: layout.$spacing-unit * 2;
+    color: colors.$white;
+    font-family: fonts.$family-display;
+    font-weight: fonts.$weight-action;
+  }
+
+  &__type {
+    position: absolute;
+    inset-inline-start: layout.$spacing-unit * 3;
+    inset-block-end: layout.$spacing-unit * 3;
+    padding: layout.$spacing-unit layout.$spacing-unit * 2;
+    border-radius: layout.$radius-pill;
+    background: colors.$white;
+    color: colors.$purple-dark;
+    font-size: layout.$session-small-size;
+    font-weight: fonts.$weight-action;
+  }
+
+  &__asset-details {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: layout.$spacing-unit * 3;
+    padding: layout.$spacing-unit * 3;
+  }
+
+  &__asset-details h3 {
+    margin: 0;
+    overflow-wrap: anywhere;
+    font-size: layout.$session-copy-size;
+  }
+
+  &__asset-details p {
+    margin: layout.$spacing-unit 0 0;
+    color: colors.$session-text-2;
+    font-size: layout.$session-small-size;
+  }
+
+  &__asset-details .btn {
+    flex: none;
+  }
+
+  &__empty {
+    display: grid;
+    justify-items: center;
+    gap: layout.$spacing-unit * 2;
+    padding: layout.$spacing-unit * 8 layout.$spacing-unit * 4;
+    border: layout.$session-border-width solid colors.$ink;
+    border-radius: layout.$radius-lg;
+    background: colors.$white;
+    text-align: center;
+  }
+
+  &__empty h3,
+  &__empty p {
+    margin: 0;
+  }
+
+  &__empty p {
+    color: colors.$session-text-2;
+  }
+
+  @media (max-width: layout.$small-screen-breakpoint) {
+    &__header {
+      flex-direction: column;
+    }
+
+    &__asset-details {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+}
+
+.session-social-clip {
+  display: grid;
+  justify-items: start;
+  gap: layout.$spacing-unit * 3;
+  padding: layout.$spacing-unit * 5;
+  border: layout.$session-border-width solid colors.$ink;
+  border-radius: layout.$radius-lg;
+  background: colors.$purple-dark;
+  box-shadow: layout.$spacing-unit layout.$spacing-unit 0 colors.$purple-dark;
+  color: colors.$white;
+
+  &__copy {
+    max-width: layout.$entry-content-width;
+  }
+
+  &__eyebrow {
+    margin: 0 0 layout.$spacing-unit;
+    color: colors.$lime;
+    font-family: fonts.$family-display;
+    font-size: layout.$session-small-size;
+    font-weight: fonts.$weight-action;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__copy h3 {
+    margin: 0;
+    color: colors.$white;
+    font-size: layout.$session-header-size * 1.5;
+  }
+
+  &__copy p:last-child,
+  &__empty,
+  &__hint {
+    margin-bottom: 0;
+    color: colors.$session-helper;
+  }
+
+  &__photos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: layout.$spacing-unit * 2;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  &__photos legend {
+    margin-bottom: layout.$spacing-unit * 2;
+    color: colors.$white;
+    font-weight: fonts.$weight-action;
+  }
+
+  &__photo-limit {
+    margin-inline-start: layout.$spacing-unit;
+    color: colors.$session-helper;
+    font-size: layout.$session-small-size;
+  }
+
+  &__photo {
+    display: flex;
+    align-items: center;
+    gap: layout.$spacing-unit * 2;
+    padding: layout.$spacing-unit * 2 layout.$spacing-unit * 3;
+    border: layout.$control-border-width solid colors.$session-helper;
+    border-radius: layout.$radius-pill;
+    cursor: pointer;
+  }
+
+  &__photo:focus-within {
+    outline: layout.$focus-ring-width solid colors.$lime;
+    outline-offset: layout.$pixel-unit;
+  }
+
+  &__photo input {
+    accent-color: colors.$lime;
+  }
+
+  &__hint {
+    font-size: layout.$session-small-size;
+  }
+
+  &__progress {
+    color: colors.$lime;
+    font-weight: fonts.$weight-action;
+  }
+
+  &__canvas {
+    --session-clip-background: #{colors.$purple-dark};
+    --session-clip-foreground: #{colors.$white};
+    --session-clip-accent: #{colors.$lime};
+    --session-clip-font: #{fonts.$family-display};
+
+    position: fixed;
+    inset-inline-start: -10000px;
+    width: 720px;
+    height: 1280px;
+    pointer-events: none;
+  }
+}

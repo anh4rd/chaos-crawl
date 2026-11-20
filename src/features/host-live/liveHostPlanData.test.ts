@@ -21,6 +21,7 @@ it("accepts missing optional task fields and preserves valid incoming order with
       { id: "second", equipment: [] },
       {},
     ],
+    challengeArtUrls: { second: "https://assets.test/second.png" },
     schedule: [
       {
         id: "break",
@@ -36,7 +37,11 @@ it("accepts missing optional task fields and preserves valid incoming order with
   });
   expect(data.plannedTasks).toEqual([
     { title: "No id" },
-    { id: "second", equipment: [] },
+    {
+      id: "second",
+      equipment: [],
+      artUrl: "https://assets.test/second.png",
+    },
     {},
   ]);
   expect(data.gameSchedule).toEqual([
@@ -57,6 +62,7 @@ it("does not mutate the source plan while updating all matching duplicate task I
       { id: "same", custom: 1 },
       { id: "same", custom: 2 },
     ],
+    challengeArtUrls: { same: "https://assets.test/same.png" },
     other: [1],
   };
   const patch = {
@@ -71,6 +77,10 @@ it("does not mutate the source plan while updating all matching duplicate task I
     ...source,
     selectedTasks: source.selectedTasks.map((task) => ({ ...task, ...patch })),
   });
+  expect(updated?.plannedTasks.map((task) => task.artUrl)).toEqual([
+    "https://assets.test/same.png",
+    "https://assets.test/same.png",
+  ]);
   expect(source.selectedTasks).toEqual([
     { id: "same", custom: 1 },
     { id: "same", custom: 2 },

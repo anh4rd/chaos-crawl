@@ -3,12 +3,72 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, expect, it, vi } from "vitest";
 import SessionChallengeCard from "./SessionChallengeCard";
+import SessionMainChallengeCard from "./SessionMainChallengeCard";
+import SessionSubmission from "./SessionSubmission";
 import SessionNavigation from "./SessionNavigation";
 import SessionRewardRound from "./SessionRewardRound";
 import SessionVotingCard from "./SessionVotingCard";
 import type { RewardPresentation, VotingEntry } from "./types";
 
 afterEach(cleanup);
+
+it("groups secret-mission upload controls and response text in the submission body", () => {
+  const { container } = render(
+    <SessionSubmission
+      title="Find the clue"
+      evidence={[]}
+      evidenceRequired
+      variant="secret-mission"
+      onUpload={vi.fn()}
+      onSubmit={vi.fn()}
+    />,
+  );
+  const body = container.querySelector(".session-submission__body");
+  expect(body?.querySelector(".session-submission__upload")).not.toBeNull();
+  expect(body?.contains(screen.getByText("Upload evidence to finish."))).toBe(
+    true,
+  );
+});
+
+it("renders supplied challenge artwork in the main challenge art slot", () => {
+  const { container } = render(
+    <SessionMainChallengeCard
+      viewerRole="player"
+      title="Make an entrance"
+      description="Make a memorable entrance."
+      artUrl="https://assets.test/entrance.png"
+      points={20}
+      round={1}
+      roundCount={3}
+      durationMinutes={5}
+      timerLabel="04:32"
+      timerCaption="TIME LEFT"
+    />,
+  );
+  expect(
+    container.querySelector(".main-challenge__art img")?.getAttribute("src"),
+  ).toBe("https://assets.test/entrance.png");
+});
+
+it("renders an explicitly selected OpenMoji in the main challenge art slot", () => {
+  const { container } = render(
+    <SessionMainChallengeCard
+      viewerRole="player"
+      title="Make an entrance"
+      description="Make a memorable entrance."
+      artUrl="openmoji:1F4F7"
+      points={20}
+      round={1}
+      roundCount={3}
+      durationMinutes={5}
+      timerLabel="04:32"
+      timerCaption="TIME LEFT"
+    />,
+  );
+  expect(
+    container.querySelector(".main-challenge__art img")?.getAttribute("src"),
+  ).toContain("/openmoji/1F4F7.svg");
+});
 
 it("preserves the reward presentation for secret mission cards", () => {
   const { container } = render(
@@ -26,7 +86,9 @@ it("preserves the reward presentation for secret mission cards", () => {
     container.querySelector("article.session-challenge-card--secret"),
   ).not.toBeNull();
   expect(screen.getByText("Mission reward: +15 pts")).toBeTruthy();
-  expect(screen.getByText("SECRET MISSION")).toBeTruthy();
+  expect(
+    container.querySelector(".session-challenge-card__kind")?.textContent,
+  ).toBe("SECRET MISSION");
 });
 
 it("exposes host navigation only when requested and preserves link navigation", () => {
@@ -49,6 +111,27 @@ it("exposes host navigation only when requested and preserves link navigation", 
   );
   fireEvent.click(screen.getByRole("button", { name: "Host" }));
   expect(onSelect).toHaveBeenCalledWith("host-controls");
+});
+
+it("keeps Final at the end of the game flow immediately before Memories", () => {
+  render(
+    <MemoryRouter>
+      <SessionNavigation
+        active="final"
+        showHost
+        showFinal
+        showMemories
+        memoriesHref="/play/123456/recap"
+        hrefFor={(section) => `/play/123456/${section}`}
+      />
+    </MemoryRouter>,
+  );
+  const navigation = screen.getByRole("navigation", { name: "Game pages" });
+  expect(
+    Array.from(navigation.querySelectorAll("a, button")).map((item) =>
+      item.getAttribute("aria-label"),
+    ),
+  ).toEqual(["Game", "Scores", "Challenges", "Host", "Final", "Memories"]);
 });
 
 const entry: VotingEntry = {

@@ -1,7 +1,10 @@
 @use "../variables/colors";
 @use "../variables/fonts";
 @use "../variables/layout";
+@use "../variables/motion";
+
 .main-challenge {
+  position: relative;
   padding: layout.$spacing-unit * 3;
   border: layout.$session-border-width solid colors.$ink;
   border-radius: layout.$radius-lg;
@@ -81,10 +84,44 @@
     align-items: flex-end;
     align-self: stretch;
     justify-content: space-between;
+    padding-bottom: 102.976px;
   }
   &__art {
-    margin-top: auto;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    box-sizing: border-box;
+    width: 116px;
+    height: 102.976px;
+    padding: 10px 1.804px 5.06px 20px;
+    justify-content: flex-end;
+    align-items: center;
+    overflow: hidden;
+    border-bottom-right-radius: calc(
+      layout.$radius-lg - layout.$session-border-width
+    );
+    background-image: url("../../src/assets/challenge-art-frame.svg");
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
     font-size: layout.$session-avatar-size;
+  }
+  &__art img,
+  &__art span {
+    display: block;
+    flex: 0 0 layout.$session-avatar-size;
+    width: layout.$session-avatar-size;
+    height: layout.$session-avatar-size;
+    transform: rotate(#{motion.$preview-art-angle}) scale(1.2);
+  }
+  &__art span {
+    display: grid;
+    place-items: center;
+    line-height: 1;
+  }
+  &__art img {
+    object-fit: contain;
   }
   &__description {
     font-size: layout.$session-copy-size;

@@ -25,11 +25,18 @@ export default function SessionChallengeCard({
         id={`cc-side-challenge-${id}`}
       >
         <header className="session-challenge-card__heading">
-          <span aria-hidden="true">{challengeIcon(title, description)}</span>
-          <div>
-            <h3>{title}</h3>
-            <strong>Mission reward: +{points ?? 0} pts</strong>
+          <div className="session-challenge-card__heading-copy">
+            <strong className="session-challenge-card__kind">
+              SECRET MISSION
+            </strong>
+            <h3 className="session-challenge-card__title">{title}</h3>
+            <strong className="session-challenge-card__reward">
+              Mission reward: +{points ?? 0} pts
+            </strong>
           </div>
+          <span className="session-challenge-card__art" aria-hidden="true">
+            {challengeIcon(title, description)}
+          </span>
         </header>
         <p>{description}</p>
         {children}

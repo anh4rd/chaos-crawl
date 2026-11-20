@@ -1,6 +1,6 @@
 import Icon from "../../components/ui/Icon";
 import Button from "../../components/ui/Button";
-import { challengeIcon } from "../../lib/challengeVisuals";
+import ChallengeArtwork from "../../components/challenge/ChallengeArtwork";
 import type { Task } from "./types";
 export default function ChallengeTile({
   task,
@@ -22,7 +22,7 @@ export default function ChallengeTile({
       className={`challenge-tile${selected ? " challenge-tile--selected" : ""}`}
     >
       <span className="challenge-tile__icon" aria-hidden="true">
-        {challengeIcon(task.title, task.description)}
+        <ChallengeArtwork title={task.title} description={task.description} />
       </span>
       <div className="challenge-tile__content">
         <div className="challenge-tile__heading">

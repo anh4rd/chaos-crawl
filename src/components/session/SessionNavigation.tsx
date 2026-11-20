@@ -9,15 +9,21 @@ export default function SessionNavigation({
   active,
   elementRef,
   showFinal = false,
+  showMemories = false,
+  memoriesActive = false,
+  memoriesHref,
   showHost = false,
   challengeCount,
   countLabel,
   tourTarget,
   ...navigation
 }: Navigation & {
-  active: SessionSection;
+  active: SessionSection | "recap";
   elementRef?: Ref<HTMLElement>;
   showFinal?: boolean;
+  showMemories?: boolean;
+  memoriesActive?: boolean;
+  memoriesHref?: string;
   showHost?: boolean;
   challengeCount?: number;
   countLabel?: string;
@@ -54,6 +60,14 @@ export default function SessionNavigation({
         countLabel={countLabel}
         {...target("side-challenges")}
       />
+      {showHost && (
+        <SessionNavItem
+          label="Host"
+          icon="shield"
+          active={active === "host-controls"}
+          {...target("host-controls")}
+        />
+      )}
       {showFinal && (
         <SessionNavItem
           label="Final"
@@ -62,12 +76,12 @@ export default function SessionNavigation({
           {...target("final")}
         />
       )}
-      {showHost && (
+      {showMemories && memoriesHref && (
         <SessionNavItem
-          label="Host"
-          icon="shield"
-          active={active === "host-controls"}
-          {...target("host-controls")}
+          label="Memories"
+          icon="film"
+          active={memoriesActive}
+          to={memoriesHref}
         />
       )}
     </nav>

@@ -7,12 +7,15 @@
   min-width: layout.$timer-readout-min-width;
   flex: 1;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: layout.$pixel-unit * 0.25;
   margin: 0;
   padding: layout.$pixel-unit layout.$pixel-unit * 1.75;
   color: colors.$lobby-setup-shadow;
-  background: transparent;
+  border: layout.$pixel-unit * 0.5 solid colors.$lobby-setup-shadow;
+  border-radius: layout.$pixel-unit * 5;
+  box-shadow: 2px 2px 0px colors.$purple-dark;
+  background: colors.$white;
 
   &__label {
     color: colors.$purple;

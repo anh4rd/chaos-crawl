@@ -9,8 +9,6 @@
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  width: max-content;
-  max-width: calc(100% - #{layout.$spacing-unit * 8});
   justify-content: center;
   flex-wrap: nowrap;
   padding: layout.$spacing-unit;
@@ -27,7 +25,7 @@
     gap: layout.$pixel-unit * 0.75;
     min-width: 0;
     min-height: layout.$pixel-unit * 12.25;
-    padding: layout.$pixel-unit * 1.25 layout.$pixel-unit * 2.5;
+    padding: layout.$pixel-unit * 1.25 layout.$pixel-unit * 5;
     border: layout.$pixel-unit * 0.5 solid transparent;
     border-radius: layout.$pixel-unit * 3;
     background: transparent;

@@ -27,9 +27,17 @@ export function GameCard({
       ? new Date(`${game.event_date}T23:59:59`).getTime() < Date.now()
       : false);
   const canPlay = game.status === "planned" || game.status === "live";
-  const challengeTasks = (game.plan_data?.selectedTasks ?? []).filter(
-    (task) => !task.kind || task.kind === "main",
-  );
+  const challengeTasks = (game.plan_data?.selectedTasks ?? [])
+    .filter((task) => !task.kind || task.kind === "main")
+    .map((task) => {
+      const artUrl = task.id
+        ? game.plan_data?.challengeArtUrls?.[task.id]
+        : undefined;
+      return {
+        ...task,
+        artUrl: typeof artUrl === "string" ? artUrl : undefined,
+      };
+    });
 
   const statusLabels = {
     planned: "Planned",

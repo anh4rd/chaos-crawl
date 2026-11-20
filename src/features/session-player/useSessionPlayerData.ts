@@ -46,6 +46,12 @@ export function useSessionPlayerData(
 
   const [gamePhotoUrl, setGamePhotoUrl] = useState<string | null>(null);
 
+  const [mainChallengeArtUrl, setMainChallengeArtUrl] = useState<string | null>(
+    null,
+  );
+
+  const [mainChallengeArtError, setMainChallengeArtError] = useState("");
+
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -76,6 +82,58 @@ export function useSessionPlayerData(
     setError("");
     setLoading(Boolean(code && token));
   }, [code, token]);
+
+  const mainChallengeId = view?.challenge?.id;
+  const mainChallengeTitle = view?.challenge?.title;
+  useEffect(() => {
+    let active = true;
+    setMainChallengeArtUrl(null);
+    setMainChallengeArtError("");
+    if (!code || !mainChallengeId || !mainChallengeTitle)
+      return () => {
+        active = false;
+      };
+
+    void (async () => {
+      try {
+        const { data, error: artError } = await supabase.rpc(
+          "cc_get_public_main_challenge_art",
+          {
+            p_join_code: code,
+            p_challenge_id: mainChallengeId,
+            p_challenge_title: mainChallengeTitle,
+          },
+        );
+        if (!active) return;
+        if (artError) {
+          setMainChallengeArtError(
+            `Challenge artwork couldn't refresh: ${artError.message}`,
+          );
+          return;
+        }
+        if (data === null || typeof data === "string") {
+          setMainChallengeArtUrl(data);
+          return;
+        }
+        setMainChallengeArtError(
+          "Challenge artwork couldn't refresh: Supabase returned an invalid URL.",
+        );
+      } catch (artError) {
+        if (!active) return;
+        const message =
+          artError instanceof Error
+            ? artError.message
+            : "Unexpected Supabase error.";
+        setMainChallengeArtError(
+          `Challenge artwork couldn't refresh: ${message}`,
+        );
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [code, mainChallengeId, mainChallengeTitle]);
 
   const loadView = useCallback(async () => {
     if (!code || !token) {
@@ -258,6 +316,8 @@ export function useSessionPlayerData(
     rewardRound,
     loading,
     error,
+    mainChallengeArtUrl,
+    errorWithArt: error || mainChallengeArtError,
     setError,
     gamePhotoUrl,
     lastUpdated,

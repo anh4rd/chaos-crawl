@@ -102,33 +102,123 @@
   }
 
   &--secret {
-    display: block;
-    min-height: auto;
-    margin-block: layout.$spacing-unit * 4;
-    padding: layout.$spacing-unit * 5;
-    overflow: visible;
-    border: layout.$session-border-width solid colors.$ink;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: layout.$pixel-unit;
+    width: 100%;
+    min-height: layout.$session-secret-card-min-height;
+    margin: 0;
+    padding: layout.$pixel-unit * 2;
+    overflow: hidden;
+    border: layout.$session-border-width solid colors.$white;
     border-radius: layout.$radius-lg;
-    box-shadow: layout.$spacing-unit layout.$spacing-unit 0 colors.$purple-dark;
+    background: linear-gradient(
+      135deg,
+      colors.$lime 0%,
+      colors.$yellow 55%,
+      colors.$lime 100%
+    );
+    color: colors.$ink;
+    box-shadow:
+      0 0 0 layout.$pixel-unit * 0.5 colors.$ink,
+      layout.$pixel-unit layout.$pixel-unit 0 colors.$purple-dark;
   }
 
   &--secret::before {
-    display: none;
+    inset: 0;
+    width: auto;
+    height: auto;
+    background:
+      repeating-linear-gradient(
+        0deg,
+        transparent 0 #{layout.$pixel-unit * 8},
+        rgba(colors.$white, 0.22) #{layout.$pixel-unit * 8}
+          #{layout.$pixel-unit * 8.25}
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent 0 #{layout.$pixel-unit * 8},
+        rgba(colors.$ink, 0.08) #{layout.$pixel-unit * 8} #{layout.$pixel-unit *
+          8.25}
+      ),
+      repeating-radial-gradient(
+        circle at 52% 42%,
+        transparent 0 #{layout.$pixel-unit * 6},
+        rgba(colors.$white, 0.28) #{layout.$pixel-unit * 6}
+          #{layout.$pixel-unit * 6.5},
+        transparent #{layout.$pixel-unit * 6.5} #{layout.$pixel-unit * 13}
+      );
+    clip-path: none;
+    pointer-events: none;
   }
 
   &--secret .session-challenge-card__heading {
     display: flex;
-    align-items: center;
-    gap: layout.$spacing-unit * 4;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: layout.$spacing-unit * 3;
   }
 
-  &--secret .session-challenge-card__heading h3 {
+  &--secret .session-challenge-card__heading-copy {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    column-gap: layout.$pixel-unit * 2;
+    min-width: 0;
+  }
+
+  &--secret .session-challenge-card__kind {
+    display: block;
+    grid-column: 1 / -1;
+    width: fit-content;
+    color: colors.$white;
+    font-family: fonts.$family-display;
+    font-size: fonts.$size-heading;
+    font-weight: fonts.$weight-action;
+    line-height: 1;
+    text-shadow: layout.$pixel-unit * 0.5 layout.$pixel-unit * 0.5 0 colors.$ink;
+    text-transform: uppercase;
+    -webkit-text-stroke: layout.$pixel-unit * 0.35 colors.$ink;
+    paint-order: stroke fill;
+    transform: rotate(-2deg);
+  }
+
+  &--secret .session-challenge-card__title {
     margin: 0;
+    padding-top: layout.$pixel-unit * 0.5;
+    color: colors.$ink;
+    font-family: fonts.$family-display;
+    font-size: fonts.$size-small;
+    line-height: 1;
+  }
+
+  &--secret .session-challenge-card__reward {
+    display: block;
+    padding: 0;
+    color: colors.$ink;
+    font-size: fonts.$size-caption;
+    white-space: nowrap;
+  }
+
+  &--secret .session-challenge-card__art {
+    display: grid;
+    width: layout.$pixel-unit * 7;
+    height: layout.$pixel-unit * 7;
+    flex: none;
+    place-items: center;
+    border: layout.$session-border-width solid colors.$ink;
+    border-radius: layout.$radius-circle;
+    background: colors.$white;
+    color: colors.$ink;
     font-size: layout.$session-header-size;
   }
 
-  &--secret .session-challenge-card__heading strong {
-    color: colors.$purple;
-    font-size: layout.$session-small-size;
+  &--secret > p {
+    margin: 0;
+    color: colors.$ink;
+    font-size: layout.$session-copy-size;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
   }
 }

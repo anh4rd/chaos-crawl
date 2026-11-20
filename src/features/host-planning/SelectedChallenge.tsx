@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import Icon from "../../components/ui/Icon";
 import Button from "../../components/ui/Button";
-import { challengeIcon } from "../../lib/challengeVisuals";
+import ChallengeArtwork from "../../components/challenge/ChallengeArtwork";
 import type { Task } from "./types";
 export default function SelectedChallenge({
   task,
@@ -37,7 +37,7 @@ export default function SelectedChallenge({
       />
       <div className="selected-challenge__number">{index + 1}</div>
       <span className="selected-challenge__icon" aria-hidden="true">
-        {challengeIcon(task.title, task.description)}
+        <ChallengeArtwork title={task.title} description={task.description} />
       </span>
       <div className="selected-challenge__copy">
         <strong>{task.title}</strong>

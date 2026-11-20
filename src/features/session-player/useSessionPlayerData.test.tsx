@@ -146,3 +146,34 @@ it("finishes loading when the gallery RPC has no current gallery", async () => {
   expect(result.current.finalGallery).toBeNull();
   expect(result.current.leaderboard).toEqual([]);
 });
+
+it("loads public artwork for the current challenge without player credentials", async () => {
+  const artUrl = "https://assets.test/challenge.png";
+  rpc.mockImplementation((name: string) =>
+    Promise.resolve({
+      data:
+        name === "cc_get_game_session_view"
+          ? {
+              session: { final_gallery_open: false },
+              player: { id: "player" },
+              challenge: {
+                id: "challenge",
+                title: "Make an entrance",
+              },
+            }
+          : name === "cc_get_public_main_challenge_art"
+            ? artUrl
+            : null,
+      error: null,
+    }),
+  );
+  const { result } = renderHook(() =>
+    useSessionPlayerData("123456", "player-token", "game"),
+  );
+  await waitFor(() => expect(result.current.mainChallengeArtUrl).toBe(artUrl));
+  expect(rpc).toHaveBeenCalledWith("cc_get_public_main_challenge_art", {
+    p_join_code: "123456",
+    p_challenge_id: "challenge",
+    p_challenge_title: "Make an entrance",
+  });
+});

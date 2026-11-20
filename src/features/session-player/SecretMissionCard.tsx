@@ -45,11 +45,11 @@ export default function SecretMissionCard({
       description={mission.description}
       points={mission.points}
     >
-      <strong>SECRET MISSION</strong>
       <SessionSubmission
+        variant="secret-mission"
         title={mission.title}
-        evidence={evidence}
         status={mission.status === "sent" ? null : mission.status}
+        evidence={evidence}
         awardedPoints={mission.awarded_points}
         busy={busy}
         uploading={uploading}

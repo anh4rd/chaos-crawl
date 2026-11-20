@@ -29,5 +29,6 @@ export interface HostGame {
       description?: string;
       kind?: string;
     }>;
+    challengeArtUrls?: Record<string, string>;
   } | null;
 }

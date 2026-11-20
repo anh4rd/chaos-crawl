@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import TimelineItem from "./TimelineItem";
 import type { ScheduleItem } from "./types";
+import { taskLibrary } from "./catalog";
 
 afterEach(cleanup);
 it.each([-1, 1] as const)(
@@ -30,6 +31,10 @@ it.each([-1, 1] as const)(
         schedule={schedule}
         startTime="18:00"
         allTasks={[]}
+        showEmojiPicker={false}
+        onUploadIcon={vi.fn()}
+        onClearIcon={vi.fn()}
+        onSelectEmoji={vi.fn()}
         dragged={null}
         setDragged={vi.fn()}
         onReorder={onReorder}
@@ -47,3 +52,43 @@ it.each([-1, 1] as const)(
     );
   },
 );
+
+it("lets hosts select a different OpenMoji for a scheduled challenge", () => {
+  const task = taskLibrary.find((candidate) => candidate.id === "pineapple");
+  if (!task) throw new Error("The pineapple challenge fixture is missing.");
+  const challenge: ScheduleItem = {
+    id: "pineapple",
+    type: "challenge",
+    title: task.title,
+    duration: 20,
+    taskId: task.id,
+  };
+  const onSelectEmoji = vi.fn();
+  render(
+    <TimelineItem
+      item={challenge}
+      index={0}
+      schedule={[challenge]}
+      startTime="18:00"
+      allTasks={[task]}
+      showEmojiPicker
+      onUploadIcon={vi.fn()}
+      onClearIcon={vi.fn()}
+      onSelectEmoji={onSelectEmoji}
+      dragged={null}
+      setDragged={vi.fn()}
+      onReorder={vi.fn()}
+      onPatch={vi.fn()}
+      onDelete={vi.fn()}
+    />,
+  );
+  fireEvent.click(screen.getByText("Change emoji"));
+  fireEvent.change(
+    screen.getByRole("searchbox", {
+      name: "Search OpenMoji for Conceal a pineapple",
+    }),
+    { target: { value: "camera" } },
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Select camera emoji" }));
+  expect(onSelectEmoji).toHaveBeenCalledWith("pineapple", "1F4F7");
+});

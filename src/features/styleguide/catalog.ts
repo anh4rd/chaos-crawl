@@ -852,8 +852,8 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   ChallengeIcons: {
     usage:
-      "Up to four challenge symbols with title tooltips; empty tasks render nothing. Shown in workspace panels.",
-    dependencies: "challengeVisuals and SCSS .challenge-icons; no queries.",
+      "Up to four OpenMoji challenge symbols with title tooltips; optional artUrl values render uploaded artwork or an explicitly selected OpenMoji. Otherwise metadata matches the challenge title and description. Empty tasks render nothing.",
+    dependencies: "openmoji metadata and SCSS .challenge-icons; no queries.",
   },
   HostDashboard: {
     usage:
@@ -1095,7 +1095,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionMainChallengeCard: {
     usage:
-      "Shared host/player challenge. Supply viewerRole, title, description, points, round, roundCount, durationMinutes, timerLabel and timerCaption. Compose buttons through action.",
+      "Shared host/player challenge. Supply viewerRole, title, description, points, round, roundCount, durationMinutes, timerLabel and timerCaption. Optional artUrl displays uploaded artwork or a selected OpenMoji; otherwise an OpenMoji is matched from the title and description. Compose buttons through action.",
     dependencies:
       "SCSS .main-challenge. No data hooks; timer text is supplied by the caller.",
   },
@@ -1110,6 +1110,12 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
       "Optional elementRef exposes the native nav for controller-owned focus recovery. The local session preview returns focus to Game when its temporary host action disappears. Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionMemories: {
+    usage:
+      "Completed-session evidence archive and silent photo-reel creator shared by player recaps and host controls. The local session archive preview uses a bundled image and a local download callback.",
+    dependencies:
+      "Caller-projected evidence, resolved media URLs and a download callback; no route, database or storage access in the shared presentation.",
   },
   SessionNavItem: {
     usage:
@@ -1197,13 +1203,13 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionSubmission: {
     usage:
-      "Shared host/player submission presentation. The side-challenge variant keeps upload as the primary action and reveals submission after evidence is available.",
+      "Shared host/player submission presentation. The side-challenge variant keeps upload as the primary action and reveals submission after evidence is available; secret missions use the themed upload treatment without changing submission behavior.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },
   SessionChallengeCard: {
     usage:
-      "Compact side-challenge card shared by host and player views. Teams-enabled sessions show the team label; the host-only add tile is composed by the host feature.",
+      "Shared host/player challenge card. The secret variant fills its container and uses a neon patterned surface with a compact 182px minimum height; teams-enabled side challenges show the team label. The host-only add tile is composed by the host feature.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },

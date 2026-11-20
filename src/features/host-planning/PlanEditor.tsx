@@ -27,6 +27,7 @@ import { usePlanPhoto } from "./usePlanPhoto";
 import { derivePlan } from "./planModel";
 import { defaultForm, tabItems } from "./catalog";
 import type { BuilderTab, SetupForm, TaskKind } from "./types";
+import { openMojiSelection } from "../../lib/openmoji";
 export default function PlanEditor({
   id,
   communityTaskId,
@@ -125,7 +126,35 @@ export default function PlanEditor({
     setError,
     setNotice,
   });
-  const { uploadGamePhoto } = usePlanPhoto({ id, update, setError, setNotice });
+  const { uploadGamePhoto, uploadChallengeIcon } = usePlanPhoto({
+    id,
+    update,
+    setChallengeArtUrl: (taskId, url) =>
+      setForm((current) => ({
+        ...current,
+        challengeArtUrls: {
+          ...current.challengeArtUrls,
+          [taskId]: url,
+        },
+      })),
+    setError,
+    setNotice,
+  });
+  function clearChallengeArt(taskId: string) {
+    setForm((current) => {
+      const challengeArtUrls = { ...current.challengeArtUrls };
+      delete challengeArtUrls[taskId];
+      return { ...current, challengeArtUrls };
+    });
+  }
+  function selectChallengeEmoji(taskId: string, hexcode: string | null) {
+    setForm((current) => {
+      const challengeArtUrls = { ...current.challengeArtUrls };
+      if (hexcode) challengeArtUrls[taskId] = openMojiSelection(hexcode);
+      else delete challengeArtUrls[taskId];
+      return { ...current, challengeArtUrls };
+    });
+  }
   if (loading)
     return (
       <HostWorkspace
@@ -320,6 +349,10 @@ export default function PlanEditor({
               sideRewardPoints={sideRewardPoints}
               addTaskToSchedule={addTaskToSchedule}
               allTasks={allTasks}
+              challengeArtUrls={form.challengeArtUrls}
+              uploadChallengeIcon={uploadChallengeIcon}
+              clearChallengeArt={clearChallengeArt}
+              selectChallengeEmoji={selectChallengeEmoji}
               addScheduleItem={addScheduleItem}
               setDragged={setDragged}
               dragged={dragged}

@@ -74,4 +74,61 @@
       flex: none;
     }
   }
+
+  &--secret-mission {
+    display: flex;
+    flex-direction: row;
+    gap: layout.$pixel-unit;
+
+    & .session-submission__body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    & .session-submission__actions {
+      display: grid;
+      gap: layout.$pixel-unit;
+    }
+
+    & .session-submission__upload {
+      width: 100%;
+      min-height: layout.$pixel-unit * 9;
+      padding: layout.$pixel-unit layout.$pixel-unit * 3;
+      border: layout.$session-border-width solid colors.$white;
+      border-radius: layout.$radius-pill;
+      background: colors.$purple;
+      color: colors.$white;
+      font-family: fonts.$family-display;
+      font-size: layout.$session-small-size;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    & .session-submission__upload:focus-within {
+      outline: layout.$focus-ring-width solid colors.$ink;
+      outline-offset: layout.$pixel-unit * 0.5;
+    }
+
+    & .session-submission__upload .icon {
+      flex: none;
+    }
+
+    & .session-submission__submit {
+      justify-self: end;
+      min-height: layout.$pixel-unit * 6;
+      padding: layout.$pixel-unit * 0.75 layout.$pixel-unit * 2;
+      border-color: colors.$ink;
+      border-radius: layout.$radius-pill;
+      background: rgba(colors.$white, 0.8);
+      color: colors.$ink;
+      font-size: fonts.$size-caption;
+    }
+
+    & .session-submission__body > p {
+      margin: 0;
+      color: colors.$ink;
+      font-size: fonts.$size-caption;
+      line-height: 1.15;
+    }
+  }
 }

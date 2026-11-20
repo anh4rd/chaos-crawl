@@ -18,6 +18,10 @@ interface ScheduleBuilderProps {
   sideRewardPoints: number;
   addTaskToSchedule: (taskId: string) => void;
   allTasks: Task[];
+  challengeArtUrls: Record<string, string>;
+  uploadChallengeIcon: (taskId: string, file: File) => void | Promise<void>;
+  clearChallengeArt: (taskId: string) => void;
+  selectChallengeEmoji: (taskId: string, hexcode: string | null) => void;
   addScheduleItem: (type: "break" | "challenge") => void;
   setDragged: Dispatch<SetStateAction<string | null>>;
   dragged: string | null;
@@ -34,6 +38,10 @@ export default function ScheduleBuilder({
   sideRewardPoints,
   addTaskToSchedule,
   allTasks,
+  challengeArtUrls,
+  uploadChallengeIcon,
+  clearChallengeArt,
+  selectChallengeEmoji,
   addScheduleItem,
   setDragged,
   dragged,
@@ -140,6 +148,17 @@ export default function ScheduleBuilder({
               schedule={form.schedule}
               startTime={form.startTime}
               allTasks={allTasks}
+              artUrl={item.taskId ? challengeArtUrls[item.taskId] : undefined}
+              showEmojiPicker={
+                item.type === "challenge" &&
+                Boolean(item.taskId) &&
+                form.schedule.findIndex(
+                  (scheduled) => scheduled.taskId === item.taskId,
+                ) === index
+              }
+              onUploadIcon={uploadChallengeIcon}
+              onClearIcon={clearChallengeArt}
+              onSelectEmoji={selectChallengeEmoji}
               dragged={dragged}
               setDragged={setDragged}
               onReorder={(items) => update("schedule", items)}

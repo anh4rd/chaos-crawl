@@ -37,6 +37,16 @@ export interface EvidencePresentation {
   description: string;
 }
 
+export interface SessionMemoryItem {
+  id: string;
+  title: string;
+  mediaType: "image" | "video";
+  mediaUrl: string;
+  storagePath: string;
+  submittedAt: string;
+  submittedBy?: string;
+}
+
 export interface VotingEntry {
   id: string;
   participant: { name: string; avatarUrl?: string | null };

@@ -14,6 +14,19 @@
     border-color: colors.$challenge-tile-selected-border;
     background: colors.$challenge-tile-selected-surface;
   }
+  &__icon {
+    display: grid;
+    width: (layout.$pixel-unit * 8);
+    height: (layout.$pixel-unit * 8);
+    flex: none;
+    place-items: center;
+    font-size: fonts.$size-subheading;
+  }
+  &__icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
   &__content {
     min-width: 0;
     flex: 1;

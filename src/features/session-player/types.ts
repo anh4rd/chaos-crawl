@@ -45,7 +45,8 @@ export interface LeaderboardEntry {
   avatar_url?: string | null;
 }
 
-export type PlayerPage = "game" | "leaderboard" | "side-challenges" | "final";
+export type PlayerPage =
+  "game" | "leaderboard" | "side-challenges" | "final" | "recap";
 
 export interface ChallengeInfo {
   id: string;
@@ -53,6 +54,7 @@ export interface ChallengeInfo {
   round_number?: number | null;
   title: string;
   description: string;
+  art_url?: string | null;
   points: number;
   duration_minutes: number;
   allow_photo_upload: boolean;
@@ -162,6 +164,10 @@ export interface SessionEvidence {
   media_type: "image" | "video";
   saved_for_final: boolean;
   created_at: string;
+}
+
+export interface PlayerMemoryAsset extends SessionEvidence {
+  title: string;
 }
 
 export interface FinalGalleryItem {

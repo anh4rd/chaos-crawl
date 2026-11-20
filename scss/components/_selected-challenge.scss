@@ -27,6 +27,19 @@
     font-size: fonts.$size-caption;
     font-weight: fonts.$weight-action;
   }
+  &__icon {
+    display: grid;
+    width: (layout.$pixel-unit * 7);
+    height: (layout.$pixel-unit * 7);
+    flex: none;
+    place-items: center;
+    font-size: fonts.$size-subheading;
+  }
+  &__icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
   &__copy {
     display: flex;
     min-width: 0;

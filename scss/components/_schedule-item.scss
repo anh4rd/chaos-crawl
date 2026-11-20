@@ -1,6 +1,7 @@
 @use "../variables/colors";
 @use "../variables/layout";
 @use "../variables/fonts";
+@use "../tools/focus-ring";
 
 .schedule-item {
   display: grid;
@@ -43,6 +44,101 @@
   }
   &__detail strong {
     font-size: fonts.$size-small;
+  }
+  &__artwork {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: (layout.$pixel-unit * 1.5);
+    margin-top: (layout.$pixel-unit * 1.5);
+  }
+  &__artwork img {
+    width: (layout.$pixel-unit * 8);
+    height: (layout.$pixel-unit * 8);
+    object-fit: contain;
+  }
+  &__artwork label {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: (layout.$pixel-unit * 1);
+    color: colors.$challenge-tile-heading-text;
+    font-size: fonts.$size-tiny;
+    font-weight: fonts.$weight-label;
+  }
+  &__artwork input {
+    max-width: 100%;
+    font-size: fonts.$size-tiny;
+  }
+  &__emoji-picker {
+    display: flex;
+    flex-basis: 100%;
+    flex-direction: column;
+    gap: (layout.$pixel-unit * 1.5);
+  }
+  &__emoji-picker summary {
+    cursor: pointer;
+    color: colors.$purple;
+    font-size: fonts.$size-tiny;
+    font-weight: fonts.$weight-label;
+  }
+  &__emoji-picker-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: (layout.$pixel-unit * 1.5);
+  }
+  &__emoji-picker-controls label {
+    display: flex;
+    flex-direction: column;
+    gap: (layout.$pixel-unit * 0.75);
+  }
+  &__emoji-picker-controls input {
+    max-width: 100%;
+    padding: (layout.$pixel-unit * 1) (layout.$pixel-unit * 1.5);
+    border: (layout.$pixel-unit * 0.25) solid colors.$schedule-item-title-border;
+    border-radius: (layout.$pixel-unit * 1.5);
+    background: colors.$white;
+    color: colors.$challenge-tile-heading-text;
+    font-size: fonts.$size-tiny;
+  }
+  &__emoji-auto,
+  &__emoji-option {
+    display: flex;
+    align-items: center;
+    gap: (layout.$pixel-unit * 1);
+    padding: (layout.$pixel-unit * 1) (layout.$pixel-unit * 1.5);
+    border: (layout.$pixel-unit * 0.25) solid colors.$schedule-item-title-border;
+    border-radius: (layout.$pixel-unit * 1.5);
+    background: colors.$white;
+    color: colors.$challenge-tile-heading-text;
+    font-size: fonts.$size-tiny;
+    cursor: pointer;
+  }
+  &__emoji-auto[aria-pressed="true"],
+  &__emoji-option[aria-pressed="true"] {
+    border-color: colors.$purple;
+    background: colors.$challenge-tile-selected-surface;
+  }
+  &__emoji-auto:focus-visible,
+  &__emoji-option:focus-visible {
+    @include focus-ring.focus-ring;
+  }
+  &__emoji-options {
+    display: flex;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    gap: (layout.$pixel-unit * 1);
+  }
+  &__emoji-auto img,
+  &__emoji-option img {
+    width: (layout.$pixel-unit * 5);
+    height: (layout.$pixel-unit * 5);
+    object-fit: contain;
+  }
+  &__emoji-picker-controls a {
+    color: colors.$purple;
+    font-size: fonts.$size-micro;
   }
   &__type {
     font-size: fonts.$size-tiny;

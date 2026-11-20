@@ -196,3 +196,11 @@ export async function uploadSessionEvidence({
     return { data: storagePath, error: null };
   });
 }
+
+export async function downloadSessionEvidence(
+  storagePath: string,
+): Promise<ApiResult<Blob>> {
+  return runApi(() =>
+    supabase.storage.from("session-evidence").download(storagePath),
+  );
+}

@@ -2,6 +2,8 @@
 @use "../variables/layout";
 .evidence-gallery {
   display: grid;
+  height: 10vh;
+  width: 40vw;
   grid-template-columns: repeat(
     auto-fit,
     minmax(min(100%, layout.$session-media-height), 1fr)

@@ -10,10 +10,13 @@ import SessionPage from "../../components/session/SessionPage";
 import SessionReview from "../../components/session/SessionReview";
 import SessionRewardRound from "../../components/session/SessionRewardRound";
 import SessionState from "../../components/session/SessionState";
+import SessionMemories from "../../components/session/SessionMemories";
+import type { SessionMemoryItem } from "../../components/session/types";
 import TabList from "../../components/ui/TabList";
 import TabPanel from "../../components/ui/TabPanel";
 import Icon from "../../components/ui/Icon";
 import { sessionEvidenceUrl } from "../../lib/sessionMedia";
+import { downloadSessionEvidence } from "../../lib/sessionEvidence";
 import SessionParticipant from "../session-player/SessionParticipant";
 import type { PlayerPage } from "../session-player/types";
 import BreakTimerEditor from "./BreakTimerEditor";
@@ -75,6 +78,7 @@ const hostManagementSections = [
   { id: "schedule", label: "Game schedule" },
   { id: "secret-missions", label: "Secret mission schedule" },
   { id: "settings", label: "Settings" },
+  { id: "memories", label: "Memories" },
 ] as const;
 type HostManagementSection = (typeof hostManagementSections)[number]["id"];
 
@@ -104,7 +108,13 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   } = useHostSessionData(sessionId);
   const navigateParticipant = useCallback(
     (section: PlayerPage) =>
-      setActiveTab(section === "final" ? "final-round" : section),
+      setActiveTab(
+        section === "final"
+          ? "final-round"
+          : section === "recap"
+            ? "game"
+            : section,
+      ),
     [],
   );
   const { busy, setBusy } = useHostOperation();
@@ -173,6 +183,9 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     finalRoundChallenges,
     finalVotes,
   });
+  const currentChallengeArtUrl =
+    plannedTasks.find((task) => task.id === currentChallenge?.id)?.artUrl ??
+    plannedTasks.find((task) => task.title === currentChallenge?.title)?.artUrl;
 
   const joinUrl = session
     ? `${window.location.origin}${window.location.pathname}#/join?code=${session.join_code}`
@@ -926,6 +939,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                     currentChallenge?.description ??
                     "Check that this session has a main challenge assigned to the current round."
                   }
+                  artUrl={currentChallengeArtUrl}
                   points={currentChallenge?.points ?? 0}
                   round={session.current_round_number}
                   roundCount={mainRounds.length}
@@ -1111,27 +1125,33 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
           <HostManagement>
             {activeTab === "host-controls" && (
               <TabList label="Host management sections" variant="workspace">
-                {hostManagementSections.map((section) => (
-                  <Button
-                    key={section.id}
-                    variant="workspace-tab"
-                    fullWidth={false}
-                    type="button"
-                    role="tab"
-                    id={`${hostManagementId}-tab-${section.id}`}
-                    aria-controls={`${hostManagementId}-panel-${section.id}`}
-                    tabIndex={activeHostSection === section.id ? 0 : -1}
-                    aria-selected={activeHostSection === section.id}
-                    className={
-                      activeHostSection === section.id
-                        ? "btn--workspace-selected"
-                        : ""
-                    }
-                    onClick={() => setActiveHostSection(section.id)}
-                  >
-                    {section.label}
-                  </Button>
-                ))}
+                {hostManagementSections
+                  .filter(
+                    (section) =>
+                      section.id !== "memories" ||
+                      session.status === "completed",
+                  )
+                  .map((section) => (
+                    <Button
+                      key={section.id}
+                      variant="workspace-tab"
+                      fullWidth={false}
+                      type="button"
+                      role="tab"
+                      id={`${hostManagementId}-tab-${section.id}`}
+                      aria-controls={`${hostManagementId}-panel-${section.id}`}
+                      tabIndex={activeHostSection === section.id ? 0 : -1}
+                      aria-selected={activeHostSection === section.id}
+                      className={
+                        activeHostSection === section.id
+                          ? "btn--workspace-selected"
+                          : ""
+                      }
+                      onClick={() => setActiveHostSection(section.id)}
+                    >
+                      {section.label}
+                    </Button>
+                  ))}
               </TabList>
             )}
             {hostManagementSections.map((section) => (
@@ -1339,6 +1359,30 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                       busy={busy}
                       onSave={saveSettings}
                       onHostParticipationChange={setHostParticipation}
+                    />
+                  )}
+                {activeTab === "host-controls" &&
+                  activeHostSection === section.id &&
+                  section.id === "memories" &&
+                  session.status === "completed" && (
+                    <SessionMemories
+                      assets={evidence.map((item): SessionMemoryItem => ({
+                        id: item.id,
+                        title:
+                          challengeById.get(item.challenge_id)?.title ??
+                          "Challenge submission",
+                        mediaType: item.media_type,
+                        mediaUrl: evidenceUrl(item.storage_path),
+                        storagePath: item.storage_path,
+                        submittedAt: item.created_at,
+                        submittedBy:
+                          playerById.get(item.player_id)?.name ?? "Player",
+                      }))}
+                      heading="Memories from the game."
+                      description={`Download original submissions from everyone in ${session.name}, or make a group photo reel to share.`}
+                      reelCredit="The whole crew"
+                      joinCode={session.join_code}
+                      downloadAsset={downloadSessionEvidence}
                     />
                   )}
               </TabPanel>

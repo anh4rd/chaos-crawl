@@ -12,6 +12,7 @@ import SessionReview from "../../components/session/SessionReview";
 import SessionRewardRound from "../../components/session/SessionRewardRound";
 import SessionState from "../../components/session/SessionState";
 import SessionSubmission from "../../components/session/SessionSubmission";
+import PanelGrid from "../../components/ui/PanelGrid";
 import HostAddSideChallengeCard from "../host-live/HostAddSideChallengeCard";
 import HostSideChallengeDialog from "../host-live/HostSideChallengeDialog";
 import type {
@@ -62,6 +63,8 @@ export default function SessionExamples() {
   const [phase, setPhase] = useState("live");
   const [submitted, setSubmitted] = useState(false);
   const [uploaded, setUploaded] = useState(false);
+  const [missionSubmitted, setMissionSubmitted] = useState(false);
+  const [missionUploaded, setMissionUploaded] = useState(false);
   const [selected, setSelected] = useState(false);
   const [notice, setNotice] = useState("");
   const [sideChallengeDialogOpen, setSideChallengeDialogOpen] = useState(false);
@@ -79,6 +82,8 @@ export default function SessionExamples() {
           setPhase("live");
           setSubmitted(false);
           setUploaded(false);
+          setMissionSubmitted(false);
+          setMissionUploaded(false);
           setSelected(false);
           setNotice("");
           setSideChallengeDialogOpen(false);
@@ -181,30 +186,51 @@ export default function SessionExamples() {
             viewerId="alex"
           />
         ) : section === "side-challenges" ? (
-          <div className="challenge-list">
-            <SessionChallengeCard
-              id="demo"
-              title="Find a pineapple"
-              description="Find the fruit and capture the moment."
-              teamsEnabled
-            >
-              <SessionSubmission
-                variant="side-challenge"
+          <>
+            <div className="challenge-list">
+              <SessionChallengeCard
+                id="demo"
                 title="Find a pineapple"
-                evidence={uploaded ? [media] : []}
-                status={submitted ? "submitted" : null}
-                evidenceRequired
-                onUpload={() => setUploaded(true)}
-                onSubmit={() => setSubmitted(true)}
-              />
-            </SessionChallengeCard>
-            {viewerRole === "host" && !closed && phase !== "completed" && (
-              <HostAddSideChallengeCard
-                disabled={false}
-                onClick={() => setSideChallengeDialogOpen(true)}
-              />
-            )}
-          </div>
+                description="Find the fruit and capture the moment."
+                teamsEnabled
+              >
+                <SessionSubmission
+                  variant="side-challenge"
+                  title="Find a pineapple"
+                  evidence={uploaded ? [media] : []}
+                  status={submitted ? "submitted" : null}
+                  evidenceRequired
+                  onUpload={() => setUploaded(true)}
+                  onSubmit={() => setSubmitted(true)}
+                />
+              </SessionChallengeCard>
+              {viewerRole === "host" && !closed && phase !== "completed" && (
+                <HostAddSideChallengeCard
+                  disabled={false}
+                  onClick={() => setSideChallengeDialogOpen(true)}
+                />
+              )}
+            </div>
+            <PanelGrid variant="private-feed">
+              <SessionChallengeCard
+                id="demo-secret"
+                kind="secret"
+                title="Make your teammate laugh"
+                description="Use this week's trending words to make your teammate guess the moment."
+                points={10}
+              >
+                <SessionSubmission
+                  variant="secret-mission"
+                  title="Make your teammate laugh"
+                  evidence={missionUploaded ? [media] : []}
+                  status={missionSubmitted ? "submitted" : null}
+                  evidenceRequired
+                  onUpload={() => setMissionUploaded(true)}
+                  onSubmit={() => setMissionSubmitted(true)}
+                />
+              </SessionChallengeCard>
+            </PanelGrid>
+          </>
         ) : section === "final" || phase === "final" || closed ? (
           <SessionFinalRound
             title="Find a pineapple"

@@ -53,6 +53,7 @@ export interface SetupForm {
   idealEndTime: string;
   playerCount: number;
   gamePhotoUrl: string;
+  challengeArtUrls: Record<string, string>;
   hostParticipates: boolean;
   teamsEnabled: boolean;
   teamSize: number | null;

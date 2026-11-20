@@ -246,6 +246,30 @@ export async function installSessionBackend(
       return;
     }
     if (
+      url.pathname.startsWith("/storage/v1/object/session-evidence/") &&
+      request.method() === "GET"
+    ) {
+      requests.push({
+        name: "storage:session-evidence-download",
+        method: "GET",
+        body: { path: url.pathname },
+      });
+      if (url.pathname.endsWith(".webm")) {
+        await route.fulfill({
+          contentType: "video/webm",
+          headers: { "access-control-allow-origin": "*" },
+          body: readFileSync(resolve("tests/support/fixtures/review.webm")),
+        });
+        return;
+      }
+      await route.fulfill({
+        contentType: "image/svg+xml",
+        headers: { "access-control-allow-origin": "*" },
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="purple"/></svg>',
+      });
+      return;
+    }
+    if (
       url.pathname.startsWith("/storage/v1/object/public/session-evidence/") &&
       request.method() === "GET"
     ) {
@@ -281,6 +305,28 @@ export async function installSessionBackend(
     }
     if (
       url.pathname.startsWith("/storage/v1/object/public/game-assets/") &&
+      request.method() === "GET"
+    ) {
+      await route.fulfill({
+        contentType: "image/svg+xml",
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"><rect width="8" height="8" fill="purple"/></svg>',
+      });
+      return;
+    }
+    if (
+      url.pathname.startsWith("/storage/v1/object/challenge-icons/") &&
+      request.method() === "POST"
+    ) {
+      requests.push({
+        name: "storage:challenge-icons",
+        method: "POST",
+        body: { path: url.pathname },
+      });
+      await respond({ Key: url.pathname });
+      return;
+    }
+    if (
+      url.pathname.startsWith("/storage/v1/object/public/challenge-icons/") &&
       request.method() === "GET"
     ) {
       await route.fulfill({
@@ -424,6 +470,7 @@ export async function installSessionBackend(
         sessions: [],
       },
       cc_get_public_game_invite: { game_photo_url: null },
+      cc_get_public_main_challenge_art: null,
       cc_get_game_session_view: {
         ...fixture.view,
         player: currentPlayer,

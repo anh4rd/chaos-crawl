@@ -82,6 +82,34 @@ test("host hub separates upcoming and past plans without duplicated cards", asyn
   expect(errors).toEqual([]);
   backend.verify();
 });
+test("host hub renders the selected main-challenge artwork from saved plan data", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  backend.rows.host_games = [
+    {
+      ...games[0],
+      plan_data: {
+        selectedTasks: [
+          { id: "entrance", title: "Make an entrance", kind: "main" },
+        ],
+        challengeArtUrls: {
+          entrance:
+            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Ccircle cx='4' cy='4' r='4'/%3E%3C/svg%3E",
+        },
+      },
+    },
+  ];
+  await page.goto("#/host");
+  await expect(page.locator(".challenge-icons img")).toHaveAttribute(
+    "src",
+    /data:image\/svg\+xml/,
+  );
+  backend.verify();
+});
 test("platform host preview keeps cards read-only and returns to the host hub", async ({
   page,
 }) => {

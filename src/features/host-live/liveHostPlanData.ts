@@ -12,6 +12,14 @@ function isStringArray(value: unknown): value is string[] {
     Array.isArray(value) && value.every((item) => typeof item === "string")
   );
 }
+function stringRecord(value: unknown): Record<string, string> {
+  if (!isRecord(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      (entry): entry is [string, string] => typeof entry[1] === "string",
+    ),
+  );
+}
 function isPlannedTask(
   value: unknown,
 ): value is Record<string, unknown> & PlannedTaskInfo {
@@ -24,10 +32,14 @@ function isPlannedTask(
     (value.equipment === undefined || isStringArray(value.equipment))
   );
 }
-function projectTask(task: PlannedTaskInfo): PlannedTaskInfo {
+function projectTask(
+  task: PlannedTaskInfo,
+  artUrls: Record<string, string>,
+): PlannedTaskInfo {
   return {
     ...(task.id !== undefined ? { id: task.id } : {}),
     ...(task.title !== undefined ? { title: task.title } : {}),
+    ...(task.id && artUrls[task.id] ? { artUrl: artUrls[task.id] } : {}),
     ...(task.equipment !== undefined ? { equipment: task.equipment } : {}),
     ...(task.setup !== undefined ? { setup: task.setup } : {}),
     ...(task.prep !== undefined ? { prep: task.prep } : {}),
@@ -51,6 +63,7 @@ export function projectLiveHostPlan(value: unknown) {
   const teamPhotoUrls: Record<string, string> = {};
   for (const [id, url] of Object.entries(photos))
     if (typeof url === "string") teamPhotoUrls[id] = url;
+  const artUrls = stringRecord(plan.challengeArtUrls);
   const breakMinutes =
     typeof plan.breakMinutes === "number" ||
     typeof plan.breakMinutes === "string"
@@ -75,7 +88,9 @@ export function projectLiveHostPlan(value: unknown) {
         }))
       : [],
     plannedTasks: Array.isArray(plan.selectedTasks)
-      ? plan.selectedTasks.filter(isPlannedTask).map(projectTask)
+      ? plan.selectedTasks
+          .filter(isPlannedTask)
+          .map((task) => projectTask(task, artUrls))
       : [],
   };
 }
@@ -100,8 +115,9 @@ export function patchLiveHostPlanTask(
   const selectedTasks = value.selectedTasks.map((task) =>
     task.id === id ? { ...task, ...patch } : task,
   );
+  const artUrls = stringRecord(value.challengeArtUrls);
   return {
     planData: { ...value, selectedTasks },
-    plannedTasks: selectedTasks.map(projectTask),
+    plannedTasks: selectedTasks.map((task) => projectTask(task, artUrls)),
   };
 }

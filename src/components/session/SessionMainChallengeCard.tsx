@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { challengeIcon } from "../../lib/challengeVisuals";
+import ChallengeArtwork from "../challenge/ChallengeArtwork";
 import ControlRow from "../ui/ControlRow";
 import TimerReadout from "../ui/TimerReadout";
 
@@ -7,6 +7,7 @@ interface SessionMainChallengeCardProps {
   viewerRole: "player" | "host";
   title: string;
   description: string;
+  artUrl?: string | null;
   points: number;
   round: number;
   roundCount: number;
@@ -22,6 +23,7 @@ export default function SessionMainChallengeCard({
   viewerRole,
   title,
   description,
+  artUrl,
   points,
   round,
   roundCount,
@@ -65,7 +67,11 @@ export default function SessionMainChallengeCard({
           </span>
           <span className="main-challenge__award">+{points} POINTS</span>
           <div className="main-challenge__art" aria-hidden="true">
-            {challengeIcon(title, description)}
+            <ChallengeArtwork
+              selection={artUrl ?? undefined}
+              title={title}
+              description={description}
+            />
           </div>
         </div>
       </div>

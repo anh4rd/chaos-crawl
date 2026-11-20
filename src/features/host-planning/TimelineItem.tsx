@@ -1,7 +1,18 @@
 import type { Dispatch, SetStateAction } from "react";
+import { useState } from "react";
 import Icon from "../../components/ui/Icon";
 import Button from "../../components/ui/Button";
+import ChallengeArtwork from "../../components/challenge/ChallengeArtwork";
 import { timePlus } from "../../utils/dateTime";
+import {
+  closestOpenMoji,
+  closestOpenMojis,
+  getOpenMoji,
+  OPENMOJI_SELECTION_PREFIX,
+  openMojiSelection,
+  searchOpenMojis,
+  selectedOpenMojiCode,
+} from "../../lib/openmoji";
 import type { ScheduleItem, Task } from "./types";
 export default function TimelineItem({
   item,
@@ -9,6 +20,11 @@ export default function TimelineItem({
   schedule,
   startTime,
   allTasks,
+  artUrl,
+  showEmojiPicker,
+  onUploadIcon,
+  onClearIcon,
+  onSelectEmoji,
   dragged,
   setDragged,
   onReorder,
@@ -20,15 +36,44 @@ export default function TimelineItem({
   schedule: ScheduleItem[];
   startTime: string;
   allTasks: Task[];
+  artUrl?: string;
+  showEmojiPicker: boolean;
+  onUploadIcon: (taskId: string, file: File) => void | Promise<void>;
+  onClearIcon: (taskId: string) => void;
+  onSelectEmoji: (taskId: string, hexcode: string | null) => void;
   dragged: string | null;
   setDragged: Dispatch<SetStateAction<string | null>>;
   onReorder: (items: ScheduleItem[]) => void;
   onPatch: (id: string, patch: Partial<ScheduleItem>) => void;
   onDelete: (id: string) => void;
 }) {
+  const [emojiSearch, setEmojiSearch] = useState("");
   const start = schedule
     .slice(0, index)
     .reduce((minutes, row) => minutes + row.duration, 0);
+  const task = item.taskId
+    ? allTasks.find((candidate) => candidate.id === item.taskId)
+    : undefined;
+  const taskId = item.taskId;
+  const automaticEmoji = task
+    ? closestOpenMoji(item.title, task.description)
+    : undefined;
+  const selectedEmojiCode = selectedOpenMojiCode(artUrl);
+  const uploadedArtwork = Boolean(
+    artUrl && !artUrl.startsWith(OPENMOJI_SELECTION_PREFIX),
+  );
+  const emojiOptions = task
+    ? emojiSearch.trim()
+      ? searchOpenMojis(emojiSearch, 24)
+      : closestOpenMojis(item.title, task.description)
+    : [];
+  const visibleEmojiOptions =
+    selectedEmojiCode &&
+    !emojiOptions.some((emoji) => emoji.hexcode === selectedEmojiCode)
+      ? [getOpenMoji(selectedEmojiCode), ...emojiOptions].filter(
+          (emoji) => emoji !== undefined,
+        )
+      : emojiOptions;
   return (
     <article
       className={`schedule-item schedule-item--${item.type}`}
@@ -76,18 +121,101 @@ export default function TimelineItem({
           ) : (
             <strong>{item.title}</strong>
           )}
-          {item.taskId && (
-            <small>{allTasks.find((t) => t.id === item.taskId)?.prep}</small>
+          {item.taskId && <small>{task?.prep}</small>}
+          {task && task.equipment.length > 0 && (
+            <small>Equipment: {task.equipment.join(", ")}</small>
           )}
-          {item.taskId &&
-            !!allTasks.find((t) => t.id === item.taskId)?.equipment.length && (
-              <small>
-                Equipment:{" "}
-                {allTasks
-                  .find((t) => t.id === item.taskId)
-                  ?.equipment.join(", ")}
-              </small>
-            )}
+          {showEmojiPicker && task?.kind === "main" && taskId && (
+            <div className="schedule-item__artwork">
+              <ChallengeArtwork
+                selection={artUrl}
+                title={item.title}
+                description={task.description}
+              />
+              <details className="schedule-item__emoji-picker">
+                <summary>Change emoji</summary>
+                <div className="schedule-item__emoji-picker-controls">
+                  <label>
+                    Search OpenMoji
+                    <input
+                      type="search"
+                      aria-label={`Search OpenMoji for ${item.title}`}
+                      value={emojiSearch}
+                      onChange={(event) =>
+                        setEmojiSearch(event.currentTarget.value)
+                      }
+                    />
+                  </label>
+                  <button
+                    className="schedule-item__emoji-auto"
+                    type="button"
+                    aria-label={`Use automatic ${automaticEmoji?.annotation} emoji`}
+                    aria-pressed={!selectedEmojiCode && !uploadedArtwork}
+                    onClick={() => onSelectEmoji(taskId, null)}
+                  >
+                    <ChallengeArtwork
+                      title={item.title}
+                      description={task.description}
+                    />
+                    <span>Auto: {automaticEmoji?.annotation}</span>
+                  </button>
+                  {emojiSearch.trim() && emojiOptions.length === 0 && (
+                    <small>No OpenMoji results. Try another word.</small>
+                  )}
+                  {visibleEmojiOptions.length > 0 && (
+                    <div className="schedule-item__emoji-options">
+                      {visibleEmojiOptions.map((emoji) => (
+                        <button
+                          key={emoji.hexcode}
+                          className="schedule-item__emoji-option"
+                          type="button"
+                          aria-label={`Select ${emoji.annotation} emoji`}
+                          aria-pressed={selectedEmojiCode === emoji.hexcode}
+                          onClick={() => onSelectEmoji(taskId, emoji.hexcode)}
+                        >
+                          <ChallengeArtwork
+                            selection={openMojiSelection(emoji.hexcode)}
+                            title={emoji.annotation}
+                          />
+                          <span>{emoji.annotation}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <a
+                    href="https://openmoji.org/"
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    OpenMoji by OpenMoji.org · CC BY-SA 4.0
+                  </a>
+                </div>
+              </details>
+              <label>
+                Upload custom art
+                <input
+                  type="file"
+                  accept="image/*"
+                  aria-label={`Upload custom art for ${item.title}`}
+                  onChange={(event) => {
+                    const file = event.currentTarget.files?.[0];
+                    if (file) void onUploadIcon(taskId, file);
+                    event.currentTarget.value = "";
+                  }}
+                />
+              </label>
+              {artUrl && (
+                <Button
+                  type="button"
+                  variant="setup-text"
+                  fullWidth={false}
+                  onClick={() => onClearIcon(taskId)}
+                >
+                  Use automatic emoji
+                </Button>
+              )}
+            </div>
+          )}
         </>
       </div>
       {item.type !== "pregame" && (

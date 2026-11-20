@@ -18,6 +18,7 @@ export interface HostSessionSettings {
 export interface PlannedTaskInfo {
   id?: string;
   title?: string;
+  artUrl?: string;
   equipment?: string[];
   setup?: string;
   prep?: string;

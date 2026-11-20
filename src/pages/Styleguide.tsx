@@ -13,6 +13,7 @@ import PosterExamples from "../features/styleguide/PosterExamples";
 import SessionChromeExample from "../features/styleguide/SessionChromeExample";
 import ChallengeExample from "../features/styleguide/ChallengeExample";
 import SessionExamples from "../features/styleguide/SessionExamples";
+import SessionMemoriesExample from "../features/styleguide/SessionMemoriesExample";
 import TeamChoicesExample from "../features/styleguide/TeamChoicesExample";
 import PlayerAccessExample from "../features/styleguide/PlayerAccessExample";
 import PrivateMissionExample from "../features/styleguide/PrivateMissionExample";
@@ -57,6 +58,7 @@ export default function Styleguide() {
         <SessionChromeExample name={name} />
         <ChallengeExample />
         <SessionExamples />
+        <SessionMemoriesExample />
         <TeamChoicesExample />
         <PrivateMissionExample />
         <SlideshowExample />

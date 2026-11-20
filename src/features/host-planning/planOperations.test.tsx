@@ -11,6 +11,8 @@ const mocks = vi.hoisted(() => ({
   update: vi.fn(),
   upload: vi.fn(),
   url: vi.fn(),
+  uploadIcon: vi.fn(),
+  iconUrl: vi.fn(),
   addFavourite: vi.fn(),
   removeFavourite: vi.fn(),
   readFavourites: vi.fn(),
@@ -21,6 +23,8 @@ vi.mock("../../lib/hostPlanApi", () => ({
   updateHostPlan: mocks.update,
   uploadPlanCover: mocks.upload,
   planCoverUrl: mocks.url,
+  uploadChallengeIconAsset: mocks.uploadIcon,
+  challengeIconAssetUrl: mocks.iconUrl,
   addPlanFavourite: mocks.addFavourite,
   removePlanFavourite: mocks.removeFavourite,
   readPlanFavourites: mocks.readFavourites,
@@ -104,7 +108,14 @@ it("ignores an uploaded cover after the plan identity changes", async () => {
   mocks.upload.mockReturnValue(deferred.promise);
   const update = vi.fn();
   const { result, rerender } = renderHook(
-    ({ id }) => usePlanPhoto({ id, update, setError, setNotice }),
+    ({ id }) =>
+      usePlanPhoto({
+        id,
+        update,
+        setChallengeArtUrl: vi.fn(),
+        setError,
+        setNotice,
+      }),
     { initialProps: { id: "old" } },
   );
   let operation = Promise.resolve();
@@ -120,7 +131,38 @@ it("ignores an uploaded cover after the plan identity changes", async () => {
     await operation;
   });
   expect(update).not.toHaveBeenCalled();
-  expect(setNotice).not.toHaveBeenCalled();
+});
+it("uploads and selects challenge artwork in the host-owned storage folder", async () => {
+  const update = vi.fn();
+  const setChallengeArtUrl = vi.fn();
+  const file = new File(["icon"], "entrance.svg", {
+    type: "image/svg+xml",
+  });
+  mocks.uploadIcon.mockResolvedValue({ data: null, error: null });
+  mocks.iconUrl.mockReturnValue("https://assets.test/entrance.svg");
+  const { result } = renderHook(() =>
+    usePlanPhoto({
+      id: "plan-one",
+      update,
+      setChallengeArtUrl,
+      setError,
+      setNotice,
+    }),
+  );
+  await act(async () => {
+    await result.current.uploadChallengeIcon("entrance", file);
+  });
+  expect(mocks.uploadIcon).toHaveBeenCalledWith(
+    expect.stringMatching(
+      /^host-one\/plan-one\/challenge-icons\/entrance\/\d+-entrance\.svg$/,
+    ),
+    file,
+  );
+  expect(setChallengeArtUrl).toHaveBeenCalledWith(
+    "entrance",
+    "https://assets.test/entrance.svg",
+  );
+  expect(setNotice).toHaveBeenLastCalledWith("Challenge icon uploaded.");
 });
 it("prevents duplicate favourite inserts while the first one is pending", async () => {
   const task = taskLibrary[0];

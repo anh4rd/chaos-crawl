@@ -170,6 +170,7 @@ export const defaultForm: SetupForm = {
   idealEndTime: "22:00",
   playerCount: 12,
   gamePhotoUrl: "",
+  challengeArtUrls: {},
   hostParticipates: true,
   teamsEnabled: true,
   teamSize: null,

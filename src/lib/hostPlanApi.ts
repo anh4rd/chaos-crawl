@@ -87,3 +87,14 @@ export function uploadPlanCover(path: string, file: File) {
 export function planCoverUrl(path: string) {
   return supabase.storage.from("game-assets").getPublicUrl(path).data.publicUrl;
 }
+export function uploadChallengeIconAsset(path: string, file: File) {
+  return runApi<unknown>(() =>
+    supabase.storage
+      .from("challenge-icons")
+      .upload(path, file, { upsert: false, contentType: file.type }),
+  );
+}
+export function challengeIconAssetUrl(path: string) {
+  return supabase.storage.from("challenge-icons").getPublicUrl(path).data
+    .publicUrl;
+}
