@@ -26,7 +26,7 @@
       border-radius: (layout.$pixel-unit * 2.5);
       color: colors.$navigation-muted;
       text-decoration: none;
-      font-size: fonts.$size-navigation-caption;
+      font-size: fonts.$size-navigation-min;
       font-weight: fonts.$weight-action;
     }
   }
@@ -58,7 +58,7 @@
       gap: (layout.$pixel-unit * 1);
       color: colors.$white;
       text-decoration: none;
-      font-size: fonts.$size-micro;
+      font-size: fonts.$size-navigation-secondary;
       font-weight: fonts.$weight-label;
       padding: (layout.$pixel-unit * 1.75) (layout.$pixel-unit * 3);
       border-radius: (layout.$pixel-unit * 3.25);

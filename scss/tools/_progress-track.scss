@@ -1,0 +1,20 @@
+@use "../variables/colors";
+@use "../variables/layout";
+@use "../variables/motion";
+
+@mixin track {
+  height: layout.$pixel-unit * 3.75;
+  border: layout.$pixel-unit * 0.5 solid var(--cc-ink);
+  border-radius: layout.$pixel-unit * 5;
+  overflow: hidden;
+  background: colors.$surface-soft;
+}
+
+@mixin fill {
+  display: block;
+  height: 100%;
+  border-radius: layout.$pixel-unit * 5;
+  background: var(--cc-lime);
+  border-right: layout.$pixel-unit * 0.5 solid var(--cc-ink);
+  transition: width motion.$duration-toggle motion.$easing-default;
+}

@@ -1,0 +1,21 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+@mixin surface {
+  position: relative;
+  overflow: hidden;
+  border: layout.$pixel-unit * 0.75 solid colors.$comic-ink;
+  border-radius: layout.$pixel-unit * 5.75;
+  color: colors.$white;
+  background: colors.$banner-background;
+  box-shadow: layout.$pixel-unit layout.$pixel-unit * 1.25 0 colors.$purple-dark;
+
+  &::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    pointer-events: none;
+    background: colors.$banner-rays;
+    mask-image: colors.$banner-mask;
+  }
+}

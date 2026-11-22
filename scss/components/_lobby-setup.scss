@@ -3,6 +3,8 @@
 @use "../variables/layout";
 @use "../variables/motion";
 @use "../variables/effects";
+@use "../tools/visually-hidden";
+@use "../tools/focus-ring";
 
 .lobby-setup {
   display: grid;
@@ -39,5 +41,58 @@
     display: flex;
     justify-content: space-between;
     gap: (layout.$pixel-unit * 2.5);
+  }
+  &--join {
+    width: min(100%, layout.$content-width);
+    margin-inline: auto;
+  }
+  &--join &__heading h1,
+  &--join &__heading p {
+    @include visually-hidden.visually-hidden;
+  }
+  &--details &__heading h1 {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    margin: 0;
+    font-size: fonts.$size-body;
+    text-align: center;
+    text-shadow: none;
+  }
+  &__join-disclosure {
+    display: grid;
+    justify-items: center;
+    gap: layout.$pixel-unit * 3;
+  }
+  &__join-toggle {
+    width: 100%;
+    min-height: layout.$session-row-height;
+    padding: layout.$pixel-unit * 2;
+    border: layout.$session-border-width solid colors.$ink;
+    border-radius: layout.$radius-pill;
+    color: colors.$white;
+    background: colors.$purple;
+    font: fonts.$size-small fonts.$family-display;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  &__join-toggle:focus-visible {
+    @include focus-ring.focus-ring;
+  }
+  &__join-details {
+    width: 100%;
+    padding: layout.$pixel-unit * 3;
+    border-radius: layout.$pixel-unit * 4;
+    background: colors.$console-panel-tint;
+  }
+  &__start-note {
+    margin: 0;
+    padding: layout.$pixel-unit * 3;
+    border-radius: layout.$pixel-unit * 3;
+    color: colors.$white;
+    background: colors.$console-panel-tint;
+    font: fonts.$size-small fonts.$family-display;
   }
 }

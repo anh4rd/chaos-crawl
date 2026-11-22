@@ -13,6 +13,7 @@ import SessionPage from "../../components/session/SessionPage";
 import SessionState from "../../components/session/SessionState";
 import SessionSubmission from "../../components/session/SessionSubmission";
 import Icon from "../../components/ui/Icon";
+import JoinProgress from "../../components/ui/JoinProgress";
 import { sessionEvidenceUrl } from "../../lib/sessionMedia";
 import ParticipantTeams from "./ParticipantTeams";
 import PlayerRewardRoundPanel from "./PlayerRewardRoundPanel";
@@ -100,6 +101,10 @@ export default function SessionParticipant({
     useSessionTimer(view?.session.id, view?.session.status, activePage);
   const finalGalleryOpen = view?.session.final_gallery_open;
   const sessionStatus = view?.session.status;
+
+  useEffect(() => {
+    if (sessionStatus === "lobby") setTourOpen(false);
+  }, [sessionStatus]);
 
   useEffect(() => {
     setStoredToken(localStorage.getItem(playerStorageKey(code)));
@@ -357,7 +362,7 @@ export default function SessionParticipant({
       title: "The final round",
       body: session.final_gallery_open
         ? "The host opens one side challenge at a time. Vote for a favourite, then review the results after voting closes."
-        : "Final stays at the end of the game flow. The host opens the final round when it is time to celebrate submissions.",
+        : "The host opens the final round when it is time to celebrate submissions.",
       page: "final",
     },
     ...(session.status === "completed" && !session.final_gallery_open
@@ -438,16 +443,18 @@ export default function SessionParticipant({
           {!rewardRound && activePage === "game" && (
             <>
               {session.status === "lobby" && (
-                <SessionState title="Waiting for the host…">
-                  <p>
-                    You're in <strong>{session.name}</strong>. The host will
-                    start the game when everyone is ready.
-                  </p>
-                  <Note as="div" variant="participant-count">
-                    {teams.reduce((sum, team) => sum + team.member_count, 0)}{" "}
-                    players in teams · {session.player_limit} player limit
-                  </Note>
-                </SessionState>
+                <>
+                  <SessionState title="Waiting for the host…">
+                    <p>
+                      You're in <strong>{session.name}</strong>. The host will
+                      start the game when everyone is ready.
+                    </p>
+                    <Note as="div" variant="participant-count">
+                      {teams.reduce((sum, team) => sum + team.member_count, 0)}{" "}
+                      players in teams · {session.player_limit} player limit
+                    </Note>
+                  </SessionState>
+                </>
               )}
 
               {session.status === "completed" && (
@@ -712,7 +719,7 @@ export default function SessionParticipant({
               />
             )}
 
-          {tourOpen && (
+          {tourOpen && session.status !== "lobby" && (
             <GuidedTour
               steps={playerTourSteps}
               onNavigate={navigatePlayerTour}
@@ -730,7 +737,7 @@ export default function SessionParticipant({
     <SessionPage
       viewerRole="player"
       profile={
-        !secretReviewTakeover
+        session.status !== "lobby" && !secretReviewTakeover
           ? {
               name: player.name,
               subtitle:
@@ -753,8 +760,21 @@ export default function SessionParticipant({
             }
           : null
       }
+      afterGame={
+        !embeddedHostMode &&
+        !finalRoundTakeover &&
+        !secretReviewTakeover &&
+        !rewardRound &&
+        activePage === "game" &&
+        session.status === "lobby" ? (
+          <JoinProgress step={3} total={3} />
+        ) : null
+      }
       toolbar={
-        !embeddedHostMode && !finalRoundTakeover && !secretReviewTakeover ? (
+        session.status !== "lobby" &&
+        !embeddedHostMode &&
+        !finalRoundTakeover &&
+        !secretReviewTakeover ? (
           <Button
             variant="session-tour"
             fullWidth={false}
@@ -766,10 +786,12 @@ export default function SessionParticipant({
         ) : null
       }
       navigation={
-        !embeddedHostMode && !finalRoundTakeover && !secretReviewTakeover ? (
+        session.status !== "lobby" &&
+        !embeddedHostMode &&
+        !finalRoundTakeover &&
+        !secretReviewTakeover ? (
           <SessionNavigation
             active={activePage}
-            showFinal
             showMemories={
               session.status === "completed" && !session.final_gallery_open
             }

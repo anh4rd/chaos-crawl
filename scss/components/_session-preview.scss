@@ -1,7 +1,18 @@
 @use "../variables/layout";
+@use "../variables/colors";
 
 .session-preview {
   padding: layout.$pixel-unit * 0.5;
   border-radius: (layout.$pixel-unit * 4);
   background: transparent;
+
+  &--inverse {
+    display: grid;
+    gap: layout.$spacing-unit * 4;
+    padding: layout.$spacing-unit * 4;
+    color: colors.$white;
+    background-color: colors.$entry-surface;
+    background-image:
+      colors.$entry-shade, colors.$entry-wash, colors.$entry-background;
+  }
 }

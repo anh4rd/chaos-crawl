@@ -29,7 +29,7 @@
     }
     .stat-tile__label {
       color: colors.$stat-label;
-      font-size: fonts.$size-micro;
+      font-size: fonts.$size-compact-label;
       font-weight: fonts.$weight-label;
     }
     @media (max-width: layout.$reference-mobile-breakpoint) {
@@ -46,7 +46,7 @@
     }
     @media (max-width: layout.$reference-mobile-breakpoint) {
       .stat-tile__label {
-        font-size: fonts.$size-navigation-caption;
+        font-size: fonts.$size-compact-label;
       }
     }
   }
@@ -69,7 +69,7 @@
   }
   &--compact .stat-tile__label {
     color: colors.$stat-tile-text;
-    font-size: fonts.$size-navigation-caption;
+    font-size: fonts.$size-compact-label;
     font-weight: fonts.$weight-action;
   }
 }
@@ -86,7 +86,7 @@
     color: colors.$purple-dark;
     text-align: center;
     .stat-tile__label {
-      font-size: fonts.$size-tiny;
+      font-size: fonts.$size-compact-label;
       font-weight: fonts.$weight-action;
       text-transform: uppercase;
     }

@@ -7,6 +7,7 @@ import MascotArt from "../../components/ui/MascotArt";
 import Note from "../../components/ui/Note";
 import Icon from "../../components/ui/Icon";
 import GameCodeInput from "../../components/ui/GameCodeInput";
+import JoinProgress from "../../components/ui/JoinProgress";
 import PlayerDetailsFields from "./PlayerDetailsFields";
 import type { PlayerAccessModel } from "./types";
 
@@ -50,6 +51,9 @@ export default function PlayerAccessView({
       <div
         className={`player-access__content ${joinStep === 1 ? "player-access__content--code" : "player-access__content--details"}`}
       >
+        {(mode === "rejoin" || joinStep !== 1) && (
+          <JoinProgress step={joinStep} total={3} />
+        )}
         {joinStep === 2 && (
           <Button
             type="button"

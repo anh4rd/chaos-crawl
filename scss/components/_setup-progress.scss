@@ -1,16 +1,12 @@
 @use "../variables/colors";
 @use "../variables/layout";
 @use "../variables/fonts";
-@use "../variables/motion";
+@use "../tools/progress-track";
 
 // ChecklistProgress supplies completion-derived track width inline; dimensions and appearance stay in SCSS.
 .setup-progress {
   &__count {
     color: colors.$purple-dark;
-  }
-  &__track span {
-    border-radius: (layout.$pixel-unit * 5);
-    transition: width motion.$duration-toggle motion.$easing-default;
   }
   & li {
     color: colors.$progress-copy;
@@ -33,18 +29,12 @@
     font-size: fonts.$size-body;
   }
   &__track {
-    height: (layout.$pixel-unit * 3.75);
-    border: (layout.$pixel-unit * 0.5) solid var(--cc-ink);
-    border-radius: (layout.$pixel-unit * 5);
-    overflow: hidden;
-    background: colors.$surface-soft;
+    @include progress-track.track;
+
     margin-bottom: (layout.$pixel-unit * 3.75);
   }
   &__track span {
-    display: block;
-    height: 100%;
-    background: var(--cc-lime);
-    border-right: (layout.$pixel-unit * 0.5) solid var(--cc-ink);
+    @include progress-track.fill;
   }
   & ul {
     list-style: none;

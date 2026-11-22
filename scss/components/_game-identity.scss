@@ -47,13 +47,13 @@
   }
   &__name small {
     color: rgba(colors.$white, 0.78);
-    font-size: fonts.$size-tiny;
+    font-size: fonts.$size-compact-label;
     font-weight: fonts.$weight-action;
     letter-spacing: fonts.$tracking-compact;
   }
   &__code small {
     color: rgba(colors.$white, 0.78);
-    font-size: fonts.$size-tiny;
+    font-size: fonts.$size-compact-label;
     font-weight: fonts.$weight-action;
     letter-spacing: fonts.$tracking-compact;
   }

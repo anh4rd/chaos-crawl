@@ -1,0 +1,8 @@
+@use "../variables/layout";
+
+.game-artwork {
+  position: relative;
+  flex: none;
+  width: fit-content;
+  padding-left: layout.$session-avatar-size * 0.55;
+}

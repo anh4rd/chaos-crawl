@@ -29,4 +29,21 @@
     font-size: fonts.$size-navigation-caption;
     font-weight: fonts.$weight-extra-bold;
   }
+  &--lobby {
+    grid-template-columns: repeat(
+      auto-fit,
+      minmax(layout.$pixel-unit * 17, 1fr)
+    );
+    gap: layout.$pixel-unit * 2;
+  }
+  &--lobby &__row {
+    flex-direction: column;
+    justify-content: start;
+    border: 0;
+    text-align: center;
+  }
+  &--lobby &__row strong {
+    flex: none;
+    max-width: 100%;
+  }
 }

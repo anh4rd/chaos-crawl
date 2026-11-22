@@ -106,20 +106,17 @@ it("exposes host navigation only when requested and preserves link navigation", 
     screen.getByRole("link", { name: "Challenges" }).getAttribute("href"),
   ).toBe("/play/123456/side-challenges");
   const onSelect = vi.fn();
-  rerender(
-    <SessionNavigation active="game" showHost showFinal onSelect={onSelect} />,
-  );
+  rerender(<SessionNavigation active="game" showHost onSelect={onSelect} />);
   fireEvent.click(screen.getByRole("button", { name: "Host" }));
   expect(onSelect).toHaveBeenCalledWith("host-controls");
 });
 
-it("keeps Final at the end of the game flow immediately before Memories", () => {
+it("keeps Memories available without a Final navigation item", () => {
   render(
     <MemoryRouter>
       <SessionNavigation
         active="final"
         showHost
-        showFinal
         showMemories
         memoriesHref="/play/123456/recap"
         hrefFor={(section) => `/play/123456/${section}`}
@@ -131,7 +128,7 @@ it("keeps Final at the end of the game flow immediately before Memories", () => 
     Array.from(navigation.querySelectorAll("a, button")).map((item) =>
       item.getAttribute("aria-label"),
     ),
-  ).toEqual(["Game", "Scores", "Challenges", "Host", "Final", "Memories"]);
+  ).toEqual(["Game", "Scores", "Challenges", "Host", "Memories"]);
 });
 
 const entry: VotingEntry = {

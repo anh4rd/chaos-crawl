@@ -94,7 +94,7 @@
     box-sizing: border-box;
     width: 116px;
     height: 102.976px;
-    padding: 10px 1.804px 5.06px 20px;
+    padding: 0px 1.804px 5.06px 20px;
     justify-content: flex-end;
     align-items: center;
     overflow: hidden;
@@ -109,10 +109,8 @@
   }
   &__art img,
   &__art span {
-    display: block;
+    display: flex;
     flex: 0 0 layout.$session-avatar-size;
-    width: layout.$session-avatar-size;
-    height: layout.$session-avatar-size;
     transform: rotate(#{motion.$preview-art-angle}) scale(1.2);
   }
   &__art span {

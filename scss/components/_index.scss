@@ -128,7 +128,10 @@
 @use "planning-preview";
 @use "plan-builder";
 @use "lobby-setup";
+@use "lobby-game-heading";
+@use "lobby-join-info";
 @use "step-progress";
+@use "join-progress";
 @use "image-well";
 @use "invite-link";
 @use "invite-code";
@@ -189,6 +192,7 @@
 
 @use "access-header";
 @use "mascot-art";
+@use "game-artwork";
 @use "form-stack";
 @use "floating-notice";
 @use "game-code-input";

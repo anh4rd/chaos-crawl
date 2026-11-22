@@ -1,12 +1,12 @@
 @use "sass:list";
 $weight-action: 900;
 $size-label: 13px;
-$size-caption: 11px;
+$size-small: 12px;
+$size-caption: $size-small;
 $weight-label: 850;
 $weight-caption: 500;
 $size-body: 16px;
-$size-small: 12px;
-$size-micro: 10px;
+$size-micro: $size-small;
 $size-subheading: 22px;
 $size-heading: 20px;
 $weight-heavy: 1000;
@@ -48,9 +48,12 @@ $family-body:
   BlinkMacSystemFont,
   "Segoe UI",
   sans-serif;
-$size-tiny: 8px;
+$size-tiny: $size-small;
+$size-compact-label: 11px;
 $tracking-compact: 0.08em;
-$size-navigation-caption: 9px;
+$size-navigation-caption: $size-small;
+$size-navigation-min: 9px;
+$size-navigation-secondary: 10px;
 
 $size-page-heading: clamp(30px, 3vw, 43px);
 $size-page-heading-base: clamp(25px, 3vw, 32px);
@@ -121,7 +124,7 @@ $size-playback-loading: 1.25rem;
 $line-height-playback-loading: 1.75rem;
 $size-playback-waiting: 1.5rem;
 $line-height-playback-waiting: 2rem;
-$size-upload-location: 0.875rem;
+$size-upload-location: max($size-small, 0.875rem);
 $line-height-upload-location: 1.25rem;
 
 $family-preview-name: "quicksand";
@@ -150,7 +153,7 @@ $tracking-console-label: 0.08em;
 
 $size-legacy-small: $size-upload-location;
 $line-height-legacy-small: $line-height-upload-location;
-$size-legacy-caption: 0.75rem;
+$size-legacy-caption: max($size-small, 0.75rem);
 $line-height-legacy-caption: 1rem;
 $size-legacy-large: $size-playback-waiting;
 $line-height-legacy-large: $line-height-playback-waiting;
@@ -168,6 +171,6 @@ $family-native-sans:
 $family-native-mono:
   ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
   "Courier New", monospace;
-$size-native-small: 80%;
-$size-native-script: 75%;
+$size-native-small: max($size-small, 80%);
+$size-native-script: max($size-small, 75%);
 $size-native-code: 1em;

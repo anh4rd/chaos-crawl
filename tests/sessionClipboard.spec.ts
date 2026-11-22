@@ -38,8 +38,7 @@ async function player(page: Page) {
   const backend = await installSessionBackend(page);
   await page.goto("#/play/123456/game");
   const copy = page.getByRole("button", {
-    name: "Copy game code",
-    exact: true,
+    name: /^(Copy game code|Game code copied)$/,
   });
   await expect(copy).toBeVisible();
   return { backend, copy };
@@ -102,7 +101,7 @@ test("a pending copy resolved after leaving the player creates no reset timer", 
   backend.verify();
 });
 
-test("host copies retain persistent success and browser-failure fallback notices", async ({
+test("host copies show a temporary check and retain browser-failure fallback", async ({
   page,
 }) => {
   await page.clock.install();
@@ -115,23 +114,138 @@ test("host copies retain persistent success and browser-failure fallback notices
   const backend = await installSessionBackend(page, { host: true });
   await page.goto("#/host/live/test-session");
   const copy = page.getByRole("button", {
-    name: "Copy game code",
-    exact: true,
+    name: /^(Copy game code|Game code copied)$/,
   });
   await activateByKeyboard(page, copy);
+  await expect(copy.locator(".lucide-check")).toBeVisible();
   await expect(
     page.getByText("Join code copied.", { exact: true }),
-  ).toBeVisible();
+  ).toHaveCount(0);
   await page.clock.runFor(2000);
-  await expect(
-    page.getByText("Join code copied.", { exact: true }),
-  ).toBeVisible();
+  await expect(copy.locator(".lucide-copy")).toBeVisible();
   fail = true;
   await activateByKeyboard(page, copy);
   await expect(
-    page.getByText("Join code: 123456", { exact: true }),
+    page.getByText("Copy isn't available. Join code: 123456", { exact: true }),
   ).toBeVisible();
   expect(writes).toEqual(["123456", "123456"]);
+  backend.verify();
+});
+
+test("lobby code and link copy feedback reset independently", async ({
+  page,
+}) => {
+  await page.clock.install();
+  const writes: string[] = [];
+  let fail = false;
+  await clipboard(page, async (text) => {
+    writes.push(text);
+    if (fail) throw new Error("Clipboard denied");
+  });
+  const backend = await installSessionBackend(page, {
+    host: true,
+    lobby: true,
+  });
+  await page.goto("#/host/live/test-session");
+  const codeButton = page.locator(".lobby-join-info__code button");
+  await activateByKeyboard(page, codeButton);
+  await expect(codeButton.locator(".lucide-check")).toBeVisible();
+  await expect(codeButton).toHaveAttribute("aria-label", "Game code copied");
+  await expect(
+    page.getByText("Join code copied.", { exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await page.getByText("Show Join Info", { exact: true }).click();
+  const detailCode = page.locator(".lobby-join-info__code button");
+  const detailLink = page.locator(".lobby-join-info__link button");
+  await expect(detailCode.locator(".lucide-check")).toBeVisible();
+  await expect(detailLink.locator(".lucide-copy")).toBeVisible();
+  await activateByKeyboard(page, detailLink);
+  await expect(detailLink.locator(".lucide-check")).toBeVisible();
+  await expect(detailCode.locator(".lucide-check")).toBeVisible();
+  await expect(
+    page.getByText("Game link copied.", { exact: true }),
+  ).toHaveCount(0);
+  fail = true;
+  await activateByKeyboard(page, detailLink);
+  await expect(
+    page.getByText(/Copy isn't available\. Game link:/),
+  ).toBeVisible();
+  await expect(detailLink.locator(".lucide-copy")).toBeVisible();
+  fail = false;
+  await activateByKeyboard(page, detailLink);
+  await expect(detailLink.locator(".lucide-check")).toBeVisible();
+  await expect(page.getByText(/Copy isn't available\. Game link:/)).toHaveCount(
+    0,
+  );
+  expect(writes[0]).toBe("123456");
+  expect(writes.slice(1)).toEqual([
+    expect.stringMatching(/#\/join\?code=123456$/),
+    expect.stringMatching(/#\/join\?code=123456$/),
+    expect.stringMatching(/#\/join\?code=123456$/),
+  ]);
+  backend.verify();
+});
+
+test("host invitation copy changes only its own icon", async ({ page }) => {
+  const writes: string[] = [];
+  await clipboard(page, async (text) => {
+    writes.push(text);
+  });
+  const backend = await installSessionBackend(page, { host: true });
+  await page.goto("#/host/live/test-session");
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Host", exact: true }),
+  );
+  const invite = page.getByRole("button", {
+    name: /^(Copy join code|Join code copied)$/,
+  });
+  await activateByKeyboard(page, invite);
+  await expect(invite.locator(".lucide-check")).toBeVisible();
+  await expect(
+    page
+      .getByRole("button", { name: "Copy game code" })
+      .locator(".lucide-copy"),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Join code copied.", { exact: true }),
+  ).toHaveCount(0);
+  await page.clock.runFor(1801);
+  await expect(detailLink.locator(".lucide-copy")).toBeVisible();
+  expect(writes).toEqual(["123456"]);
+  backend.verify();
+});
+
+test("styleguide copy examples show checks without success notices", async ({
+  page,
+}) => {
+  const writes: string[] = [];
+  await clipboard(page, async (text) => {
+    writes.push(text);
+  });
+  const backend = await installSessionBackend(page);
+  await page.goto("#/styleguide");
+  const example = page
+    .getByRole("heading", { name: "Host join information", exact: true })
+    .locator("xpath=ancestor::article[1]");
+  await example.getByText("Usage example", { exact: true }).click();
+  const codeButton = example.locator(".component-example__copy-button");
+  await activateByKeyboard(page, codeButton);
+  await expect(codeButton.locator(".lucide-check")).toBeVisible();
+  await expect(example.getByRole("status")).toHaveText("");
+  expect(writes[0]).toContain("LobbyGameHeading");
+  const localButton = example.getByRole("button", {
+    name: "Copy game code",
+    exact: true,
+  });
+  await activateByKeyboard(page, localButton);
+  await expect(
+    example
+      .getByRole("button", { name: "Game code copied" })
+      .locator(".lucide-check"),
+  ).toBeVisible();
+  expect(writes).toHaveLength(1);
   backend.verify();
 });
 

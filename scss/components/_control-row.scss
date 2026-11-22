@@ -21,6 +21,10 @@
     background: colors.$white;
     flex-wrap: nowrap;
   }
+  &--timer > .btn--control {
+    flex-shrink: 1;
+    overflow-wrap: anywhere;
+  }
   &--break .btn--control-primary {
     padding-inline: layout.$pixel-unit * 3.5;
   }

@@ -34,7 +34,7 @@
       gap: #{layout.$pixel-unit * 1};
       min-height: #{layout.$pixel-unit * 13.25};
       padding: #{layout.$pixel-unit * 1.75} #{layout.$pixel-unit * 0.75};
-      font-size: fonts.$size-micro;
+      font-size: fonts.$size-navigation-secondary;
     }
   }
   position: fixed;
@@ -66,7 +66,7 @@
     padding: #{layout.$pixel-unit * 1} #{layout.$pixel-unit * 1.25};
     border-radius: #{layout.$pixel-unit * 3};
     color: rgba(colors.$white, 0.86);
-    font-size: fonts.$size-navigation-caption;
+    font-size: fonts.$size-navigation-min;
     text-align: center;
     text-decoration: none;
   }

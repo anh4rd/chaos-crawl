@@ -1,8 +1,9 @@
 import TeamEditor from "../host-live/TeamEditor";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Avatar from "../../components/ui/Avatar";
 import ImageWell from "../../components/ui/ImageWell";
 import StepProgress from "../../components/ui/StepProgress";
+import JoinProgress from "../../components/ui/JoinProgress";
 import StatTile from "../../components/ui/StatTile";
 import ContentPanel from "../../components/ui/ContentPanel";
 import { Field } from "../../components/ui/Field";
@@ -12,6 +13,11 @@ import Icon from "../../components/ui/Icon";
 import ControlRow from "../../components/ui/ControlRow";
 import { Example } from "./Example";
 import HostPatternPreview from "./HostPatternPreview";
+import LobbyGameHeading from "../host-live/LobbyGameHeading";
+import LobbyJoinInfo from "../host-live/LobbyJoinInfo";
+import LobbyJoinDisclosure from "../host-live/LobbyJoinDisclosure";
+import LobbyParticipationStep from "../host-live/LobbyParticipationStep";
+import SessionPreview from "../../components/session/SessionPreview";
 export default function LobbyPrimitivesExample() {
   const [teamName, setTeamName] = useState("Example team");
   const [savedTeamName, setSavedTeamName] = useState("Example team");
@@ -23,9 +29,69 @@ export default function LobbyPrimitivesExample() {
   };
   const [step, setStep] = useState(1);
   const [selected, setSelected] = useState(false);
+  const [codeCopied, setCodeCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [hostJoinChoice, setHostJoinChoice] = useState(true);
+  const [hostAvatarPreview, setHostAvatarPreview] = useState("");
+  const [, setHostAvatarFile] = useState<File | null>(null);
+  useEffect(
+    () => () => {
+      if (hostAvatarPreview) URL.revokeObjectURL(hostAvatarPreview);
+    },
+    [hostAvatarPreview],
+  );
   const imageSrc = `${import.meta.env.BASE_URL}chaos-logo.png`;
   return (
     <>
+      <Example
+        title="Host join information"
+        source="src/features/host-live/LobbyGameHeading.tsx + LobbyJoinInfo.tsx + LobbyJoinDisclosure.tsx"
+        code={
+          '<LobbyGameHeading name="Example party" photoUrl={imageSrc} />\n<LobbyJoinInfo code="123456" joinUrl="#/styleguide" codeCopied={codeCopied} linkCopied={linkCopied} copyCode={copyLocally} copyLink={copyLocally} />\n<LobbyJoinDisclosure code="123456" joinUrl="#/styleguide" codeCopied={codeCopied} linkCopied={linkCopied} copyCode={copyLocally} copyLink={copyLocally} />'
+        }
+      >
+        <HostPatternPreview>
+          <LobbyGameHeading name="Example party" photoUrl={imageSrc} />
+          <LobbyJoinInfo
+            code="123456"
+            joinUrl="#/styleguide"
+            codeCopied={codeCopied}
+            linkCopied={linkCopied}
+            copyCode={async () => setCodeCopied(true)}
+            copyLink={async () => setLinkCopied(true)}
+          />
+          <LobbyJoinDisclosure
+            code="123456"
+            joinUrl="#/styleguide"
+            codeCopied={codeCopied}
+            linkCopied={linkCopied}
+            copyCode={async () => setCodeCopied(true)}
+            copyLink={async () => setLinkCopied(true)}
+          />
+        </HostPatternPreview>
+      </Example>
+      <Example
+        title="Host lobby participation"
+        source="src/features/host-live/LobbyParticipationStep.tsx"
+        code={
+          "<LobbyParticipationStep hostJoinChoice={choice} setHostParticipation={chooseLocally} hostAvatarPreview={preview} setHostAvatarPreview={setPreview} setHostAvatarFile={setFile} hostPlayer={undefined} busy={false} />"
+        }
+      >
+        <HostPatternPreview>
+          <LobbyParticipationStep
+            hostAvatarPreview={hostAvatarPreview}
+            setHostAvatarFile={setHostAvatarFile}
+            setHostAvatarPreview={setHostAvatarPreview}
+            hostJoinChoice={hostJoinChoice}
+            busy={false}
+            setHostParticipation={async (participates) => {
+              setHostJoinChoice(participates);
+              return true;
+            }}
+            hostPlayer={undefined}
+          />
+        </HostPatternPreview>
+      </Example>
       <Example
         title="Lobby surfaces and identity"
         source="src/components/ui/Avatar.tsx + ImageWell.tsx + StatTile.tsx"
@@ -70,13 +136,16 @@ export default function LobbyPrimitivesExample() {
       </Example>
       <Example
         title="Lobby controls and step progress"
-        source="src/components/ui/Button.tsx + StepProgress.tsx"
+        source="src/components/ui/Button.tsx + StepProgress.tsx + JoinProgress.tsx"
         code={
-          '<StepProgress value={step} total={6} />\n<Button variant="lobby-next" fullWidth={false} onClick={advance}>Continue</Button>'
+          '<JoinProgress step={step} total={6} />\n<Button variant="lobby-next" fullWidth={false} onClick={advance}>Continue</Button>'
         }
       >
         <HostPatternPreview>
-          <p>Example step {step} of 6</p>
+          <SessionPreview variant="inverse">
+            <JoinProgress step={step} total={6} />
+          </SessionPreview>
+          <p>Original step progress</p>
           <StepProgress value={step} total={6} />
           <ControlRow>
             <Button type="button" variant="lobby-action" fullWidth={false}>

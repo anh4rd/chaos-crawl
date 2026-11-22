@@ -3,6 +3,37 @@ import { activateByKeyboard, tabTo } from "./support/keyboard";
 import { installSessionBackend, sessionCode } from "./support/sessionBackend";
 import { seedPrivateMissions, seenMissionKey } from "./support/privateMissions";
 
+test("the local session preview hides player chrome during the lobby only", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  await page.goto("#/styleguide");
+  const preview = page
+    .locator('[data-tour="example-session-content"]')
+    .locator("..");
+  await page.getByLabel("Phase", { exact: true }).selectOption("lobby");
+  await expect(preview.locator(".session-profile")).toHaveCount(0);
+  await expect(
+    preview.getByRole("navigation", { name: "Game pages" }),
+  ).toHaveCount(0);
+  await expect(preview.locator(".session-titlebar")).toBeVisible();
+  await expect(
+    preview.getByRole("progressbar", { name: "Join progress" }),
+  ).toBeVisible();
+  await page.getByLabel("Preview as", { exact: true }).selectOption("host");
+  await expect(preview.locator(".session-profile")).toBeVisible();
+  await expect(
+    preview.getByRole("navigation", { name: "Game pages" }),
+  ).toBeVisible();
+  await page.getByLabel("Preview as", { exact: true }).selectOption("player");
+  await page.getByLabel("Phase", { exact: true }).selectOption("live");
+  await expect(preview.locator(".session-profile")).toBeVisible();
+  await expect(
+    preview.getByRole("navigation", { name: "Game pages" }),
+  ).toBeVisible();
+  backend.verify();
+});
+
 test("participant lobby feedback and keyboard recovery preserve the current join target and credential", async ({
   page,
 }) => {
@@ -128,6 +159,44 @@ test("local participant status reference keeps recovery and final links in local
       exact: true,
     })
     .locator("xpath=ancestor::article[1]");
+  const statusCard = reference.locator(".session-state").first();
+  const banner = page.locator(".feature-banner").first();
+  const frameStyles = (element: Element) => {
+    const style = getComputedStyle(element);
+    const rays = getComputedStyle(element, "::after");
+    return {
+      background: style.backgroundImage,
+      border: style.border,
+      radius: style.borderRadius,
+      shadow: style.boxShadow,
+      rays: rays.backgroundImage,
+      mask: rays.maskImage,
+    };
+  };
+  expect(await statusCard.evaluate(frameStyles)).toEqual(
+    await banner.evaluate(frameStyles),
+  );
+  const headingStyles = (element: Element) => {
+    const style = getComputedStyle(element);
+    return {
+      font: style.font,
+      color: style.color,
+      shadow: style.textShadow,
+    };
+  };
+  expect(await statusCard.locator("h2").evaluate(headingStyles)).toEqual(
+    await banner.locator("h2").evaluate(headingStyles),
+  );
+  const recovery = reference.locator(".session-state").filter({
+    has: page.getByRole("heading", { name: "Rejoin the chaos" }),
+  });
+  const copyBox = await recovery.locator("p").boundingBox();
+  const rejoin = recovery.getByRole("link", { name: "Rejoin game" });
+  const linkBox = await rejoin.boundingBox();
+  expect(copyBox).not.toBeNull();
+  expect(linkBox).not.toBeNull();
+  if (!copyBox || !linkBox) throw new Error("Missing recovery content");
+  expect(linkBox.y).toBeGreaterThanOrEqual(copyBox.y + copyBox.height);
   await expect(
     reference.getByText("4 players in teams · 12 player limit", {
       exact: true,
@@ -171,6 +240,10 @@ test("local participant status reference keeps recovery and final links in local
   );
   await expect(
     reference.getByText("Sample recovery action stays local.", { exact: true }),
+  ).toBeVisible();
+  await activateByKeyboard(page, rejoin, "backward");
+  await expect(
+    reference.getByText("Sample rejoin action stays local.", { exact: true }),
   ).toBeVisible();
   await expect(page).toHaveURL(/\/styleguide$/);
   expect(backend.requests).toEqual([]);

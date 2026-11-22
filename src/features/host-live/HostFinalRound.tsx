@@ -6,7 +6,7 @@ import ContentPanel from "../../components/ui/ContentPanel";
 import Button from "../../components/ui/Button";
 import SessionFinalRound from "../../components/session/SessionFinalRound";
 import Icon from "../../components/ui/Icon";
-import HostManagement from "./HostManagement";
+import PanelHeading from "../../components/ui/PanelHeading";
 import type {
   GameSession,
   SessionChallenge,
@@ -84,252 +84,251 @@ export default function HostFinalRound({
 }: HostFinalRoundProps) {
   return (
     <>
-      <HostManagement>
-        <ContentPanel variant="session" data-tour="host-final-round">
-          <ContentPanel variant="review-controls" as="div">
-            <Overline variant="review" as="strong">
-              HOST CONTROLS
-            </Overline>
-            <FormGrid variant="review">
-              {sideChallenges.length > 0 && (
-                <FormLabel variant="review">
-                  Choose side challenge
-                  <select
-                    value={selectedFinalChallengeId}
-                    disabled={busy || selectedFinalChallengeStatus === "voting"}
-                    title={
-                      selectedFinalChallengeStatus === "voting"
-                        ? "Close the current vote before changing challenges."
-                        : undefined
-                    }
-                    onChange={(event) =>
-                      void selectFinalChallenge(event.target.value)
-                    }
+      <ContentPanel variant="session" data-tour="host-final-round">
+        <PanelHeading variant="session">
+          <h2>Final round</h2>
+        </PanelHeading>
+        <ContentPanel variant="review-controls" as="div">
+          <Overline variant="review" as="strong">
+            HOST CONTROLS
+          </Overline>
+          <FormGrid variant="review">
+            {sideChallenges.length > 0 && (
+              <FormLabel variant="review">
+                Choose side challenge
+                <select
+                  value={selectedFinalChallengeId}
+                  disabled={busy || selectedFinalChallengeStatus === "voting"}
+                  title={
+                    selectedFinalChallengeStatus === "voting"
+                      ? "Close the current vote before changing challenges."
+                      : undefined
+                  }
+                  onChange={(event) =>
+                    void selectFinalChallenge(event.target.value)
+                  }
+                >
+                  {sideChallenges.map((challenge) => (
+                    <option value={challenge.id} key={challenge.id}>
+                      {challenge.title}
+                    </option>
+                  ))}
+                </select>
+              </FormLabel>
+            )}
+            {selectedFinalChallengeStatus === "pending" &&
+              sideChallenges.length > 0 && (
+                <>
+                  <Button
+                    type="button"
+                    fullWidth={false}
+                    disabled={busy}
+                    onClick={() => void setFinalGallery(true, true)}
+                    variant="review-comic-primary"
                   >
-                    {sideChallenges.map((challenge) => (
-                      <option value={challenge.id} key={challenge.id}>
-                        {challenge.title}
-                      </option>
-                    ))}
-                  </select>
-                </FormLabel>
+                    <Icon name="heart" className="icon--size-15" /> Open Voting
+                  </Button>
+                </>
               )}
-              {selectedFinalChallengeStatus === "pending" &&
-                sideChallenges.length > 0 && (
+            {selectedFinalChallengeStatus === "voting" && (
+              <>
+                <StatTile
+                  variant="review"
+                  label="Players voted"
+                  value={
+                    <>
+                      {selectedFinalChallengeVotes.length}/{players.length}
+                    </>
+                  }
+                />
+                <Button
+                  type="button"
+                  fullWidth={false}
+                  disabled={busy}
+                  onClick={() => void setFinalGallery(true, false)}
+                  variant="review-comic-primary"
+                >
+                  <Icon name="flag" className="icon--size-15" /> Show Results
+                </Button>
+              </>
+            )}
+            {selectedFinalChallengeStatus === "results" && (
+              <>
+                {session.final_gallery_open ? (
+                  <>
+                    <StatTile
+                      variant="review"
+                      label="Results shared"
+                      value={
+                        <>
+                          {selectedFinalChallengeState?.votes_cast ?? 0} votes
+                        </>
+                      }
+                    />
+                    <Button
+                      type="button"
+                      fullWidth={false}
+                      disabled={busy}
+                      onClick={() => void reopenFinalChallengeVoting()}
+                      variant="review-comic"
+                    >
+                      <Icon name="heart" className="icon--size-15" /> Reopen
+                      Voting
+                    </Button>
+                    {nextPendingFinalChallenge ? (
+                      <Button
+                        type="button"
+                        fullWidth={false}
+                        disabled={busy}
+                        onClick={() => void advanceFinalChallenge()}
+                        variant="review-comic-primary"
+                        className="btn--review-wide"
+                      >
+                        <Icon name="arrow-right" className="icon--size-15" />{" "}
+                        Next challenge · {nextPendingFinalChallenge.title}
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        fullWidth={false}
+                        disabled={busy}
+                        onClick={() => void setFinalGallery(false, false)}
+                        variant="review-comic-primary"
+                        className="btn--review-wide"
+                      >
+                        Return all players to game
+                      </Button>
+                    )}
+                  </>
+                ) : (
                   <>
                     <Button
                       type="button"
                       fullWidth={false}
                       disabled={busy}
-                      onClick={() => void setFinalGallery(true, true)}
-                      variant="review-comic-primary"
+                      onClick={() => void setFinalGallery(true, false)}
+                      variant="review-comic"
                     >
-                      <Icon name="heart" className="icon--size-15" /> Open
+                      <Icon name="heart" className="icon--size-15" /> Show
+                      Results
+                    </Button>
+                    <Button
+                      type="button"
+                      fullWidth={false}
+                      disabled={busy}
+                      onClick={() => void reopenFinalChallengeVoting()}
+                      variant="review-comic"
+                    >
+                      <Icon name="heart" className="icon--size-15" /> Reopen
                       Voting
+                    </Button>
+                    {nextPendingFinalChallenge ? (
+                      <Button
+                        type="button"
+                        fullWidth={false}
+                        disabled={busy || !session.final_gallery_open}
+                        title="Share the results before moving to the next challenge."
+                        onClick={() => void advanceFinalChallenge()}
+                        variant="review-comic-primary"
+                        className="btn--review-wide"
+                      >
+                        <Icon name="arrow-right" className="icon--size-15" />{" "}
+                        Next challenge · {nextPendingFinalChallenge.title}
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        fullWidth={false}
+                        disabled={busy}
+                        onClick={() => void setFinalGallery(false, false)}
+                        variant="review-comic-primary"
+                        className="btn--review-wide"
+                      >
+                        Return all players to game
+                      </Button>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+            {(selectedFinalChallengeStatus === "voting" ||
+              selectedFinalChallengeStatus === "results") && (
+              <>
+                {isFinalSlideshowConnected && (
+                  <>
+                    <Button
+                      type="button"
+                      fullWidth={false}
+                      disabled={
+                        busy || selectedFinalChallengeEvidence.length < 2
+                      }
+                      onClick={() => {
+                        const index =
+                          (selectedFinalEvidenceIndex -
+                            1 +
+                            selectedFinalChallengeEvidence.length) %
+                          selectedFinalChallengeEvidence.length;
+                        const item = selectedFinalChallengeEvidence[index];
+                        if (item)
+                          void setFinalSlideshow(
+                            selectedFinalChallengeId,
+                            item.id,
+                          );
+                      }}
+                      variant="review-comic"
+                    >
+                      <Icon name="arrow-left" className="icon--size-15" />{" "}
+                      Previous
+                    </Button>
+                    <Button
+                      type="button"
+                      fullWidth={false}
+                      disabled={
+                        busy || selectedFinalChallengeEvidence.length < 2
+                      }
+                      onClick={() => {
+                        const index =
+                          (selectedFinalEvidenceIndex + 1) %
+                          selectedFinalChallengeEvidence.length;
+                        const item = selectedFinalChallengeEvidence[index];
+                        if (item)
+                          void setFinalSlideshow(
+                            selectedFinalChallengeId,
+                            item.id,
+                          );
+                      }}
+                      variant="review-comic"
+                    >
+                      Next <Icon name="arrow-right" className="icon--size-15" />
                     </Button>
                   </>
                 )}
-              {selectedFinalChallengeStatus === "voting" && (
-                <>
-                  <StatTile
-                    variant="review"
-                    label="Players voted"
-                    value={
-                      <>
-                        {selectedFinalChallengeVotes.length}/{players.length}
-                      </>
-                    }
-                  />
-                  <Button
-                    type="button"
-                    fullWidth={false}
-                    disabled={busy}
-                    onClick={() => void setFinalGallery(true, false)}
-                    variant="review-comic-primary"
-                  >
-                    <Icon name="flag" className="icon--size-15" /> Show Results
-                  </Button>
-                </>
-              )}
-              {selectedFinalChallengeStatus === "results" && (
-                <>
-                  {session.final_gallery_open ? (
-                    <>
-                      <StatTile
-                        variant="review"
-                        label="Results shared"
-                        value={
-                          <>
-                            {selectedFinalChallengeState?.votes_cast ?? 0} votes
-                          </>
-                        }
-                      />
-                      <Button
-                        type="button"
-                        fullWidth={false}
-                        disabled={busy}
-                        onClick={() => void reopenFinalChallengeVoting()}
-                        variant="review-comic"
-                      >
-                        <Icon name="heart" className="icon--size-15" /> Reopen
-                        Voting
-                      </Button>
-                      {nextPendingFinalChallenge ? (
-                        <Button
-                          type="button"
-                          fullWidth={false}
-                          disabled={busy}
-                          onClick={() => void advanceFinalChallenge()}
-                          variant="review-comic-primary"
-                          className="btn--review-wide"
-                        >
-                          <Icon name="arrow-right" className="icon--size-15" />{" "}
-                          Next challenge · {nextPendingFinalChallenge.title}
-                        </Button>
-                      ) : (
-                        <Button
-                          type="button"
-                          fullWidth={false}
-                          disabled={busy}
-                          onClick={() => void setFinalGallery(false, false)}
-                          variant="review-comic-primary"
-                          className="btn--review-wide"
-                        >
-                          Return all players to game
-                        </Button>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        type="button"
-                        fullWidth={false}
-                        disabled={busy}
-                        onClick={() => void setFinalGallery(true, false)}
-                        variant="review-comic"
-                      >
-                        <Icon name="heart" className="icon--size-15" /> Show
-                        Results
-                      </Button>
-                      <Button
-                        type="button"
-                        fullWidth={false}
-                        disabled={busy}
-                        onClick={() => void reopenFinalChallengeVoting()}
-                        variant="review-comic"
-                      >
-                        <Icon name="heart" className="icon--size-15" /> Reopen
-                        Voting
-                      </Button>
-                      {nextPendingFinalChallenge ? (
-                        <Button
-                          type="button"
-                          fullWidth={false}
-                          disabled={busy || !session.final_gallery_open}
-                          title="Share the results before moving to the next challenge."
-                          onClick={() => void advanceFinalChallenge()}
-                          variant="review-comic-primary"
-                          className="btn--review-wide"
-                        >
-                          <Icon name="arrow-right" className="icon--size-15" />{" "}
-                          Next challenge · {nextPendingFinalChallenge.title}
-                        </Button>
-                      ) : (
-                        <Button
-                          type="button"
-                          fullWidth={false}
-                          disabled={busy}
-                          onClick={() => void setFinalGallery(false, false)}
-                          variant="review-comic-primary"
-                          className="btn--review-wide"
-                        >
-                          Return all players to game
-                        </Button>
-                      )}
-                    </>
-                  )}
-                </>
-              )}
-              {(selectedFinalChallengeStatus === "voting" ||
-                selectedFinalChallengeStatus === "results") && (
-                <>
-                  {isFinalSlideshowConnected && (
-                    <>
-                      <Button
-                        type="button"
-                        fullWidth={false}
-                        disabled={
-                          busy || selectedFinalChallengeEvidence.length < 2
-                        }
-                        onClick={() => {
-                          const index =
-                            (selectedFinalEvidenceIndex -
-                              1 +
-                              selectedFinalChallengeEvidence.length) %
-                            selectedFinalChallengeEvidence.length;
-                          const item = selectedFinalChallengeEvidence[index];
-                          if (item)
-                            void setFinalSlideshow(
-                              selectedFinalChallengeId,
-                              item.id,
-                            );
-                        }}
-                        variant="review-comic"
-                      >
-                        <Icon name="arrow-left" className="icon--size-15" />{" "}
-                        Previous
-                      </Button>
-                      <Button
-                        type="button"
-                        fullWidth={false}
-                        disabled={
-                          busy || selectedFinalChallengeEvidence.length < 2
-                        }
-                        onClick={() => {
-                          const index =
-                            (selectedFinalEvidenceIndex + 1) %
-                            selectedFinalChallengeEvidence.length;
-                          const item = selectedFinalChallengeEvidence[index];
-                          if (item)
-                            void setFinalSlideshow(
-                              selectedFinalChallengeId,
-                              item.id,
-                            );
-                        }}
-                        variant="review-comic"
-                      >
-                        Next{" "}
-                        <Icon name="arrow-right" className="icon--size-15" />
-                      </Button>
-                    </>
-                  )}
-                  <Button
-                    type="button"
-                    fullWidth={false}
-                    disabled={
-                      !isFinalSlideshowConnected &&
-                      (!selectedFinalEvidence || busy)
-                    }
-                    onClick={() =>
-                      isFinalSlideshowConnected
-                        ? disconnectFinalSlideshow()
-                        : void castFinalSlideshow()
-                    }
-                    variant={
-                      isFinalSlideshowConnected
-                        ? "review-comic-primary"
-                        : "review-comic"
-                    }
-                  >
-                    <Icon name="cast" className="icon--size-15" />
-                    {isFinalSlideshowConnected ? "Disconnect" : "Cast"}
-                  </Button>
-                </>
-              )}
-            </FormGrid>
-          </ContentPanel>
+                <Button
+                  type="button"
+                  fullWidth={false}
+                  disabled={
+                    !isFinalSlideshowConnected &&
+                    (!selectedFinalEvidence || busy)
+                  }
+                  onClick={() =>
+                    isFinalSlideshowConnected
+                      ? disconnectFinalSlideshow()
+                      : void castFinalSlideshow()
+                  }
+                  variant={
+                    isFinalSlideshowConnected
+                      ? "review-comic-primary"
+                      : "review-comic"
+                  }
+                >
+                  <Icon name="cast" className="icon--size-15" />
+                  {isFinalSlideshowConnected ? "Disconnect" : "Cast"}
+                </Button>
+              </>
+            )}
+          </FormGrid>
         </ContentPanel>
-      </HostManagement>
+      </ContentPanel>
       {!participantView && (
         <SessionFinalRound
           title={selectedFinalChallenge?.title}

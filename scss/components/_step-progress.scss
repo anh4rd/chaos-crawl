@@ -3,6 +3,7 @@
 @use "../variables/layout";
 @use "../variables/motion";
 @use "../variables/effects";
+@use "../tools/progress-track";
 
 /* Width is the current step ratio, supplied as runtime data.*/
 .step-progress {
@@ -17,6 +18,20 @@
     border-radius: inherit;
     background: colors.$challenge-icon-glow;
     transition: width motion.$duration-toggle ease;
+  }
+}
+
+.step-progress {
+  &--join {
+    @include progress-track.track;
+  }
+  &--join span {
+    @include progress-track.fill;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &--join span {
+      transition-duration: motion.$duration-reduced;
+    }
   }
 }
 

@@ -1,0 +1,49 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.lobby-join-info {
+  display: grid;
+  justify-items: center;
+  gap: layout.$pixel-unit * 3;
+  min-width: 0;
+
+  &__code,
+  &__link {
+    display: flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 2;
+    min-width: 0;
+    padding: layout.$pixel-unit * 2 layout.$pixel-unit * 3;
+    border-radius: layout.$pixel-unit * 3;
+  }
+  &__code {
+    color: colors.$ink;
+    background: colors.$white;
+  }
+  &__code strong {
+    font: fonts.$size-game-code fonts.$family-game-code;
+  }
+  &__link {
+    max-width: 100%;
+    color: colors.$white;
+    background: colors.$filter-surface;
+  }
+  &__link a {
+    min-width: 0;
+    color: inherit;
+    overflow-wrap: anywhere;
+    font-size: fonts.$size-small;
+  }
+  button {
+    display: grid;
+    place-items: center;
+    flex: none;
+    min-width: layout.$session-row-height;
+    min-height: layout.$session-row-height;
+    border: 0;
+    color: inherit;
+    background: transparent;
+    cursor: pointer;
+  }
+}

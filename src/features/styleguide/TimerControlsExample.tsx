@@ -7,6 +7,7 @@ import Note from "../../components/ui/Note";
 import TimerReadout from "../../components/ui/TimerReadout";
 import RoundFlowControls from "../../components/session/RoundFlowControls";
 import HostManagement from "../host-live/HostManagement";
+import HostRoundControls from "../host-live/HostRoundControls";
 import SessionPreview from "../../components/session/SessionPreview";
 import { Example } from "./Example";
 
@@ -15,6 +16,12 @@ export default function TimerControlsExample() {
   const [busy, setBusy] = useState(false);
   const [rewardActive, setRewardActive] = useState(false);
   const [notice, setNotice] = useState("No timer action selected.");
+  const [previewStage, setPreviewStage] = useState("ready");
+  const [previewSeconds, setPreviewSeconds] = useState(300);
+  const previewRunning = previewStage === "running";
+  const previewTime = `${Math.floor(previewSeconds / 60)
+    .toString()
+    .padStart(2, "0")}:${(previewSeconds % 60).toString().padStart(2, "0")}`;
   return (
     <Example
       title="Session timer and flow controls"
@@ -25,6 +32,69 @@ export default function TimerControlsExample() {
     >
       <SessionPreview>
         <HostManagement>
+          <label>
+            Preview host control stage{" "}
+            <select
+              value={previewStage}
+              onChange={(event) => {
+                const stage = event.target.value;
+                setPreviewStage(stage);
+                setPreviewSeconds(stage === "expired" ? 0 : 300);
+              }}
+            >
+              <option value="ready">Ready</option>
+              <option value="running">Running</option>
+              <option value="expired">Time's up</option>
+              <option value="reviewing">Review in progress</option>
+              <option value="awarded">Round complete</option>
+              <option value="break">Break</option>
+              <option value="complete">Game complete</option>
+            </select>
+          </label>
+          <HostRoundControls
+            session={{
+              id: "local",
+              status: previewStage === "complete" ? "completed" : "live",
+              current_round_number: 2,
+            }}
+            rewardActive={previewStage === "reviewing"}
+            openPointReview={() => setPreviewStage("reviewing")}
+            hostBreakActive={previewStage === "break"}
+            currentRoundPointsAwarded={previewStage === "awarded"}
+            roundClockText={previewTime}
+            busy={busy}
+            moveToRound={() => setPreviewStage("ready")}
+            breakResumeRound={3}
+            openBreakTimerEditor={() =>
+              setNotice("Edit break selected locally.")
+            }
+            requestMoveToRound={() => setPreviewStage("ready")}
+            totalRounds={4}
+            requestStartBreak={() => setPreviewStage("break")}
+            roundTimerHydrated
+            roundClockSeconds={previewSeconds}
+            roundClockRunning={previewRunning}
+            restartRoundTimer={() => {
+              setPreviewSeconds(300);
+              setPreviewStage("running");
+            }}
+            enabledRewardMethods={["host_awards"]}
+            startGameOrToggleTimer={() =>
+              setPreviewStage(previewRunning ? "ready" : "running")
+            }
+            resetRoundTimer={() => {
+              setPreviewSeconds(300);
+              setPreviewStage("ready");
+            }}
+            setRoundTimerSeconds={(seconds) => {
+              setPreviewSeconds(seconds);
+              setPreviewStage("ready");
+            }}
+            addRoundTimerMinutes={(minutes) =>
+              setPreviewSeconds((seconds) => seconds + minutes * 60)
+            }
+            skipTimerAndReview={() => setPreviewStage("reviewing")}
+          />
           <ControlPanel
             heading="LOCAL TIMER CONTROLS"
             marker="✦"

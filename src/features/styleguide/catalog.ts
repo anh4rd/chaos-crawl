@@ -1,13 +1,14 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
   SessionPreview: {
-    usage: "Purple session surface for grouping related session content.",
+    usage:
+      "Session content wrapper; inverse variant supplies the session backdrop for local previews.",
     dependencies:
       "Children only; presentation wrapper with no state or backend access.",
   },
   SessionStatusExample: {
     usage:
-      "Local participant status, private-feed, recovery and spinner reference.",
+      "Local participant status, private-feed, recovery and spinner reference on the session backdrop.",
     dependencies:
       "Shared presentation components and local state only; no connection, credential or backend hooks.",
   },
@@ -544,7 +545,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   PlayerAccessView: {
     usage:
-      "Controlled join/rejoin presentation. Supply values, validation state and callbacks; as=section avoids a nested main landmark in the local reference.",
+      "Controlled join/rejoin presentation with progress after the initial join-code screen and throughout rejoin. Supply values, validation state and callbacks; as=section avoids a nested main landmark in the local reference.",
     dependencies:
       "Shared access header, heading, notices, form/panel/field/input/button primitives, GameCodeInput, PlayerDetailsFields and owned SCSS. No router, storage or backend reads/writes. Local join and rejoin demonstrates both steps and the pending contract.",
   },
@@ -641,7 +642,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionInvite: {
     usage:
-      "Session QR, native join link, joined-player count and optional team guidance. Explicit session-secondary/session-ghost controls preserve live invitation styling. Shared session panels and invitation demonstrates local callbacks.",
+      "Session QR, native join link, joined-player count and optional team guidance. The supplied copied state changes the copy icon to a check. Shared session panels and invitation demonstrates local callbacks.",
     dependencies:
       "Caller-supplied URL, counts and team flags; QrFrame, shared controls and qrcode.react. No credential, clipboard or backend reads.",
   },
@@ -672,11 +673,41 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     dependencies:
       "SCSS .image-well; caller supplies image URLs and fallback content. No storage reads.",
   },
+  GameArtwork: {
+    usage:
+      "Wrap supplied game artwork with the decorative mascot overlapping its left edge. Shown in the host join and session chrome references.",
+    dependencies:
+      "Presentation-only wrapper and bundled public mascot image; callers supply the artwork.",
+  },
+  LobbyGameHeading: {
+    usage:
+      "Host lobby game artwork, overlapping mascot and name, with a compact layout for later join screens.",
+    dependencies:
+      "Feature presentation only; supplied name and image URL, no backend access.",
+  },
+  LobbyJoinInfo: {
+    usage:
+      "Host lobby code, join link and QR with separate copy actions and caller-supplied check states. Shown in the local host join information example.",
+    dependencies:
+      "Caller supplies the code, URL and callbacks; the example uses local actions only.",
+  },
+  LobbyJoinDisclosure: {
+    usage:
+      "Host show/hide control reveals a card below with the join code, link, copy actions and QR code. The local host join example is interactive.",
+    dependencies:
+      "Caller supplies code, URL, copy states and callbacks; disclosure state is local and no backend is accessed.",
+  },
   StepProgress: {
     usage:
-      "Visual progress from supplied value/total. Keep a visible step label beside it, as in the local lobby controls example.",
+      "Progress from supplied value/total. Join variant uses the host hub track and exposes a labeled progressbar; the default and console variants remain visual only.",
     dependencies:
       "SCSS .step-progress; only the data-derived width uses inline style. No navigation or persistence.",
+  },
+  JoinProgress: {
+    usage:
+      "Join progress label and host-hub-style progress bar, with the current step exposed to assistive technology. Local lobby controls, join/rejoin and session examples demonstrate it.",
+    dependencies:
+      "Caller supplies the current step and total; StepProgress owns the data-derived width and accessible progress value. No navigation or persistence.",
   },
   TeamChoiceCard: {
     usage:
@@ -985,7 +1016,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   TimerReadout: {
     usage:
-      "Compact labeled timer value, composed with ControlRow timer/break variants. Caller supplies label and value; local Session timer and flow controls demonstrate it.",
+      "Compact labeled timer value with an 11px minimum label, composed with ControlRow timer/break variants or the compact host control panel. Caller supplies label and value; local Session timer and flow controls demonstrate both.",
     dependencies:
       "SCSS .timer-readout; no ticking, storage or publishing lifecycle.",
   },
@@ -1039,13 +1070,13 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionPlayerProfile: {
     usage:
-      "Player/host profile with score, rank, optional avatar and badge. See the live example above.",
+      "Player/host profile with optional avatar, badge and score/rank. Set showScore=false to omit statistics during setup; toggle it in the local example.",
     dependencies:
       "SCSS .session-profile and Router for the host link. Data is supplied by the caller.",
   },
   SessionGameTitlebar: {
     usage:
-      "Game title, optional art and copyable join code. Pass name, code, onCopy and optional copied/photoUrl/tourTarget. The local chrome example demonstrates a named game-details target.",
+      "Game title, optional art with overlapping mascot and copyable join code. Pass name, code, onCopy and optional copied/photoUrl/tourTarget. The local chrome example demonstrates a named game-details target.",
     dependencies:
       "SCSS .session-titlebar; clipboard behavior belongs to the caller.",
   },
@@ -1101,13 +1132,13 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionPage: {
     usage:
-      "Shared host/player presentation. Optional contentTourTarget identifies the visible content for a caller-owned tour; the local session example includes one. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+      "Shared host/player presentation. The local session example hides the player profile and navigation in the lobby while retaining game details and progress. Optional contentTourTarget identifies the visible content for a caller-owned tour; callbacks are optional where read-only viewing is supported.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },
   SessionNavigation: {
     usage:
-      "Optional elementRef exposes the native nav for controller-owned focus recovery. The local session preview returns focus to Game when its temporary host action disappears. Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+      "Shared host/player navigation without a Final item; the host manages final voting in Control overrides. Optional elementRef exposes the native nav for controller-owned focus recovery. The local session preview returns focus to Game when its temporary host action disappears.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },
@@ -1125,7 +1156,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionState: {
     usage:
-      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+      "Shared host/player status and recovery surface using the feature-banner frame, rays and heading typography. See the local participant status and interactive session examples.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },
@@ -1263,9 +1294,9 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   HostLobby: {
     usage:
-      "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
+      "Host join screens for invite, participation and roster. Team games continue to a separate host team setup; solo games start from the roster. Lobby navigation is local to the host browser.",
     dependencies:
-      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
+      "Caller-supplied models and actions; local locks coordinate participation and pending photo saves. No internal backend reads or writes.",
   },
   LobbyInviteStep: {
     usage:
@@ -1275,7 +1306,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   LobbyParticipationStep: {
     usage:
-      "Host feature presentation with explicit data and action props. Compose it from the host session coordinator; keep persistence in its controller.",
+      "Host participation question and Play/Just host switch in a translucent purple card, with the separate profile upload below. The local Host lobby participation reference defaults to Play and uses local state.",
     dependencies:
       "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
@@ -1311,7 +1342,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   HostFinalRound: {
     usage:
-      "Controlled final-round management using caller-supplied challenge, evidence and voting presentation. The controller retains publication and winner rules; this view does not require an unused top-vote-count prop.",
+      "Controlled final-round management under host Control overrides using caller-supplied challenge, evidence and voting presentation. The controller retains publication and winner rules; the local review reference demonstrates its section heading and controls.",
     dependencies:
       "Shared review controls and evidence presentation; useHostFinalRound owns persistence and participation recovery. Local review references never mount the controller.",
   },

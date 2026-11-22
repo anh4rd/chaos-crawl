@@ -13,7 +13,7 @@
     display: grid;
     gap: (layout.$pixel-unit * 0.5);
     color: colors.$invite-code-text;
-    font-size: fonts.$size-tiny;
+    font-size: fonts.$size-compact-label;
     font-weight: fonts.$weight-heavy;
     letter-spacing: fonts.$tracking-compact;
   }

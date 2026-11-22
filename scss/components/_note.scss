@@ -200,9 +200,8 @@ p.note--console-muted {
   &--participant-count {
     margin: layout.$pixel-unit * 3.75 0 0;
     padding-top: layout.$pixel-unit * 3;
-    border-top: layout.$pixel-unit * 0.25 solid
-      colors.$participant-count-divider;
-    color: colors.$purple;
+    border-top: layout.$pixel-unit * 0.25 solid colors.$banner-copy;
+    color: colors.$banner-copy;
     font-size: fonts.$size-small;
     font-weight: fonts.$weight-extra-bold;
   }

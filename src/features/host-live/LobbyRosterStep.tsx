@@ -1,4 +1,3 @@
-import StatTile from "../../components/ui/StatTile";
 import Note from "../../components/ui/Note";
 import { Field } from "../../components/ui/Field";
 import Avatar from "../../components/ui/Avatar";
@@ -8,7 +7,6 @@ import type { GameSession, SessionPlayer, SessionTeam } from "./types";
 interface Props {
   players: SessionPlayer[];
   session: GameSession;
-  teams: SessionTeam[];
   hostPlayer: SessionPlayer | undefined;
   teamById: Map<string, SessionTeam>;
   busy: boolean;
@@ -17,7 +15,6 @@ interface Props {
 export default function LobbyRosterStep({
   players,
   session,
-  teams,
   hostPlayer,
   teamById,
   busy,
@@ -30,19 +27,8 @@ export default function LobbyRosterStep({
       variant="lobby"
       className="lobby-roster"
     >
-      <div className="metric-grid">
-        <StatTile
-          variant="compact"
-          value={players.length}
-          label="Players joined"
-        />
-        <StatTile
-          variant="compact"
-          value={session.teams_enabled ? teams.length : 0}
-          label="Teams ready"
-        />
-      </div>
-      <div className="player-roster">
+      <h2>Players joined ({players.length})</h2>
+      <div className="player-roster player-roster--lobby">
         {players.length ? (
           players.map((player) => (
             <div className="player-roster__row" key={player.id}>

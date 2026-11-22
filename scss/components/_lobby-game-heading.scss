@@ -1,0 +1,38 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.lobby-game-heading {
+  display: grid;
+  justify-items: center;
+  gap: layout.$pixel-unit * 3;
+  min-width: 0;
+  color: colors.$white;
+  text-align: center;
+
+  h2 {
+    margin: 0;
+    color: colors.$white;
+    font-family: fonts.$family-display;
+    font-size: fonts.$size-poster-hero;
+    line-height: 1;
+    overflow-wrap: anywhere;
+    text-transform: uppercase;
+    text-shadow:
+      layout.$pixel-unit * 0.5 layout.$pixel-unit * 0.5 0 colors.$ink,
+      layout.$pixel-unit * -0.5 layout.$pixel-unit * -0.5 0 colors.$ink,
+      layout.$pixel-unit * 0.5 layout.$pixel-unit * -0.5 0 colors.$ink,
+      layout.$pixel-unit * -0.5 layout.$pixel-unit * 0.5 0 colors.$ink;
+    box-shadow: inset 0 (layout.$pixel-unit * -2) colors.$lime;
+  }
+
+  &--compact {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+    justify-items: start;
+    text-align: left;
+  }
+  &--compact h2 {
+    font-size: fonts.$size-builder-heading;
+  }
+}

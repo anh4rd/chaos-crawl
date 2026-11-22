@@ -19,6 +19,7 @@
     display: grid;
     gap: (layout.$pixel-unit * 0.75);
   }
+
   & strong {
     color: colors.$purple-dark;
     font-size: fonts.$size-caption;
@@ -32,5 +33,17 @@
   }
   &:focus-within {
     @include focus-ring.focus-ring;
+  }
+  &--lobby {
+    flex-direction: column-reverse;
+    align-items: center;
+    padding: layout.$pixel-unit * 4;
+    border: 0;
+    background: colors.$console-panel-tint;
+    text-align: center;
+  }
+  &--lobby strong,
+  &--lobby small {
+    color: colors.$white;
   }
 }

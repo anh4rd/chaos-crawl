@@ -119,6 +119,11 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   );
   const { busy, setBusy } = useHostOperation();
   const [notice, setNotice] = useState("");
+  const [copyError, setCopyError] = useState("");
+  const [codeCopyTarget, setCodeCopyTarget] = useState<
+    "lobby" | "titlebar" | "invite" | null
+  >(null);
+  const [linkCopyFeedback, setLinkCopyFeedback] = useState(false);
   const [actionError, setError] = useState("");
   const [activeTab, setActiveTab] = useState<HostTab>("game");
   const [activeHostSection, setActiveHostSection] =
@@ -212,14 +217,36 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     session,
   });
 
-  const { copy: copyJoinCode } = useClipboard({
+  const { copied: codeCopied, copy: copyJoinCode } = useClipboard({
     text: session?.join_code ?? "",
+    resetAfterMs: 1800,
   });
-  async function copyCode() {
+  async function copyCode(target: "lobby" | "titlebar" | "invite") {
     if (!session) return;
     const result = await copyJoinCode();
-    if (result === "copied") setNotice("Join code copied.");
-    if (result === "failed") setNotice(`Join code: ${session.join_code}`);
+    if (result === "copied") {
+      setCodeCopyTarget(target);
+      setCopyError("");
+    }
+    if (result === "failed") {
+      setCodeCopyTarget(null);
+      setCopyError(`Copy isn't available. Join code: ${session.join_code}`);
+    }
+  }
+  const { copied: linkCopied, copy: copyJoinLink } = useClipboard({
+    text: joinUrl,
+    resetAfterMs: 1800,
+  });
+  async function copyLink() {
+    const result = await copyJoinLink();
+    if (result === "copied") {
+      setLinkCopyFeedback(true);
+      setCopyError("");
+    }
+    if (result === "failed") {
+      setLinkCopyFeedback(false);
+      setCopyError(`Copy isn't available. Game link: ${joinUrl}`);
+    }
   }
 
   function evidenceUrl(path: string) {
@@ -265,6 +292,8 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     skipTimerAndReview,
     restartRoundTimer,
     resetRoundTimer,
+    setRoundTimerSeconds,
+    addRoundTimerMinutes,
   } = useHostRoundTimer({
     mainRounds,
     session,
@@ -426,11 +455,11 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   const {
     hostPlayerToken,
     focusedHostChallenge,
-    hostJoinChoice,
     setHostAvatarFile,
     hostAvatarPreview,
     setHostAvatarPreview,
     setHostParticipation,
+    saveHostAvatar,
     ensureHostPlayerToken,
     openHostPlayerView,
     openHostSideChallengeUpload,
@@ -464,6 +493,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     status: session?.status,
     onTab: setActiveTab,
     onLobbyStep: goToLobbyStep,
+    onHostSection: setActiveHostSection,
   });
   const {
     startOverrideReasons,
@@ -613,6 +643,13 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
           onDismiss={dismissError}
         />
       )}
+      {copyError && (
+        <SessionFeedback
+          message={copyError}
+          kind="error"
+          onDismiss={() => setCopyError("")}
+        />
+      )}
       {notice && (
         <SessionFeedback
           message={notice}
@@ -639,14 +676,23 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
       gamePhotoUrl={gamePhotoUrl}
       session={session}
       joinUrl={joinUrl}
-      copyCode={copyCode}
+      copyCode={() => copyCode("lobby")}
+      copyLink={copyLink}
+      codeCopied={codeCopied && codeCopyTarget === "lobby"}
+      linkCopied={linkCopied && linkCopyFeedback}
       players={players}
       hostAvatarPreview={hostAvatarPreview}
       setHostAvatarFile={setHostAvatarFile}
       setHostAvatarPreview={setHostAvatarPreview}
-      hostJoinChoice={hostJoinChoice}
+      hostPlayerToken={hostPlayerToken}
       busy={busy}
-      setHostParticipation={setHostParticipation}
+      setHostParticipation={(participates) =>
+        setHostParticipation(participates, { requireAvatar: true })
+      }
+      ensureHostPlayerToken={() =>
+        ensureHostPlayerToken(undefined, { requireAvatar: true })
+      }
+      saveHostAvatar={saveHostAvatar}
       hostPlayer={hostPlayer}
       teams={teams}
       teamById={teamById}
@@ -697,8 +743,9 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   );
   const hostRoundControls = (
     <HostRoundControls
+      key={`${session.id}:${session.current_round_number}:${session.status}:${Boolean(activeRewardRound)}:${hostBreakActive}:${currentRoundPointsAwarded}`}
       session={session}
-      activeRewardRound={activeRewardRound}
+      rewardActive={Boolean(activeRewardRound)}
       openPointReview={openPointReview}
       hostBreakActive={hostBreakActive}
       currentRoundPointsAwarded={currentRoundPointsAwarded}
@@ -708,7 +755,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
       breakResumeRound={breakResumeRound}
       openBreakTimerEditor={openBreakTimerEditor}
       requestMoveToRound={requestMoveToRound}
-      mainRounds={mainRounds}
+      totalRounds={mainRounds.length}
       requestStartBreak={requestStartBreak}
       roundTimerHydrated={roundTimerHydrated}
       roundClockSeconds={roundClockSeconds}
@@ -717,6 +764,8 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
       enabledRewardMethods={enabledRewardMethods}
       startGameOrToggleTimer={startGameOrToggleTimer}
       resetRoundTimer={resetRoundTimer}
+      setRoundTimerSeconds={setRoundTimerSeconds}
+      addRoundTimerMinutes={addRoundTimerMinutes}
       skipTimerAndReview={skipTimerAndReview}
     />
   );
@@ -739,36 +788,62 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
       viewerRole="host"
       contentTourTarget="host-player-game"
       profile={{
-        name: hostPlayer?.name ?? headerPlayer?.name ?? hostDisplayName,
-        subtitle: hostPlayer
-          ? (teamById.get(hostPlayer.team_id ?? "")?.name ??
-            "Playing in this game")
-          : headerPlayer
-            ? "Current leader"
-            : "Game host",
-        avatarUrl: hostPlayer?.avatar_url ?? headerPlayer?.avatar_url,
-        score: headerPlayer?.score ?? 0,
-        rank: headerRank,
-        badge: hostPlayer ? "HOST" : headerPlayer ? "LEADER" : "HOST",
+        name:
+          hostPlayer?.name ??
+          (session.status === "lobby"
+            ? hostDisplayName
+            : (headerPlayer?.name ?? hostDisplayName)),
+        subtitle:
+          session.status === "lobby"
+            ? "Game host"
+            : hostPlayer
+              ? (teamById.get(hostPlayer.team_id ?? "")?.name ??
+                "Playing in this game")
+              : headerPlayer
+                ? "Current leader"
+                : "Game host",
+        avatarUrl:
+          (session.status === "lobby" ? hostAvatarPreview || null : null) ??
+          hostPlayer?.avatar_url ??
+          (session.status === "lobby" ? null : headerPlayer?.avatar_url),
+        score:
+          session.status === "lobby"
+            ? (hostPlayer?.score ?? 0)
+            : (headerPlayer?.score ?? 0),
+        rank: session.status === "lobby" && !hostPlayer ? null : headerRank,
+        showScore: session.status !== "lobby",
+        badge:
+          hostPlayer || session.status === "lobby"
+            ? "HOST"
+            : headerPlayer
+              ? "LEADER"
+              : "HOST",
       }}
-      game={{
-        name: session.name,
-        code: session.join_code,
-        photoUrl: gamePhotoUrl,
-        tourTarget: "host-overview",
-        onCopy: () => void copyCode(),
-      }}
+      game={
+        session.status === "lobby"
+          ? null
+          : {
+              name: session.name,
+              code: session.join_code,
+              photoUrl: gamePhotoUrl,
+              tourTarget: "host-overview",
+              copied: codeCopied && codeCopyTarget === "titlebar",
+              onCopy: () => void copyCode("titlebar"),
+            }
+      }
       toolbar={
-        <HostManagement>
-          <Button
-            variant="session-tour"
-            fullWidth={false}
-            type="button"
-            onClick={startHostTour}
-          >
-            ✦ Take the host tour
-          </Button>
-        </HostManagement>
+        session.status !== "lobby" ? (
+          <HostManagement>
+            <Button
+              variant="session-tour"
+              fullWidth={false}
+              type="button"
+              onClick={startHostTour}
+            >
+              ✦ Take the host tour
+            </Button>
+          </HostManagement>
+        ) : null
       }
       navigation={
         session.status !== "lobby" ? (
@@ -776,12 +851,11 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
             elementRef={navigationRef}
             active={
               activeTab === "final-round"
-                ? "final"
+                ? "game"
                 : activeTab === "reward-round"
                   ? "host-controls"
                   : activeTab
             }
-            showFinal
             showHost
             tourTarget="host-sections"
             onSelect={(section) =>
@@ -1024,38 +1098,6 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
               teamById={teamById}
             />
           )}
-          {activeTab === "final-round" && (
-            <HostFinalRound
-              canVote={canParticipate}
-              participantView={canParticipate}
-              selectedFinalChallengeEvidence={selectedFinalChallengeEvidence}
-              sideChallenges={sideChallenges}
-              selectedFinalChallengeId={selectedFinalChallengeId}
-              busy={busy}
-              selectedFinalChallengeStatus={selectedFinalChallengeStatus}
-              selectFinalChallenge={selectFinalChallenge}
-              setFinalGallery={setFinalGallery}
-              selectedFinalChallengeVotes={selectedFinalChallengeVotes}
-              players={players}
-              session={session}
-              selectedFinalChallengeState={selectedFinalChallengeState}
-              reopenFinalChallengeVoting={reopenFinalChallengeVoting}
-              nextPendingFinalChallenge={nextPendingFinalChallenge}
-              advanceFinalChallenge={advanceFinalChallenge}
-              isFinalSlideshowConnected={isFinalSlideshowConnected}
-              selectedFinalEvidenceIndex={selectedFinalEvidenceIndex}
-              setFinalSlideshow={setFinalSlideshow}
-              selectedFinalEvidence={selectedFinalEvidence}
-              disconnectFinalSlideshow={disconnectFinalSlideshow}
-              castFinalSlideshow={castFinalSlideshow}
-              selectedFinalChallenge={selectedFinalChallenge}
-              playerById={playerById}
-              evidenceUrl={evidenceUrl}
-              castHostFinalVote={castHostFinalVote}
-              finalWinningEvidenceIds={finalWinningEvidenceIds}
-              rankedPlayers={rankedPlayers}
-            />
-          )}
           {selectedSecretReviewAssignment &&
             selectedSecretReviewChallenge &&
             ((activeTab === "host-controls" &&
@@ -1173,7 +1215,8 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                       <PanelGrid>
                         <SessionInvite
                           joinUrl={joinUrl}
-                          onCopy={copyCode}
+                          onCopy={() => copyCode("invite")}
+                          copied={codeCopied && codeCopyTarget === "invite"}
                           playerCount={players.length}
                           playerLimit={session.player_limit}
                           teamsEnabled={session.teams_enabled}
@@ -1219,6 +1262,55 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                             requestMoveToRound(round);
                         }}
                       />
+                      <HostFinalRound
+                        canVote={canParticipate}
+                        participantView={canParticipate}
+                        selectedFinalChallengeEvidence={
+                          selectedFinalChallengeEvidence
+                        }
+                        sideChallenges={sideChallenges}
+                        selectedFinalChallengeId={selectedFinalChallengeId}
+                        busy={busy}
+                        selectedFinalChallengeStatus={
+                          selectedFinalChallengeStatus
+                        }
+                        selectFinalChallenge={selectFinalChallenge}
+                        setFinalGallery={setFinalGallery}
+                        selectedFinalChallengeVotes={
+                          selectedFinalChallengeVotes
+                        }
+                        players={players}
+                        session={session}
+                        selectedFinalChallengeState={
+                          selectedFinalChallengeState
+                        }
+                        reopenFinalChallengeVoting={reopenFinalChallengeVoting}
+                        nextPendingFinalChallenge={nextPendingFinalChallenge}
+                        advanceFinalChallenge={advanceFinalChallenge}
+                        isFinalSlideshowConnected={isFinalSlideshowConnected}
+                        selectedFinalEvidenceIndex={selectedFinalEvidenceIndex}
+                        setFinalSlideshow={setFinalSlideshow}
+                        selectedFinalEvidence={selectedFinalEvidence}
+                        disconnectFinalSlideshow={disconnectFinalSlideshow}
+                        castFinalSlideshow={castFinalSlideshow}
+                        selectedFinalChallenge={selectedFinalChallenge}
+                        playerById={playerById}
+                        evidenceUrl={evidenceUrl}
+                        castHostFinalVote={castHostFinalVote}
+                        finalWinningEvidenceIds={finalWinningEvidenceIds}
+                        rankedPlayers={rankedPlayers}
+                      />
+                      {canParticipate && session.final_gallery_open && (
+                        <SessionParticipant
+                          key={`${session.id}:${hostPlayerToken}:final`}
+                          joinCode={session.join_code}
+                          section="final"
+                          playerToken={hostPlayerToken ?? undefined}
+                          embedded
+                          onSectionChange={navigateParticipant}
+                          onRecover={() => void openHostPlayerView()}
+                        />
+                      )}
                     </>
                   )}
                 {activeTab === "host-controls" &&

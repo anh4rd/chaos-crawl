@@ -4,12 +4,16 @@ on conflict (id) do update
 set public = excluded.public,
     file_size_limit = excluded.file_size_limit;
 
+drop policy if exists "Public can read challenge icons"
+  on storage.objects;
 create policy "Public can read challenge icons"
   on storage.objects
   for select
   to public
   using (bucket_id = 'challenge-icons');
 
+drop policy if exists "Hosts can upload challenge icons"
+  on storage.objects;
 create policy "Hosts can upload challenge icons"
   on storage.objects
   for insert

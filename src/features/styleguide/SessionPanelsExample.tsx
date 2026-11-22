@@ -23,6 +23,7 @@ export default function SessionPanelsExample() {
   const [round, setRound] = useState(1);
   const [busy, setBusy] = useState(false);
   const [teams, setTeams] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState(
     "Choose a sample round or invite action.",
   );
@@ -135,11 +136,8 @@ export default function SessionPanelsExample() {
           </ContentPanel>
           <SessionInvite
             joinUrl="#/styleguide"
-            onCopy={() =>
-              setNotice(
-                "Sample join code selected locally; clipboard unchanged.",
-              )
-            }
+            onCopy={() => setCopied(true)}
+            copied={copied}
             playerCount={3}
             playerLimit={12}
             teamsEnabled={teams}

@@ -8,6 +8,7 @@ export interface SessionProfile {
   avatarUrl?: string | null;
   score: number;
   rank: number | null;
+  showScore?: boolean;
   badge?: string;
 }
 

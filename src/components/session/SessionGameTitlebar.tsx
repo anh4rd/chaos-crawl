@@ -1,5 +1,6 @@
 import Icon from "../ui/Icon";
 import type { SessionGame } from "./types";
+import GameArtwork from "./GameArtwork";
 
 export function SessionGameTitlebar({
   tourTarget,
@@ -15,13 +16,15 @@ export function SessionGameTitlebar({
       aria-label="Game details"
       data-tour={tourTarget}
     >
-      <span className="session-titlebar__art">
-        {photoUrl ? (
-          <img src={photoUrl} alt={`${name} game art`} />
-        ) : (
-          <span aria-hidden="true">🎉</span>
-        )}
-      </span>
+      <GameArtwork>
+        <span className="session-titlebar__art">
+          {photoUrl ? (
+            <img src={photoUrl} alt={`${name} game art`} />
+          ) : (
+            <span aria-hidden="true">🎉</span>
+          )}
+        </span>
+      </GameArtwork>
       <div className="session-titlebar__name">
         <strong>{name}</strong>
       </div>
@@ -33,8 +36,8 @@ export function SessionGameTitlebar({
         type="button"
         className="session-titlebar__copy"
         onClick={onCopy}
-        aria-label="Copy game code"
-        title="Copy game code"
+        aria-label={copied ? "Game code copied" : "Copy game code"}
+        title={copied ? "Game code copied" : "Copy game code"}
       >
         <Icon
           name={copied ? "check" : "copy"}

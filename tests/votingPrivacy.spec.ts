@@ -22,7 +22,7 @@ for (const source of ["session", "presentation"] as const) {
     };
     backend.rows.cc_game_session_final_round_state = [state];
     await page.goto("#/host/live/test-session");
-    await page.getByRole("button", { name: "Final", exact: true }).click();
+    await page.getByRole("button", { name: "Host", exact: true }).click();
     await expect(
       page.getByRole("button", { name: "Show Results", exact: true }),
     ).toBeVisible();
@@ -43,7 +43,7 @@ for (const source of ["session", "presentation"] as const) {
     backend.session.final_voting_open = false;
     state.voting_open = false;
     await page.reload();
-    await page.getByRole("button", { name: "Final", exact: true }).click();
+    await page.getByRole("button", { name: "Host", exact: true }).click();
     await expect(
       page.getByText("Top submission", { exact: true }),
     ).toBeVisible();
@@ -96,6 +96,12 @@ for (const source of ["state", "row"] as const) {
     });
     await page.goto("#/host/live/test-session");
     await page.getByRole("button", { name: "Host", exact: true }).click();
+    await page
+      .getByRole("tab", { name: "Secret mission schedule", exact: true })
+      .click();
+    await expect(
+      page.getByText("Success · +25 pts", { exact: true }),
+    ).toHaveCount(0);
     await page.getByRole("tab", { name: "Review", exact: true }).click();
     await expect(page.getByText("SUCCESS", { exact: true })).toHaveCount(0);
     await expect(page.getByText("Pat · success", { exact: true })).toHaveCount(
@@ -121,10 +127,13 @@ for (const source of ["state", "row"] as const) {
     review.status = "results";
     await page.reload();
     await page.getByRole("button", { name: "Host", exact: true }).click();
-    await page.getByRole("tab", { name: "Review", exact: true }).click();
+    await page
+      .getByRole("tab", { name: "Secret mission schedule", exact: true })
+      .click();
     await expect(
       page.getByText("Success · +25 pts", { exact: true }),
     ).toBeVisible();
+    await page.getByRole("tab", { name: "Review", exact: true }).click();
     await expect(
       page.getByText("Pat · success", { exact: true }),
     ).toBeVisible();

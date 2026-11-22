@@ -29,14 +29,9 @@ test("V2 player retains credentials and can move between game sections", async (
     challengeArtUrl,
   );
   const gameNavigation = page.getByRole("navigation", { name: "Game pages" });
-  await expect(
-    gameNavigation.getByRole("link", { name: "Final" }),
-  ).toBeVisible();
-  await gameNavigation.getByRole("link", { name: "Final" }).click();
-  await expect(page).toHaveURL(/\/final$/);
-  await expect(
-    page.getByRole("heading", { name: "The final vote isn't open yet" }),
-  ).toBeVisible();
+  await expect(gameNavigation.getByRole("link", { name: "Final" })).toHaveCount(
+    0,
+  );
   await page.getByRole("link", { name: "Scores", exact: true }).first().click();
   await expect(page).toHaveURL(/\/leaderboard$/);
   await expect(page.getByText("Pat", { exact: true }).first()).toBeVisible();
@@ -105,7 +100,7 @@ test("completed players can download their submissions and create a photo reel",
       .evaluateAll((items) =>
         items.map((item) => item.getAttribute("aria-label")),
       ),
-  ).toEqual(["Game", "Scores", "Challenges", "Final", "Memories"]);
+  ).toEqual(["Game", "Scores", "Challenges", "Memories"]);
   await page
     .getByRole("navigation", { name: "Game pages" })
     .getByRole("link", { name: "Game", exact: true })
@@ -382,7 +377,7 @@ test("authenticated host can open a lobby and navigate setup", async ({
   ).toBeVisible();
   await page.getByRole("button", { name: /Next/i }).first().click();
   await expect(
-    page.getByRole("heading", { name: "Join your game", exact: true }),
+    page.getByRole("heading", { name: "Enter your details", exact: true }),
   ).toBeVisible();
   expect(
     backend.requests.some(
@@ -829,7 +824,8 @@ test("final voting keeps result details private and sends the participant token"
   backend.session.final_gallery_open = true;
   backend.session.final_voting_open = true;
   backend.responses.cc_player_get_session_final_round_gallery = finalFixture;
-  await page.goto(`#/play/${sessionCode}/final`);
+  await page.goto(`#/play/${sessionCode}`);
+  await expect(page).toHaveURL(/\/final$/);
   await expect(
     page.getByRole("heading", { name: "Side challenge voting" }),
   ).toBeVisible();
@@ -1208,6 +1204,12 @@ test("inline host final voting uses the host token and keeps one page landmark",
   });
   await expect(page.locator("main")).toHaveCount(1);
   await page.getByRole("button", { name: "Host", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Final round", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Side challenge voting", exact: true }),
+  ).toBeVisible();
   await page
     .getByRole("tab", { name: "Secret mission schedule", exact: true })
     .click();
@@ -1551,9 +1553,7 @@ test("host avatar upload failure keeps participation and survives the next data 
     mimeType: "image/png",
     buffer: Buffer.from("fixture"),
   });
-  await page
-    .getByRole("button", { name: "Yes, I’ll play", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(page.getByRole("alert")).toContainText(
     "You joined, but your profile photo couldn't upload",
   );
@@ -1937,6 +1937,19 @@ test("host timer actions work by keyboard and preserve reset/pause payloads", as
   await expect(
     controls.getByRole("button", { name: "Pause", exact: true }),
   ).toBeVisible();
+  await activateByKeyboard(
+    page,
+    controls.getByLabel("Host control recovery actions", { exact: true }),
+  );
+  await page.keyboard.press("Escape");
+  await expect(
+    controls.getByLabel("Host control recovery actions", { exact: true }),
+  ).toBeFocused();
+  await activateByKeyboard(
+    page,
+    controls.getByLabel("Host control recovery actions", { exact: true }),
+  );
+  page.once("dialog", (dialog) => void dialog.accept());
   await activateByKeyboard(
     page,
     controls.getByRole("button", { name: "Redo timer", exact: true }),

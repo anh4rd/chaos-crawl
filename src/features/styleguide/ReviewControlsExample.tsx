@@ -6,6 +6,7 @@ import FormGrid from "../../components/ui/FormGrid";
 import FormLabel from "../../components/ui/FormLabel";
 import Note from "../../components/ui/Note";
 import Overline from "../../components/ui/Overline";
+import PanelHeading from "../../components/ui/PanelHeading";
 import StatTile from "../../components/ui/StatTile";
 import HostManagement from "../host-live/HostManagement";
 import { Example } from "./Example";
@@ -29,56 +30,65 @@ export default function ReviewControlsExample() {
     >
       <SessionPreview>
         <HostManagement>
-          <ContentPanel
-            as="div"
-            variant="review-controls"
-            aria-label="Local final review controls"
-          >
-            <Overline as="strong" variant="review">
-              LOCAL FINAL CONTROLS
-            </Overline>
-            <FormGrid variant="review">
-              <FormLabel variant="review">
-                Choose sample challenge
-                <select
-                  value={choice}
-                  disabled={busy || voting}
-                  onChange={(event) => setChoice(event.target.value)}
+          <ContentPanel variant="session">
+            <PanelHeading variant="session">
+              <h2>Final round</h2>
+            </PanelHeading>
+            <ContentPanel
+              as="div"
+              variant="review-controls"
+              aria-label="Local final review controls"
+            >
+              <Overline as="strong" variant="review">
+                LOCAL FINAL CONTROLS
+              </Overline>
+              <FormGrid variant="review">
+                <FormLabel variant="review">
+                  Choose sample challenge
+                  <select
+                    value={choice}
+                    disabled={busy || voting}
+                    onChange={(event) => setChoice(event.target.value)}
+                  >
+                    <option value="one">Team portrait</option>
+                    <option value="two">Secret toast</option>
+                  </select>
+                </FormLabel>
+                <StatTile
+                  variant="review"
+                  label="Players voted"
+                  value="1 / 2"
+                />
+                <Button
+                  type="button"
+                  variant="review-comic-primary"
+                  fullWidth={false}
+                  disabled={busy}
+                  onClick={() => setNotice("Sample results selected locally.")}
                 >
-                  <option value="one">Team portrait</option>
-                  <option value="two">Secret toast</option>
-                </select>
-              </FormLabel>
-              <StatTile variant="review" label="Players voted" value="1 / 2" />
-              <Button
-                type="button"
-                variant="review-comic-primary"
-                fullWidth={false}
-                disabled={busy}
-                onClick={() => setNotice("Sample results selected locally.")}
-              >
-                Show sample results
-              </Button>
-              <Button
-                type="button"
-                variant="review-comic"
-                fullWidth={false}
-                disabled={busy}
-                onClick={() =>
-                  setNotice("Sample vote reopen selected locally.")
-                }
-              >
-                Reopen sample vote
-              </Button>
-              <Button
-                type="button"
-                variant="review-comic"
-                fullWidth={false}
-                disabled
-              >
-                Unavailable sample action
-              </Button>
-            </FormGrid>
+                  Show sample results
+                </Button>
+                <Button
+                  type="button"
+                  variant="review-comic"
+                  fullWidth={false}
+                  disabled={busy}
+                  onClick={() =>
+                    setNotice("Sample vote reopen selected locally.")
+                  }
+                >
+                  Reopen sample vote
+                </Button>
+                <Button
+                  type="button"
+                  variant="review-comic"
+                  fullWidth={false}
+                  disabled
+                >
+                  Unavailable sample action
+                </Button>
+              </FormGrid>
+            </ContentPanel>
           </ContentPanel>
           <ContentPanel
             as="div"

@@ -406,6 +406,45 @@ export function useHostRoundTimer({
     setNotice("Round timer reset. Start it when you’re ready.");
   }
 
+  function setRoundTimerSeconds(seconds: number) {
+    if (
+      !session ||
+      session.status !== "live" ||
+      !roundTimerHydrated ||
+      hostBreakActive ||
+      !Number.isSafeInteger(seconds) ||
+      seconds < 1
+    )
+      return;
+    roundClockSecondsRef.current = seconds;
+    setRoundClockSeconds(seconds);
+    if (roundClockStorageKey) {
+      try {
+        writeRoundClockSnapshot(roundClockStorageKey, {
+          seconds,
+          running: roundClockRunning,
+          onBreak: false,
+          resumeRound: null,
+        });
+      } catch {
+        setError(
+          "The round timer changed, but this browser could not save it for recovery.",
+        );
+      }
+    }
+    void saveSharedTimer(
+      session.current_round_number,
+      seconds,
+      roundClockRunning,
+      false,
+    );
+    setNotice("Round timer updated.");
+  }
+
+  function addRoundTimerMinutes(minutes: number) {
+    setRoundTimerSeconds(roundClockSecondsRef.current + minutes * 60);
+  }
+
   async function saveSharedTimer(
     roundNumber: number,
     remainingSeconds: number,
@@ -490,6 +529,8 @@ export function useHostRoundTimer({
     skipTimerAndReview,
     restartRoundTimer,
     resetRoundTimer,
+    setRoundTimerSeconds,
+    addRoundTimerMinutes,
     saveSharedTimer,
   };
 }

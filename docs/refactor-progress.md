@@ -7,6 +7,43 @@ included.
 
 ## Delivered slices
 
+Host controls use a compact stage-based panel with local, keyboard-accessible
+recovery actions. Duration edits and added time use the existing clock and
+serialized shared timer writes; review, round transitions and breaks retain
+their existing workflows. There is no shared challenge-reveal phase or distinct
+skip-review command, so the panel does not simulate either. The timer reference
+demonstrates the supported stages with local state only.
+
+The host lobby now leads with invite, participation and roster screens. For
+team games, Next opens the host's separate team setup; solo games can start from
+the roster. Lobby steps remain local to the host's browser and do not yet move
+players between screens. Existing start validation still applies. The join
+information reference uses local data only.
+Host setup and player join/rejoin show step progress using the host hub track,
+except on the initial join-code screen; the player waiting screen is the final
+join step.
+The player lobby hides the profile header, navigation and tour until play starts;
+the game-name frame and join progress remain visible.
+Final is no longer a host or player navigation item. Host Control overrides
+contains final-round management; an open final still takes over the player view.
+Successful copy actions show a temporary check on the activated control instead
+of a success notice; clipboard failures retain manual-copy feedback.
+During host lobby setup the header omits score, rank and team, and the host tour
+is available after the session enters live play.
+Game artwork in the host lobby and shared session titlebar uses the supplied
+decorative mascot, overlapping the left edge of the artwork.
+The host join disclosure reveals the code, link, copy actions and QR code in a
+card beneath its show/hide button.
+Selecting a host profile photo immediately previews it in the lobby header;
+the saved player photo remains the source after the game starts.
+The host participation question and Play/Just host switch share a translucent
+purple card, separate from the profile photo upload. Play is the default and is
+joined before advancing; explicit choices are retained for this browser.
+Navigation captions use a 9px minimum, compact timer and comparable labels use
+11px, and other visible text uses at least 12px.
+Shared host/player status and recovery cards use the feature-banner surface and
+typography; the local status reference includes recovery on a session backdrop.
+
 | Slice                 | Changes                                                                                                                                                                                                          | Review focus                                                            |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
 | Guidance and gates    | Project-specific AGENTS.md; Sass, Stylelint, formatting gate and review-load command; pinned mocked backend for browser tests                                                                                    | Rules, dependency changes and migration boundaries                      |

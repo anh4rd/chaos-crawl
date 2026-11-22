@@ -57,7 +57,7 @@ export function hostTourSteps(status: SessionStatus): GuidedTourStep[] {
     {
       target: '[data-tour="host-sections"]',
       title: "The same game sections",
-      body: "Move between Game, Challenges, Scores and Final. Host keeps management tools separate from the shared player screens.",
+      body: "Move between Game, Challenges and Scores. Host keeps management tools separate from the shared player screens.",
       page: "game",
     },
     {
@@ -76,25 +76,25 @@ export function hostTourSteps(status: SessionStatus): GuidedTourStep[] {
       target: '[data-tour="host-side-review"]',
       title: "Side challenges",
       body: "Review side-challenge submissions here. Submissions receive 5 points automatically, and tied top submissions receive the configured challenge bonus.",
-      page: "host-controls",
+      page: "host-review",
     },
     {
       target: '[data-tour="host-controls-tab"]',
       title: "Host-only controls",
       body: "This tab contains tools players cannot access: start or finish the game, navigate rounds, manage teams, review submissions and schedule secret missions.",
-      page: "host-controls",
+      page: "host-overrides",
     },
     {
       target: '[data-tour="host-start-controls"]',
       title: "Start and manage the game",
       body: "Share the join code and QR, check who has joined, assign teams and start the game when everyone is ready. During play, use the round controls to move the game along.",
-      page: "host-controls",
+      page: "host-overrides",
     },
     {
       target: '[data-tour="host-review"]',
       title: "Review main challenges",
       body: "Open submitted photos or videos, approve or reject the work and assign main-challenge points here. Side-challenge points are handled separately after voting.",
-      page: "host-controls",
+      page: "host-review",
     },
     {
       target: '[data-tour="host-reward"]',
@@ -106,7 +106,7 @@ export function hostTourSteps(status: SessionStatus): GuidedTourStep[] {
       target: '[data-tour="host-final-round"]',
       title: "Run the final round",
       body: "Open side-challenge voting, cast the slideshow to a TV and vote alongside players from the submission list.",
-      page: "final-round",
+      page: "host-overrides",
     },
   ];
 }

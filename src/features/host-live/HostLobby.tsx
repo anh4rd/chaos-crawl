@@ -1,7 +1,7 @@
-import StepProgress from "../../components/ui/StepProgress";
+import JoinProgress from "../../components/ui/JoinProgress";
 import Button from "../../components/ui/Button";
 import type { Dispatch, SetStateAction } from "react";
-import { type FormEvent } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import Icon from "../../components/ui/Icon";
 import LobbyInviteStep from "./LobbyInviteStep";
 import LobbyParticipationStep from "./LobbyParticipationStep";
@@ -9,6 +9,8 @@ import LobbyReadyStep from "./LobbyReadyStep";
 import LobbyRosterStep from "./LobbyRosterStep";
 import LobbyTeamAssignmentStep from "./LobbyTeamAssignmentStep";
 import LobbyTeamNamesStep from "./LobbyTeamNamesStep";
+import LobbyGameHeading from "./LobbyGameHeading";
+import LobbyJoinDisclosure from "./LobbyJoinDisclosure";
 import type { GameSession, SessionPlayer, SessionTeam } from "./types";
 
 interface Props {
@@ -17,13 +19,18 @@ interface Props {
   session: GameSession;
   joinUrl: string;
   copyCode: () => Promise<void>;
+  copyLink: () => Promise<void>;
+  codeCopied: boolean;
+  linkCopied: boolean;
   players: SessionPlayer[];
   hostAvatarPreview: string;
   setHostAvatarFile: Dispatch<SetStateAction<File | null>>;
   setHostAvatarPreview: Dispatch<SetStateAction<string>>;
-  hostJoinChoice: boolean | null;
+  hostPlayerToken: string | null;
   busy: boolean;
   setHostParticipation: (participates: boolean) => Promise<boolean>;
+  ensureHostPlayerToken: () => Promise<string | null>;
+  saveHostAvatar: () => Promise<boolean>;
   hostPlayer: SessionPlayer | undefined;
   teams: SessionTeam[];
   teamById: Map<string, SessionTeam>;
@@ -50,13 +57,18 @@ export default function HostLobby({
   session,
   joinUrl,
   copyCode,
+  copyLink,
+  codeCopied,
+  linkCopied,
   players,
   hostAvatarPreview,
   setHostAvatarFile,
   setHostAvatarPreview,
-  hostJoinChoice,
+  hostPlayerToken,
   busy,
   setHostParticipation,
+  ensureHostPlayerToken,
+  saveHostAvatar,
   hostPlayer,
   teams,
   teamById,
@@ -77,20 +89,75 @@ export default function HostLobby({
   uploadTeamPhoto,
   startGame,
 }: Props) {
+  const [photoNeedsSaving, setPhotoNeedsSaving] = useState(false);
+  const choiceKey = `chaos-crawl-host-lobby-choice:${session.id}`;
+  const [participates, setParticipates] = useState(() => {
+    const saved = localStorage.getItem(choiceKey);
+    if (saved === "true" || saved === "false") return saved === "true";
+    return lobbyStep >= 3 ? session.host_participates : true;
+  });
+  const [advancing, setAdvancing] = useState(false);
+  const advanceLock = useRef(false);
+  const [choosing, setChoosing] = useState(false);
+  const choiceLock = useRef(false);
+  const totalSteps = session.teams_enabled || lobbyStep > 3 ? 6 : 3;
+
+  async function chooseParticipation(participates: boolean) {
+    if (choiceLock.current || advanceLock.current) return false;
+    choiceLock.current = true;
+    setChoosing(true);
+    try {
+      const saved = await setHostParticipation(participates);
+      if (saved) {
+        setParticipates(participates);
+        localStorage.setItem(choiceKey, String(participates));
+        if (participates) setPhotoNeedsSaving(false);
+      }
+      return saved;
+    } finally {
+      choiceLock.current = false;
+      setChoosing(false);
+    }
+  }
+
+  async function advanceFromParticipation() {
+    if (advanceLock.current || choiceLock.current) return;
+    advanceLock.current = true;
+    setAdvancing(true);
+    try {
+      if (participates) {
+        const needsRecovery =
+          !session.host_participates ||
+          !session.host_player_id ||
+          !hostPlayerToken;
+        if (!(await ensureHostPlayerToken())) return;
+        if (photoNeedsSaving && !needsRecovery && !(await saveHostAvatar()))
+          return;
+        setPhotoNeedsSaving(false);
+      } else if (session.host_participates) {
+        if (!(await setHostParticipation(false))) return;
+      }
+      localStorage.setItem(choiceKey, String(participates));
+      goToLobbyStep(3);
+    } finally {
+      advanceLock.current = false;
+      setAdvancing(false);
+    }
+  }
+
   return (
     <section
-      className="lobby-setup"
-      aria-label={`Game setup step ${lobbyStep} of 6`}
+      className={`lobby-setup${lobbyStep <= 3 ? " lobby-setup--join" : ""}${lobbyStep === 2 ? " lobby-setup--details" : ""}`}
+      aria-label={`Game setup step ${lobbyStep} of ${totalSteps}`}
     >
       <header className="lobby-setup__heading">
-        <span>STEP {lobbyStep} OF 6</span>
-        <StepProgress value={lobbyStep} total={6} />
+        {lobbyStep > 3 && <span>TEAM SETUP</span>}
         <h1>
           {
             (
               [
                 "Share the invite",
-                "Join your game",
+                "Enter your details",
                 "Players & teams",
                 "Choose your teams",
                 "Name your teams",
@@ -115,40 +182,67 @@ export default function HostLobby({
         </p>
       </header>
 
+      {lobbyStep <= 3 && (
+        <LobbyGameHeading
+          name={session.name}
+          photoUrl={gamePhotoUrl}
+          compact={lobbyStep !== 1}
+        />
+      )}
+      <JoinProgress step={lobbyStep} total={totalSteps} />
       {lobbyStep === 1 && (
         <LobbyInviteStep
-          gamePhotoUrl={gamePhotoUrl}
           session={session}
           joinUrl={joinUrl}
           copyCode={copyCode}
-          players={players}
+          copyLink={copyLink}
+          codeCopied={codeCopied}
+          linkCopied={linkCopied}
+        />
+      )}
+
+      {(lobbyStep === 2 || lobbyStep === 3) && (
+        <LobbyJoinDisclosure
+          code={session.join_code}
+          joinUrl={joinUrl}
+          copyCode={copyCode}
+          copyLink={copyLink}
+          codeCopied={codeCopied}
+          linkCopied={linkCopied}
         />
       )}
 
       {lobbyStep === 2 && (
         <LobbyParticipationStep
-          gamePhotoUrl={gamePhotoUrl}
-          session={session}
           hostAvatarPreview={hostAvatarPreview}
-          setHostAvatarFile={setHostAvatarFile}
+          setHostAvatarFile={(file) => {
+            setPhotoNeedsSaving(true);
+            setHostAvatarFile(file);
+          }}
           setHostAvatarPreview={setHostAvatarPreview}
-          hostJoinChoice={hostJoinChoice}
-          busy={busy}
-          setHostParticipation={setHostParticipation}
+          hostJoinChoice={participates}
+          busy={busy || advancing || choosing}
+          setHostParticipation={chooseParticipation}
           hostPlayer={hostPlayer}
         />
       )}
 
       {lobbyStep === 3 && (
-        <LobbyRosterStep
-          players={players}
-          session={session}
-          teams={teams}
-          hostPlayer={hostPlayer}
-          teamById={teamById}
-          busy={busy}
-          updatePlayersPerTeam={updatePlayersPerTeam}
-        />
+        <>
+          <LobbyRosterStep
+            players={players}
+            session={session}
+            hostPlayer={hostPlayer}
+            teamById={teamById}
+            busy={busy}
+            updatePlayersPerTeam={updatePlayersPerTeam}
+          />
+          <p className="lobby-setup__start-note">
+            {session.teams_enabled
+              ? "Continue once all players have joined."
+              : "Only start the game once all players have joined."}
+          </p>
+        </>
       )}
 
       {lobbyStep === 4 && (
@@ -200,25 +294,29 @@ export default function HostLobby({
       )}
 
       <footer className="lobby-setup__actions">
-        <Button
-          variant="lobby-back"
-          fullWidth={false}
-          type="button"
-          disabled={lobbyStep === 1}
-          onClick={() =>
-            goToLobbyStep((lobbyStep - 1) as 1 | 2 | 3 | 4 | 5 | 6)
-          }
-        >
-          <Icon name="arrow-left" className="icon--size-16" /> Back
-        </Button>
-        {lobbyStep < 6 ? (
+        {lobbyStep !== 1 && (
+          <Button
+            variant="lobby-back"
+            fullWidth={false}
+            type="button"
+            disabled={busy || advancing || choosing}
+            onClick={() =>
+              goToLobbyStep((lobbyStep - 1) as 1 | 2 | 3 | 4 | 5 | 6)
+            }
+          >
+            <Icon name="arrow-left" className="icon--size-16" /> Back
+          </Button>
+        )}
+        {lobbyStep < 6 && (lobbyStep !== 3 || session.teams_enabled) ? (
           <Button
             variant="lobby-next"
             fullWidth={false}
             type="button"
-            onClick={() =>
-              goToLobbyStep((lobbyStep + 1) as 1 | 2 | 3 | 4 | 5 | 6)
-            }
+            disabled={busy || advancing || choosing}
+            onClick={() => {
+              if (lobbyStep === 2) void advanceFromParticipation();
+              else goToLobbyStep((lobbyStep + 1) as 1 | 2 | 3 | 4 | 5 | 6);
+            }}
           >
             Next <Icon name="arrow-right" className="icon--size-17" />
           </Button>

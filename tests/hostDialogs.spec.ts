@@ -115,6 +115,10 @@ test("break timer editor contains keyboard focus and preserves the save contract
   page,
 }) => {
   const backend = await openHost(page, { onBreak: true });
+  await activateByKeyboard(
+    page,
+    page.getByLabel("Host control recovery actions"),
+  );
   const trigger = page.getByRole("button", {
     name: "Edit break timer",
     exact: true,
@@ -249,6 +253,10 @@ test("break save remains modal and cannot be dismissed while its write is pendin
     await route.fallback();
   });
   try {
+    await activateByKeyboard(
+      page,
+      page.getByLabel("Host control recovery actions"),
+    );
     const trigger = page.getByRole("button", {
       name: "Edit break timer",
       exact: true,
@@ -389,6 +397,11 @@ for (const editor of ["break", "challenge"] as const) {
     page,
   }) => {
     const backend = await openHost(page, { onBreak: true });
+    if (editor === "break")
+      await activateByKeyboard(
+        page,
+        page.getByLabel("Host control recovery actions"),
+      );
     const trigger = page.getByRole("button", {
       name: editor === "break" ? "Edit break timer" : "Edit next challenge",
       exact: true,
@@ -589,9 +602,9 @@ test("shared session panel reference selects rounds and keeps invitation actions
   ).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(
-    page.getByRole("status").filter({
-      hasText: "Sample join code selected locally; clipboard unchanged.",
-    }),
+    page
+      .getByRole("button", { name: "Join code copied", exact: true })
+      .locator(".lucide-check"),
   ).toBeVisible();
   const link = page.getByRole("link", {
     name: "Open join screen",

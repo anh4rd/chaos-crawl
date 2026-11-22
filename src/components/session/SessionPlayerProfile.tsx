@@ -10,6 +10,7 @@ export function SessionPlayerProfile({
   score,
   rank,
   badge,
+  showScore = true,
 }: SessionProfile & { viewerRole: SessionRole }) {
   return (
     <header
@@ -31,16 +32,18 @@ export function SessionPlayerProfile({
           {badge ? ` · ${badge}` : ""}
         </p>
       </div>
-      <div className="session-profile__score">
-        <strong>
-          <Icon name="star" className="icon--size-18" aria-hidden="true" />
-          {score}
-        </strong>
-        <span>
-          <Icon name="trophy" className="icon--size-17" aria-hidden="true" />#
-          {rank ?? "—"}
-        </span>
-      </div>
+      {showScore && (
+        <div className="session-profile__score">
+          <strong>
+            <Icon name="star" className="icon--size-18" aria-hidden="true" />
+            {score}
+          </strong>
+          <span>
+            <Icon name="trophy" className="icon--size-17" aria-hidden="true" />#
+            {rank ?? "—"}
+          </span>
+        </div>
+      )}
       {viewerRole === "host" && (
         <Link className="session-profile__hub" to="/host">
           Host Hub ↗

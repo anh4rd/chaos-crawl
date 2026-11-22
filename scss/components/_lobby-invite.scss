@@ -5,9 +5,13 @@
 @use "../variables/effects";
 
 .lobby-invite {
-  &__count {
-    color: colors.$purple;
-    font-size: fonts.$size-caption;
+  display: grid;
+  gap: layout.$pixel-unit * 3;
+
+  p {
+    margin: 0;
+    color: colors.$white;
+    font-size: fonts.$size-body;
     text-align: center;
   }
 }

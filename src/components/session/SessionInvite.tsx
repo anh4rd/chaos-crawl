@@ -10,6 +10,7 @@ import Icon from "../ui/Icon";
 export default function SessionInvite({
   joinUrl,
   onCopy,
+  copied = false,
   playerCount,
   playerLimit,
   teamsEnabled,
@@ -17,6 +18,7 @@ export default function SessionInvite({
 }: {
   joinUrl: string;
   onCopy: () => void | Promise<void>;
+  copied?: boolean;
   playerCount: number;
   playerLimit: number;
   teamsEnabled: boolean;
@@ -40,8 +42,13 @@ export default function SessionInvite({
           variant="session-secondary"
           fullWidth={false}
           onClick={() => void onCopy()}
+          aria-label={copied ? "Join code copied" : "Copy join code"}
         >
-          <Icon name="clipboard" className="icon--size-16" /> Copy join code
+          <Icon
+            name={copied ? "check" : "clipboard"}
+            className="icon--size-16"
+          />{" "}
+          Copy join code
         </Button>
         <ButtonLink
           variant="session-ghost"

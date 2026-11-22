@@ -1,0 +1,11 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.join-progress {
+  display: grid;
+  gap: layout.$pixel-unit * 1.5;
+  color: colors.$white;
+  font-size: fonts.$size-small;
+  font-weight: fonts.$weight-extra-bold;
+}

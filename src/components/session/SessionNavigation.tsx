@@ -8,7 +8,6 @@ type Navigation =
 export default function SessionNavigation({
   active,
   elementRef,
-  showFinal = false,
   showMemories = false,
   memoriesActive = false,
   memoriesHref,
@@ -20,7 +19,6 @@ export default function SessionNavigation({
 }: Navigation & {
   active: SessionSection | "recap";
   elementRef?: Ref<HTMLElement>;
-  showFinal?: boolean;
   showMemories?: boolean;
   memoriesActive?: boolean;
   memoriesHref?: string;
@@ -66,14 +64,6 @@ export default function SessionNavigation({
           icon="shield"
           active={active === "host-controls"}
           {...target("host-controls")}
-        />
-      )}
-      {showFinal && (
-        <SessionNavItem
-          label="Final"
-          icon="heart"
-          active={active === "final"}
-          {...target("final")}
         />
       )}
       {showMemories && memoriesHref && (

@@ -1,3 +1,5 @@
+@use "fonts";
+
 $spacing-unit: 0.25rem;
 $radius-lg: 1rem;
 $radius-pill: calc(infinity * 1px);
@@ -35,7 +37,7 @@ $session-media-height: 220px;
 $session-border-width: 2px;
 $session-header-size: 14px;
 $session-copy-size: 14px;
-$session-label-size: 11px;
+$session-label-size: fonts.$size-compact-label;
 $session-small-size: 12px;
 $session-row-height: 46px;
 $session-row-width: 78px;
@@ -95,7 +97,7 @@ $planner-narrow-breakpoint: 393px;
 
 $session-compact-breakpoint: 640px;
 
-$timer-readout-min-width: 75px;
+$timer-readout-min-width: 100px;
 
 $host-overlay-blur: 5px;
 

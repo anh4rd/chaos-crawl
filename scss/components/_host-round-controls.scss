@@ -3,38 +3,154 @@
 @use "../variables/layout";
 
 .host-round-controls {
-  &__stage {
-    display: grid;
+  position: relative;
+  display: grid;
+  gap: layout.$pixel-unit * 2;
+  min-width: 0;
+  padding: layout.$pixel-unit * 2.5;
+  border: layout.$pixel-unit * 0.75 solid colors.$black;
+  border-radius: layout.$pixel-unit * 4.5;
+  background: colors.$banner-rays, colors.$purple-dark;
+  box-shadow: layout.$pixel-unit layout.$pixel-unit 0 colors.$black;
+
+  &__top {
+    display: flex;
+    align-items: center;
     gap: layout.$pixel-unit * 2;
   }
-  &__review {
-    width: 100%;
-    min-height: layout.$pixel-unit * 10.75;
+  &__top h2 {
+    margin: 0;
+    color: colors.$pink;
+    font-family: fonts.$family-display;
+    font-size: fonts.$size-body;
+    line-height: 1;
   }
-  &__actions {
+  &__round {
+    padding: layout.$pixel-unit * 0.5 layout.$pixel-unit * 2;
+    border: layout.$session-border-width solid colors.$black;
+    border-radius: layout.$badge-radius;
+    color: colors.$black;
+    background: colors.$lime;
+    font-weight: fonts.$weight-heavy;
+    line-height: 1;
+  }
+  &__menu {
+    position: relative;
+    z-index: 1;
+    margin-left: auto;
+  }
+  &__menu summary {
     display: grid;
-    gap: layout.$pixel-unit * 1.75;
-
-    &--progress {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      .btn--control {
-        padding-inline: layout.$pixel-unit * 1.75;
-      }
-    }
+    width: layout.$control-height;
+    height: layout.$control-height;
+    place-items: center;
+    border: layout.$session-border-width solid colors.$black;
+    border-radius: layout.$pixel-unit * 2;
+    color: colors.$black;
+    background: colors.$white;
+    cursor: pointer;
+    list-style: none;
   }
-  &__next {
-    grid-column: 1 / -1;
+  &__menu summary::-webkit-details-marker {
+    display: none;
   }
-  &__break-heading {
+  &__menu summary:focus-visible {
+    outline: layout.$focus-ring-width solid colors.$lime;
+    outline-offset: layout.$pixel-unit * 0.5;
+  }
+  &__menu-content {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    display: grid;
+    min-width: layout.$pixel-unit * 45;
+    gap: layout.$pixel-unit;
+    padding: layout.$pixel-unit * 2;
+    border: layout.$session-border-width solid colors.$black;
+    border-radius: layout.$pixel-unit * 2;
+    color: colors.$black;
+    background: colors.$white;
+    box-shadow: layout.$pixel-unit layout.$pixel-unit 0 colors.$black;
+    font-size: fonts.$size-small;
+  }
+  &__menu-content .btn--flow {
+    min-height: layout.$control-height;
+  }
+  &__main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: layout.$pixel-unit * 2;
+  }
+  &__title {
+    display: flex;
+    min-width: min(100%, layout.$pixel-unit * 45);
+    flex: 1 1 layout.$pixel-unit * 50;
+    align-items: center;
+    gap: layout.$pixel-unit * 2;
+  }
+  &__stage-icon {
+    width: layout.$pixel-unit * 8;
+    height: layout.$pixel-unit * 8;
+    flex: none;
+    color: colors.$lime;
+    stroke-width: 3;
+  }
+  &__title h3 {
     margin: 0;
     color: colors.$white;
     font-family: fonts.$family-display;
-    font-size: fonts.$size-brand-mobile;
-    font-style: italic;
-  }
-  &__pause-symbol {
-    font-size: fonts.$size-pause-symbol;
-    font-weight: fonts.$weight-heavy;
+    font-size: fonts.$size-heading;
     line-height: 1;
+    text-shadow: layout.$pixel-unit * 0.5 layout.$pixel-unit * 0.5 0
+      colors.$black;
+  }
+  &__title p {
+    margin: layout.$pixel-unit 0 0;
+    color: colors.$white;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-bold;
+    line-height: 1.25;
+  }
+  &__primary {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 layout.$pixel-unit * 60;
+    align-items: stretch;
+    gap: layout.$pixel-unit * 2;
+  }
+  &__primary .timer-readout {
+    min-width: layout.$pixel-unit * 25;
+    padding: layout.$pixel-unit layout.$pixel-unit * 2;
+    border: layout.$pixel-unit * 0.75 solid colors.$black;
+  }
+  &__primary .timer-readout__value {
+    font-size: fonts.$size-poster-heading;
+  }
+  &__primary .btn--control {
+    min-height: layout.$pixel-unit * 13;
+    flex: 1 1 auto;
+    border: layout.$pixel-unit * 0.75 solid colors.$black;
+    box-shadow: 0 layout.$pixel-unit * 0.75 0 colors.$black;
+    font-family: fonts.$family-display;
+    font-size: fonts.$size-body;
+    line-height: 1.1;
+  }
+  &__secondary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: layout.$pixel-unit * 1.5;
+  }
+  &__secondary .btn--flow {
+    min-height: layout.$control-height;
+    flex: 1 1 auto;
+    border: layout.$session-border-width solid colors.$black;
+    border-radius: layout.$badge-radius;
+    box-shadow: 0 layout.$pixel-unit * 0.5 0 colors.$black;
+    font-size: fonts.$size-small;
+  }
+  &__secondary .btn--flow:focus-visible {
+    outline: layout.$focus-ring-width solid colors.$lime;
+    outline-offset: layout.$pixel-unit * 0.5;
   }
 }

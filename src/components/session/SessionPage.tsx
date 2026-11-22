@@ -8,6 +8,7 @@ export default function SessionPage({
   viewerRole,
   profile,
   game,
+  afterGame,
   contentTourTarget,
   toolbar,
   navigation,
@@ -19,6 +20,7 @@ export default function SessionPage({
   viewerRole: SessionRole;
   profile?: SessionProfile | null;
   game?: SessionGame | null;
+  afterGame?: ReactNode;
   contentTourTarget?: string;
   toolbar?: ReactNode;
   navigation?: ReactNode;
@@ -34,6 +36,7 @@ export default function SessionPage({
       {profile && <SessionPlayerProfile viewerRole={viewerRole} {...profile} />}
       <div className="session-page__content" data-tour={contentTourTarget}>
         {game && <SessionGameTitlebar {...game} />}
+        {afterGame}
         {toolbar && <div className="session-page__toolbar">{toolbar}</div>}
         {feedback}
         {children}

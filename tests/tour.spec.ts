@@ -9,14 +9,13 @@ async function expectTarget(page: Page, target: string) {
   await expect(highlighted).toBeInViewport();
 }
 
-for (const status of ["live", "lobby", "completed"] as const) {
+for (const status of ["live", "completed"] as const) {
   test(`host ${status} tour walks every visible target by keyboard and restores focus`, async ({
     page,
   }) => {
     const backend = await installSessionBackend(page, {
       host: true,
       savedPlayer: false,
-      lobby: status === "lobby",
     });
     backend.session.status = status;
     await page.goto(`#/host/live/${sessionId}`);
@@ -46,29 +45,18 @@ for (const status of ["live", "lobby", "completed"] as const) {
     ).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(close).toBeFocused();
-    const targets =
-      status === "lobby"
-        ? [
-            "host-overview",
-            "host-lobby-invite",
-            "host-lobby-participation",
-            "host-lobby-roster",
-            "host-lobby-teams",
-            "host-lobby-team-names",
-            "host-lobby-ready",
-          ]
-        : [
-            "host-overview",
-            "host-sections",
-            "host-player-game",
-            "host-leaderboard",
-            "host-side-review",
-            "host-controls-tab",
-            "host-start-controls",
-            "host-review",
-            "host-reward",
-            "host-final-round",
-          ];
+    const targets = [
+      "host-overview",
+      "host-sections",
+      "host-player-game",
+      "host-leaderboard",
+      "host-side-review",
+      "host-controls-tab",
+      "host-start-controls",
+      "host-review",
+      "host-reward",
+      "host-final-round",
+    ];
     for (let index = 0; index < targets.length; index += 1) {
       await expectTarget(page, `[data-tour="${targets[index]}"]`);
       if (targets[index] === "host-sections")
@@ -155,9 +143,7 @@ test("public demo tour opens as a keyboard modal and releases its background on 
   backend.verify();
 });
 
-test("a lobby tour closes safely when the session moves into live play", async ({
-  page,
-}) => {
+test("the host tour becomes available after the lobby", async ({ page }) => {
   const backend = await installSessionBackend(page, {
     host: true,
     savedPlayer: false,
@@ -165,12 +151,18 @@ test("a lobby tour closes safely when the session moves into live play", async (
   });
   await page.goto(`#/host/live/${sessionId}`);
   const trigger = page.getByRole("button", { name: /Take the host tour/ });
+  await expect(
+    page.getByRole("heading", { name: "Share the invite" }),
+  ).toBeVisible();
+  await expect(trigger).toHaveCount(0);
+  backend.session.status = "live";
+  await expect(trigger).toBeVisible({ timeout: 10_000 });
   await activateByKeyboard(page, trigger);
   const dialog = page.getByRole("dialog", { name: /HOST TOUR/ });
   await expect(dialog).toBeVisible();
   await expectTarget(page, '[data-tour="host-overview"]');
-  backend.session.status = "live";
-  await expect(dialog).toHaveCount(0, { timeout: 10_000 });
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
   await expect(trigger).toBeFocused();
   await expect(page.locator(".tour-highlight")).toHaveCount(0);
   backend.verify();

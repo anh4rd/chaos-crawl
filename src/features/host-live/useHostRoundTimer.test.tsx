@@ -175,6 +175,61 @@ it("keeps pause, reset-paused and restart-running as distinct operations", async
   expect(result.current.roundClockSeconds).toBe(300);
   expect(result.current.roundClockRunning).toBe(true);
 });
+it("edits and adds time using the existing clock and shared publication queue", async () => {
+  const { result } = renderHook(() => useHostRoundTimer(options()));
+  await act(async () => {});
+  act(() => result.current.setRoundTimerSeconds(120));
+  expect(result.current.roundClockSeconds).toBe(120);
+  expect(result.current.roundClockRunning).toBe(false);
+  act(() => result.current.toggleTimer());
+  act(() => {
+    result.current.addRoundTimerMinutes(1);
+    result.current.addRoundTimerMinutes(5);
+  });
+  expect(result.current.roundClockSeconds).toBe(480);
+  expect(result.current.roundClockRunning).toBe(true);
+  await act(async () => {});
+  expect(write.mock.calls.at(-1)?.[0]).toMatchObject({
+    remaining_seconds: 480,
+    is_running: true,
+    is_on_break: false,
+  });
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(1000);
+  });
+  expect(result.current.roundClockSeconds).toBe(479);
+  act(() => result.current.toggleTimer());
+  expect(result.current.roundClockSeconds).toBe(479);
+  expect(result.current.roundClockRunning).toBe(false);
+});
+it("does not apply round timer adjustments during a break", async () => {
+  const { result } = renderHook(() => useHostRoundTimer(options()));
+  await act(async () => {});
+  await act(async () => result.current.startScheduledBreak(2, 2));
+  act(() => result.current.addRoundTimerMinutes(5));
+  expect(result.current.roundClockSeconds).toBe(120);
+  expect(result.current.hostBreakActive).toBe(true);
+});
+it("reports storage failure while still publishing a changed timer", async () => {
+  const props = options();
+  const { result } = renderHook(() => useHostRoundTimer(props));
+  await act(async () => {});
+  const storage = vi
+    .spyOn(Storage.prototype, "setItem")
+    .mockImplementation(() => {
+      throw new Error("storage unavailable");
+    });
+  act(() => result.current.addRoundTimerMinutes(1));
+  await act(async () => {});
+  expect(props.setError).toHaveBeenCalledWith(
+    "The round timer changed, but this browser could not save it for recovery.",
+  );
+  expect(write.mock.calls.at(-1)?.[0]).toMatchObject({
+    remaining_seconds: 360,
+    is_running: false,
+  });
+  storage.mockRestore();
+});
 it("writes a scheduled break locally before the shared publish settles", async () => {
   const { result } = renderHook(() => useHostRoundTimer(options()));
   await act(async () => {});

@@ -32,6 +32,8 @@ test("join code filters input, preserves details across Back and sends nothing b
 }) => {
   const backend = await installSessionBackend(page, { savedPlayer: false });
   await page.goto("#/join?code=12x3456789");
+  const progress = page.getByRole("progressbar", { name: "Join progress" });
+  await expect(progress).toHaveCount(0);
   const code = page.getByRole("textbox", { name: "Enter six digit game code" });
   await expect(code).toHaveValue("123456");
   await tabTo(page, code);
@@ -46,6 +48,8 @@ test("join code filters input, preserves details across Back and sends nothing b
     page,
     page.getByRole("button", { name: "Next", exact: true }),
   );
+  await expect(progress).toHaveAttribute("aria-valuetext", "Step 2 of 3");
+  await expect(page.getByText("Join progress", { exact: true })).toBeVisible();
   await typeField(page, "Your name?", " Pat ");
   await typeField(page, "Your phone number?", "1234567");
   await expect(
@@ -55,11 +59,13 @@ test("join code filters input, preserves details across Back and sends nothing b
     page,
     page.getByRole("button", { name: "← Back", exact: true }),
   );
+  await expect(progress).toHaveCount(0);
   await expect(code).toHaveValue("123456");
   await activateByKeyboard(
     page,
     page.getByRole("button", { name: "Next", exact: true }),
   );
+  await expect(progress).toHaveAttribute("aria-valuetext", "Step 2 of 3");
   await expect(page.getByLabel("Your name?", { exact: true })).toHaveValue(
     " Pat ",
   );
@@ -71,6 +77,70 @@ test("join code filters input, preserves details across Back and sends nothing b
     page.getByLabel("Your phone number?", { exact: true }),
   ).toHaveValue("1234567");
   expect(joinRequests(backend)).toHaveLength(0);
+  backend.verify();
+});
+
+test("the player waiting screen completes join progress and hides it when play starts", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    savedPlayer: false,
+    lobby: true,
+  });
+  await enterDetails(page);
+  await page.getByLabel("Your name?", { exact: true }).fill("Pat");
+  await page
+    .getByLabel("Your phone number?", { exact: true })
+    .fill("0712345678");
+  await page.getByRole("button", { name: "Join game", exact: true }).click();
+  const progress = page.getByRole("progressbar", { name: "Join progress" });
+  await expect(progress).toHaveAttribute("aria-valuetext", "Step 3 of 3");
+  await expect(page.getByText("Join progress", { exact: true })).toBeVisible();
+  await expect(
+    page.locator(".session-titlebar + .join-progress"),
+  ).toBeVisible();
+  await expect(page.locator(".session-profile")).toHaveCount(0);
+  await expect(
+    page.getByRole("navigation", { name: "Game pages" }),
+  ).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Take a tour/ })).toHaveCount(
+    0,
+  );
+  await expect(
+    page.getByRole("button", { name: "Copy game code" }),
+  ).toBeVisible();
+  backend.session.status = "live";
+  await expect(progress).toHaveCount(0, { timeout: 10_000 });
+  await expect(page.locator(".session-profile")).toBeVisible();
+  await expect(
+    page.getByRole("navigation", { name: "Game pages" }),
+  ).toBeVisible();
+  const tour = page.getByRole("button", { name: /Take a tour/ });
+  await expect(tour).toBeVisible();
+  await tour.click();
+  const dialog = page.getByRole("dialog", { name: /PLAYER TOUR/ });
+  await expect(dialog).toBeVisible();
+  backend.session.status = "lobby";
+  await expect(dialog).toHaveCount(0, { timeout: 10_000 });
+  await expect(page.locator(".session-profile")).toHaveCount(0);
+  await expect(
+    page.getByRole("navigation", { name: "Game pages" }),
+  ).toHaveCount(0);
+  backend.session.status = "live";
+  await expect(tour).toBeVisible({ timeout: 10_000 });
+  await expect(dialog).toHaveCount(0);
+  backend.verify();
+});
+
+test("embedded host participation does not render player join progress", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { lobby: true });
+  await page.goto("#/play/123456/game?hostEmbed=1");
+  await expect(page.getByText("Waiting for the host…")).toBeVisible();
+  await expect(
+    page.getByRole("progressbar", { name: "Join progress" }),
+  ).toHaveCount(0);
   backend.verify();
 });
 
@@ -119,7 +189,16 @@ test("rejoin uses the original mobile number and no name, preserving the resumed
     player_name: "Pat",
     resumed: true,
   };
-  await enterDetails(page, true);
+  await page.goto("#/join?code=123456&returning=1");
+  const progress = page.getByRole("progressbar", { name: "Join progress" });
+  await expect(progress).toHaveAttribute("aria-valuetext", "Step 1 of 3");
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Next", exact: true }),
+  );
+  await expect(
+    page.getByRole("progressbar", { name: "Join progress" }),
+  ).toHaveAttribute("aria-valuetext", "Step 2 of 3");
   await expect(page.getByLabel("Your name?", { exact: true })).toHaveCount(0);
   await typeField(page, "Your phone number?", " 0712345678 ");
   await activateByKeyboard(
@@ -334,6 +413,8 @@ test("local join reference advances by keyboard, exposes pending controls and ne
     page,
     example.locator("summary", { hasText: "Open local join form" }),
   );
+  const progress = example.getByRole("progressbar", { name: "Join progress" });
+  await expect(progress).toHaveCount(0);
   await tabTo(
     page,
     example.getByRole("textbox", { name: "Enter six digit game code" }),
@@ -343,6 +424,7 @@ test("local join reference advances by keyboard, exposes pending controls and ne
     page,
     example.getByRole("button", { name: "Next", exact: true }),
   );
+  await expect(progress).toHaveAttribute("aria-valuetext", "Step 2 of 3");
   await tabTo(page, example.getByLabel("Your name?", { exact: true }));
   await page.keyboard.type("Local Pat");
   await tabTo(page, example.getByLabel("Your phone number?", { exact: true }));

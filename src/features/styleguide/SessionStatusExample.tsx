@@ -20,7 +20,7 @@ export default function SessionStatusExample() {
   return (
     <Example
       title="Shared participant status and recovery"
-      source="src/components/session/SyncStatus.tsx + src/components/ui/LiveIndicator.tsx"
+      source="src/components/session/SessionState.tsx + SyncStatus.tsx + src/components/ui/LiveIndicator.tsx"
       code={
         "<SyncStatus>Live updates enabled <span>· synced 12:34:56</span></SyncStatus>"
       }
@@ -49,7 +49,7 @@ export default function SessionStatusExample() {
         />{" "}
         Sample session spinner
       </label>
-      <SessionPreview>
+      <SessionPreview variant="inverse">
         <SessionState
           title={
             completed ? "Game over. Chaos achieved." : "Waiting for the host…"
@@ -72,6 +72,23 @@ export default function SessionStatusExample() {
               4 players in teams · 12 player limit
             </Note>
           )}
+        </SessionState>
+        <SessionState
+          title="Rejoin the chaos"
+          action={
+            <ButtonLink
+              to="/styleguide"
+              fullWidth={false}
+              onClick={(event) => {
+                event.preventDefault();
+                setNotice("Sample rejoin action stays local.");
+              }}
+            >
+              Rejoin game
+            </ButtonLink>
+          }
+        >
+          <p>Enter the game code and the mobile number you used to join.</p>
         </SessionState>
         <ContentPanel
           variant="private-feed"

@@ -1,4 +1,5 @@
 import Icon from "../../components/ui/Icon";
+import { useClipboard } from "../../components/ui/useClipboard";
 
 import { useState, type ReactNode } from "react";
 
@@ -16,13 +17,14 @@ export function Example({
   className?: string;
 }) {
   const [copyStatus, setCopyStatus] = useState("");
+  const { copied, copy: copyText } = useClipboard({
+    text: code,
+    resetAfterMs: 1800,
+  });
   async function copy() {
-    try {
-      await navigator.clipboard.writeText(code);
-      setCopyStatus("Copied");
-    } catch {
-      setCopyStatus("Select the code to copy manually.");
-    }
+    const result = await copyText();
+    if (result === "copied") setCopyStatus("");
+    if (result === "failed") setCopyStatus("Select the code to copy manually.");
   }
   return (
     <article className={`component-example ${className}`.trim()}>
@@ -38,8 +40,10 @@ export function Example({
             className="component-example__copy-button"
             type="button"
             onClick={() => void copy()}
+            aria-label={copied ? "Code copied" : "Copy code"}
           >
-            <Icon name="copy" className="icon--size-14" /> Copy code
+            <Icon name={copied ? "check" : "copy"} className="icon--size-14" />{" "}
+            Copy code
           </button>
           <span role="status">{copyStatus}</span>
         </div>

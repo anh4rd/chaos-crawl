@@ -23,6 +23,7 @@ import type {
 } from "../../components/session/types";
 import ControlRow from "../../components/ui/ControlRow";
 import DemoNotice from "../../components/ui/DemoNotice";
+import JoinProgress from "../../components/ui/JoinProgress";
 
 const entries = [
   { id: "alex", name: "Alex", score: 120, teamName: "Team Chaos" },
@@ -73,6 +74,7 @@ export default function SessionExamples() {
   const [sideChallengePoints, setSideChallengePoints] = useState(5);
   const [sideChallengeDuration, setSideChallengeDuration] = useState(10);
   const closed = phase === "results";
+  const playerLobby = viewerRole === "player" && phase === "lobby";
   return (
     <>
       <DemoNotice
@@ -131,12 +133,21 @@ export default function SessionExamples() {
         as="section"
         contentTourTarget="example-session-content"
         viewerRole={viewerRole}
-        profile={{ name: "Alex", subtitle: "Team Chaos", score: 120, rank: 1 }}
+        profile={
+          playerLobby
+            ? null
+            : { name: "Alex", subtitle: "Team Chaos", score: 120, rank: 1 }
+        }
         game={{
           name: "Friday Night Chaos",
           code: "123456",
           onCopy: () => setNotice("Demo code: 123456"),
         }}
+        afterGame={
+          viewerRole === "player" && section === "game" && phase === "lobby" ? (
+            <JoinProgress step={3} total={3} />
+          ) : null
+        }
         feedback={
           notice && (
             <SessionFeedback
@@ -147,14 +158,15 @@ export default function SessionExamples() {
           )
         }
         navigation={
-          <SessionNavigation
-            elementRef={navigationRef}
-            active={section}
-            showHost={viewerRole === "host"}
-            showFinal
-            onSelect={setSection}
-            challengeCount={1}
-          />
+          !playerLobby && (
+            <SessionNavigation
+              elementRef={navigationRef}
+              active={section}
+              showHost={viewerRole === "host"}
+              onSelect={setSection}
+              challengeCount={1}
+            />
+          )
         }
       >
         {section === "host-controls" ? (

@@ -26,14 +26,25 @@ for (const kind of ["final", "secret"] as const) {
         points_awarded: 25,
       };
       await page.goto("#/host/live/test-session");
-      await page
-        .getByRole("button", {
-          name: kind === "final" ? "Final" : "Host",
-          exact: true,
-        })
-        .click();
+      await expect(
+        page
+          .getByRole("navigation", { name: "Game pages" })
+          .getByRole("button", {
+            name: "Final",
+            exact: true,
+          }),
+      ).toHaveCount(0);
+      await page.getByRole("button", { name: "Host", exact: true }).click();
       if (kind === "secret")
         await page.getByRole("tab", { name: "Review", exact: true }).click();
+      else {
+        await expect(
+          page.getByRole("tab", { name: "Control overrides" }),
+        ).toHaveAttribute("aria-selected", "true");
+        await expect(
+          page.getByRole("heading", { name: "Final round", exact: true }),
+        ).toBeVisible();
+      }
       const picker = page.getByRole("combobox", {
         name:
           kind === "final"
@@ -201,12 +212,9 @@ for (const kind of ["final", "secret"] as const) {
         : "cc_host_set_secret_review_evidence";
     backend.responses[rpc] = null;
     await page.goto("#/host/live/test-session");
-    await page
-      .getByRole("button", {
-        name: kind === "final" ? "Final" : "Host",
-        exact: true,
-      })
-      .click();
+    await page.getByRole("button", { name: "Host", exact: true }).click();
+    if (kind === "secret")
+      await page.getByRole("tab", { name: "Review", exact: true }).click();
     const controls =
       kind === "final"
         ? page.locator('[data-tour="host-final-round"]')

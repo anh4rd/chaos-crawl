@@ -111,6 +111,119 @@ test("corrupted persisted break cannot publish or navigate with a nonnumeric rou
   backend.verify();
 });
 
+test("host edits and extends the shared clock through keyboard controls", async ({
+  page,
+}) => {
+  await freezeClock(page);
+  const backend = await installSessionBackend(page, { host: true });
+  seedHostRoundControls(backend);
+  await saveClock(page, {
+    seconds: 300,
+    running: false,
+    onBreak: false,
+    resumeRound: null,
+  });
+  const controls = await openHost(page);
+  await activateByKeyboard(
+    page,
+    controls.getByRole("button", { name: "Edit Time" }),
+  );
+  const dialog = page.getByRole("dialog", { name: "Edit round timer" });
+  await dialog.getByLabel("Minutes").fill("2");
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Save timer" }),
+  );
+  await expect(controls.getByText("02:00", { exact: true })).toBeVisible();
+  await activateByKeyboard(
+    page,
+    controls.getByRole("button", { name: "Start Timer" }),
+  );
+  await activateByKeyboard(
+    page,
+    controls.getByRole("button", { name: "+1 Min" }),
+  );
+  await activateByKeyboard(
+    page,
+    controls.getByRole("button", { name: "+5 Min" }),
+  );
+  await expect(controls.getByText("08:00", { exact: true })).toBeVisible();
+  await expect
+    .poll(
+      () =>
+        backend.requests
+          .filter(
+            (r) => r.name === "cc_game_session_timers" && r.method === "POST",
+          )
+          .at(-1)?.body,
+    )
+    .toMatchObject({
+      remaining_seconds: 480,
+      is_running: true,
+      is_on_break: false,
+    });
+  await activateByKeyboard(
+    page,
+    controls.getByRole("button", { name: "Pause" }),
+  );
+  await expect(controls.getByText("08:00", { exact: true })).toBeVisible();
+  await activateByKeyboard(
+    page,
+    controls.getByRole("button", { name: "Start Timer" }),
+  );
+  await activateByKeyboard(
+    page,
+    controls.getByRole("button", { name: "End Early" }),
+  );
+  await expect(page.getByRole("dialog")).toBeVisible();
+  expect(
+    backend.requests.filter(
+      (r) => r.name.includes("award") && r.method !== "GET",
+    ),
+  ).toEqual([]);
+  backend.verify();
+});
+
+test("local host control stages remain usable without horizontal overflow", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto("#/styleguide");
+  const stage = page.getByLabel("Preview host control stage");
+  const controls = page.getByRole("region", {
+    name: "Host controls",
+    exact: true,
+  });
+  for (const [value, heading] of [
+    ["ready", "START TIMER"],
+    ["running", "ROUND IN PROGRESS"],
+    ["expired", "TIME'S UP – REVIEW"],
+    ["reviewing", "REVIEW IN PROGRESS"],
+    ["awarded", "ROUND COMPLETE"],
+    ["break", "BREAK IN PROGRESS"],
+    ["complete", "GAME COMPLETE"],
+  ]) {
+    await stage.selectOption(value);
+    await expect(
+      controls.getByRole("heading", { name: heading }),
+    ).toBeVisible();
+    const sizes = await controls.evaluate((element) => {
+      const box = element.getBoundingClientRect();
+      return {
+        width: box.width,
+        scrollWidth: element.scrollWidth,
+        buttons: [...element.querySelectorAll("button")]
+          .filter((button) => button.getBoundingClientRect().height > 0)
+          .map((button) => button.getBoundingClientRect().height),
+      };
+    });
+    expect(sizes.scrollWidth).toBeLessThanOrEqual(Math.ceil(sizes.width));
+    expect(sizes.buttons.every((height) => height >= 44)).toBe(true);
+  }
+  backend.verify();
+});
+
 test("fractional saved lobby step recovers to usable invite content", async ({
   page,
 }) => {
@@ -126,7 +239,7 @@ test("fractional saved lobby step recovers to usable invite content", async ({
   await expect(
     page.getByRole("heading", { name: "Share the invite", exact: true }),
   ).toBeVisible();
-  await expect(page.getByText("STEP 1 OF 6", { exact: true })).toBeVisible();
+  await expect(page.getByText("123456", { exact: true })).toBeVisible();
   backend.verify();
 });
 

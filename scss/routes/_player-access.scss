@@ -36,6 +36,9 @@
     margin: 0 auto;
     padding: layout.$pixel-unit * 4.5 layout.$pixel-unit * 4
       calc(layout.$pixel-unit * 7 + env(safe-area-inset-bottom));
+    > .join-progress {
+      margin-bottom: layout.$pixel-unit * 4;
+    }
     &--code {
       display: flex;
       flex-direction: column;

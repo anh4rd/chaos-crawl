@@ -7,10 +7,12 @@ export function useHostTour({
   status,
   onTab,
   onLobbyStep,
+  onHostSection,
 }: {
   status?: SessionStatus;
   onTab: (tab: HostTab) => void;
   onLobbyStep: (step: 1 | 2 | 3 | 4 | 5 | 6) => void;
+  onHostSection: (section: "overrides" | "review") => void;
 }) {
   const [open, setOpen] = useState(false);
   const [steps, setSteps] = useState<GuidedTourStep[]>([]);
@@ -45,6 +47,14 @@ export function useHostTour({
         case "ready":
           onLobbyStep(6);
           return;
+        case "host-review":
+          onHostSection("review");
+          onTab("host-controls");
+          return;
+        case "host-overrides":
+          onHostSection("overrides");
+          onTab("host-controls");
+          return;
         case "game":
         case "leaderboard":
         case "side-challenges":
@@ -54,7 +64,7 @@ export function useHostTour({
           onTab(page);
       }
     },
-    [onTab, onLobbyStep],
+    [onTab, onLobbyStep, onHostSection],
   );
   return { open, steps, start, close, navigate };
 }
