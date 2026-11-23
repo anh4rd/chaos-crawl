@@ -1,4 +1,5 @@
 import SharedLeaderboard from "../../components/session/SessionLeaderboard";
+import ScoreAdjustmentForm from "./ScoreAdjustmentForm";
 import type { GameSession, SessionPlayer, SessionTeam } from "./types";
 
 export default function HostSessionLeaderboard({
@@ -8,6 +9,8 @@ export default function HostSessionLeaderboard({
   busy,
   assignTeam,
   teamById,
+  adjustScore,
+  scoreAdjustmentCount,
 }: {
   session: GameSession;
   players: SessionPlayer[];
@@ -15,6 +18,8 @@ export default function HostSessionLeaderboard({
   busy: boolean;
   assignTeam: (player: SessionPlayer, teamId: string) => Promise<void>;
   teamById: Map<string, SessionTeam>;
+  adjustScore: (target: "player" | "team", id: string, delta: number) => void;
+  scoreAdjustmentCount: number;
 }) {
   const ranked = [...players].sort((a, b) =>
     session.status === "lobby"
@@ -27,13 +32,28 @@ export default function HostSessionLeaderboard({
       name: team.name,
       score: players
         .filter((player) => player.team_id === team.id)
-        .reduce((sum, player) => sum + player.score, 0),
+        .reduce(
+          (sum, player) => sum + player.score,
+          team.manual_score_adjustment,
+        ),
       detail: `${players.filter((player) => player.team_id === team.id).length}/${session.team_size} players`,
     }))
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
   return (
     <SharedLeaderboard
+      variant="page"
+      viewerRole="host"
       tourTarget="host-leaderboard"
+      scoreControls={
+        <ScoreAdjustmentForm
+          players={players}
+          teams={session.teams_enabled ? teams : []}
+          teamsEnabled={session.teams_enabled}
+          busy={busy}
+          onAdjust={adjustScore}
+          successCount={scoreAdjustmentCount}
+        />
+      }
       teamsEnabled={session.teams_enabled}
       viewerId={session.host_player_id}
       entries={ranked.map((player) => ({

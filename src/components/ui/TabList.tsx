@@ -8,7 +8,7 @@ export default function TabList({
   children,
 }: {
   label: string;
-  variant?: "workspace";
+  variant?: "workspace" | "leaderboard";
   navigation?: "arrows" | "native";
   children: ReactNode;
 }) {

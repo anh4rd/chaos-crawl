@@ -7,6 +7,46 @@ included.
 
 ## Delivered slices
 
+Host management includes a roster tab using the existing team, score and invite
+flows, plus a session-scoped player-name update. Player creation and deletion,
+and team deletion, remain unavailable until their backend contracts and data
+retention behavior are established.
+
+Game-page host controls show the upcoming break or challenge. During a break,
+both host participation modes show the next challenge and keyboard-accessible
+break timer and round actions, reusing the existing host timer and transitions.
+The upcoming challenge shows saved equipment, setup and preparation and opens
+the existing challenge editor; unlinked equipment is explicitly unavailable.
+The stage reference demonstrates the break controls with local state only.
+
+Host session successes are announced to assistive technology without visible
+success popups. Score updates, host stage changes and incoming team members use
+contextual motion, disabled for reduced motion. Partial saved-plan failures
+remain visible errors.
+
+Host and player score pages use the shared podium, player/team tabs and ranked
+cards shown in the supplied references. The podium follows the active score tab
+and uses caller-provided order; result and compact leaderboards retain their
+existing presentation and publication guards. No new score commands were
+introduced by that visual slice. Host score controls now call the separately
+installed score adjustment RPC. Team totals include the separately stored host
+adjustment as well as member points; player reads require the team adjustment
+RPC. The shared session reference uses local data only.
+
+Host and player tour prompts have a keyboard-accessible dismiss button. The
+prompt stays hidden during navigation for the current page visit and returns on
+reload. Dismissal returns focus to the active game navigation item; the local
+host-frame example demonstrates the same controls without backend access. The
+player route retains its participant across the base and section URLs, keyed by
+join code. Focused participant tests and desktop/mobile keyboard, tour and
+navigation checks passed; screenshots were inspected at both viewport sizes.
+
+Round review shows the current round and reward target/points as a compact
+summary. Edit reveals the controlled target and points fields; Done retains
+valid edits, and reopening review restores the current round defaults. The
+saved plan controls whether enabled reward methods appear as OpenMoji choices.
+The local reward reference uses state only.
+
 Host controls use a compact stage-based panel with local, keyboard-accessible
 recovery actions. Duration edits and added time use the existing clock and
 serialized shared timer writes; review, round transitions and breaks retain
@@ -4812,3 +4852,13 @@ unit/component tests pass. Eight focused desktop/mobile browser checks pass for
 player credentials, challenge-grid rendering, host challenge creation, and
 inline host participation/upload. The repository-wide review load is well above
 the 800-line reviewer nudge; it should not be attributed to this slice.
+
+## Host control overrides
+
+The host override tab now provides explicit round selection, timer operations,
+challenge editing, review navigation, secret-mission and side-challenge voting,
+the join screen and game completion. Direct round selection confirms the change,
+skips a scheduled break and still respects reward and autoplay guards. Timers
+remain attached to the current round or break. Completing the game opens the
+existing Memories view, which downloads individual originals and creates a photo
+reel; it does not provide a bulk archive. Local override examples use state only.

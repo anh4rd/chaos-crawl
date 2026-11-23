@@ -87,7 +87,7 @@ export function hostTourSteps(status: SessionStatus): GuidedTourStep[] {
     {
       target: '[data-tour="host-start-controls"]',
       title: "Start and manage the game",
-      body: "Share the join code and QR, check who has joined, assign teams and start the game when everyone is ready. During play, use the round controls to move the game along.",
+      body: "Share the join code and QR, choose a round, adjust the timer, open reviews and finish the game. Manage teams in the roster tab.",
       page: "host-overrides",
     },
     {

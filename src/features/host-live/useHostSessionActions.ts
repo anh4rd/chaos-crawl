@@ -68,7 +68,7 @@ export function useHostSessionActions({
   const [overridePrompt, setOverridePrompt] = useState<
     | null
     | { kind: "start" }
-    | { kind: "round"; round: number; forceBreak?: boolean }
+    | { kind: "round"; round: number; forceBreak?: boolean; direct?: boolean }
   >(null);
   const breakAdvance = useRef<"idle" | "pending" | "failed" | "succeeded">(
     "idle",
@@ -203,6 +203,7 @@ export function useHostSessionActions({
     nextRound: number,
     confirmedOverride = false,
     forceBreakMinutes = 0,
+    direct = false,
   ): Promise<"moved" | "break-started" | "blocked" | "failed"> {
     if (!session || busy) return "blocked";
     if (activeRewardRound) {
@@ -211,7 +212,11 @@ export function useHostSessionActions({
       );
       return "blocked";
     }
-    if (!hostBreakActive && nextRound > session.current_round_number) {
+    if (
+      !direct &&
+      !hostBreakActive &&
+      nextRound > session.current_round_number
+    ) {
       const breakMinutes =
         forceBreakMinutes || plannedBreakAfter(session.current_round_number);
       if (breakMinutes > 0) {
@@ -269,20 +274,20 @@ export function useHostSessionActions({
   }
 
   async function finishGame() {
-    if (!session) return;
+    if (!session) return false;
     if (activeRewardRound) {
       setError(
         "Complete or cancel the reward flow and return everyone to the game before finishing.",
       );
-      return;
+      return false;
     }
     if (
       !window.confirm(
         "Finish this game? Players will no longer be able to submit challenges.",
       )
     )
-      return;
-    if (!setBusy(true)) return;
+      return false;
+    if (!setBusy(true)) return false;
     setError("");
     setNotice("");
     const { error: finishError } =
@@ -292,10 +297,11 @@ export function useHostSessionActions({
     setBusy(false);
     if (finishError) {
       setError(finishError.message);
-      return;
+      return false;
     }
     setNotice("Game completed.");
     await load();
+    return true;
   }
   function markAutoplayOverridden() {
     localStorage.setItem(
@@ -308,12 +314,16 @@ export function useHostSessionActions({
     if (session?.status === "lobby") void startGame();
     else toggleTimer();
   }
-  function requestMoveToRound(nextRound: number) {
+  function requestMoveToRound(nextRound: number, direct = false) {
     if (autoplayEnabled && !autoplayOverridden) {
-      setOverridePrompt({ kind: "round", round: nextRound });
+      setOverridePrompt({
+        kind: "round",
+        round: nextRound,
+        ...(direct ? { direct: true } : {}),
+      });
       return;
     }
-    void moveToRound(nextRound);
+    void moveToRound(nextRound, false, 0, direct);
   }
   function requestStartBreak() {
     if (
@@ -344,6 +354,7 @@ export function useHostSessionActions({
         prompt.forceBreak
           ? plannedBreakAfter(session?.current_round_number ?? 0) || 15
           : 0,
+        prompt.direct,
       );
   }
   return {

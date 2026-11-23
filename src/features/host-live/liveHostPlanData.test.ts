@@ -1,5 +1,16 @@
 import { expect, it } from "vitest";
 import { projectLiveHostPlan, patchLiveHostPlanTask } from "./liveHostPlanData";
+it("projects the saved in-game reward choice without inventing a setting", () => {
+  expect(
+    projectLiveHostPlan({ decideRewardInGame: true }).decideRewardInGame,
+  ).toBe(true);
+  expect(
+    projectLiveHostPlan({ decideRewardInGame: false }).decideRewardInGame,
+  ).toBe(false);
+  expect(
+    projectLiveHostPlan({ decideRewardInGame: "true" }).decideRewardInGame,
+  ).toBeNull();
+});
 it.each([
   { value: 0, expected: 0 },
   { value: 2.5, expected: 2.5 },

@@ -30,6 +30,8 @@ import type {
 interface HostRewardRoundProps {
   feedback?: ReactNode;
   canParticipate?: boolean;
+  currentChallenge: SessionChallenge | undefined;
+  decideRewardInGame: boolean | null;
   showRewardOverlay: boolean;
   enabledRewardMethods: RewardMethod[];
   setShowRewardOverlay: Dispatch<SetStateAction<boolean>>;
@@ -77,6 +79,8 @@ interface HostRewardRoundProps {
 export default function HostRewardRound({
   feedback,
   canParticipate = false,
+  currentChallenge,
+  decideRewardInGame,
   showRewardOverlay,
   enabledRewardMethods,
   setShowRewardOverlay,
@@ -128,13 +132,16 @@ export default function HostRewardRound({
           </Overline>
           <h2>Review points</h2>
           <p>
-            Choose a challenge, then run the player vote or award flow without
-            leaving the game screen.
+            {showRewardOverlay
+              ? "Choose how to award points for this round."
+              : "Choose a challenge, then run the player vote or award flow without leaving the game screen."}
           </p>
         </div>
-        <CountBadge variant="session">
-          {enabledRewardMethods.length} methods enabled
-        </CountBadge>
+        {!showRewardOverlay && (
+          <CountBadge variant="session">
+            {enabledRewardMethods.length} methods enabled
+          </CountBadge>
+        )}
         {showRewardOverlay && (
           <Button
             type="button"
@@ -164,7 +171,11 @@ export default function HostRewardRound({
 
       {!activeRewardRound && showRewardSetup && session.status === "live" && (
         <RewardSetupForm
+          key={showRewardOverlay ? "round-review" : "reward-setup"}
           busy={busy}
+          currentRoundOnly={showRewardOverlay}
+          currentChallenge={currentChallenge}
+          decideRewardInGame={decideRewardInGame}
           rewardChallengeId={rewardChallengeId}
           setRewardChallengeId={setRewardChallengeId}
           challenges={challenges}

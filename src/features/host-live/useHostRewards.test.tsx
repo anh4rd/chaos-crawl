@@ -1,12 +1,22 @@
-import { act, cleanup, renderHook } from "@testing-library/react";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  renderHook,
+} from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { hostChallengeFixture, hostSessionFixture } from "./testFixtures";
 import { useHostRewards } from "./useHostRewards";
-import { hostCompleteSessionRewardRound } from "../../lib/hostRewardCommands";
+import {
+  hostCompleteSessionRewardRound,
+  hostStartSessionRewardRound,
+} from "../../lib/hostRewardCommands";
 import type { SessionRewardRound } from "./types";
 
 vi.mock("../../lib/hostRewardCommands", () => ({
   hostCompleteSessionRewardRound: vi.fn(),
+  hostStartSessionRewardRound: vi.fn(),
 }));
 vi.mock("../../lib/sessionParticipantCommands", () => ({}));
 afterEach(() => {
@@ -61,6 +71,42 @@ it("preserves an enabled method and falls back when setup disables it", () => {
     },
   });
   expect(result.current.rewardMethod).toBe("voting");
+});
+
+it("defaults review settings on opening, retains edits across refresh and rejects a changed round", () => {
+  const props = options();
+  props.session = hostSessionFixture({ teams_enabled: true });
+  props.currentChallenge = hostChallengeFixture({ points: 25 });
+  const { result, rerender } = renderHook(
+    ({ value }) => useHostRewards(value),
+    { initialProps: { value: props } },
+  );
+  act(() => result.current.openPointReview());
+  expect(result.current.rewardTargetKind).toBe("team");
+  expect(result.current.rewardPoints).toBe(25);
+  act(() => {
+    result.current.setRewardTargetKind("player");
+    result.current.setRewardPoints(37);
+  });
+  rerender({
+    value: { ...props, currentChallenge: hostChallengeFixture({ points: 50 }) },
+  });
+  expect(result.current.rewardTargetKind).toBe("player");
+  expect(result.current.rewardPoints).toBe(37);
+  rerender({
+    value: {
+      ...props,
+      currentChallenge: hostChallengeFixture({ id: "next", round_number: 2 }),
+    },
+  });
+  const view = render(
+    <form onSubmit={result.current.startRewardRound} aria-label="Review" />,
+  );
+  fireEvent.submit(view.getByRole("form", { name: "Review" }));
+  expect(props.setError).toHaveBeenCalledWith(
+    "The current round changed. Close and reopen review to continue.",
+  );
+  expect(hostStartSessionRewardRound).not.toHaveBeenCalled();
 });
 
 function rewardRound(

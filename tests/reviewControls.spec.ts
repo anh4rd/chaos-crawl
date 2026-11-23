@@ -35,12 +35,10 @@ for (const kind of ["final", "secret"] as const) {
           }),
       ).toHaveCount(0);
       await page.getByRole("button", { name: "Host", exact: true }).click();
-      if (kind === "secret")
-        await page.getByRole("tab", { name: "Review", exact: true }).click();
-      else {
-        await expect(
-          page.getByRole("tab", { name: "Control overrides" }),
-        ).toHaveAttribute("aria-selected", "true");
+      await expect(
+        page.getByRole("tab", { name: "Control overrides" }),
+      ).toHaveAttribute("aria-selected", "true");
+      if (kind === "final") {
         await expect(
           page.getByRole("heading", { name: "Final round", exact: true }),
         ).toBeVisible();

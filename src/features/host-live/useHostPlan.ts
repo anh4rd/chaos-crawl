@@ -136,6 +136,7 @@ export function useHostPlan({ session }: Options) {
     setTeamPhotoUrls,
     gamePhotoUrl: current.gamePhotoUrl,
     autoplayEnabled: current.autoplayEnabled,
+    decideRewardInGame: current.decideRewardInGame,
     gameSchedule: current.gameSchedule,
     plannedTasks: current.plannedTasks,
     setPlannedTasks,

@@ -439,6 +439,37 @@ export async function installSessionBackend(
       await respond(null);
       return;
     }
+    if (name === "cc_host_adjust_session_score") {
+      const targetRows =
+        body.p_target_kind === "team"
+          ? (rows.cc_game_session_teams ?? [])
+          : (rows.cc_game_session_players ?? [fixture.player]);
+      const target = targetRows.find(
+        (row) =>
+          typeof row === "object" &&
+          row !== null &&
+          "id" in row &&
+          row.id === body.p_target_id,
+      );
+      if (!target || typeof target !== "object") {
+        await respond({ message: "Target not found" }, 400);
+        return;
+      }
+      if (body.p_target_kind === "team") {
+        const current =
+          "manual_score_adjustment" in target &&
+          typeof target.manual_score_adjustment === "number"
+            ? target.manual_score_adjustment
+            : 0;
+        Object.assign(target, {
+          manual_score_adjustment: current + body.p_delta,
+        });
+      } else if ("score" in target && typeof target.score === "number") {
+        Object.assign(target, { score: target.score + body.p_delta });
+      }
+      await respond(null);
+      return;
+    }
     if (
       name === "cc_host_start_game_session" ||
       name === "cc_host_complete_game_session"
@@ -490,6 +521,19 @@ export async function installSessionBackend(
           ? [{ ...hostPlayer, player_id: hostPlayer.id }]
           : []),
       ],
+      cc_get_session_team_adjustments: (rows.cc_game_session_teams ?? []).map(
+        (row) => {
+          if (typeof row !== "object" || row === null || !("id" in row))
+            throw new Error("Invalid team fixture");
+          return {
+            team_id: row.id,
+            adjustment:
+              "manual_score_adjustment" in row
+                ? row.manual_score_adjustment
+                : 0,
+          };
+        },
+      ),
       cc_host_dispatch_due_secret_missions: null,
       cc_host_create_game_session: {
         id: sessionId,
@@ -551,6 +595,13 @@ export async function installSessionBackend(
     if (url.pathname.startsWith("/rest/v1/") && Object.hasOwn(tables, name)) {
       if (request.method() === "GET") {
         let rows = tables[name];
+        if (name === "cc_game_session_teams") {
+          rows = rows.map((row) =>
+            typeof row === "object" && row !== null
+              ? { manual_score_adjustment: 0, ...row }
+              : row,
+          );
+        }
         if (name === "host_games" && url.searchParams.has("or")) {
           const query = url.searchParams.get("or") ?? "";
           const dateKey = query.match(
@@ -701,6 +752,24 @@ export async function installSessionBackend(
           await respond({ id: assignment.id });
           return;
         }
+      }
+      if (
+        name === "cc_game_session_players" &&
+        request.method() === "PATCH" &&
+        url.searchParams.get("session_id") === `eq.${fixture.session.id}` &&
+        typeof body?.name === "string"
+      ) {
+        const target =
+          url.searchParams.get("id") === "eq.host-player"
+            ? hostPlayer
+            : fixture.player;
+        if (`eq.${target.id}` !== url.searchParams.get("id")) {
+          await respond(null);
+          return;
+        }
+        target.name = body.name;
+        await respond({ id: target.id });
+        return;
       }
       if (
         name === "cc_game_session_players" &&

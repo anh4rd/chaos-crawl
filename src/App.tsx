@@ -46,8 +46,7 @@ export default function App() {
         <Route path="/styleguide" element={<Styleguide />} />
         <Route path="/component-test" element={<Styleguide />} />
         <Route path="/game" element={<Game />} />
-        <Route path="/play/:joinCode" element={<SessionPlayerGame />} />
-        <Route path="/play/:joinCode/:page" element={<SessionPlayerGame />} />
+        <Route path="/play/:joinCode/:page?" element={<SessionPlayerGame />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
         <Route path="/vote" element={<Vote />} />
         <Route

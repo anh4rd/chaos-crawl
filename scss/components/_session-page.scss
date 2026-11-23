@@ -11,7 +11,9 @@
   );
   .btn:not(.btn--session-tour):not(.btn--timer-menu):not(
       .btn--control-replay
-    ):not(.btn--dialog-dismiss):not(.btn--text):not(.btn--comic-icon) {
+    ):not(.btn--dialog-dismiss):not(.btn--text):not(.btn--comic-icon):not(
+      .btn--leaderboard-tab
+    ) {
     border: layout.$session-border-width solid colors.$session-frame-ink;
     box-shadow: 0 layout.$pixel-unit * 0.75 0 colors.$session-frame-ink;
   }

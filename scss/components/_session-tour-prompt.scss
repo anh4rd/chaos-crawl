@@ -1,0 +1,20 @@
+@use "../variables/colors";
+@use "../variables/layout";
+
+.session-tour-prompt {
+  display: inline-flex;
+  align-items: stretch;
+  gap: layout.$spacing-unit;
+
+  &__dismiss {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: layout.$control-height;
+    padding: layout.$spacing-unit;
+  }
+  button:focus-visible {
+    outline: layout.$focus-ring-width solid colors.$white;
+    outline-offset: layout.$spacing-unit;
+  }
+}

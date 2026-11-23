@@ -1,0 +1,73 @@
+@use "../tools/focus-ring";
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+
+.score-adjustment {
+  margin-bottom: layout.$spacing-unit * 4;
+  &__form {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+    gap: layout.$spacing-unit * 2;
+    align-items: end;
+  }
+  &__form label {
+    display: grid;
+    min-width: 0;
+    gap: layout.$spacing-unit;
+    font-size: fonts.$size-compact-label;
+    font-weight: fonts.$weight-bold;
+  }
+  &__form select,
+  &__form input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    height: layout.$control-height;
+    padding: 0 layout.$spacing-unit * 2;
+    border: layout.$session-border-width solid colors.$session-frame-ink;
+    border-radius: layout.$control-radius;
+    background: colors.$white;
+    color: colors.$ink;
+    font: inherit;
+  }
+  &__form label:nth-child(4) {
+    grid-column: 1 / 4;
+  }
+  &__submit {
+    grid-column: 4;
+    grid-row: 1 / 3;
+    display: grid;
+    place-items: center;
+    width: layout.$control-height;
+    height: layout.$control-height;
+    border: layout.$session-border-width solid colors.$session-frame-ink;
+    border-radius: layout.$control-radius;
+    background: colors.$pink;
+    color: colors.$white;
+    cursor: pointer;
+  }
+  &__form :focus-visible {
+    @include focus-ring.focus-ring;
+  }
+  &__form :disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  &__success {
+    animation: score-adjustment-confirm motion.$duration-toggle
+      motion.$easing-interaction;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &__success {
+      animation: none;
+    }
+  }
+}
+
+@keyframes score-adjustment-confirm {
+  50% {
+    transform: scale(motion.$scale-hover);
+  }
+}

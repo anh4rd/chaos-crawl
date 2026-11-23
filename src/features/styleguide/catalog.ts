@@ -1,5 +1,11 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
+  HostRosterManagement: {
+    usage:
+      "Controlled host roster panel for player names, team assignments, team settings, scores and invitations. The local host roster example uses local state.",
+    dependencies:
+      "Uses supplied values and callbacks only. Host controllers own permissions, persistence and feedback; direct player creation and player/team deletion are unavailable.",
+  },
   SessionPreview: {
     usage:
       "Session content wrapper; inverse variant supplies the session backdrop for local previews.",
@@ -1126,7 +1132,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionMainChallengeCard: {
     usage:
-      "Shared host/player challenge. Supply viewerRole, title, description, points, round, roundCount, durationMinutes, timerLabel and timerCaption. Optional artUrl displays uploaded artwork or a selected OpenMoji; otherwise an OpenMoji is matched from the title and description. Compose buttons through action.",
+      "Shared host/player challenge. Supply viewerRole, title, description, points, round, roundCount, durationMinutes, timerLabel and timerCaption. Optional artUrl displays uploaded artwork or a selected OpenMoji; otherwise an OpenMoji is matched from the title and description. The upcoming variant labels the next challenge without claiming the tour target; its details slot supplies host preparation and edit controls.",
     dependencies:
       "SCSS .main-challenge. No data hooks; timer text is supplied by the caller.",
   },
@@ -1141,6 +1147,11 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
       "Shared host/player navigation without a Final item; the host manages final voting in Control overrides. Optional elementRef exposes the native nav for controller-owned focus recovery. The local session preview returns focus to Game when its temporary host action disappears.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionTourPrompt: {
+    usage:
+      "Host and player tour trigger with a separately labelled dismiss button. The caller owns visibility, focus recovery and tour state; the local host frame demonstrates both actions.",
+    dependencies: "Shared Button and Icon; no storage or backend access.",
   },
   SessionMemories: {
     usage:
@@ -1174,7 +1185,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   StagePreview: {
     usage:
-      "Shared next-stage presentation receives label, decorative illustration, title, description, highlight and optional action children. The local stage/plan example demonstrates ordinary and break states.",
+      "Shared next-stage presentation receives label, decorative illustration, title, description, highlight and optional action children. The local stage/plan example demonstrates ordinary and break states, including the host break card and next challenge.",
     dependencies:
       "Owned stage-preview SCSS with shared Badge stage/stage-break and IconBadge stage/stage-break; no backend, storage, route or timer reads. Feature adapter owns stage precedence and copy.",
   },
@@ -1216,15 +1227,26 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionLeaderboard: {
     usage:
-      "Shared host/player leaderboard with Players and Teams tabs for team-enabled sessions; the compact variant preserves caller order and displays simple rank/name/score rows.",
+      "The page variant shows host/player scores as a podium and ranked cards, with player/team tabs and an optional host controls slot. The local session reference adjusts sample scores without a backend. The compact and result variants retain their existing layouts.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },
+  ScoreAdjustmentForm: {
+    usage:
+      "Host score controls for adding or removing player or team points. Successful changes animate the check; reduced motion disables it. The local session reference uses local data.",
+    dependencies:
+      "Native fields and supplied records, pending state and callback; persistence remains in the host controller.",
+  },
   SessionRankRow: {
     usage:
-      "Compact variant uses a native span with name and score only. Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+      "Page variant displays a ranked score card; host score changes animate, respecting reduced motion. Compact uses a native span with name and score only. Optional actions remain caller-owned.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
+  },
+  SessionPodium: {
+    usage:
+      "Displays up to three caller-ranked players or teams without sorting or inventing missing places. The local session reference demonstrates it with both score tabs.",
+    dependencies: "Presentation data, OpenMoji crown and owned podium SCSS.",
   },
   EvidenceGallery: {
     usage:
@@ -1336,7 +1358,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   HostRewardRound: {
     usage:
-      "Controlled reward stage composed from RewardSetupForm and RewardAwardControls. Receive player/team data and explicit actions; unused lookup-map props are not part of its contract.",
+      "Controlled reward stage composed from RewardSetupForm and RewardAwardControls. Round review summarizes the target and points with an edit toggle; the local example uses the same controls.",
     dependencies:
       "Shared reward primitives and owned reward SCSS; useHostRewards owns commands, locks, credentials and feedback. Local reward examples use only state and callbacks.",
   },
@@ -1348,15 +1370,15 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   HostRoundControls: {
     usage:
-      "Controlled timer and round actions. startGameOrToggleTimer names its toggle/start behavior; resetRoundTimer pauses at full duration while restartRoundTimer runs. The feature owns transitions, persistence and locks; local timer primitives remain backend-free.",
+      "Controlled timer and round actions. Stage changes animate the icon unless reduced motion is requested. startGameOrToggleTimer names its toggle/start behavior; resetRoundTimer pauses at full duration while restartRoundTimer runs. The feature owns transitions, persistence and locks; local timer primitives remain backend-free.",
     dependencies:
       "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
-  HostRoundOverview: {
+  HostControlOverrides: {
     usage:
-      "Controlled host round overview with supplied phase state and named actions. The existing Start Now and next-round controls provide explicit recovery; no timer, query or persistence lifecycle lives in this view.",
+      "Host override actions expose direct round selection, timer controls, challenge editing, reviews and the end phase independently of the game controls. The local example uses state only.",
     dependencies:
-      "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
+      "Caller-supplied state and callbacks; the host coordinator retains phase guards, timer publication, persistence and navigation.",
   },
   HostInvite: {
     usage:

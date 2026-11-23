@@ -86,6 +86,9 @@
     justify-content: space-between;
     padding-bottom: 102.976px;
   }
+  &--upcoming &__summary {
+    min-width: layout.$pixel-unit * 29;
+  }
   &__art {
     position: absolute;
     right: 0;

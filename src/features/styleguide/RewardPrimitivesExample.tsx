@@ -1,3 +1,4 @@
+import { useState } from "react";
 import CandidateList from "../../components/session/CandidateList";
 import SessionCandidate from "../../components/session/SessionCandidate";
 import Button from "../../components/ui/Button";
@@ -11,8 +12,22 @@ import StatusPill from "../../components/ui/StatusPill";
 import HostManagement from "../host-live/HostManagement";
 import { Example } from "./Example";
 import SessionPreview from "../../components/session/SessionPreview";
+import RewardSetupForm from "../host-live/RewardSetupForm";
+import type { RewardMethod, RewardTargetKind } from "../../types/hostSession";
+
+const sampleChallenge = {
+  id: "sample",
+  title: "Make an entrance",
+  kind: "main" as const,
+  round_number: 1,
+  points: 20,
+};
 
 export default function RewardPrimitivesExample() {
+  const [method, setMethod] = useState<RewardMethod>("voting");
+  const [notice, setNotice] = useState("");
+  const [target, setTarget] = useState<RewardTargetKind>("player");
+  const [points, setPoints] = useState(sampleChallenge.points);
   return (
     <Example
       title="Reward fields, summaries and award controls"
@@ -28,6 +43,36 @@ export default function RewardPrimitivesExample() {
             stacked
             aria-label="Local reward primitives"
           >
+            <RewardSetupForm
+              busy={false}
+              currentRoundOnly
+              currentChallenge={sampleChallenge}
+              decideRewardInGame
+              rewardChallengeId={sampleChallenge.id}
+              setRewardChallengeId={() => {}}
+              challenges={[sampleChallenge]}
+              setRewardPoints={setPoints}
+              rewardMethod={method}
+              setRewardMethod={setMethod}
+              enabledRewardMethods={[
+                "host_awards",
+                "audience_cheers",
+                "voting",
+              ]}
+              rewardMethodLabel={(value) => value}
+              rewardTargetKind={target}
+              setRewardTargetKind={setTarget}
+              setSelectedRewardWinnerIds={() => {}}
+              session={{ teams_enabled: true }}
+              teams={[{ id: "sample-team" }]}
+              rewardPoints={points}
+              startRewardRound={async (event) => {
+                event.preventDefault();
+                setNotice(`Sample reward: ${target}, ${points} points.`);
+              }}
+              setShowRewardSetup={() => setNotice("Sample cancelled.")}
+            />
+            {notice && <output>{notice}</output>}
             <RoundSummary
               title="Make an entrance"
               detail="Host awards · 20 points per winner · Players"

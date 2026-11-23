@@ -119,7 +119,7 @@ export function useHostSessionData(sessionId: string) {
           .order("joined_at", { ascending: true }),
         supabase
           .from("cc_game_session_teams")
-          .select("id,name,created_at")
+          .select("id,name,created_at,manual_score_adjustment")
           .eq("session_id", sessionId)
           .order("created_at", { ascending: true }),
         supabase

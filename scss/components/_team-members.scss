@@ -15,4 +15,19 @@
     color: colors.$portrait-upload-text;
     font-size: fonts.$size-navigation-caption;
   }
+  & > .btn--lobby-member {
+    animation: team-member-arrival motion.$duration-toggle
+      motion.$easing-interaction;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    & > .btn--lobby-member {
+      animation: none;
+    }
+  }
+}
+
+@keyframes team-member-arrival {
+  from {
+    transform: scale(motion.$scale-console-active);
+  }
 }

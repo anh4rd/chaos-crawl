@@ -168,6 +168,102 @@ test("the host tour becomes available after the lobby", async ({ page }) => {
   backend.verify();
 });
 
+test("player tour dismissal lasts through game navigation until reload", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page);
+  await page.goto("#/play/123456");
+  const trigger = page.getByRole("button", {
+    name: "✦ How to play / Take a tour",
+    exact: true,
+  });
+  const dismiss = page.getByRole("button", {
+    name: "Dismiss player tour button",
+    exact: true,
+  });
+  const navigation = page.getByRole("navigation", { name: "Game pages" });
+  await expect(trigger).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath("player-prompt.png") });
+  await activateByKeyboard(page, dismiss);
+  await expect(trigger).toHaveCount(0);
+  await expect(dismiss).toHaveCount(0);
+  await expect(navigation.getByRole("link", { name: "Game" })).toBeFocused();
+  await activateByKeyboard(
+    page,
+    navigation.getByRole("link", { name: "Scores" }),
+  );
+  await expect(page).toHaveURL(/\/leaderboard$/);
+  await expect(trigger).toHaveCount(0);
+  await activateByKeyboard(
+    page,
+    navigation.getByRole("link", { name: "Game" }),
+  );
+  await expect(trigger).toHaveCount(0);
+  await page.reload();
+  await expect(trigger).toBeVisible();
+  backend.verify();
+});
+
+test("host tour dismissal lasts through game navigation until reload", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  await page.goto(`#/host/live/${sessionId}`);
+  const trigger = page.getByRole("button", { name: "✦ Take the host tour" });
+  const dismiss = page.getByRole("button", {
+    name: "Dismiss host tour button",
+  });
+  const navigation = page.getByRole("navigation", { name: "Game pages" });
+  await expect(trigger).toBeVisible();
+  await page.screenshot({ path: test.info().outputPath("host-prompt.png") });
+  await activateByKeyboard(page, dismiss);
+  await expect(trigger).toHaveCount(0);
+  await expect(dismiss).toHaveCount(0);
+  await expect(navigation.getByRole("button", { name: "Game" })).toBeFocused();
+  await activateByKeyboard(
+    page,
+    navigation.getByRole("button", { name: "Scores" }),
+  );
+  await expect(trigger).toHaveCount(0);
+  await activateByKeyboard(
+    page,
+    navigation.getByRole("button", { name: "Game" }),
+  );
+  await expect(trigger).toHaveCount(0);
+  await page.reload();
+  await expect(trigger).toBeVisible();
+  backend.verify();
+});
+
+test("player tour remains open while navigating to another game page", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page);
+  await page.goto("#/play/123456");
+  const trigger = page.getByRole("button", {
+    name: "✦ How to play / Take a tour",
+    exact: true,
+  });
+  await activateByKeyboard(page, trigger);
+  const dialog = page.getByRole("dialog", { name: /PLAYER TOUR/ });
+  for (let index = 0; index < 4; index += 1) {
+    await activateByKeyboard(
+      page,
+      dialog.getByRole("button", { name: "Next", exact: true }),
+    );
+  }
+  await expect(page).toHaveURL(/\/leaderboard$/);
+  await expect(dialog).toBeVisible();
+  await expectTarget(page, '[data-tour="player-leaderboard"]');
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(trigger).toBeFocused();
+  backend.verify();
+});
+
 test("host frame reference uses shared controls and local tour without backend requests", async ({
   page,
 }) => {
@@ -195,6 +291,14 @@ test("host frame reference uses shared controls and local tour without backend r
   await expect(
     page.getByText("Local host action selected.", { exact: true }),
   ).toBeVisible();
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Dismiss sample tour button" }),
+  );
+  await expect(trigger).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "Try local host action", exact: true }),
+  ).toBeFocused();
   expect(backend.requests).toEqual([]);
   backend.verify();
 });

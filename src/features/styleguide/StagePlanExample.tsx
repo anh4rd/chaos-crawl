@@ -4,6 +4,7 @@ import StagePreview from "../../components/session/StagePreview";
 import Button from "../../components/ui/Button";
 import Note from "../../components/ui/Note";
 import HostManagement from "../host-live/HostManagement";
+import HostBreakPanel from "../host-live/HostBreakPanel";
 import { Example } from "./Example";
 import SessionPreview from "../../components/session/SessionPreview";
 
@@ -11,6 +12,7 @@ export default function StagePlanExample() {
   const [round, setRound] = useState(1);
   const [readOnly, setReadOnly] = useState(false);
   const [onBreak, setOnBreak] = useState(false);
+  const [breakRunning, setBreakRunning] = useState(true);
   const [notice, setNotice] = useState(
     "Choose a sample round or stage action.",
   );
@@ -46,6 +48,38 @@ export default function StagePlanExample() {
               </Button>
             )}
           </StagePreview>
+          {onBreak && (
+            <HostBreakPanel
+              label="01:00"
+              running={breakRunning}
+              busy={readOnly}
+              nextRound={2}
+              roundCount={2}
+              preparation={{
+                equipment: ["Camera", "Props"],
+                setup: "Choose a photo spot.",
+                prep: "Gather everyone together.",
+              }}
+              nextChallenge={{
+                title: "Team portrait",
+                description: "Capture your team together.",
+                points: 40,
+                duration_minutes: 5,
+              }}
+              onEditTimer={() =>
+                setNotice("Sample break timer edit selected locally.")
+              }
+              onToggleTimer={() => setBreakRunning(!breakRunning)}
+              onEditChallenge={() =>
+                setNotice("Sample challenge edit selected locally.")
+              }
+              onStartNext={() => {
+                setOnBreak(false);
+                setRound(2);
+                setNotice("Sample next round started locally.");
+              }}
+            />
+          )}
           <RoundPlan
             rounds={[
               {

@@ -1,6 +1,6 @@
 import { useClipboard } from "../../components/ui/useClipboard";
+import { useNavigationFocus } from "../../components/ui/useNavigationFocus";
 import { isSecretVotingOpen } from "./votingState";
-import Button from "../../components/ui/Button";
 import ButtonLink from "../../components/ui/ButtonLink";
 import Note from "../../components/ui/Note";
 import ContentPanel from "../../components/ui/ContentPanel";
@@ -11,8 +11,8 @@ import SessionFeedback from "../../components/session/SessionFeedback";
 import SessionNavigation from "../../components/session/SessionNavigation";
 import SessionPage from "../../components/session/SessionPage";
 import SessionState from "../../components/session/SessionState";
+import SessionTourPrompt from "../../components/session/SessionTourPrompt";
 import SessionSubmission from "../../components/session/SessionSubmission";
-import Icon from "../../components/ui/Icon";
 import JoinProgress from "../../components/ui/JoinProgress";
 import { sessionEvidenceUrl } from "../../lib/sessionMedia";
 import ParticipantTeams from "./ParticipantTeams";
@@ -52,6 +52,7 @@ export default function SessionParticipant({
   onRecover,
   focusChallengeId: focusedChallenge,
   afterMainChallenge,
+  hostBreakView,
   sideChallengeAddAction,
 }: {
   joinCode: string;
@@ -62,6 +63,7 @@ export default function SessionParticipant({
   onRecover?: () => void;
   focusChallengeId?: string | null;
   afterMainChallenge?: ReactNode;
+  hostBreakView?: ReactNode;
   sideChallengeAddAction?: ReactNode;
 }) {
   const navigate = useNavigate();
@@ -78,6 +80,7 @@ export default function SessionParticipant({
     secretMissions,
     secretReview,
     leaderboard,
+    teamAdjustments,
     playerRank,
     evidence,
     finalGallery,
@@ -97,6 +100,8 @@ export default function SessionParticipant({
   });
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [tourOpen, setTourOpen] = useState(false);
+  const [tourDismissed, setTourDismissed] = useState(false);
+  const { navigationRef, restoreFocus } = useNavigationFocus();
   const { sharedTimer, sharedTimerError, timerReceivedAt, timerNow } =
     useSessionTimer(view?.session.id, view?.session.status, activePage);
   const finalGalleryOpen = view?.session.final_gallery_open;
@@ -386,9 +391,19 @@ export default function SessionParticipant({
       ...team,
       score: leaderboard
         .filter((entry) => entry.team_id === team.id)
-        .reduce((total, entry) => total + entry.score, 0),
+        .reduce(
+          (total, entry) => total + entry.score,
+          teamAdjustments?.find((item) => item.team_id === team.id)
+            ?.adjustment ?? 0,
+        ),
     }))
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+  const teamScoresUnavailable =
+    session.teams_enabled &&
+    (teamAdjustments === null ||
+      teams.some(
+        (team) => !teamAdjustments.some((item) => item.team_id === team.id),
+      ));
   const activeSecretMission =
     secretMissions.find(
       (mission) => mission.assignment_id === activeSecretMissionId,
@@ -524,7 +539,10 @@ export default function SessionParticipant({
 
               {session.status === "live" && (
                 <>
-                  {sharedTimer?.is_on_break ? (
+                  {hostBreakView ? (
+                    hostBreakView
+                  ) : hostBreakView === undefined &&
+                    sharedTimer?.is_on_break ? (
                     <SessionBreak
                       label={sharedTimerLabel}
                       running={sharedTimer.is_running}
@@ -639,6 +657,7 @@ export default function SessionParticipant({
               leaderboard={leaderboard}
               player={player}
               teamLeaderboard={teamLeaderboard}
+              teamScoresUnavailable={teamScoresUnavailable}
             />
           )}
 
@@ -694,18 +713,6 @@ export default function SessionParticipant({
                 </span>
               )}
             </SyncStatus>
-          )}
-
-          {!embeddedHostMode && !finalRoundTakeover && (
-            <Button
-              type="button"
-              variant="participant-rejoin"
-              fullWidth={false}
-              onClick={() => navigate(`/join?code=${code}&returning=1`)}
-            >
-              <Icon name="rotate-ccw" className="icon--size-15" /> Need to
-              rejoin on this device?
-            </Button>
           )}
 
           {activeSecretMission &&
@@ -772,17 +779,19 @@ export default function SessionParticipant({
       }
       toolbar={
         session.status !== "lobby" &&
+        !tourDismissed &&
         !embeddedHostMode &&
         !finalRoundTakeover &&
         !secretReviewTakeover ? (
-          <Button
-            variant="session-tour"
-            fullWidth={false}
-            type="button"
-            onClick={() => setTourOpen(true)}
-          >
-            ✦ How to play / Take a tour
-          </Button>
+          <SessionTourPrompt
+            label="✦ How to play / Take a tour"
+            dismissLabel="Dismiss player tour button"
+            onStart={() => setTourOpen(true)}
+            onDismiss={() => {
+              setTourDismissed(true);
+              restoreFocus();
+            }}
+          />
         ) : null
       }
       navigation={
@@ -791,6 +800,7 @@ export default function SessionParticipant({
         !finalRoundTakeover &&
         !secretReviewTakeover ? (
           <SessionNavigation
+            elementRef={navigationRef}
             active={activePage}
             showMemories={
               session.status === "completed" && !session.final_gallery_open

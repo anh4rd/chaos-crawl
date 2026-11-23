@@ -74,6 +74,10 @@ export function projectLiveHostPlan(value: unknown) {
       typeof plan.gamePhotoUrl === "string" ? plan.gamePhotoUrl : null,
     teamPhotoUrls,
     autoplayEnabled: Boolean(plan.autoplay),
+    decideRewardInGame:
+      typeof plan.decideRewardInGame === "boolean"
+        ? plan.decideRewardInGame
+        : null,
     defaultBreakMinutes: Number.isFinite(breakMinutes)
       ? Math.max(0, breakMinutes)
       : 0,

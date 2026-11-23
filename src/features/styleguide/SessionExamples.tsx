@@ -15,6 +15,7 @@ import SessionSubmission from "../../components/session/SessionSubmission";
 import PanelGrid from "../../components/ui/PanelGrid";
 import HostAddSideChallengeCard from "../host-live/HostAddSideChallengeCard";
 import HostSideChallengeDialog from "../host-live/HostSideChallengeDialog";
+import ScoreAdjustmentForm from "../host-live/ScoreAdjustmentForm";
 import type {
   RewardPresentation,
   SessionRole,
@@ -26,8 +27,16 @@ import DemoNotice from "../../components/ui/DemoNotice";
 import JoinProgress from "../../components/ui/JoinProgress";
 
 const entries = [
-  { id: "alex", name: "Alex", score: 120, teamName: "Team Chaos" },
+  {
+    id: "alex",
+    name: "Alex",
+    score: 120,
+    teamName: "Team Chaos",
+    avatarUrl: `${import.meta.env.BASE_URL}chaos-logo.png`,
+  },
   { id: "sam", name: "Sam", score: 100, teamName: "Team Chaos" },
+  { id: "lee", name: "Lee", score: 75, teamName: "Team Spark" },
+  { id: "jo", name: "Jo", score: 50, teamName: "Team Spark" },
 ];
 const media = {
   id: "photo",
@@ -73,6 +82,12 @@ export default function SessionExamples() {
   const [sideChallengeDescription, setSideChallengeDescription] = useState("");
   const [sideChallengePoints, setSideChallengePoints] = useState(5);
   const [sideChallengeDuration, setSideChallengeDuration] = useState(10);
+  const [scores, setScores] = useState(entries);
+  const [scoreAdjustmentCount, setScoreAdjustmentCount] = useState(0);
+  const [teamScores, setTeamScores] = useState([
+    { id: "chaos", name: "Team Chaos", score: 220 },
+    { id: "spark", name: "Team Spark", score: 125 },
+  ]);
   const closed = phase === "results";
   const playerLobby = viewerRole === "player" && phase === "lobby";
   return (
@@ -93,6 +108,12 @@ export default function SessionExamples() {
           setSideChallengeDescription("");
           setSideChallengePoints(5);
           setSideChallengeDuration(10);
+          setScores(entries);
+          setScoreAdjustmentCount(0);
+          setTeamScores([
+            { id: "chaos", name: "Team Chaos", score: 220 },
+            { id: "spark", name: "Team Spark", score: 125 },
+          ]);
         }}
       >
         Local demonstration — these controls do not change a real game.
@@ -193,9 +214,50 @@ export default function SessionExamples() {
           </SessionState>
         ) : section === "leaderboard" ? (
           <SessionLeaderboard
-            entries={entries}
-            teams={[{ id: "chaos", name: "Team Chaos", score: 220 }]}
+            variant="page"
+            viewerRole={viewerRole}
+            entries={[...scores].sort((a, b) => b.score - a.score)}
+            teams={[...teamScores].sort((a, b) => b.score - a.score)}
             viewerId="alex"
+            scoreControls={
+              viewerRole === "host" ? (
+                <ScoreAdjustmentForm
+                  players={scores}
+                  teams={teamScores}
+                  teamsEnabled
+                  busy={false}
+                  successCount={scoreAdjustmentCount}
+                  onAdjust={(target, id, delta) => {
+                    setScoreAdjustmentCount((count) => count + 1);
+                    if (target === "player") {
+                      const player = scores.find((entry) => entry.id === id);
+                      setScores((current) =>
+                        current.map((entry) =>
+                          entry.id === id
+                            ? { ...entry, score: entry.score + delta }
+                            : entry,
+                        ),
+                      );
+                      setTeamScores((current) =>
+                        current.map((team) =>
+                          team.name === player?.teamName
+                            ? { ...team, score: team.score + delta }
+                            : team,
+                        ),
+                      );
+                    } else {
+                      setTeamScores((current) =>
+                        current.map((team) =>
+                          team.id === id
+                            ? { ...team, score: team.score + delta }
+                            : team,
+                        ),
+                      );
+                    }
+                  }}
+                />
+              ) : undefined
+            }
           />
         ) : section === "side-challenges" ? (
           <>

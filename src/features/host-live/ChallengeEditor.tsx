@@ -22,6 +22,7 @@ interface ChallengeEditorProps {
   editChallengeDescription: string;
   setEditChallengeDescription: Dispatch<SetStateAction<string>>;
   editChallengeEquipment: string;
+  canEditEquipment: boolean;
   setEditChallengeEquipment: Dispatch<SetStateAction<string>>;
   editChallengeDuration: number;
   setEditChallengeDuration: Dispatch<SetStateAction<number>>;
@@ -43,6 +44,7 @@ export default function ChallengeEditor({
   editChallengeDescription,
   setEditChallengeDescription,
   editChallengeEquipment,
+  canEditEquipment,
   setEditChallengeEquipment,
   editChallengeDuration,
   setEditChallengeDuration,
@@ -89,9 +91,15 @@ export default function ChallengeEditor({
           />
         </FormLabel>
         <FormLabel spaced>
-          Equipment needed <small>Separate items with commas.</small>
+          Equipment needed{" "}
+          <small>
+            {canEditEquipment
+              ? "Separate items with commas."
+              : "Equipment can't be saved because this challenge isn't linked to a saved plan."}
+          </small>
           <textarea
             rows={2}
+            disabled={!canEditEquipment}
             value={editChallengeEquipment}
             onChange={(event) => setEditChallengeEquipment(event.target.value)}
           />

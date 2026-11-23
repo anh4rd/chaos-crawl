@@ -17,6 +17,20 @@
 }
 
 .session-leaderboard {
+  &--page {
+    width: 100%;
+    max-width: layout.$invitation-content-width;
+    margin-inline: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  &__board {
+    padding: layout.$spacing-unit * 1.5;
+    border-radius: layout.$radius-lg;
+    background: rgba(colors.$purple-dark, 0.3);
+    color: colors.$white;
+  }
   &--compact {
     display: grid;
     gap: layout.$pixel-unit;

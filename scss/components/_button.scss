@@ -665,6 +665,32 @@
 }
 
 .btn {
+  &--leaderboard-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: layout.$control-height;
+    padding: layout.$spacing-unit * 2;
+    border: 0;
+    border-radius: layout.$pixel-unit * 4;
+    background: transparent;
+    color: colors.$white;
+    font: fonts.$size-body fonts.$family-display;
+    text-transform: none;
+    box-shadow: none;
+    scale: none;
+    cursor: pointer;
+    &[aria-selected="true"] {
+      background: colors.$lime;
+      color: colors.$ink;
+    }
+    &:focus-visible {
+      outline: layout.$focus-ring-width solid colors.$white;
+      outline-offset: -#{layout.$focus-ring-width};
+    }
+  }
+}
+
+.btn {
   &--session-tour {
     border: 2px solid colors.$session-frame-ink;
     border-radius: layout.$badge-radius;

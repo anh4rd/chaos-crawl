@@ -20,6 +20,8 @@ import SessionPanelsExample from "./SessionPanelsExample";
 import TimerControlsExample from "./TimerControlsExample";
 import HostChromeExample from "./HostChromeExample";
 import LobbyPrimitivesExample from "./LobbyPrimitivesExample";
+import HostRosterExample from "./HostRosterExample";
+import HostControlOverridesExample from "./HostControlOverridesExample";
 import PlanningPrimitivesExample from "./PlanningPrimitivesExample";
 import WorkspaceExamples from "./WorkspaceExamples";
 import Button from "../../components/ui/Button";
@@ -129,7 +131,9 @@ export default function HostExamples() {
       <HostFoundationExample />
       <PlanningPrimitivesExample />
       <LobbyPrimitivesExample />
+      <HostRosterExample />
       <HostChromeExample />
+      <HostControlOverridesExample />
       <TimerControlsExample />
       <SessionPanelsExample />
       <SubmissionReviewExample />

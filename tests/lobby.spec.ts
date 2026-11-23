@@ -276,13 +276,19 @@ test("host lobby retains team capacity, assignment, creation, naming and photo p
   await expect(
     alpha.getByRole("button", { name: "Leave team", exact: true }),
   ).toBeEnabled();
+  const member = alpha.getByRole("button", { name: "Pat", exact: true });
+  await expect(member).toHaveCSS("animation-name", "team-member-arrival");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(member).toHaveCSS("animation-name", "none");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   await page
     .getByRole("textbox", { name: "New team name", exact: true })
     .fill("Gamma");
   await page.getByRole("button", { name: "+ Add team", exact: true }).click();
-  await expect(
-    page.getByText('Team "Gamma" created.', { exact: true }),
-  ).toBeVisible();
+  await expect(page.locator("output.u-visually-hidden")).toHaveText(
+    'Team "Gamma" created.',
+  );
+  await expect(page.locator(".session-feedback--success")).toHaveCount(0);
   await next(page, "Name your teams");
   const editor = page.locator("article").filter({
     has: page.getByRole("textbox", { name: "Name for Alpha", exact: true }),
@@ -291,9 +297,9 @@ test("host lobby retains team capacity, assignment, creation, naming and photo p
     .getByRole("textbox", { name: "Name for Alpha", exact: true })
     .fill("Renamed Alpha");
   await editor.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(
-    page.getByText("Team renamed to Renamed Alpha.", { exact: true }),
-  ).toBeVisible();
+  await expect(page.locator("output.u-visually-hidden")).toHaveText(
+    "Team renamed to Renamed Alpha.",
+  );
   const renamed = page.locator("article").filter({
     has: page.getByRole("textbox", {
       name: "Name for Renamed Alpha",
@@ -308,9 +314,9 @@ test("host lobby retains team capacity, assignment, creation, naming and photo p
       "base64",
     ),
   });
-  await expect(
-    page.getByText("Photo saved for Renamed Alpha.", { exact: true }),
-  ).toBeVisible();
+  await expect(page.locator("output.u-visually-hidden")).toHaveText(
+    "Photo saved for Renamed Alpha.",
+  );
   await expect(renamed.getByAltText("Team photo")).toHaveAttribute(
     "src",
     /\/game-assets\/team-photos\/test-session\/alpha-.*\.png$/,

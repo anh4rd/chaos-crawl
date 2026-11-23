@@ -1,5 +1,7 @@
 @use "../variables/colors";
 @use "../variables/layout";
+@use "../variables/fonts";
+@use "../variables/effects";
 .reward-setup {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -14,8 +16,128 @@
     grid-column: 1 / -1;
     margin: 0;
   }
+  &--round-review {
+    color: colors.$session-field-ink;
+    > .note--session,
+    > .form-label--reward > span {
+      color: colors.$session-field-ink;
+    }
+  }
+  &__round,
+  &__methods,
+  &__summary {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+  &__round {
+    display: grid;
+    gap: layout.$spacing-unit;
+  }
+  &__round span,
+  &__summary span,
+  &__methods legend {
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-action;
+  }
+  &__methods {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    legend {
+      padding: 0;
+      margin-bottom: layout.$spacing-unit * 2;
+    }
+  }
+  &__method-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, layout.$pixel-unit * 30));
+    gap: layout.$spacing-unit;
+  }
+  &__method {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: layout.$spacing-unit;
+    min-width: 0;
+    aspect-ratio: 1;
+    padding: layout.$spacing-unit;
+    border: layout.$session-border-width solid colors.$session-field-border;
+    border-radius: layout.$radius-lg;
+    background: colors.$btn-surface;
+    color: colors.$session-field-ink;
+    font: inherit;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-action;
+    line-height: 1.1;
+    cursor: pointer;
+    &[aria-pressed="true"] {
+      border-color: colors.$purple;
+      background: colors.$accent-soft;
+    }
+    &:disabled {
+      opacity: effects.$setup-disabled-opacity;
+      cursor: not-allowed;
+    }
+    img {
+      width: min(layout.$spacing-unit * 9, 40%);
+      height: auto;
+    }
+  }
+  .host-portal &__method {
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-action;
+    line-height: 1.1;
+  }
+  &__summary {
+    padding: layout.$spacing-unit * 3;
+    border: layout.$control-border-width solid colors.$session-field-border;
+    border-radius: layout.$radius-lg;
+    background: colors.$btn-surface;
+    color: colors.$session-field-ink;
+  }
+  &__summary-values {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: layout.$spacing-unit * 3;
+    > div {
+      display: grid;
+      gap: layout.$spacing-unit;
+    }
+    > button {
+      margin-left: auto;
+    }
+  }
+  &__edit-fields:not([hidden]) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: layout.$spacing-unit * 2;
+    margin-top: layout.$spacing-unit * 3;
+    .form-label--reward > span {
+      color: colors.$session-field-ink;
+    }
+    .form-label--reward select,
+    .form-label--reward input {
+      min-height: layout.$control-height;
+      padding: layout.$spacing-unit * 2;
+      font-size: fonts.$size-small;
+    }
+  }
+  .host-management &__method:focus-visible,
+  .host-management &__summary button:focus-visible,
+  .host-management &__summary select:focus-visible,
+  .host-management &__summary input:focus-visible {
+    outline: layout.$focus-ring-width solid colors.$purple;
+    outline-offset: layout.$spacing-unit;
+  }
   @media (max-width: layout.$reward-compact-breakpoint) {
     grid-template-columns: 1fr;
     padding: layout.$pixel-unit * 3;
+  }
+  @media (max-width: layout.$player-compact-breakpoint) {
+    &__edit-fields:not([hidden]) {
+      grid-template-columns: 1fr;
+    }
   }
 }

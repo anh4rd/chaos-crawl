@@ -172,6 +172,8 @@ export function useHostRewards({
     if (!activeRewardRound && currentChallenge) {
       setRewardChallengeId(currentChallenge.id);
       setRewardPoints(currentChallenge.points);
+      setRewardTargetKind(session?.teams_enabled ? "team" : "player");
+      setSelectedRewardWinnerIds([]);
       setShowRewardSetup(true);
     } else {
       setShowRewardSetup(false);
@@ -183,6 +185,12 @@ export function useHostRewards({
     event.preventDefault();
     if (!session || !rewardChallengeId) {
       setError("Choose a challenge to reward.");
+      return;
+    }
+    if (showRewardOverlay && currentChallenge?.id !== rewardChallengeId) {
+      setError(
+        "The current round changed. Close and reopen review to continue.",
+      );
       return;
     }
     if (!enabledRewardMethods.includes(rewardMethod)) {

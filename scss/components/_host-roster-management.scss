@@ -1,0 +1,34 @@
+@use "../variables/layout";
+@use "../tools/compact-input";
+@use "../tools/compact-select";
+
+.host-roster-management {
+  display: grid;
+  gap: layout.$pixel-unit * 3;
+
+  &__fields {
+    display: grid;
+    gap: layout.$pixel-unit * 3;
+    min-width: 0;
+  }
+  &__player {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: layout.$pixel-unit * 2;
+  }
+  &__player label,
+  &__capacity {
+    display: grid;
+    flex: 1 1 layout.$pixel-unit * 35;
+    gap: layout.$pixel-unit;
+    min-width: 0;
+  }
+  &__player input {
+    @include compact-input.compact-input;
+  }
+  &__player select,
+  &__capacity select {
+    @include compact-select.compact-select;
+  }
+}

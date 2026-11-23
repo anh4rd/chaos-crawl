@@ -35,11 +35,19 @@ export function useHostRoster({
   const [teamNameEdits, setTeamNameEdits] = useState<Record<string, string>>(
     {},
   );
+  const [playerNameEdits, setPlayerNameEdits] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     setTeamNameEdits((current) =>
       Object.fromEntries(
         teams.map((team) => [team.id, current[team.id] ?? team.name]),
+      ),
+    );
+    setPlayerNameEdits((current) =>
+      Object.fromEntries(
+        players.map((player) => [player.id, current[player.id] ?? player.name]),
       ),
     );
     if (!players.some((player) => player.id === selectedLobbyPlayerId)) {
@@ -202,6 +210,32 @@ export function useHostRoster({
     }
     await load();
   }
+  async function renamePlayer(player: SessionPlayer) {
+    const name = (playerNameEdits[player.id] ?? player.name).trim();
+    if (!session || !name || name === player.name) return;
+    if (!setBusy(true)) return;
+    setError("");
+    setNotice("");
+    try {
+      const { data, error } = await hostRosterCommands.renameSessionPlayer({
+        values: { name },
+        playerId: player.id,
+        sessionId: session.id,
+      });
+      if (error || !data) {
+        setError(
+          error?.message ??
+            "The player could not be updated. Check host permissions and try again.",
+        );
+        return;
+      }
+      setPlayerNameEdits((current) => ({ ...current, [player.id]: name }));
+      setNotice(`Player renamed to ${name}.`);
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  }
   return {
     teamName,
     setTeamName,
@@ -209,6 +243,9 @@ export function useHostRoster({
     setSelectedLobbyPlayerId,
     teamNameEdits,
     setTeamNameEdits,
+    playerNameEdits,
+    setPlayerNameEdits,
+    renamePlayer,
     updatePlayersPerTeam,
     createTeam,
     renameTeam,

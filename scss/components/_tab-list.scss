@@ -16,6 +16,14 @@
 }
 
 .tab-list {
+  &--leaderboard {
+    width: 100%;
+    flex-wrap: nowrap;
+    padding: layout.$spacing-unit;
+    border-color: colors.$session-frame-ink;
+    border-radius: layout.$pixel-unit * 5;
+    background: colors.$purple-dark;
+  }
   &--workspace {
     display: flex;
     justify-content: normal;

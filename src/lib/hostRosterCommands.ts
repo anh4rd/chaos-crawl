@@ -149,3 +149,23 @@ export function assignSessionTeam({
       .eq("session_id", sessionId),
   );
 }
+
+export function renameSessionPlayer({
+  values,
+  playerId,
+  sessionId,
+}: {
+  values: { name: string };
+  playerId: string;
+  sessionId: string;
+}): Promise<ApiResult<{ id: string }>> {
+  return runApi<{ id: string }>(() =>
+    supabase
+      .from("cc_game_session_players")
+      .update(values)
+      .eq("id", playerId)
+      .eq("session_id", sessionId)
+      .select("id")
+      .maybeSingle(),
+  );
+}

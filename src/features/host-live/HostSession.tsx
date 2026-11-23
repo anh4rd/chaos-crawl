@@ -1,8 +1,8 @@
 import { useClipboard } from "../../components/ui/useClipboard";
+import { useHostScoreAdjustments } from "./useHostScoreAdjustments";
 import { useNavigationFocus } from "../../components/ui/useNavigationFocus";
 import Button from "../../components/ui/Button";
 import { useHostTour } from "./useHostTour";
-import SessionBreak from "../../components/session/SessionBreak";
 import SessionChallengeCard from "../../components/session/SessionChallengeCard";
 import SessionFeedback from "../../components/session/SessionFeedback";
 import SessionNavigation from "../../components/session/SessionNavigation";
@@ -10,6 +10,7 @@ import SessionPage from "../../components/session/SessionPage";
 import SessionReview from "../../components/session/SessionReview";
 import SessionRewardRound from "../../components/session/SessionRewardRound";
 import SessionState from "../../components/session/SessionState";
+import SessionTourPrompt from "../../components/session/SessionTourPrompt";
 import SessionMemories from "../../components/session/SessionMemories";
 import type { SessionMemoryItem } from "../../components/session/types";
 import TabList from "../../components/ui/TabList";
@@ -31,12 +32,14 @@ import HostMainSubmissions from "./HostMainSubmissions";
 import HostManagement from "./HostManagement";
 import HostRewardRound from "./HostRewardRound";
 import HostRoundControls from "./HostRoundControls";
-import HostRoundOverview from "./HostRoundOverview";
+import HostControlOverrides from "./HostControlOverrides";
 import HostSettings from "./HostSettings";
 import HostSecretMissions from "./HostSecretMissions";
 import HostSecretReview from "./HostSecretReview";
 import HostSecretScreenControls from "./HostSecretScreenControls";
 import HostSessionLeaderboard from "./HostSessionLeaderboard";
+import HostBreakPanel from "./HostBreakPanel";
+import HostRosterManagement from "./HostRosterManagement";
 import HostSideSubmissions from "./HostSideSubmissions";
 import { rewardPresentation } from "./rewardPresentation";
 import RoundOverrideDialog from "./RoundOverrideDialog";
@@ -69,12 +72,12 @@ import SessionPreview from "../../components/session/SessionPreview";
 import GuidedTour from "../../components/tour/GuidedTour";
 import { upcomingStageModel } from "./upcomingStageModel";
 import StagePreview from "../../components/session/StagePreview";
-import RoundPlan from "../../components/session/RoundPlan";
 import PanelGrid from "../../components/ui/PanelGrid";
 
 const hostManagementSections = [
   { id: "overrides", label: "Control overrides" },
   { id: "review", label: "Review" },
+  { id: "roster", label: "Manage teams and players" },
   { id: "schedule", label: "Game schedule" },
   { id: "secret-missions", label: "Secret mission schedule" },
   { id: "settings", label: "Settings" },
@@ -126,6 +129,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   const [linkCopyFeedback, setLinkCopyFeedback] = useState(false);
   const [actionError, setError] = useState("");
   const [activeTab, setActiveTab] = useState<HostTab>("game");
+  const [tourDismissed, setTourDismissed] = useState(false);
   const [activeHostSection, setActiveHostSection] =
     useState<HostManagementSection>("overrides");
   const hostManagementId = useId();
@@ -135,6 +139,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     setTeamPhotoUrls,
     gamePhotoUrl,
     autoplayEnabled,
+    decideRewardInGame,
     gameSchedule,
     plannedTasks,
     setPlannedTasks,
@@ -148,6 +153,13 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     setPlanError("");
     setQueryError("");
   }, [setPlanError, setQueryError]);
+  const { adjustScore, scoreAdjustmentCount } = useHostScoreAdjustments({
+    sessionId,
+    setBusy,
+    setError,
+    setNotice,
+    load,
+  });
 
   const { hostPlayerName, hostDisplayName } = useHostIdentity();
   const {
@@ -436,6 +448,9 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     setSelectedLobbyPlayerId,
     teamNameEdits,
     setTeamNameEdits,
+    playerNameEdits,
+    setPlayerNameEdits,
+    renamePlayer,
     updatePlayersPerTeam,
     createTeam,
     renameTeam,
@@ -538,6 +553,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   });
   const {
     editingBreakChallenge,
+    canEditEquipment,
     setEditingBreakChallenge,
     editChallengeTitle,
     setEditChallengeTitle,
@@ -650,13 +666,9 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
           onDismiss={() => setCopyError("")}
         />
       )}
-      {notice && (
-        <SessionFeedback
-          message={notice}
-          kind="success"
-          onDismiss={() => setNotice("")}
-        />
-      )}
+      <output className="u-visually-hidden" aria-atomic="true">
+        {notice}
+      </output>
     </>
   );
   const sideChallengeAddAction =
@@ -718,9 +730,36 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   const canParticipate = Boolean(
     session.host_participates && hostPlayer && hostPlayerToken,
   );
+  function openHostSection(section: HostManagementSection) {
+    document.getElementById(`${hostManagementId}-tab-${section}`)?.focus();
+    setActiveHostSection(section);
+  }
+  const secretReviewControls = (
+    <HostSecretReview
+      secretReviewOptions={secretReviewOptions}
+      votingOpen={secretReviewVotingOpen}
+      selectedSecretReview={selectedSecretReview}
+      selectedSecretReviewAssignmentId={selectedSecretReviewAssignmentId}
+      busy={busy}
+      selectSecretReviewAssignment={selectSecretReviewAssignment}
+      challenges={challenges}
+      secretReviewAssignments={secretReviewAssignments}
+      players={players}
+      selectedSecretReviewChallenge={selectedSecretReviewChallenge}
+      selectedSecretReviewAssignment={selectedSecretReviewAssignment}
+      secretReviewVotes={secretReviewVotes}
+      reopenSecretReviewVote={reopenSecretReviewVote}
+      advanceSecretReview={advanceSecretReview}
+      hasPendingSecretReviews={hasPendingSecretReviews}
+      currentSecretReviewVoteCount={currentSecretReviewVoteCount}
+      closeSecretReviewVote={closeSecretReviewVote}
+      session={session}
+      openSecretReviewVote={openSecretReviewVote}
+    />
+  );
   const upcomingStage = upcomingStageModel({
     status: session.status,
-    nextRound: mainRounds[session.current_round_number],
+    nextRound: nextBreakChallenge,
     currentRound: session.current_round_number,
     onBreak: hostBreakActive,
     breakMinutes: upcomingBreakMinutes,
@@ -734,6 +773,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
           variant="session-edit"
           fullWidth={false}
           disabled={busy}
+          aria-label="Edit next challenge"
           onClick={() => openBreakChallengeEditor(nextBreakChallenge)}
         >
           <Icon name="pencil" className="icon--size-14" />
@@ -753,7 +793,6 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
       busy={busy}
       moveToRound={moveToRound}
       breakResumeRound={breakResumeRound}
-      openBreakTimerEditor={openBreakTimerEditor}
       requestMoveToRound={requestMoveToRound}
       totalRounds={mainRounds.length}
       requestStartBreak={requestStartBreak}
@@ -767,6 +806,9 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
       setRoundTimerSeconds={setRoundTimerSeconds}
       addRoundTimerMinutes={addRoundTimerMinutes}
       skipTimerAndReview={skipTimerAndReview}
+      nextStage={
+        hostBreakActive ? nextBreakChallenge?.title : upcomingStage?.title
+      }
     />
   );
   const gameTabHostControls = (
@@ -777,6 +819,41 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
       </HostManagement>
     </SessionPreview>
   );
+  const hostBreakView = hostBreakActive ? (
+    <>
+      <HostBreakPanel
+        label={roundClockText}
+        running={roundClockRunning}
+        busy={busy || Boolean(activeRewardRound)}
+        nextChallenge={nextBreakChallenge}
+        nextRound={breakResumeRound ?? session.current_round_number + 1}
+        roundCount={mainRounds.length}
+        artUrl={nextBreakTask?.artUrl}
+        preparation={nextBreakTask}
+        schedule={
+          nextBreakChallenge
+            ? `Starts ${nextRoundStartAt?.toLocaleTimeString() ?? "when the host resumes"} · ends ${nextRoundEndAt?.toLocaleTimeString() ?? "after the timer"}`
+            : undefined
+        }
+        onEditTimer={openBreakTimerEditor}
+        onToggleTimer={toggleTimer}
+        onEditChallenge={() => {
+          if (nextBreakChallenge) openBreakChallengeEditor(nextBreakChallenge);
+        }}
+        onStartNext={() => {
+          if (!nextBreakChallenge) return;
+          void moveToRound(
+            breakResumeRound ?? session.current_round_number + 1,
+          ).then((outcome) => {
+            if (outcome === "moved") restoreFocus();
+          });
+        }}
+      />
+      <SessionPreview>
+        <HostManagement>{hostRoundControls}</HostManagement>
+      </SessionPreview>
+    </>
+  ) : null;
   const participantSection =
     activeTab === "final-round"
       ? "final"
@@ -832,16 +909,17 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
             }
       }
       toolbar={
-        session.status !== "lobby" ? (
+        session.status !== "lobby" && !tourDismissed ? (
           <HostManagement>
-            <Button
-              variant="session-tour"
-              fullWidth={false}
-              type="button"
-              onClick={startHostTour}
-            >
-              ✦ Take the host tour
-            </Button>
+            <SessionTourPrompt
+              label="✦ Take the host tour"
+              dismissLabel="Dismiss host tour button"
+              onStart={startHostTour}
+              onDismiss={() => {
+                setTourDismissed(true);
+                restoreFocus();
+              }}
+            />
           </HostManagement>
         ) : null
       }
@@ -875,6 +953,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
               setEditingBreakChallenge={setEditingBreakChallenge}
               saveBreakChallengeEdit={saveBreakChallengeEdit}
               editingBreakChallenge={editingBreakChallenge}
+              canEditEquipment={canEditEquipment}
               editChallengeTitle={editChallengeTitle}
               setEditChallengeTitle={setEditChallengeTitle}
               editChallengeDescription={editChallengeDescription}
@@ -965,6 +1044,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                 onRecover={() => void openHostPlayerView()}
                 focusChallengeId={focusedHostChallenge}
                 afterMainChallenge={gameTabHostControls}
+                hostBreakView={hostBreakView}
                 sideChallengeAddAction={sideChallengeAddAction}
               />
             )}
@@ -993,17 +1073,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                 <p>This session has finished.</p>
               </SessionState>
             ) : hostBreakActive ? (
-              <SessionBreak label={roundClockText} running={roundClockRunning}>
-                {nextBreakChallenge && (
-                  <p>
-                    Up next: {nextBreakChallenge.title} · starts{" "}
-                    {nextRoundStartAt?.toLocaleTimeString() ??
-                      "when the host resumes"}{" "}
-                    · ends{" "}
-                    {nextRoundEndAt?.toLocaleTimeString() ?? "after the timer"}
-                  </p>
-                )}
-              </SessionBreak>
+              hostBreakView
             ) : (
               <>
                 <SessionMainChallengeCard
@@ -1096,6 +1166,8 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
               busy={busy}
               assignTeam={assignTeam}
               teamById={teamById}
+              adjustScore={adjustScore}
+              scoreAdjustmentCount={scoreAdjustmentCount}
             />
           )}
           {selectedSecretReviewAssignment &&
@@ -1210,9 +1282,64 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                   activeHostSection === section.id &&
                   section.id === "overrides" && (
                     <>
-                      {hostRoundControls}
-                      {upcomingStagePreview}
-                      <PanelGrid>
+                      <PanelGrid data-tour="host-controls-tab">
+                        <HostControlOverrides
+                          key={`${session.id}:${session.current_round_number}`}
+                          rounds={mainRounds}
+                          currentRound={session.current_round_number}
+                          status={session.status}
+                          busy={busy}
+                          rewardActive={Boolean(activeRewardRound)}
+                          timerReady={roundTimerHydrated}
+                          onBreak={hostBreakActive}
+                          timerRunning={roundClockRunning}
+                          timerSeconds={roundClockSeconds}
+                          timerText={roundClockText}
+                          onMoveRound={(round) =>
+                            requestMoveToRound(round, true)
+                          }
+                          onToggleTimer={toggleTimer}
+                          onResetTimer={resetRoundTimer}
+                          onRestartTimer={restartRoundTimer}
+                          onSetTimer={setRoundTimerSeconds}
+                          onAddMinutes={addRoundTimerMinutes}
+                          onEditBreak={openBreakTimerEditor}
+                          onStartBreak={requestStartBreak}
+                          onEditChallenge={(id) => {
+                            const challenge = mainRounds.find(
+                              (round) => round.id === id,
+                            );
+                            if (challenge) openBreakChallengeEditor(challenge);
+                          }}
+                          onReviewPoints={() => {
+                            setShowRewardOverlay(false);
+                            setShowRewardSetup(!activeRewardRound);
+                            if (!activeRewardRound && currentChallenge) {
+                              setRewardChallengeId(currentChallenge.id);
+                              setRewardPoints(currentChallenge.points);
+                              setRewardTargetKind(
+                                session.teams_enabled ? "team" : "player",
+                              );
+                              setSelectedRewardWinnerIds([]);
+                            }
+                            setActiveTab("reward-round");
+                            restoreFocus();
+                          }}
+                          onReviewSubmissions={() => openHostSection("review")}
+                          onSecretReview={() =>
+                            openHostSection("secret-missions")
+                          }
+                          onSchedule={() => openHostSection("schedule")}
+                          onFinish={() => {
+                            void finishGame().then((finished) => {
+                              if (finished) {
+                                setActiveHostSection("memories");
+                                restoreFocus();
+                              }
+                            });
+                          }}
+                          onMemories={() => openHostSection("memories")}
+                        />
                         <SessionInvite
                           joinUrl={joinUrl}
                           onCopy={() => copyCode("invite")}
@@ -1222,46 +1349,8 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                           teamsEnabled={session.teams_enabled}
                           hostChoosesTeams={session.host_chooses_teams}
                         />
-                        <HostRoundOverview
-                          session={session}
-                          mainRounds={mainRounds}
-                          currentChallenge={currentChallenge}
-                          busy={busy}
-                          requestMoveToRound={requestMoveToRound}
-                          activeRewardRound={activeRewardRound}
-                          roundTimerHydrated={roundTimerHydrated}
-                          hostBreakActive={hostBreakActive}
-                          currentRoundPointsAwarded={currentRoundPointsAwarded}
-                          enabledRewardMethods={enabledRewardMethods}
-                          openPointReview={openPointReview}
-                          skipTimerAndReview={skipTimerAndReview}
-                          roundClockRunning={roundClockRunning}
-                          breakResumeRound={breakResumeRound}
-                          requestStartBreak={requestStartBreak}
-                          startGameOrToggleTimer={startGameOrToggleTimer}
-                          roundClockSeconds={roundClockSeconds}
-                          restartRoundTimer={restartRoundTimer}
-                          nextBreakChallenge={nextBreakChallenge}
-                          openBreakChallengeEditor={openBreakChallengeEditor}
-                          finishGame={finishGame}
-                        />
                       </PanelGrid>
-                      <RoundPlan
-                        rounds={mainRounds.map((round) => ({
-                          id: round.id,
-                          round: round.round_number,
-                          title: round.title,
-                          description: round.description,
-                          points: round.points,
-                        }))}
-                        currentRound={session.current_round_number}
-                        interactive={session.status === "live"}
-                        busy={busy}
-                        onSelect={(round) => {
-                          if (session.status === "live")
-                            requestMoveToRound(round);
-                        }}
-                      />
+                      {secretReviewControls}
                       <HostFinalRound
                         canVote={canParticipate}
                         participantView={canParticipate}
@@ -1340,37 +1429,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                             }
                           />
                         )}
-                      <HostSecretReview
-                        secretReviewOptions={secretReviewOptions}
-                        votingOpen={secretReviewVotingOpen}
-                        selectedSecretReview={selectedSecretReview}
-                        selectedSecretReviewAssignmentId={
-                          selectedSecretReviewAssignmentId
-                        }
-                        busy={busy}
-                        selectSecretReviewAssignment={
-                          selectSecretReviewAssignment
-                        }
-                        challenges={challenges}
-                        secretReviewAssignments={secretReviewAssignments}
-                        players={players}
-                        selectedSecretReviewChallenge={
-                          selectedSecretReviewChallenge
-                        }
-                        selectedSecretReviewAssignment={
-                          selectedSecretReviewAssignment
-                        }
-                        secretReviewVotes={secretReviewVotes}
-                        reopenSecretReviewVote={reopenSecretReviewVote}
-                        advanceSecretReview={advanceSecretReview}
-                        hasPendingSecretReviews={hasPendingSecretReviews}
-                        currentSecretReviewVoteCount={
-                          currentSecretReviewVoteCount
-                        }
-                        closeSecretReviewVote={closeSecretReviewVote}
-                        session={session}
-                        openSecretReviewVote={openSecretReviewVote}
-                      />
+                      {secretReviewControls}
                       <HostMainSubmissions
                         submissions={submissions}
                         challengeById={challengeById}
@@ -1388,6 +1447,34 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                         evidenceUrl={evidenceUrl}
                       />
                     </>
+                  )}
+                {activeTab === "host-controls" &&
+                  activeHostSection === section.id &&
+                  section.id === "roster" && (
+                    <HostRosterManagement
+                      session={session}
+                      players={players}
+                      teams={teams}
+                      teamPhotoUrls={teamPhotoUrls}
+                      teamName={teamName}
+                      setTeamName={setTeamName}
+                      teamNameEdits={teamNameEdits}
+                      setTeamNameEdits={setTeamNameEdits}
+                      playerNameEdits={playerNameEdits}
+                      setPlayerNameEdits={setPlayerNameEdits}
+                      busy={busy}
+                      createTeam={createTeam}
+                      renameTeam={renameTeam}
+                      renamePlayer={renamePlayer}
+                      uploadTeamPhoto={uploadTeamPhoto}
+                      assignTeam={assignTeam}
+                      updatePlayersPerTeam={updatePlayersPerTeam}
+                      joinUrl={joinUrl}
+                      copyCode={() => copyCode("invite")}
+                      codeCopied={codeCopied && codeCopyTarget === "invite"}
+                      adjustScore={adjustScore}
+                      scoreAdjustmentCount={scoreAdjustmentCount}
+                    />
                   )}
                 {activeTab === "host-controls" &&
                   activeHostSection === section.id &&
@@ -1482,6 +1569,8 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
             {(activeTab === "reward-round" || showRewardOverlay) && (
               <HostRewardRound
                 feedback={showRewardOverlay ? feedback : undefined}
+                currentChallenge={currentChallenge}
+                decideRewardInGame={decideRewardInGame}
                 canParticipate={canParticipate}
                 showRewardOverlay={showRewardOverlay}
                 enabledRewardMethods={enabledRewardMethods}

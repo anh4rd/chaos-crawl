@@ -6,11 +6,41 @@ import SessionChallengeCard from "./SessionChallengeCard";
 import SessionMainChallengeCard from "./SessionMainChallengeCard";
 import SessionSubmission from "./SessionSubmission";
 import SessionNavigation from "./SessionNavigation";
+import SessionLeaderboard from "./SessionLeaderboard";
 import SessionRewardRound from "./SessionRewardRound";
 import SessionVotingCard from "./SessionVotingCard";
 import type { RewardPresentation, VotingEntry } from "./types";
 
 afterEach(cleanup);
+
+it("shows only supplied podium places and switches the podium with the score tab", () => {
+  const { rerender } = render(
+    <SessionLeaderboard
+      variant="page"
+      viewerRole="player"
+      entries={[
+        { id: "a", name: "Alex", score: 10 },
+        { id: "b", name: "Bo", score: 5 },
+      ]}
+      teams={[{ id: "team", name: "Team Chaos", score: 15 }]}
+      viewerId="b"
+    />,
+  );
+  const podium = screen.getByRole("list", { name: "Top players" });
+  expect(podium.querySelectorAll("li")).toHaveLength(2);
+  expect(podium.textContent).toContain("Alex");
+  expect(screen.getByText("Bo · YOU")).toBeTruthy();
+  fireEvent.click(screen.getByRole("tab", { name: "Team Scores" }));
+  expect(screen.getByRole("list", { name: "Top teams" }).textContent).toContain(
+    "Team Chaos",
+  );
+  expect(screen.queryByRole("list", { name: "Top players" })).toBeNull();
+  rerender(<SessionLeaderboard variant="page" entries={[]} />);
+  expect(screen.queryByRole("list", { name: "Top players" })).toBeNull();
+  expect(
+    screen.getByText("No players yet. Scores appear when players join."),
+  ).toBeTruthy();
+});
 
 it("groups secret-mission upload controls and response text in the submission body", () => {
   const { container } = render(

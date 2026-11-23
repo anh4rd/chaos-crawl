@@ -91,7 +91,7 @@ export function useHostChallengeEditor({
       return;
     }
     const editingTask = plannedTaskFor(editingBreakChallenge);
-    let saveNotice = `Round ${editingBreakChallenge.round_number} updated.`;
+    let saveError = "";
     if (session.host_game_id && editingTask?.id) {
       const { data: gameData, error: readError } =
         await hostSessionCommands.readHostPlan(session.host_game_id);
@@ -105,7 +105,7 @@ export function useHostChallengeEditor({
             equipment,
           });
       if (!update) {
-        saveNotice =
+        saveError =
           "Challenge updated for this game. Its saved plan equipment could not be updated.";
       } else {
         const { error: planError } =
@@ -115,18 +115,24 @@ export function useHostChallengeEditor({
             hostId: session.host_id,
           });
         if (planError)
-          saveNotice =
+          saveError =
             "Challenge updated for this game. Its saved plan equipment could not be updated.";
         else setPlannedTasks(update.plannedTasks);
       }
     }
     setBusy(false);
-    setNotice(saveNotice);
+    if (saveError) setError(saveError);
+    else setNotice(`Round ${editingBreakChallenge.round_number} updated.`);
     setEditingBreakChallenge(null);
     await load();
   }
   return {
     editingBreakChallenge,
+    canEditEquipment: Boolean(
+      session?.host_game_id &&
+      editingBreakChallenge &&
+      plannedTaskFor(editingBreakChallenge)?.id,
+    ),
     setEditingBreakChallenge,
     editChallengeTitle,
     setEditChallengeTitle,

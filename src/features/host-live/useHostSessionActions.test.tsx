@@ -139,6 +139,34 @@ it("routes planned progression through a break and blocks round changes during r
     expect.stringContaining("Complete or cancel"),
   );
 });
+it("direct overrides skip planned breaks while retaining autoplay confirmation", async () => {
+  const props = options();
+  props.autoplayEnabled = true;
+  props.plannedBreakAfter = vi.fn(() => 5);
+  props.mainRounds.push(
+    hostChallengeFixture({
+      id: "second",
+      round_number: 2,
+      duration_minutes: 7,
+    }),
+  );
+  const { result } = renderHook(() => useHostSessionActions(props));
+  act(() => result.current.requestMoveToRound(2, true));
+  expect(result.current.overridePrompt).toEqual({
+    kind: "round",
+    round: 2,
+    direct: true,
+  });
+  expect(mocks.round).not.toHaveBeenCalled();
+  act(() => result.current.confirmHostOverride());
+  await act(async () => {});
+  expect(props.startScheduledBreak).not.toHaveBeenCalled();
+  expect(mocks.round).toHaveBeenCalledWith({
+    p_session_id: "session",
+    p_round_number: 2,
+  });
+  expect(props.initializeRoundClock).toHaveBeenCalledWith(2, 7);
+});
 it("releases the shared action lock and reports a failed start", async () => {
   const props = options();
   mocks.start.mockResolvedValue({

@@ -3,6 +3,7 @@ import { updateHostPlan } from "./hostPlanApi";
 import { saveBreakChallenge, saveHostPlanTasks } from "./hostSessionCommands";
 import {
   assignSessionTeam,
+  renameSessionPlayer,
   renameSessionTeam,
   saveTeamPhoto,
   updateHostAvatar,
@@ -21,6 +22,11 @@ const mocks = vi.hoisted(() => {
       trace.push(["eq", name, value]);
       return query;
     },
+    select: (columns: string) => {
+      trace.push(["select", columns]);
+      return query;
+    },
+    maybeSingle: () => execute(),
     then: (
       ...args: Parameters<Promise<{ data: unknown; error: unknown }>["then"]>
     ) => execute().then(...args),
@@ -216,5 +222,25 @@ it("keeps null team assignment as an explicit unassignment", async () => {
     ["update", { team_id: null }],
     ["eq", "id", "participant-55"],
     ["eq", "session_id", "live-session-33"],
+  ]);
+});
+it("renames a player only within the session and requests the affected identity", async () => {
+  mocks.execute.mockResolvedValueOnce({
+    data: { id: "participant-55" },
+    error: null,
+  });
+  expect(
+    await renameSessionPlayer({
+      playerId: "participant-55",
+      sessionId: "live-session-33",
+      values: { name: "Pat" },
+    }),
+  ).toEqual({ data: { id: "participant-55" }, error: null });
+  expect(mocks.trace).toEqual([
+    ["from", "cc_game_session_players"],
+    ["update", { name: "Pat" }],
+    ["eq", "id", "participant-55"],
+    ["eq", "session_id", "live-session-33"],
+    ["select", "id"],
   ]);
 });

@@ -127,7 +127,7 @@ it.each([
     const { result } = await save(props);
     expect(commands.saveBreakChallenge).toHaveBeenCalledOnce();
     expect(commands.saveHostPlanTasks).not.toHaveBeenCalled();
-    expect(props.setNotice).toHaveBeenLastCalledWith(
+    expect(props.setError).toHaveBeenLastCalledWith(
       "Challenge updated for this game. Its saved plan equipment could not be updated.",
     );
     expect(result.current.editingBreakChallenge).toBeNull();
@@ -142,9 +142,25 @@ it("does not overwrite a plan after a failed read", async () => {
   const props = options();
   await save(props);
   expect(commands.saveHostPlanTasks).not.toHaveBeenCalled();
-  expect(props.setNotice).toHaveBeenLastCalledWith(
+  expect(props.setError).toHaveBeenLastCalledWith(
     "Challenge updated for this game. Its saved plan equipment could not be updated.",
   );
+});
+it("reports a failed saved-plan write as a visible error after updating the live challenge", async () => {
+  commands.readHostPlan.mockResolvedValue({
+    data: { plan_data: { selectedTasks: [{ id: "task" }] } },
+    error: null,
+  });
+  commands.saveHostPlanTasks.mockResolvedValue({
+    data: null,
+    error: { message: "Write failed" },
+  });
+  const props = options();
+  await save(props);
+  expect(props.setError).toHaveBeenLastCalledWith(
+    "Challenge updated for this game. Its saved plan equipment could not be updated.",
+  );
+  expect(props.load).toHaveBeenCalledOnce();
 });
 it("stops before a saved-plan read when the live update fails", async () => {
   commands.saveBreakChallenge.mockResolvedValue({

@@ -1,6 +1,7 @@
 @use "../variables/colors";
 @use "../variables/fonts";
 @use "../variables/layout";
+@use "../variables/motion";
 
 .host-round-controls {
   position: relative;
@@ -95,6 +96,13 @@
     flex: none;
     color: colors.$lime;
     stroke-width: 3;
+    animation: host-stage-change motion.$duration-toggle
+      motion.$easing-interaction;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &__stage-icon {
+      animation: none;
+    }
   }
   &__title h3 {
     margin: 0;
@@ -104,6 +112,12 @@
     line-height: 1;
     text-shadow: layout.$pixel-unit * 0.5 layout.$pixel-unit * 0.5 0
       colors.$black;
+  }
+
+  @keyframes host-stage-change {
+    50% {
+      transform: scale(motion.$scale-hover);
+    }
   }
   &__title p {
     margin: layout.$pixel-unit 0 0;

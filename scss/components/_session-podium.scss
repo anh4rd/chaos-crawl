@@ -1,0 +1,97 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.session-podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  width: min(100%, layout.$entry-content-width);
+  margin: 0 auto layout.$spacing-unit * 4;
+  padding: layout.$spacing-unit * 8 0 0;
+  list-style: none;
+  color: colors.$white;
+  text-align: center;
+  &__place {
+    display: grid;
+    justify-items: center;
+    gap: layout.$spacing-unit;
+    min-width: 0;
+    padding-top: layout.$spacing-unit * 3;
+    strong {
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      font-size: fonts.$size-body;
+      line-height: 1.15;
+    }
+    > span {
+      font-size: fonts.$size-small;
+    }
+  }
+  &__place--1 {
+    grid-column: 2;
+    grid-row: 1;
+    padding-top: 0;
+    &:only-child {
+      grid-column: 1 / -1;
+    }
+  }
+  &__place--2 {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  &__place--3 {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  &__portrait {
+    position: relative;
+    margin-bottom: layout.$spacing-unit * 2;
+  }
+  &__avatar {
+    display: grid;
+    place-items: center;
+    width: layout.$session-avatar-size;
+    height: layout.$session-avatar-size;
+    overflow: hidden;
+    border: layout.$pixel-unit solid colors.$choice-lavender;
+    border-radius: layout.$radius-circle;
+    background: colors.$purple-dark;
+    color: colors.$white;
+    font-size: fonts.$size-subheading;
+    font-weight: fonts.$weight-bold;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+  &__place--1 &__avatar {
+    width: layout.$pixel-unit * 21;
+    height: layout.$pixel-unit * 21;
+  }
+  &__crown {
+    position: absolute;
+    z-index: 1;
+    top: -(layout.$spacing-unit * 7);
+    left: 50%;
+    width: layout.$pixel-unit * 12;
+    transform: translateX(-50%);
+  }
+  &__rank {
+    position: absolute;
+    bottom: -(layout.$spacing-unit * 2);
+    left: 50%;
+    display: grid;
+    place-items: center;
+    width: layout.$pixel-unit * 6;
+    height: layout.$pixel-unit * 6;
+    border: layout.$session-border-width solid colors.$purple-dark;
+    border-radius: layout.$radius-circle;
+    background: colors.$choice-lavender;
+    color: colors.$purple-dark;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-action;
+    transform: translateX(-50%);
+  }
+}

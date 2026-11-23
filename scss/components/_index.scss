@@ -18,6 +18,8 @@
 @use "main-challenge";
 @use "session-state";
 @use "session-leaderboard";
+@use "score-adjustment";
+@use "session-podium";
 @use "session-rank-row";
 @use "evidence-gallery";
 @use "session-voting-card";
@@ -30,6 +32,8 @@
 @use "session-reward-round";
 @use "session-review";
 @use "host-management";
+@use "host-roster-management";
+@use "host-break-panel";
 @use "host-game-schedule";
 @use "host-settings";
 @use "session-feedback";
@@ -164,6 +168,7 @@
 @use "round-selector";
 @use "upcoming-challenge";
 @use "session-invite";
+@use "session-tour-prompt";
 @use "submission-list";
 @use "submission-row";
 @use "evidence-review";

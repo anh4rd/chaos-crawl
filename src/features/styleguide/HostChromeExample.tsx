@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Button from "../../components/ui/Button";
 import ControlPanel from "../../components/ui/ControlPanel";
 import Note from "../../components/ui/Note";
@@ -8,6 +8,7 @@ import GuidedTour from "../../components/tour/GuidedTour";
 import HostManagement from "../host-live/HostManagement";
 import { Example } from "./Example";
 import SessionPreview from "../../components/session/SessionPreview";
+import SessionTourPrompt from "../../components/session/SessionTourPrompt";
 
 const steps = [
   {
@@ -19,25 +20,30 @@ const steps = [
 
 export default function HostChromeExample() {
   const [tourOpen, setTourOpen] = useState(false);
+  const [tourDismissed, setTourDismissed] = useState(false);
   const [notice, setNotice] = useState("No local action selected.");
+  const actionRef = useRef<HTMLDivElement>(null);
   return (
     <Example
       title="Host frame and control panel"
       source="src/features/host-live/HostManagement.tsx + src/components/ui/ControlPanel.tsx"
       code={
-        '<HostManagement>\n  <Button variant="session-tour" fullWidth={false}>Take sample tour</Button>\n  <PanelGrid>\n    <ControlPanel heading="LOCAL HOST CONTROLS" marker="✦">…</ControlPanel>\n    <ContentPanel variant="session">Local context</ContentPanel>\n  </PanelGrid>\n</HostManagement>'
+        '<SessionTourPrompt label="Take sample tour" dismissLabel="Dismiss sample tour button" onStart={openTour} onDismiss={dismissTour} />'
       }
     >
       <SessionPreview>
         <HostManagement>
-          <Button
-            type="button"
-            variant="session-tour"
-            fullWidth={false}
-            onClick={() => setTourOpen(true)}
-          >
-            ✦ Take sample tour
-          </Button>
+          {!tourDismissed && (
+            <SessionTourPrompt
+              label="✦ Take sample tour"
+              dismissLabel="Dismiss sample tour button"
+              onStart={() => setTourOpen(true)}
+              onDismiss={() => {
+                actionRef.current?.querySelector("button")?.focus();
+                setTourDismissed(true);
+              }}
+            />
+          )}
           <PanelGrid>
             <ControlPanel
               heading="LOCAL HOST CONTROLS"
@@ -45,14 +51,16 @@ export default function HostChromeExample() {
               aria-label="Local host controls"
               data-tour="example-host-tools"
             >
-              <Button
-                type="button"
-                variant="lobby-action"
-                fullWidth={false}
-                onClick={() => setNotice("Local host action selected.")}
-              >
-                Try local host action
-              </Button>
+              <div ref={actionRef}>
+                <Button
+                  type="button"
+                  variant="lobby-action"
+                  fullWidth={false}
+                  onClick={() => setNotice("Local host action selected.")}
+                >
+                  Try local host action
+                </Button>
+              </div>
               <Note as="output">{notice}</Note>
             </ControlPanel>
             <ContentPanel variant="session">

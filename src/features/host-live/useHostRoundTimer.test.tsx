@@ -34,6 +34,49 @@ afterEach(() => {
   cleanup();
   vi.useRealTimers();
 });
+it("selects preparation for the upcoming scheduled task instead of an earlier task", () => {
+  const base = options();
+  const props = {
+    ...base,
+    mainRounds: [
+      hostChallengeFixture({ title: "First" }),
+      hostChallengeFixture({
+        id: "next",
+        round_number: 2,
+        title: "Portrait — Player prep",
+      }),
+    ],
+    plannedTasks: [
+      { id: "first-task", title: "First", equipment: ["Wrong"] },
+      { id: "portrait-task", title: "Portrait", equipment: ["Camera"] },
+    ],
+    gameSchedule: [
+      { type: "challenge", title: "First", duration: 5, taskId: "first-task" },
+      {
+        type: "challenge",
+        title: "Portrait — Player prep",
+        duration: 5,
+        taskId: "portrait-task",
+      },
+    ],
+  };
+  const { result, rerender } = renderHook(
+    ({ plannedTasks, gameSchedule }) =>
+      useHostRoundTimer({ ...props, plannedTasks, gameSchedule }),
+    {
+      initialProps: {
+        plannedTasks: props.plannedTasks,
+        gameSchedule: props.gameSchedule,
+      },
+    },
+  );
+  expect(result.current.nextBreakTask?.equipment).toEqual(["Camera"]);
+  rerender({
+    plannedTasks: [props.plannedTasks[0]],
+    gameSchedule: props.gameSchedule,
+  });
+  expect(result.current.nextBreakTask).toBeUndefined();
+});
 it("ticks once per second, publishes every five seconds and clears intervals on unmount", async () => {
   const props = options();
   const { result, unmount } = renderHook(() => useHostRoundTimer(props));

@@ -1,6 +1,7 @@
 @use "../variables/fonts";
 @use "../variables/colors";
 @use "../variables/layout";
+@use "../variables/motion";
 .session-rank-row {
   display: flex;
   align-items: center;
@@ -46,6 +47,85 @@
 }
 
 .session-rank-row {
+  &--page {
+    gap: layout.$spacing-unit * 2;
+    margin-top: layout.$spacing-unit;
+    padding: layout.$spacing-unit * 1.5;
+    border: layout.$session-border-width solid colors.$session-frame-ink;
+    border-radius: layout.$pixel-unit * 3;
+    background: colors.$white;
+    color: colors.$ink;
+    box-shadow: 0 layout.$pixel-unit * 0.75 0 colors.$session-frame-ink;
+    .session-rank-row__rank {
+      display: grid;
+      place-items: center;
+      flex: 0 0 layout.$control-height;
+      height: layout.$control-height;
+      border-radius: layout.$pixel-unit * 3;
+      background: colors.$choice-lavender;
+      color: colors.$purple-dark;
+      font: fonts.$size-stat fonts.$family-display;
+    }
+    .session-rank-row__avatar {
+      flex: 0 0 layout.$control-height;
+      width: layout.$control-height;
+      height: layout.$control-height;
+      border: layout.$session-border-width solid colors.$choice-lavender;
+    }
+    .session-rank-row__name strong {
+      overflow-wrap: anywhere;
+      font-size: fonts.$size-body;
+      line-height: 1.15;
+    }
+    .session-rank-row__name small {
+      color: colors.$host-muted;
+      line-height: 1.2;
+    }
+    .session-rank-row__score {
+      display: grid;
+      justify-items: center;
+      color: colors.$ink;
+      font: fonts.$size-stat fonts.$family-display;
+      line-height: 1;
+    }
+    .session-rank-row__score small {
+      color: colors.$purple;
+      font: fonts.$weight-bold fonts.$size-compact-label fonts.$family-body;
+      text-transform: uppercase;
+    }
+  }
+  &--page.session-rank-row--selected {
+    border-color: colors.$purple-dark;
+  }
+  &--host &__score-value {
+    animation: session-score-change motion.$duration-toggle
+      motion.$easing-interaction;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &--host &__score-value {
+      animation: none;
+    }
+  }
+  &--rank-1 .session-rank-row__rank {
+    background: colors.$lime;
+    color: colors.$ink;
+  }
+
+  @keyframes session-score-change {
+    50% {
+      transform: scale(motion.$scale-hover);
+    }
+  }
+  &--rank-2 .session-rank-row__rank,
+  &--rank-3 .session-rank-row__rank {
+    background: colors.$purple;
+    color: colors.$white;
+  }
+  &--host.session-rank-row--rank-2 .session-rank-row__rank,
+  &--host.session-rank-row--rank-3 .session-rank-row__rank {
+    background: colors.$choice-lavender;
+    color: colors.$purple-dark;
+  }
   &--compact {
     align-items: normal;
     flex-wrap: nowrap;

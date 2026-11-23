@@ -30,7 +30,6 @@ interface Props {
     forceBreakMinutes?: number,
   ) => void;
   breakResumeRound: number | null;
-  openBreakTimerEditor: () => void;
   requestMoveToRound: (nextRound: number) => void;
   totalRounds: number;
   requestStartBreak: () => void;
@@ -44,6 +43,7 @@ interface Props {
   setRoundTimerSeconds: (seconds: number) => void;
   addRoundTimerMinutes: (minutes: number) => void;
   skipTimerAndReview: () => void;
+  nextStage?: string;
 }
 
 export default function HostRoundControls({
@@ -56,7 +56,6 @@ export default function HostRoundControls({
   busy,
   moveToRound,
   breakResumeRound,
-  openBreakTimerEditor,
   requestMoveToRound,
   totalRounds,
   requestStartBreak,
@@ -70,6 +69,7 @@ export default function HostRoundControls({
   setRoundTimerSeconds,
   addRoundTimerMinutes,
   skipTimerAndReview,
+  nextStage,
 }: Props) {
   const [editingTime, setEditingTime] = useState<string | null>(null);
   const [minutes, setMinutes] = useState("");
@@ -156,61 +156,53 @@ export default function HostRoundControls({
         >
           {session.current_round_number}/{totalRounds}
         </span>
-        <details className="host-round-controls__menu" ref={menuRef}>
-          <summary
-            aria-label="Host control recovery actions"
-            onKeyDown={dismissMenu}
-          >
-            <Icon
-              name="more-vertical"
-              className="icon--size-20"
-              aria-hidden="true"
-            />
-          </summary>
-          <div className="host-round-controls__menu-content">
-            {hostBreakActive && !rewardActive && !complete ? (
-              <Button
-                type="button"
-                variant="flow"
-                fullWidth={false}
-                disabled={busy}
-                onClick={openBreakTimerEditor}
-                onKeyDown={dismissMenu}
-              >
-                Edit break timer
-              </Button>
-            ) : showTimer && !hostBreakActive ? (
-              <Button
-                type="button"
-                variant="flow"
-                fullWidth={false}
-                disabled={busy}
-                onKeyDown={dismissMenu}
-                onClick={() => {
-                  closeMenu();
-                  if (
-                    window.confirm(
-                      expired
-                        ? "Restart the round timer?"
-                        : "Reset the round timer and pause it?",
-                    )
-                  ) {
-                    if (expired) restartRoundTimer();
-                    else resetRoundTimer();
-                  }
-                }}
-              >
-                {expired ? "Play timer again" : "Redo timer"}
-              </Button>
-            ) : (
-              <span>No recovery actions available.</span>
-            )}
-          </div>
-        </details>
+        {!hostBreakActive && (
+          <details className="host-round-controls__menu" ref={menuRef}>
+            <summary
+              aria-label="Host control recovery actions"
+              onKeyDown={dismissMenu}
+            >
+              <Icon
+                name="more-vertical"
+                className="icon--size-20"
+                aria-hidden="true"
+              />
+            </summary>
+            <div className="host-round-controls__menu-content">
+              {showTimer ? (
+                <Button
+                  type="button"
+                  variant="flow"
+                  fullWidth={false}
+                  disabled={busy}
+                  onKeyDown={dismissMenu}
+                  onClick={() => {
+                    closeMenu();
+                    if (
+                      window.confirm(
+                        expired
+                          ? "Restart the round timer?"
+                          : "Reset the round timer and pause it?",
+                      )
+                    ) {
+                      if (expired) restartRoundTimer();
+                      else resetRoundTimer();
+                    }
+                  }}
+                >
+                  {expired ? "Play timer again" : "Redo timer"}
+                </Button>
+              ) : (
+                <span>No recovery actions available.</span>
+              )}
+            </div>
+          </details>
+        )}
       </div>
       <div className="host-round-controls__main">
         <div className="host-round-controls__title">
           <Icon
+            key={stage}
             name={icon}
             className="host-round-controls__stage-icon"
             aria-hidden="true"
@@ -234,6 +226,11 @@ export default function HostRoundControls({
                             ? "The timer is running."
                             : "Set the duration and start the round."}
             </p>
+            {nextStage && !complete && (
+              <p className="host-round-controls__next">
+                <strong>Up next:</strong> {nextStage}
+              </p>
+            )}
           </div>
         </div>
         <div className="host-round-controls__primary">

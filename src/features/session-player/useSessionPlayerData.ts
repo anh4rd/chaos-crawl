@@ -1,6 +1,10 @@
 import { isFinalVotingOpen } from "./votingState";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/sessionSupabase";
+import {
+  readSessionTeamAdjustments,
+  type SessionTeamAdjustment,
+} from "../../lib/sessionTeamAdjustments";
 import type {
   FinalGalleryView,
   LeaderboardEntry,
@@ -27,6 +31,9 @@ export function useSessionPlayerData(
   );
 
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [teamAdjustments, setTeamAdjustments] = useState<
+    SessionTeamAdjustment[] | null
+  >(null);
 
   const [playerRank, setPlayerRank] = useState<number | null>(null);
 
@@ -76,6 +83,7 @@ export function useSessionPlayerData(
     setSecretReview(null);
     setEvidence([]);
     setLeaderboard([]);
+    setTeamAdjustments(null);
     setPlayerRank(null);
     setFinalGalleryView(null);
     setRewardRound(null);
@@ -232,6 +240,18 @@ export function useSessionPlayerData(
       } else {
         setLeaderboard((leaderboardData ?? []) as LeaderboardEntry[]);
       }
+      if (currentView?.session.teams_enabled) {
+        const adjustments = await readSessionTeamAdjustments(code, token);
+        if (version !== requestVersion.current) return;
+        if (adjustments.error) {
+          setTeamAdjustments(null);
+          nextError =
+            nextError ||
+            `Team scores couldn't refresh: ${adjustments.error.message}`;
+        } else {
+          setTeamAdjustments(adjustments.data);
+        }
+      }
     }
 
     if (activePage === "final" || currentView?.session.final_gallery_open) {
@@ -310,6 +330,7 @@ export function useSessionPlayerData(
     secretMissions,
     secretReview,
     leaderboard,
+    teamAdjustments,
     playerRank,
     evidence,
     finalGallery,

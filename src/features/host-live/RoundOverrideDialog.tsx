@@ -12,12 +12,13 @@ interface RoundOverrideDialogProps {
   setOverridePrompt: Dispatch<
     SetStateAction<
       | { kind: "start" }
-      | { kind: "round"; round: number; forceBreak?: boolean }
+      | { kind: "round"; round: number; forceBreak?: boolean; direct?: boolean }
       | null
     >
   >;
   overridePrompt:
-    { kind: "start" } | { kind: "round"; round: number; forceBreak?: boolean };
+    | { kind: "start" }
+    | { kind: "round"; round: number; forceBreak?: boolean; direct?: boolean };
   startOverrideReasons: () => string[];
   players: SessionPlayer[];
   session: GameSession;

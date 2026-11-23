@@ -17,6 +17,8 @@ interface SessionMainChallengeCardProps {
   action?: ReactNode;
   children?: ReactNode;
   actionTourTarget?: string;
+  upcoming?: boolean;
+  details?: ReactNode;
 }
 
 export default function SessionMainChallengeCard({
@@ -30,18 +32,22 @@ export default function SessionMainChallengeCard({
   durationMinutes,
   timerLabel,
   timerCaption,
+  upcoming = false,
+  details,
 }: SessionMainChallengeCardProps) {
   return (
     <section
-      className="main-challenge"
+      className={`main-challenge${upcoming ? " main-challenge--upcoming" : ""}`}
       data-viewer-role={viewerRole}
-      data-tour="player-challenge"
-      aria-label={`Main challenge · ${durationMinutes} minute allowance`}
+      data-tour={upcoming ? undefined : "player-challenge"}
+      aria-label={`${upcoming ? "Next main challenge" : "Main challenge"} · ${durationMinutes} minute allowance`}
     >
       <div className="main-challenge__heading-row">
         <div className="main-challenge__heading">
           <div className="main-challenge__kind-title">
-            <span className="main-challenge__kind">MAIN CHALLENGE</span>
+            <span className="main-challenge__kind">
+              {upcoming ? "NEXT MAIN CHALLENGE" : "MAIN CHALLENGE"}
+            </span>
             <div>
               <h2>
                 <span
@@ -60,6 +66,7 @@ export default function SessionMainChallengeCard({
               <TimerReadout label={timerCaption} value={timerLabel} />
             </ControlRow>
           </div>
+          {details}
         </div>
         <div className="main-challenge__summary">
           <span className="main-challenge__round">

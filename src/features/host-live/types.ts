@@ -74,6 +74,7 @@ export interface SessionTeam {
   id: string;
   name: string;
   created_at: string;
+  manual_score_adjustment: number;
 }
 
 export interface SessionSubmission {

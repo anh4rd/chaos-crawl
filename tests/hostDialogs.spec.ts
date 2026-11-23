@@ -62,6 +62,14 @@ async function expectModalKeyboard(
   await expect(trigger).toBeFocused();
 }
 
+async function openBreakMenu(page: Page) {
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Game", exact: true }),
+  );
+  await activateByKeyboard(page, page.locator(".host-break-panel summary"));
+}
+
 test("round override is a keyboard modal and cancellation never advances the round", async ({
   page,
 }) => {
@@ -69,6 +77,7 @@ test("round override is a keyboard modal and cancellation never advances the rou
   const trigger = page
     .getByRole("region", { name: "Host controls", exact: true })
     .getByRole("button", { name: "Next", exact: true });
+  page.once("dialog", (dialog) => void dialog.accept());
   await activateByKeyboard(page, trigger);
   const modal = page.getByRole("alertdialog", {
     name: "Override autoplay?",
@@ -84,6 +93,7 @@ test("round override is a keyboard modal and cancellation never advances the rou
   expect(
     backend.requests.filter((r) => r.name === "cc_host_set_game_session_round"),
   ).toEqual([]);
+  page.once("dialog", (dialog) => void dialog.accept());
   await activateByKeyboard(page, trigger);
   await activateByKeyboard(
     page,
@@ -115,10 +125,7 @@ test("break timer editor contains keyboard focus and preserves the save contract
   page,
 }) => {
   const backend = await openHost(page, { onBreak: true });
-  await activateByKeyboard(
-    page,
-    page.getByLabel("Host control recovery actions"),
-  );
+  await openBreakMenu(page);
   const trigger = page.getByRole("button", {
     name: "Edit break timer",
     exact: true,
@@ -253,10 +260,7 @@ test("break save remains modal and cannot be dismissed while its write is pendin
     await route.fallback();
   });
   try {
-    await activateByKeyboard(
-      page,
-      page.getByLabel("Host control recovery actions"),
-    );
+    await openBreakMenu(page);
     const trigger = page.getByRole("button", {
       name: "Edit break timer",
       exact: true,
@@ -397,11 +401,7 @@ for (const editor of ["break", "challenge"] as const) {
     page,
   }) => {
     const backend = await openHost(page, { onBreak: true });
-    if (editor === "break")
-      await activateByKeyboard(
-        page,
-        page.getByLabel("Host control recovery actions"),
-      );
+    if (editor === "break") await openBreakMenu(page);
     const trigger = page.getByRole("button", {
       name: editor === "break" ? "Edit break timer" : "Edit next challenge",
       exact: true,

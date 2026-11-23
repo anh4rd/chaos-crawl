@@ -946,6 +946,7 @@ test("shared participant states cover breaks, completion and host-assigned teams
   await expect(
     page.getByRole("heading", { name: "Take a breather" }),
   ).toBeVisible();
+  await expect(page.getByText("Edit break", { exact: true })).toHaveCount(0);
   backend.timer.is_on_break = false;
   backend.session.teams_enabled = true;
   backend.session.host_chooses_teams = true;
@@ -957,6 +958,121 @@ test("shared participant states cover breaks, completion and host-assigned teams
   await expect(
     page.getByRole("heading", { name: "Game over. Chaos achieved." }),
   ).toBeVisible();
+  backend.verify();
+});
+
+test("host roster tab edits player names, moves players and creates teams", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.session.teams_enabled = true;
+  backend.rows.cc_game_session_teams = [
+    { id: "team-original", name: "Team Chaos", created_at: "2030-01-01" },
+  ];
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Host", exact: true }).click();
+  const tabs = page.getByRole("tablist", { name: "Host management sections" });
+  const first = tabs.getByRole("tab", { name: "Control overrides" });
+  await first.focus();
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowRight");
+  const tab = tabs.getByRole("tab", { name: "Manage teams and players" });
+  await expect(tab).toBeFocused();
+  await expect(tab).toHaveAttribute("aria-selected", "true");
+  const panel = page.getByRole("tabpanel", {
+    name: "Manage teams and players",
+  });
+  await expect(
+    panel.getByText(
+      "Adding players directly and deleting players or teams are not available in this game yet.",
+    ),
+  ).toBeVisible();
+  await panel.getByLabel("Name for Pat").fill("  Alex  ");
+  await panel.getByRole("button", { name: "Save name" }).click();
+  await expect(panel.getByLabel("Name for Alex")).toHaveValue("Alex");
+  expect(
+    backend.requests.find(
+      (request) =>
+        request.name === "cc_game_session_players" &&
+        request.method === "PATCH" &&
+        typeof request.body === "object" &&
+        request.body !== null &&
+        "name" in request.body,
+    )?.body,
+  ).toEqual({ name: "Alex" });
+  await panel.getByLabel("Team for Alex").selectOption("team-original");
+  await expect(panel.getByLabel("Team for Alex")).toHaveValue("team-original");
+  await panel.getByLabel("Players per team").selectOption("3");
+  await expect(panel.getByLabel("Players per team")).toHaveValue("3");
+  await panel.getByLabel("New team name").fill("Team Spark");
+  await panel.getByRole("button", { name: "+ Add team" }).click();
+  await expect(panel.getByLabel("Name for Team Spark")).toBeVisible();
+  await expect(
+    panel.getByRole("link", { name: /Open join screen/ }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth <=
+        document.documentElement.clientWidth,
+    ),
+  ).toBe(true);
+  backend.verify();
+});
+
+test("roster player rename reports a missing update and can be retried", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  let first = true;
+  await page.route("**/rest/v1/cc_game_session_players*", async (route) => {
+    if (first && route.request().method() === "PATCH") {
+      first = false;
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: "null",
+      });
+      return;
+    }
+    await route.fallback();
+  });
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Host", exact: true }).click();
+  await page.getByRole("tab", { name: "Manage teams and players" }).click();
+  const panel = page.getByRole("tabpanel", {
+    name: "Manage teams and players",
+  });
+  const name = panel.getByLabel("Name for Pat");
+  await name.fill("Alex");
+  await panel.getByRole("button", { name: "Save name" }).click();
+  await expect(page.getByRole("alert")).toContainText(
+    "The player could not be updated",
+  );
+  await expect(name).toHaveValue("Alex");
+  await panel.getByRole("button", { name: "Save name" }).click();
+  await expect(panel.getByLabel("Name for Alex")).toHaveValue("Alex");
+  backend.verify();
+});
+
+test("host roster reference changes only local data", async ({ page }) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  await page.goto("#/styleguide");
+  const example = page.locator("article.component-example").filter({
+    has: page.getByRole("heading", {
+      name: "Host roster management",
+      exact: true,
+    }),
+  });
+  await example.getByLabel("Name for Pat").fill("Alex");
+  await example.getByRole("button", { name: "Save name" }).click();
+  await expect(example.getByLabel("Name for Alex")).toHaveValue("Alex");
+  await example.getByLabel("Team for Alex").selectOption("team");
+  await expect(example.getByLabel("Team for Alex")).toHaveValue("team");
+  await example.getByLabel("New team name").fill("Team Spark");
+  await example.getByRole("button", { name: "+ Add team" }).click();
+  await expect(example.getByLabel("Name for Team Spark")).toBeVisible();
+  expect(backend.requests).toEqual([]);
   backend.verify();
 });
 
@@ -1281,11 +1397,11 @@ test("host and player scores use the same team totals", async ({ page }) => {
 
   const playerTabs = leaderboardTabs();
   const playersTab = playerTabs.getByRole("tab", {
-    name: "Players",
+    name: "Player Scores",
     exact: true,
   });
   const teamsTab = playerTabs.getByRole("tab", {
-    name: "Teams",
+    name: "Team Scores",
     exact: true,
   });
   await expect(playersTab).toHaveAttribute("aria-selected", "true");
@@ -1295,21 +1411,280 @@ test("host and player scores use the same team totals", async ({ page }) => {
   await expect(teamsTab).toHaveAttribute("aria-selected", "true");
   await expect(teamRow()).toBeVisible();
   await expect(
-    page.getByRole("tabpanel", { name: "Players", exact: true }),
+    page.getByRole("tabpanel", { name: "Player Scores", exact: true }),
   ).toBeHidden();
   await teamsTab.focus();
   await page.keyboard.press("ArrowLeft");
   await expect(playersTab).toBeFocused();
   await expect(
-    page.getByRole("tabpanel", { name: "Players", exact: true }),
+    page.getByRole("tabpanel", { name: "Player Scores", exact: true }),
   ).toBeVisible();
 
   await page.goto(`#/host/live/${sessionId}`);
   await page.getByRole("button", { name: "Scores", exact: true }).click();
   const hostTabs = leaderboardTabs();
-  await hostTabs.getByRole("tab", { name: "Teams", exact: true }).click();
+  await hostTabs.getByRole("tab", { name: "Team Scores", exact: true }).click();
   await expect(teamRow()).toHaveCount(1);
   await expect(teamRow()).toBeVisible();
+  backend.verify();
+});
+
+test("host and player score pages show the ranked podium and cards", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.session.teams_enabled = true;
+  const team = { id: "team-1", name: "Team Chaos", member_count: 3 };
+  const pat = { ...backend.player, team_id: team.id, team_name: team.name };
+  const players = [
+    { ...pat, id: "alex", name: "Alex", score: 65 },
+    { ...pat, id: "sam", name: "Sam", score: 55 },
+    { ...pat, score: 35 },
+  ];
+  backend.responses.cc_get_game_session_view = {
+    ...backend.view,
+    player: pat,
+    teams: [team],
+  };
+  backend.responses.cc_get_player_session_leaderboard = players.map(
+    (player) => ({ ...player, player_id: player.id }),
+  );
+  backend.rows.cc_game_session_players = players;
+  backend.rows.cc_game_session_teams = [{ ...team, session_id: sessionId }];
+  await page.goto(`#/play/${sessionCode}/leaderboard`);
+  const playerPodium = page.getByRole("list", { name: "Top players" });
+  await expect(playerPodium.locator("li")).toHaveCount(3);
+  await expect(playerPodium.locator("li").first()).toContainText("Alex");
+  await expect(page.locator(".session-rank-row--page")).toHaveCount(3);
+  await page.screenshot({ path: test.info().outputPath("player-scores.png") });
+
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Scores", exact: true }).click();
+  const hostPodium = page.getByRole("list", { name: "Top players" });
+  await expect(hostPodium.locator("li")).toHaveCount(3);
+  await expect(hostPodium.locator("li").first()).toContainText("Alex");
+  await expect(page.locator(".session-rank-row--page")).toHaveCount(3);
+  await page.screenshot({ path: test.info().outputPath("host-scores.png") });
+  backend.verify();
+});
+
+test("score cards remain readable on a narrow screen with long names", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  const backend = await installSessionBackend(page);
+  backend.responses.cc_get_player_session_leaderboard = [
+    {
+      ...backend.player,
+      player_id: backend.player.id,
+      name: "AVeryLongPlayerNameWithoutSpaces",
+      score: 10000,
+    },
+  ];
+  await page.goto(`#/play/${sessionCode}/leaderboard`);
+  const row = page.locator(".session-rank-row--page");
+  await expect(row).toContainText("AVeryLongPlayerNameWithoutSpaces");
+  await expect(row).toContainText("10000");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({ path: test.info().outputPath("narrow-scores.png") });
+  backend.verify();
+});
+
+test("host adjusts player and team scores and players see team adjustments", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.session.teams_enabled = true;
+  const team = { id: "team-1", name: "Team Chaos", member_count: 1 };
+  const player = { ...backend.player, team_id: team.id, team_name: team.name };
+  backend.rows.cc_game_session_players = [player];
+  backend.rows.cc_game_session_teams = [
+    { ...team, manual_score_adjustment: 0 },
+  ];
+  backend.responses.cc_get_game_session_view = {
+    ...backend.view,
+    player,
+    teams: [team],
+  };
+  backend.responses.cc_get_player_session_leaderboard = [
+    { ...player, player_id: player.id, score: 25 },
+  ];
+
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Scores", exact: true }).click();
+  const controls = page.locator(".score-adjustment");
+  const previousScore = await page
+    .locator(".session-rank-row__score-value")
+    .first()
+    .elementHandle();
+  await controls.getByLabel("Name").selectOption(player.id);
+  await controls.getByLabel("Points").fill("5");
+  await controls
+    .getByRole("button", { name: "Apply score adjustment" })
+    .click();
+  await expect(page.locator("output.u-visually-hidden")).toHaveText(
+    "Score updated.",
+  );
+  await expect(page.locator(".session-feedback--success")).toHaveCount(0);
+  await expect(controls.locator(".score-adjustment__success")).toHaveCount(1);
+  await expect(controls.locator(".score-adjustment__success")).toHaveCSS(
+    "animation-name",
+    "score-adjustment-confirm",
+  );
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(controls.locator(".score-adjustment__success")).toHaveCSS(
+    "animation-name",
+    "none",
+  );
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await expect(page.locator(".session-rank-row--page").first()).toContainText(
+    "25",
+  );
+  expect(await previousScore?.evaluate((element) => element.isConnected)).toBe(
+    false,
+  );
+  const scoreValue = page.locator(".session-rank-row__score-value").first();
+  await expect(scoreValue).toHaveCSS("animation-name", "session-score-change");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(scoreValue).toHaveCSS("animation-name", "none");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+
+  await controls.getByLabel("Action").selectOption("remove");
+  await controls.getByLabel("Target").selectOption("team");
+  await controls.getByLabel("Name").selectOption(team.id);
+  await controls.getByLabel("Points").fill("3");
+  await controls
+    .getByRole("button", { name: "Apply score adjustment" })
+    .click();
+  await expect
+    .poll(
+      () =>
+        backend.requests.filter(
+          (r) => r.name === "cc_host_adjust_session_score",
+        ).length,
+    )
+    .toBe(2);
+  expect(
+    backend.requests
+      .filter((r) => r.name === "cc_host_adjust_session_score")
+      .map((r) => r.body),
+  ).toEqual([
+    {
+      p_session_id: sessionId,
+      p_target_kind: "player",
+      p_target_id: player.id,
+      p_delta: 5,
+    },
+    {
+      p_session_id: sessionId,
+      p_target_kind: "team",
+      p_target_id: team.id,
+      p_delta: -3,
+    },
+  ]);
+  await page.getByRole("tab", { name: "Team Scores" }).click();
+  await expect(page.locator(".session-rank-row--page").first()).toContainText(
+    "22",
+  );
+
+  await page.goto(`#/play/${sessionCode}/leaderboard`);
+  await page.getByRole("tab", { name: "Team Scores" }).click();
+  await expect(page.locator(".session-rank-row--page").first()).toContainText(
+    "22",
+  );
+  await expect(page.locator(".score-adjustment")).toHaveCount(0);
+  backend.verify();
+});
+
+test("score adjustment failures are visible and retryable", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.failures.add("cc_host_adjust_session_score");
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Scores", exact: true }).click();
+  const controls = page.locator(".score-adjustment");
+  await controls.getByLabel("Name").selectOption(backend.player.id);
+  await controls
+    .getByRole("button", { name: "Apply score adjustment" })
+    .click();
+  await expect(
+    page.getByText("Couldn't adjust score: Fixture connection failed"),
+  ).toBeVisible();
+  await expect(controls.locator(".score-adjustment__success")).toHaveCount(0);
+  backend.failures.delete("cc_host_adjust_session_score");
+  await controls
+    .getByRole("button", { name: "Apply score adjustment" })
+    .click();
+  await expect(page.locator("output.u-visually-hidden")).toHaveText(
+    "Score updated.",
+  );
+  await expect(page.locator(".session-feedback--success")).toHaveCount(0);
+  backend.verify();
+});
+
+test("host can adjust a score using only the keyboard", async ({ page }) => {
+  const backend = await installSessionBackend(page, { host: true });
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Scores", exact: true }).click();
+  const controls = page.locator(".score-adjustment");
+  await controls.getByLabel("Action").focus();
+  await page.keyboard.press("r");
+  await expect(controls.getByLabel("Action")).toHaveValue("remove");
+  await page.keyboard.press("Tab");
+  await expect(controls.getByLabel("Name")).toBeFocused();
+  await page.keyboard.press("p");
+  await expect(controls.getByLabel("Name")).toHaveValue(backend.player.id);
+  await page.keyboard.press("Tab");
+  await expect(controls.getByLabel("Points")).toBeFocused();
+  await page.keyboard.press("ControlOrMeta+A");
+  await page.keyboard.type("3");
+  await page.keyboard.press("Tab");
+  await expect(
+    controls.getByRole("button", { name: "Apply score adjustment" }),
+  ).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect
+    .poll(() =>
+      backend.requests.find((r) => r.name === "cc_host_adjust_session_score"),
+    )
+    .toMatchObject({
+      body: {
+        p_target_kind: "player",
+        p_target_id: backend.player.id,
+        p_delta: -3,
+      },
+    });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  backend.verify();
+});
+
+test("player team scores do not show incomplete totals when adjustments fail", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page);
+  backend.session.teams_enabled = true;
+  const team = { id: "team-1", name: "Team Chaos", member_count: 1 };
+  backend.responses.cc_get_game_session_view = {
+    ...backend.view,
+    teams: [team],
+  };
+  backend.failures.add("cc_get_session_team_adjustments");
+  await page.goto(`#/play/${sessionCode}/leaderboard`);
+  await page.getByRole("tab", { name: "Team Scores" }).click();
+  await expect(
+    page.getByText("Team scores are unavailable. Please try again."),
+  ).toBeVisible();
+  await expect(page.locator(".session-rank-row--page")).toHaveCount(0);
   backend.verify();
 });
 
@@ -1319,10 +1694,17 @@ test("host timer start and pause publish the existing shared timer fields", asyn
   const backend = await installSessionBackend(page, { host: true });
   await page.goto(`#/host/live/${sessionId}`);
   await page.getByRole("button", { name: "Host", exact: true }).click();
+  const stageIcon = page.locator(".host-round-controls__stage-icon");
+  const before = await stageIcon.elementHandle();
   await page.getByRole("button", { name: "Start Timer", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Pause", exact: true }),
   ).toBeVisible();
+  expect(await before?.evaluate((element) => element.isConnected)).toBe(false);
+  await expect(stageIcon).toHaveCSS("animation-name", "host-stage-change");
+  await expect(page.locator(".session-feedback--success")).toHaveCount(0);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(stageIcon).toHaveCSS("animation-name", "none");
   await expect
     .poll(() =>
       backend.requests

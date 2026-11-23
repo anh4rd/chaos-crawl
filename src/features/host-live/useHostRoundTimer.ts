@@ -9,6 +9,13 @@ import {
   writeRoundClockSnapshot,
 } from "./roundClockSnapshot";
 
+function normalizeScheduleTitle(title: string) {
+  return title
+    .toLowerCase()
+    .replace(/\s*[-–—]\s*(player prep|player performance)$/i, "")
+    .trim();
+}
+
 interface Options {
   mainRounds: SessionChallenge[];
   session: GameSession | null;
@@ -61,20 +68,24 @@ export function useHostRoundTimer({
       (breakResumeRound ?? (session?.current_round_number ?? 0) + 1),
   );
 
+  const nextScheduleItem = nextBreakChallenge
+    ? gameSchedule.find(
+        (item) =>
+          item.type === "challenge" &&
+          normalizeScheduleTitle(item.title) ===
+            normalizeScheduleTitle(nextBreakChallenge.title),
+      )
+    : undefined;
   const nextBreakTask = nextBreakChallenge
-    ? (plannedTasks.find((task) =>
-        gameSchedule.some(
-          (item) =>
-            item.type === "challenge" &&
-            item.taskId === task.id &&
-            (item.title === nextBreakChallenge.title ||
-              item.title.startsWith(task.title ?? "")),
-        ),
+    ? (plannedTasks.find((task) => task.id === nextBreakChallenge.id) ??
+      plannedTasks.find(
+        (task) => task.id && task.id === nextScheduleItem?.taskId,
       ) ??
       plannedTasks.find(
         (task) =>
-          (task.title ?? "").toLowerCase() ===
-          nextBreakChallenge.title.toLowerCase(),
+          task.title &&
+          normalizeScheduleTitle(task.title) ===
+            normalizeScheduleTitle(nextBreakChallenge.title),
       ))
     : undefined;
 
@@ -102,22 +113,18 @@ export function useHostRoundTimer({
       (round) => Number(round.round_number) === roundNumber,
     );
     if (!currentRound) return defaultBreakMinutes;
-    const normalize = (title: string) =>
-      title
-        .toLowerCase()
-        .replace(/\s*[-–—]\s*(player prep|player performance)$/i, "")
-        .trim();
-    const currentTitle = normalize(currentRound.title);
+    const currentTitle = normalizeScheduleTitle(currentRound.title);
     let scheduleIndex = gameSchedule.findIndex(
       (item) =>
-        item.type === "challenge" && normalize(item.title) === currentTitle,
+        item.type === "challenge" &&
+        normalizeScheduleTitle(item.title) === currentTitle,
     );
     if (scheduleIndex < 0)
       scheduleIndex = gameSchedule.findIndex(
         (item) =>
           item.type === "challenge" &&
-          (normalize(item.title).startsWith(currentTitle) ||
-            currentTitle.startsWith(normalize(item.title))),
+          (normalizeScheduleTitle(item.title).startsWith(currentTitle) ||
+            currentTitle.startsWith(normalizeScheduleTitle(item.title))),
       );
     if (scheduleIndex >= 0) {
       let planned = 0;

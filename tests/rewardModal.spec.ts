@@ -130,7 +130,7 @@ for (const operation of ["start", "award"] as const) {
   });
 }
 
-test("reward command errors and notices remain reachable inside the modal and retry preserves the payload", async ({
+test("reward errors remain reachable and retry preserves the payload without a success popup", async ({
   page,
 }) => {
   const { backend, modal } = await openReward(page);
@@ -156,16 +156,12 @@ test("reward command errors and notices remain reachable inside the modal and re
   await expect(modal.getByRole("status")).toContainText(
     "Player voting started",
   );
+  await expect(modal.locator(".session-feedback--success")).toHaveCount(0);
   const requests = backend.requests.filter(
     (r) => r.name === "cc_host_start_session_reward_round",
   );
   expect(requests).toHaveLength(2);
   expect(requests[1].body).toEqual(requests[0].body);
-  await activateByKeyboard(
-    page,
-    modal.getByRole("button", { name: "Dismiss notice", exact: true }),
-  );
-  await expect(modal.getByRole("status")).toHaveCount(0);
   backend.verify();
 });
 

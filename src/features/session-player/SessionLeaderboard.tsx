@@ -6,6 +6,7 @@ export default function SessionLeaderboard({
   leaderboard,
   player,
   teamLeaderboard,
+  teamScoresUnavailable,
 }: {
   session: SessionInfo;
   leaderboard: LeaderboardEntry[];
@@ -16,14 +17,18 @@ export default function SessionLeaderboard({
     score: number;
     member_count: number;
   }[];
+  teamScoresUnavailable: boolean;
 }) {
   return (
     <SharedLeaderboard
+      variant="page"
+      viewerRole="player"
       title={
         session.status === "completed" ? "Final leaderboard" : "Leaderboard"
       }
       tourTarget="player-leaderboard"
       teamsEnabled={session.teams_enabled}
+      teamScoresUnavailable={teamScoresUnavailable}
       viewerId={player.id}
       viewerTeamId={player.team_id}
       entries={leaderboard.map((entry) => ({

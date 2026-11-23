@@ -65,9 +65,6 @@ export default function TimerControlsExample() {
             busy={busy}
             moveToRound={() => setPreviewStage("ready")}
             breakResumeRound={3}
-            openBreakTimerEditor={() =>
-              setNotice("Edit break selected locally.")
-            }
             requestMoveToRound={() => setPreviewStage("ready")}
             totalRounds={4}
             requestStartBreak={() => setPreviewStage("break")}
@@ -94,6 +91,9 @@ export default function TimerControlsExample() {
               setPreviewSeconds((seconds) => seconds + minutes * 60)
             }
             skipTimerAndReview={() => setPreviewStage("reviewing")}
+            nextStage={
+              previewStage === "break" ? "Team portrait" : "Break · 5 minutes"
+            }
           />
           <ControlPanel
             heading="LOCAL TIMER CONTROLS"

@@ -26,6 +26,7 @@ export default function LobbyPrimitivesExample() {
     id: "local-team",
     name: savedTeamName,
     created_at: "2030-01-01T12:00:00Z",
+    manual_score_adjustment: 0,
   };
   const [step, setStep] = useState(1);
   const [selected, setSelected] = useState(false);
