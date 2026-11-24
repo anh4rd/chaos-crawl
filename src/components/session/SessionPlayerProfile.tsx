@@ -46,7 +46,7 @@ export function SessionPlayerProfile({
       )}
       {viewerRole === "host" && (
         <Link className="session-profile__hub" to="/host">
-          Host Hub ↗
+          Hub ↗
         </Link>
       )}
     </header>

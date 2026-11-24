@@ -43,6 +43,7 @@ interface Props {
   setRoundTimerSeconds: (seconds: number) => void;
   addRoundTimerMinutes: (minutes: number) => void;
   skipTimerAndReview: () => void;
+  onEditBreak?: () => void;
   nextStage?: string;
 }
 
@@ -69,6 +70,7 @@ export default function HostRoundControls({
   setRoundTimerSeconds,
   addRoundTimerMinutes,
   skipTimerAndReview,
+  onEditBreak,
   nextStage,
 }: Props) {
   const [editingTime, setEditingTime] = useState<string | null>(null);
@@ -152,9 +154,9 @@ export default function HostRoundControls({
         <h2>HOST CONTROLS</h2>
         <span
           className="host-round-controls__round"
-          aria-label={`Round ${session.current_round_number} of ${totalRounds}`}
+          aria-label={`ROUND ${session.current_round_number} of ${totalRounds}`}
         >
-          {session.current_round_number}/{totalRounds}
+          ROUND {session.current_round_number}/{totalRounds}
         </span>
         {!hostBreakActive && (
           <details className="host-round-controls__menu" ref={menuRef}>
@@ -168,8 +170,20 @@ export default function HostRoundControls({
                 aria-hidden="true"
               />
             </summary>
+            
             <div className="host-round-controls__menu-content">
-              {showTimer ? (
+              {showTimer && !hostBreakActive && (
+            <Button
+              type="button"
+              variant="flow"
+              fullWidth={false}
+              disabled={busy}
+              onClick={editTime}
+            >
+              {expired ? "Add Time" : "Edit Time"}
+            </Button>
+          )}
+          {showTimer ? (
                 <Button
                   type="button"
                   variant="flow"
@@ -234,8 +248,22 @@ export default function HostRoundControls({
           </div>
         </div>
         <div className="host-round-controls__primary">
-          {showTimer && (
-            <TimerReadout label="TIME REMAINING" value={roundClockText} />
+          {showTimer && <TimerReadout label="TIMER" value={roundClockText} />}
+          {hostBreakActive && onEditBreak && (
+            <Button
+              type="button"
+              variant="session-edit"
+              fullWidth={false}
+              disabled={busy}
+              aria-label="Edit break length or end time"
+              onClick={onEditBreak}
+            >
+              <Icon
+                name="pencil"
+                className="icon--size-14"
+                aria-hidden="true"
+              />
+            </Button>
           )}
           {!complete &&
             (rewardActive ? (
@@ -343,17 +371,7 @@ export default function HostRoundControls({
               </Button>
             </>
           )}
-          {showTimer && !hostBreakActive && !roundClockRunning && (
-            <Button
-              type="button"
-              variant="flow"
-              fullWidth={false}
-              disabled={busy}
-              onClick={editTime}
-            >
-              {expired ? "Add Time" : "Edit Time"}
-            </Button>
-          )}
+          
           {currentRoundPointsAwarded && !hostBreakActive && (
             <Button
               type="button"
@@ -471,6 +489,7 @@ export default function HostRoundControls({
                 >
                   Save timer
                 </Button>
+                
               </DialogActions>
             </DialogPanel>
           </Dialog>

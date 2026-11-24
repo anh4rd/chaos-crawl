@@ -5,6 +5,7 @@
   background-color: colors.$entry-surface;
   background-image:
     colors.$entry-shade, colors.$entry-wash, colors.$entry-background;
+  background-attachment: fixed;
   color: colors.$ink;
   padding-bottom: calc(
     #{layout.$session-dock-height} + env(safe-area-inset-bottom)

@@ -19,6 +19,7 @@
   &__heading {
     display: flex;
     align-items: center;
+    margin-top: layout.$pixel-unit * 1.5;
     gap: layout.$pixel-unit * 2.25;
   }
   &__title {

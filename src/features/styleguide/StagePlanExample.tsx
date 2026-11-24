@@ -12,7 +12,6 @@ export default function StagePlanExample() {
   const [round, setRound] = useState(1);
   const [readOnly, setReadOnly] = useState(false);
   const [onBreak, setOnBreak] = useState(false);
-  const [breakRunning, setBreakRunning] = useState(true);
   const [notice, setNotice] = useState(
     "Choose a sample round or stage action.",
   );
@@ -50,8 +49,6 @@ export default function StagePlanExample() {
           </StagePreview>
           {onBreak && (
             <HostBreakPanel
-              label="01:00"
-              running={breakRunning}
               busy={readOnly}
               nextRound={2}
               roundCount={2}
@@ -66,18 +63,9 @@ export default function StagePlanExample() {
                 points: 40,
                 duration_minutes: 5,
               }}
-              onEditTimer={() =>
-                setNotice("Sample break timer edit selected locally.")
-              }
-              onToggleTimer={() => setBreakRunning(!breakRunning)}
               onEditChallenge={() =>
                 setNotice("Sample challenge edit selected locally.")
               }
-              onStartNext={() => {
-                setOnBreak(false);
-                setRound(2);
-                setNotice("Sample next round started locally.");
-              }}
             />
           )}
           <RoundPlan

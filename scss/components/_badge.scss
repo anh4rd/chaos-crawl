@@ -108,6 +108,7 @@
     font-size: fonts.$size-navigation-caption;
     font-weight: fonts.$weight-heavy;
     letter-spacing: fonts.$tracking-stage-label;
+    line-height: 1;
   }
   &--stage-break {
     color: colors.$white;

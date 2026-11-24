@@ -91,6 +91,7 @@ export default function TimerControlsExample() {
               setPreviewSeconds((seconds) => seconds + minutes * 60)
             }
             skipTimerAndReview={() => setPreviewStage("reviewing")}
+            onEditBreak={() => undefined}
             nextStage={
               previewStage === "break" ? "Team portrait" : "Break · 5 minutes"
             }

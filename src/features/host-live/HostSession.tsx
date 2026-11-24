@@ -806,6 +806,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
       setRoundTimerSeconds={setRoundTimerSeconds}
       addRoundTimerMinutes={addRoundTimerMinutes}
       skipTimerAndReview={skipTimerAndReview}
+      onEditBreak={openBreakTimerEditor}
       nextStage={
         hostBreakActive ? nextBreakChallenge?.title : upcomingStage?.title
       }
@@ -821,9 +822,10 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   );
   const hostBreakView = hostBreakActive ? (
     <>
+      <SessionPreview>
+        <HostManagement>{hostRoundControls}</HostManagement>
+      </SessionPreview>
       <HostBreakPanel
-        label={roundClockText}
-        running={roundClockRunning}
         busy={busy || Boolean(activeRewardRound)}
         nextChallenge={nextBreakChallenge}
         nextRound={breakResumeRound ?? session.current_round_number + 1}
@@ -835,23 +837,10 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
             ? `Starts ${nextRoundStartAt?.toLocaleTimeString() ?? "when the host resumes"} · ends ${nextRoundEndAt?.toLocaleTimeString() ?? "after the timer"}`
             : undefined
         }
-        onEditTimer={openBreakTimerEditor}
-        onToggleTimer={toggleTimer}
         onEditChallenge={() => {
           if (nextBreakChallenge) openBreakChallengeEditor(nextBreakChallenge);
         }}
-        onStartNext={() => {
-          if (!nextBreakChallenge) return;
-          void moveToRound(
-            breakResumeRound ?? session.current_round_number + 1,
-          ).then((outcome) => {
-            if (outcome === "moved") restoreFocus();
-          });
-        }}
       />
-      <SessionPreview>
-        <HostManagement>{hostRoundControls}</HostManagement>
-      </SessionPreview>
     </>
   ) : null;
   const participantSection =

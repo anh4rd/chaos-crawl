@@ -6,41 +6,9 @@
   display: grid;
   gap: layout.$pixel-unit * 4;
 
-  &__menu {
-    display: grid;
-    justify-items: center;
-    margin-top: layout.$pixel-unit * 3;
-  }
-  &__menu summary {
+  &__edit {
     display: flex;
-    align-items: center;
-    gap: layout.$pixel-unit;
-    padding: layout.$pixel-unit * 2 layout.$pixel-unit * 4;
-    border: layout.$session-border-width solid colors.$black;
-    border-radius: layout.$badge-radius;
-    color: colors.$black;
-    background: colors.$white;
-    font-weight: fonts.$weight-bold;
-    cursor: pointer;
-    list-style: none;
-  }
-  &__menu summary::-webkit-details-marker {
-    display: none;
-  }
-  &__menu summary:focus-visible {
-    outline: layout.$focus-ring-width solid colors.$lime;
-    outline-offset: layout.$pixel-unit * 0.5;
-  }
-  &__menu summary .icon {
-    width: layout.$pixel-unit * 4;
-    height: layout.$pixel-unit * 4;
-  }
-  &__actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
     gap: layout.$pixel-unit * 2;
-    margin-top: layout.$pixel-unit * 2;
   }
   &__preparation {
     display: grid;
@@ -53,5 +21,13 @@
   }
   &__preparation p {
     margin: 0;
+  }
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: layout.$pixel-unit * 2;
+  }
+  &__item .icon {
+    flex: none;
   }
 }

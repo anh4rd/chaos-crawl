@@ -80,10 +80,9 @@
   &__summary {
     display: flex;
     flex-direction: column;
+    align-self:flex-start;
     gap: layout.$spacing-unit;
     align-items: flex-end;
-    align-self: stretch;
-    justify-content: space-between;
     padding-bottom: 102.976px;
   }
   &--upcoming &__summary {

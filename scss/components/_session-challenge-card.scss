@@ -13,11 +13,11 @@
   margin: 0;
   padding: layout.$pixel-unit * 3;
   overflow: hidden;
-  border: 0;
+  border: layout.$session-border-width solid colors.$ink;
   border-radius: layout.$radius-lg;
   background: colors.$white;
   color: colors.$ink;
-  box-shadow: layout.$pixel-unit layout.$pixel-unit 0 colors.$comic-lavender;
+  box-shadow: layout.$spacing-unit * 0.5 layout.$spacing-unit * 0.5 colors.$purple-dark;
 
   &::before {
     position: absolute;
