@@ -2,24 +2,23 @@ import ControlRow from "../../components/ui/ControlRow";
 import SubmissionList from "../../components/session/SubmissionList";
 import SubmissionRow from "../../components/session/SubmissionRow";
 import EvidenceReview from "../../components/session/EvidenceReview";
-import ContentPanel from "../../components/ui/ContentPanel";
-import PanelHeading from "../../components/ui/PanelHeading";
-import Overline from "../../components/ui/Overline";
-import CountBadge from "../../components/ui/CountBadge";
 import Note from "../../components/ui/Note";
 import Button from "../../components/ui/Button";
+import HostReviewSection from "./HostReviewSection";
 import Icon from "../../components/ui/Icon";
 import type {
   SessionChallenge,
   SessionEvidence,
   SessionPlayer,
   SessionSubmission,
+  SessionTeam,
 } from "./types";
 
 interface Props {
   submissions: SessionSubmission[];
   challengeById: Map<string, SessionChallenge>;
   playerById: Map<string, SessionPlayer>;
+  teamById: Map<string, SessionTeam>;
   evidenceForChallenge: (
     playerId: string,
     challengeId: string,
@@ -35,41 +34,26 @@ export default function HostMainSubmissions({
   submissions,
   challengeById,
   playerById,
+  teamById,
   evidenceForChallenge,
   evidenceUrl,
   busy,
   reviewSubmission,
 }: Props) {
+  const mainSubmissions = submissions.filter(
+    (item) => challengeById.get(item.challenge_id)?.kind === "main",
+  );
+  const pendingCount = mainSubmissions.filter(
+    (item) => item.status === "submitted",
+  ).length;
   return (
-    <ContentPanel
-      variant="session"
-      stacked
-      compact
-      className="cc-host-main-review-card"
-      data-tour="host-review"
+    <HostReviewSection
+      title="Player submissions"
+      icon="camera"
+      open
+      tourTarget="host-review"
+      count={`${mainSubmissions.length} · ${pendingCount} pending`}
     >
-      <PanelHeading variant="session">
-        <div>
-          <Overline as="div" variant="session">
-            HOST REVIEW
-          </Overline>
-          <h2>Main challenge submissions</h2>
-          <p>
-            Review evidence from the main rounds and assign points when
-            approving.
-          </p>
-        </div>
-        <CountBadge variant="session">
-          {
-            submissions.filter(
-              (item) =>
-                item.status === "submitted" &&
-                challengeById.get(item.challenge_id)?.kind === "main",
-            ).length
-          }{" "}
-          pending
-        </CountBadge>
-      </PanelHeading>
       {submissions.filter(
         (item) => challengeById.get(item.challenge_id)?.kind === "main",
       ).length === 0 ? (
@@ -93,6 +77,16 @@ export default function HostMainSubmissions({
                 <SubmissionRow
                   key={submission.id}
                   participant={player?.name ?? "Player"}
+                  avatarUrl={player?.avatar_url}
+                  team={teamById.get(player?.team_id ?? "")?.name}
+                  description={challenge?.description}
+                  points={submission.awarded_points}
+                  thumbnailType={submissionMedia[0]?.media_type}
+                  thumbnailUrl={
+                    submissionMedia[0]
+                      ? evidenceUrl(submissionMedia[0].storage_path)
+                      : undefined
+                  }
                   challenge={challenge?.title ?? "Main challenge"}
                   time={new Date(submission.submitted_at).toLocaleTimeString(
                     [],
@@ -158,6 +152,6 @@ export default function HostMainSubmissions({
             })}
         </SubmissionList>
       )}
-    </ContentPanel>
+    </HostReviewSection>
   );
 }

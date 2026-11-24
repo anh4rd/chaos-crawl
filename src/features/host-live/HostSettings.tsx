@@ -1,12 +1,11 @@
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { useState } from "react";
 import Button from "../../components/ui/Button";
 import ButtonLink from "../../components/ui/ButtonLink";
-import ContentPanel from "../../components/ui/ContentPanel";
+import Disclosure from "../../components/ui/Disclosure";
+import Icon, { type IconName } from "../../components/ui/Icon";
 import { Field } from "../../components/ui/Field";
 import FormGrid from "../../components/ui/FormGrid";
-import PanelHeading from "../../components/ui/PanelHeading";
-import Overline from "../../components/ui/Overline";
 import { Toggle } from "../../components/ui/Toggle";
 import type {
   HostSessionSettings,
@@ -48,12 +47,14 @@ function initialDraft(session: GameSession): SettingsDraft {
 export default function HostSettings({
   session,
   playerCount,
+  joinUrl,
   busy,
   onSave,
   onHostParticipationChange,
 }: {
   session: GameSession;
   playerCount: number;
+  joinUrl?: string;
   busy: boolean;
   onSave: (values: HostSessionSettings) => Promise<void>;
   onHostParticipationChange: (participates: boolean) => Promise<boolean>;
@@ -67,6 +68,13 @@ export default function HostSettings({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (
+      affectsLiveGame &&
+      !window.confirm(
+        "This game is live. Changing teams, player limit or reward methods can affect players right now. Save these changes?",
+      )
+    )
+      return;
     void onSave({
       ...draft,
       name: draft.name.trim(),
@@ -86,32 +94,37 @@ export default function HostSettings({
     );
   }
 
+  const initial = initialDraft(session);
+  const dirty = JSON.stringify(draft) !== JSON.stringify(initial);
+  const affectsLiveGame =
+    session.status === "live" &&
+    (draft.teams_enabled !== initial.teams_enabled ||
+      draft.team_size !== initial.team_size ||
+      draft.host_chooses_teams !== initial.host_chooses_teams ||
+      draft.player_limit !== initial.player_limit ||
+      draft.reward_methods.join() !== initial.reward_methods.join());
+  const rewardSummary =
+    draft.reward_methods
+      .map(
+        (method) => rewardMethods.find((item) => item.value === method)?.label,
+      )
+      .join(", ") || "None selected";
+
   return (
-    <ContentPanel variant="session" stacked>
-      <PanelHeading variant="session">
-        <div>
-          <Overline as="div" variant="session">
-            GAME SETTINGS
-          </Overline>
-          <h2>Session settings</h2>
-          <p>
-            {readOnly
-              ? "Session settings are read-only after the game is complete."
-              : "Changes here are saved to this active game session."}
-          </p>
-        </div>
-      </PanelHeading>
-
+    <form className="host-settings" onSubmit={submit}>
+      <p className="host-settings__intro">
+        {readOnly
+          ? "Session settings are read-only after the game is complete."
+          : "Configure how the game works. Changes are saved to this game session."}
+      </p>
       <fieldset className="host-settings__fields" disabled={readOnly}>
-        <legend>Active session details</legend>
-        <Toggle
-          title="Host participates"
-          detail="Joining or leaving the player list also updates your host player access."
-          checked={session.host_participates}
-          onChange={(value) => void onHostParticipationChange(value)}
-        />
-
-        <form onSubmit={submit}>
+        <legend className="u-visually-hidden">Active session details</legend>
+        <SettingsCategory
+          icon="clipboard-list"
+          title="Game details"
+          description="Name, date, venue and player limit."
+          summary={`${draft.name || "Untitled"} · ${draft.event_date || "No date"} · limit ${draft.player_limit}`}
+        >
           <FormGrid>
             <Field label="Game name">
               <input
@@ -162,7 +175,29 @@ export default function HostSettings({
               />
             </Field>
           </FormGrid>
+        </SettingsCategory>
 
+        <SettingsCategory
+          icon="users"
+          title="Teams & participation"
+          description="Teams, team size, assignment and host play."
+          summary={`${draft.teams_enabled ? `Teams of ${draft.team_size}` : "Individual play"} · Host ${session.host_participates ? "plays" : "not playing"}`}
+        >
+          <Toggle
+            title="Host participates"
+            detail="Joining or leaving the player list also updates your host player access."
+            checked={session.host_participates}
+            onChange={(value) => {
+              if (
+                session.status === "live" &&
+                !window.confirm(
+                  "Change host participation during a live game? Your host player access updates immediately.",
+                )
+              )
+                return;
+              void onHostParticipationChange(value);
+            }}
+          />
           <Toggle
             title="Use teams"
             detail="Players compete in teams instead of individually."
@@ -195,7 +230,14 @@ export default function HostSettings({
               </Field>
             </FormGrid>
           )}
+        </SettingsCategory>
 
+        <SettingsCategory
+          icon="trophy"
+          title="Voting & rewards"
+          description="How reward rounds are decided."
+          summary={rewardSummary}
+        >
           <fieldset className="host-settings__rewards">
             <legend>Reward methods</legend>
             {rewardMethods.map(({ value, label }) => (
@@ -211,36 +253,111 @@ export default function HostSettings({
               </label>
             ))}
           </fieldset>
+        </SettingsCategory>
 
-          <Button
-            type="submit"
-            variant="session-action"
-            disabled={busy || readOnly}
-          >
-            {busy ? "Saving…" : "Save session settings"}
-          </Button>
-        </form>
+        <SettingsCategory
+          icon="settings"
+          title="Game flow & scoring"
+          description="Rounds, breaks, scoring and secret missions."
+          summary={
+            session.host_game_id
+              ? "Managed in the saved Host Hub plan"
+              : "No saved plan linked"
+          }
+        >
+          {session.host_game_id ? (
+            <div className="host-settings__plan">
+              <p>
+                Edit the complete saved plan, including challenge selection,
+                accessibility, game options, and the planned schedule.
+                Saved-plan changes do not rewrite this active session.
+              </p>
+              <ButtonLink
+                variant="session-secondary"
+                fullWidth={false}
+                to={`/host/games/${session.host_game_id}/edit`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Edit all Host Hub settings
+              </ButtonLink>
+            </div>
+          ) : (
+            <p>This game has no saved plan to configure.</p>
+          )}
+        </SettingsCategory>
+
+        <SettingsCategory
+          icon="send"
+          title="Access & sharing"
+          description="Join code and invitation link."
+          summary={`Code ${session.join_code}`}
+        >
+          <dl className="host-settings__access">
+            <div>
+              <dt>Join code</dt>
+              <dd>{session.join_code}</dd>
+            </div>
+            {joinUrl && (
+              <div>
+                <dt>Invitation link</dt>
+                <dd>{joinUrl}</dd>
+              </div>
+            )}
+          </dl>
+        </SettingsCategory>
       </fieldset>
 
-      {session.host_game_id && (
-        <div className="host-settings__plan">
-          <h3>More Host Hub settings</h3>
-          <p>
-            Edit the complete saved plan, including challenge selection,
-            accessibility, game options, and the planned schedule. Saved-plan
-            changes do not rewrite this active session.
-          </p>
-          <ButtonLink
-            variant="session-secondary"
-            fullWidth={false}
-            to={`/host/games/${session.host_game_id}/edit`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Edit all Host Hub settings
-          </ButtonLink>
-        </div>
-      )}
-    </ContentPanel>
+      <div className="host-settings__save">
+        {dirty && (
+          <span className="host-settings__dirty" role="status">
+            Unsaved changes
+          </span>
+        )}
+        <Button
+          type="submit"
+          variant="session-action"
+          fullWidth={false}
+          disabled={busy || readOnly || !dirty}
+        >
+          {busy ? "Saving…" : "Save changes"}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function SettingsCategory({
+  icon,
+  title,
+  description,
+  summary,
+  children,
+}: {
+  icon: IconName;
+  title: string;
+  description: string;
+  summary: string;
+  children: ReactNode;
+}) {
+  return (
+    <Disclosure
+      variant="session"
+      className="host-settings__category"
+      summary={
+        <span className="host-settings__summary">
+          <span className="host-settings__icon">
+            <Icon name={icon} className="icon--size-20" aria-hidden="true" />
+          </span>
+          <span className="host-settings__heading">
+            <strong>{title}</strong>
+            <small>{description}</small>
+            <small className="host-settings__values">{summary}</small>
+          </span>
+        </span>
+      }
+    >
+      <div className="host-settings__body">{children}</div>
+    </Disclosure>
   );
 }

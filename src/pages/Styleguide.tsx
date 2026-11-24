@@ -12,6 +12,7 @@ import FormExamples from "../features/styleguide/FormExamples";
 import PosterExamples from "../features/styleguide/PosterExamples";
 import SessionChromeExample from "../features/styleguide/SessionChromeExample";
 import ChallengeExample from "../features/styleguide/ChallengeExample";
+import HostWorkspaceNavigationExample from "../features/styleguide/HostWorkspaceNavigationExample";
 import SessionExamples from "../features/styleguide/SessionExamples";
 import SessionMemoriesExample from "../features/styleguide/SessionMemoriesExample";
 import TeamChoicesExample from "../features/styleguide/TeamChoicesExample";
@@ -58,6 +59,7 @@ export default function Styleguide() {
         <SessionChromeExample name={name} />
         <ChallengeExample />
         <SessionExamples />
+        <HostWorkspaceNavigationExample />
         <SessionMemoriesExample />
         <TeamChoicesExample />
         <PrivateMissionExample />

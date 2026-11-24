@@ -1,0 +1,267 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+// Controls tab: one dominant current-round panel, compact rows below.
+.control-console {
+  display: grid;
+  gap: layout.$pixel-unit * 2.5;
+  min-width: 0;
+  &__round {
+    display: grid;
+    gap: layout.$pixel-unit * 3;
+    padding: layout.$pixel-unit * 4;
+    border: layout.$session-border-width solid colors.$comic-ink;
+    border-radius: layout.$radius-lg;
+    background: linear-gradient(
+      160deg,
+      colors.$purple-mid 0%,
+      colors.$purple-dark 100%
+    );
+    box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
+      colors.$comic-ink;
+    color: colors.$white;
+  }
+  &__round-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: layout.$pixel-unit * 2;
+  }
+  &__kicker {
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-heavy;
+    letter-spacing: fonts.$tracking-eyebrow;
+  }
+  &__state {
+    padding: layout.$pixel-unit * 0.5 layout.$pixel-unit * 2.5;
+    border: layout.$session-border-width solid colors.$comic-ink;
+    border-radius: layout.$radius-pill;
+    background: colors.$white;
+    color: colors.$comic-ink;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-heavy;
+    &--live,
+    &--break {
+      background: colors.$lime;
+    }
+  }
+  &__card {
+    display: grid;
+    gap: layout.$pixel-unit * 2.5;
+    padding: layout.$pixel-unit * 3;
+    border: layout.$session-border-width solid colors.$comic-ink;
+    border-radius: layout.$radius-lg;
+    background: colors.$white;
+    color: colors.$comic-ink;
+  }
+  &__description {
+    margin: 0;
+    font-size: fonts.$size-small;
+  }
+  &__progress {
+    width: 100%;
+    height: layout.$pixel-unit * 2.5;
+    border: layout.$session-border-width solid colors.$comic-ink;
+    border-radius: layout.$radius-pill;
+    background: colors.$comic-lavender;
+    overflow: hidden;
+    appearance: none;
+    &::-webkit-progress-bar {
+      background: colors.$comic-lavender;
+    }
+    &::-webkit-progress-value {
+      background: colors.$lime;
+    }
+    &::-moz-progress-bar {
+      background: colors.$lime;
+    }
+  }
+  &__summary {
+    display: flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 2;
+  }
+  &__summary-icon {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: layout.$pixel-unit * 8;
+    height: layout.$pixel-unit * 8;
+    border: layout.$session-border-width solid colors.$comic-ink;
+    border-radius: layout.$radius-lg;
+    background: colors.$lime;
+    color: colors.$comic-ink;
+  }
+  &__chevron {
+    flex: none;
+    transition: transform 0.15s ease;
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+  &__panel[open] &__chevron {
+    transform: rotate(180deg);
+  }
+  &__panel > summary {
+    list-style: none;
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+  // Panel content sits flat on the card instead of nesting another card.
+  &__panel.disclosure {
+    .content-panel,
+    .session-final-round,
+    .session-state,
+    .empty-state,
+    .disclosure {
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      padding: 0;
+      color: colors.$comic-ink;
+    }
+    *:not(.btn, .btn *, .count-badge, .badge, .status-pill) {
+      color: colors.$comic-ink;
+      text-shadow: none;
+      -webkit-text-stroke: 0;
+    }
+  }
+  &__panel > :not(summary) {
+    margin-top: layout.$pixel-unit * 3;
+  }
+  &__summary-title {
+    font-family: fonts.$family-display;
+  }
+  &__summary-status {
+    margin-left: auto;
+    color: colors.$purple-dark;
+    font-size: fonts.$size-small;
+    text-align: right;
+    &--live {
+      padding: 0 layout.$pixel-unit * 2;
+      border-radius: layout.$radius-pill;
+      background: colors.$lime;
+      color: colors.$comic-ink;
+    }
+  }
+  &__title {
+    margin: 0;
+    color: colors.$comic-ink;
+    font-family: fonts.$family-display;
+    font-size: fonts.$size-control-timer;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+  }
+  &__clock {
+    display: flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 2;
+  }
+  &__primary {
+    display: grid;
+    gap: layout.$pixel-unit * 1.5;
+    justify-items: center;
+    text-align: center;
+    p {
+      margin: 0;
+      font-size: fonts.$size-small;
+    }
+  }
+  &__next {
+    width: 100%;
+    min-height: layout.$pixel-unit * 16;
+    font-size: fonts.$size-control-timer;
+  }
+  &__tools {
+    display: grid;
+    gap: layout.$pixel-unit * 3;
+    margin-top: layout.$pixel-unit * 3;
+  }
+  &__breaks {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: layout.$pixel-unit * 2;
+    margin-top: layout.$pixel-unit * 2;
+  }
+  &__actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: layout.$pixel-unit * 2;
+    .btn {
+      width: 100%;
+      min-width: 0;
+      padding-inline: layout.$pixel-unit;
+    }
+  }
+  // Secondary actions are white so the pink primary stays the only loud button.
+  .btn.btn--session-secondary {
+    background: colors.$white;
+    color: colors.$comic-ink;
+    &:disabled {
+      background: colors.$comic-lavender;
+      opacity: 0.7;
+    }
+  }
+  &__more.disclosure,
+  &__panel.disclosure {
+    border: layout.$session-border-width solid colors.$comic-ink;
+    border-radius: layout.$radius-lg;
+    background: colors.$comic-lavender;
+    padding: layout.$pixel-unit * 2.5 layout.$pixel-unit * 3;
+    summary {
+      color: colors.$comic-ink;
+    }
+  }
+  &__panel {
+    box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
+      colors.$comic-ink;
+    &--secret {
+      background: colors.$white;
+      border-color: colors.$comic-ink;
+      box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
+        colors.$pink;
+    }
+    &--end {
+      box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
+        colors.$pink;
+    }
+    &--end .control-console__summary-icon {
+      background: colors.$pink;
+      color: colors.$white;
+    }
+    &--secret .control-console__summary-icon {
+      background: colors.$pink;
+      color: colors.$white;
+    }
+  }
+  &__end {
+    display: grid;
+    gap: layout.$pixel-unit * 2;
+    padding: layout.$pixel-unit * 3;
+    border: layout.$session-border-width solid colors.$comic-ink;
+    border-radius: layout.$radius-lg;
+    background: colors.$purple-dark;
+    box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
+      colors.$pink;
+    color: colors.$white;
+    p {
+      margin: 0;
+      font-size: fonts.$size-small;
+    }
+  }
+  &__end .btn {
+    width: 100%;
+  }
+  &__end-title {
+    display: inline-flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 2;
+    margin: 0;
+    color: colors.$pink;
+    font-family: fonts.$family-display;
+  }
+}

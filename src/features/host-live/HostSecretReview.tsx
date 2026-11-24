@@ -6,9 +6,8 @@ import Button from "../../components/ui/Button";
 import FormGrid from "../../components/ui/FormGrid";
 import FormLabel from "../../components/ui/FormLabel";
 import ContentPanel from "../../components/ui/ContentPanel";
-import PanelHeading from "../../components/ui/PanelHeading";
 import Overline from "../../components/ui/Overline";
-import CountBadge from "../../components/ui/CountBadge";
+import HostReviewSection from "./HostReviewSection";
 import Note from "../../components/ui/Note";
 import type {
   GameSession,
@@ -62,22 +61,16 @@ export default function HostSecretReview({
   openSecretReviewVote,
 }: Props) {
   return (
-    <ContentPanel variant="session" stacked>
-      <PanelHeading variant="session">
-        <div>
-          <Overline as="div" variant="session">
-            SECRET MISSION VOTE
-          </Overline>
-          <h2>Review one mission at a time</h2>
-          <p>
-            A strict majority of Success awards the mission points. Fail or a
-            tie is final and awards zero.
-          </p>
-        </div>
-        <CountBadge variant="session">
-          {secretReviewOptions.length} to review
-        </CountBadge>
-      </PanelHeading>
+    <HostReviewSection
+      title="Secret mission vote"
+      icon="lock-keyhole"
+      open
+      count={`${secretReviewOptions.length} to review`}
+    >
+      <Note variant="session">
+        Reviewed one mission at a time by player vote. A strict majority of
+        Success awards the mission points. Fail or a tie awards zero.
+      </Note>
       {secretReviewOptions.length === 0 ? (
         <Note variant="session">
           Submitted secret missions will appear here when players mark them
@@ -268,6 +261,6 @@ export default function HostSecretReview({
           </ContentPanel>
         </>
       )}
-    </ContentPanel>
+    </HostReviewSection>
   );
 }

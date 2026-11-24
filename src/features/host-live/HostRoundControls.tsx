@@ -170,20 +170,20 @@ export default function HostRoundControls({
                 aria-hidden="true"
               />
             </summary>
-            
+
             <div className="host-round-controls__menu-content">
               {showTimer && !hostBreakActive && (
-            <Button
-              type="button"
-              variant="flow"
-              fullWidth={false}
-              disabled={busy}
-              onClick={editTime}
-            >
-              {expired ? "Add Time" : "Edit Time"}
-            </Button>
-          )}
-          {showTimer ? (
+                <Button
+                  type="button"
+                  variant="flow"
+                  fullWidth={false}
+                  disabled={busy}
+                  onClick={editTime}
+                >
+                  {expired ? "Add Time" : "Edit Time"}
+                </Button>
+              )}
+              {showTimer ? (
                 <Button
                   type="button"
                   variant="flow"
@@ -371,7 +371,7 @@ export default function HostRoundControls({
               </Button>
             </>
           )}
-          
+
           {currentRoundPointsAwarded && !hostBreakActive && (
             <Button
               type="button"
@@ -489,7 +489,6 @@ export default function HostRoundControls({
                 >
                   Save timer
                 </Button>
-                
               </DialogActions>
             </DialogPanel>
           </Dialog>

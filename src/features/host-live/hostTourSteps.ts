@@ -49,12 +49,6 @@ export function hostTourSteps(status: SessionStatus): GuidedTourStep[] {
     ];
   return [
     {
-      target: '[data-tour="host-overview"]',
-      title: "Your game overview",
-      body: "The game name and code identify your session. Share the code or QR from Host Controls when people are joining.",
-      page: "game",
-    },
-    {
       target: '[data-tour="host-sections"]',
       title: "The same game sections",
       body: "Move between Game, Challenges and Scores. Host keeps management tools separate from the shared player screens.",

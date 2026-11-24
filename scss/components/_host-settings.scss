@@ -1,50 +1,132 @@
 @use "../variables/colors";
 @use "../variables/layout";
 @use "../variables/fonts";
-@use "../variables/effects";
 
 .host-settings {
+  display: grid;
+  gap: layout.$pixel-unit * 3;
+
+  &__intro {
+    margin: 0;
+    color: colors.$comic-lavender;
+    font-size: fonts.$size-small;
+  }
   &__fields {
+    display: grid;
+    gap: layout.$pixel-unit * 2.5;
     min-width: 0;
     margin: 0;
     padding: 0;
     border: 0;
     background: transparent;
   }
-
+  &__category {
+    border: layout.$session-border-width solid colors.$comic-ink;
+    background: colors.$purple-dark;
+    box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
+      colors.$comic-ink;
+    summary {
+      color: colors.$white;
+    }
+  }
+  &__summary {
+    display: flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 2.5;
+  }
+  &__icon {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    width: layout.$pixel-unit * 9;
+    height: layout.$pixel-unit * 9;
+    border: layout.$session-border-width solid colors.$comic-ink;
+    border-radius: layout.$radius-lg;
+    background: colors.$lime;
+    color: colors.$comic-ink;
+  }
+  &__heading {
+    display: grid;
+    min-width: 0;
+    strong {
+      font-family: fonts.$family-display;
+      text-transform: uppercase;
+    }
+    small {
+      font-size: fonts.$size-small;
+    }
+  }
+  &__values {
+    color: colors.$accent-soft;
+    font-weight: fonts.$weight-heavy;
+    overflow-wrap: anywhere;
+  }
+  &__body {
+    display: grid;
+    gap: layout.$pixel-unit * 3;
+    margin-top: layout.$pixel-unit * 3;
+    padding: layout.$pixel-unit * 3;
+    border-radius: layout.$radius-lg;
+    background: colors.$comic-lavender;
+    color: colors.$comic-ink;
+  }
   &__rewards {
     display: flex;
     flex-wrap: wrap;
     gap: layout.$pixel-unit * 3;
-    margin: layout.$pixel-unit * 5 0;
+    margin: 0;
     padding: 0;
     border: 0;
+    legend {
+      width: 100%;
+      margin-bottom: layout.$pixel-unit * 2;
+      font-size: fonts.$size-label;
+      font-weight: fonts.$weight-action;
+    }
+    label {
+      display: flex;
+      align-items: center;
+      gap: layout.$pixel-unit * 1.5;
+    }
   }
-
-  &__rewards legend {
-    width: 100%;
-    margin-bottom: layout.$pixel-unit * 2;
-    font-size: fonts.$size-label;
-    font-weight: fonts.$weight-action;
-  }
-
-  &__rewards label {
-    display: flex;
-    align-items: center;
-    gap: layout.$pixel-unit * 1.5;
-  }
-
   &__plan {
     display: grid;
     gap: layout.$pixel-unit * 2;
-    margin-top: layout.$pixel-unit * 5;
-    padding-top: layout.$pixel-unit * 4;
-    border-top: layout.$pixel-unit * 0.5 solid
-      rgba(colors.$white, effects.$translucent-border-opacity);
+    justify-items: start;
+    p {
+      margin: 0;
+    }
   }
-
-  &__plan h3,
-  &__plan p {
+  &__access {
+    display: grid;
+    gap: layout.$pixel-unit * 2;
     margin: 0;
+    div {
+      display: grid;
+      gap: layout.$pixel-unit * 0.5;
+    }
+    dt {
+      font-size: fonts.$size-small;
+      font-weight: fonts.$weight-heavy;
+    }
+    dd {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+  }
+  &__save {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: layout.$pixel-unit * 3;
+  }
+  &__dirty {
+    padding: layout.$pixel-unit * 0.5 layout.$pixel-unit * 2.5;
+    border: layout.$session-border-width solid colors.$comic-ink;
+    border-radius: layout.$radius-pill;
+    background: colors.$lime;
+    color: colors.$comic-ink;
+    font-weight: fonts.$weight-heavy;
   }
 }

@@ -1142,6 +1142,12 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },
+  HostWorkspaceNavigation: {
+    usage:
+      "Secondary host section switcher: light panel of separate icon-over-label tabs, lime active tile with thick outline and offset shadow, horizontal scroll when narrow. Pass items, active, idPrefix (tab/panel IDs are idPrefix-tab-id and idPrefix-panel-id) and onSelect. Distinct from the dark fixed SessionNavigation dock.",
+    dependencies:
+      "Icon, shared tab-list arrow/Home/End handler and owned host-workspace-nav SCSS. No backend or storage access.",
+  },
   SessionNavigation: {
     usage:
       "Shared host/player navigation without a Final item; the host manages final voting in Control overrides. Optional elementRef exposes the native nav for controller-owned focus recovery. The local session preview returns focus to Game when its temporary host action disappears.",
@@ -1376,7 +1382,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   HostControlOverrides: {
     usage:
-      "Host override actions expose direct round selection, timer controls, challenge editing, reviews and the end phase independently of the game controls. The local example uses state only.",
+      "Controls-tab console: a dominant current-round surface with one dynamic primary action, compact accordion rows for breaks, side challenges (slot) and secret missions (slot), and a confirmed End game section. The local example uses state only.",
     dependencies:
       "Caller-supplied state and callbacks; the host coordinator retains phase guards, timer publication, persistence and navigation.",
   },

@@ -81,6 +81,36 @@ function openMojiAssets(base: string): Plugin {
   };
 }
 
+// The catalog ships many fields the app never reads; keep only what
+// src/lib/openmoji.ts uses so the bundled chunk stays small.
+function slimOpenMojiCatalog(): Plugin {
+  const keep = [
+    "emoji",
+    "hexcode",
+    "annotation",
+    "tags",
+    "openmoji_tags",
+    "order",
+    "unicode",
+    "skintone",
+  ];
+  return {
+    name: "slim-openmoji-catalog",
+    enforce: "pre",
+    transform(code, id) {
+      if (!id.endsWith("openmoji/data/openmoji.json")) return null;
+      const data: unknown = JSON.parse(code);
+      if (!Array.isArray(data)) return null;
+      const slim = data
+        .filter(isRecord)
+        .map((entry) =>
+          Object.fromEntries(keep.map((key) => [key, entry[key]])),
+        );
+      return { code: JSON.stringify(slim), map: null };
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const uploadSourceMaps = Boolean(
@@ -92,6 +122,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       openMojiAssets(base),
+      slimOpenMojiCatalog(),
       ...(uploadSourceMaps
         ? [
             sentryVitePlugin({
@@ -106,7 +137,12 @@ export default defineConfig(({ mode }) => {
         : []),
     ],
 
-    build: { sourcemap: uploadSourceMaps ? "hidden" : false },
+    build: {
+      sourcemap: uploadSourceMaps ? "hidden" : false,
+      // The OpenMoji catalogue is one ~840 kB (114 kB gzip) chunk of searchable
+      // emoji data, loaded separately from the app code.
+      chunkSizeWarningLimit: 900,
+    },
 
     resolve: {
       alias: {

@@ -3,39 +3,104 @@
 @use "../variables/fonts";
 @use "../variables/layout";
 
+// Compact submission row; opening it reveals the review detail.
 .submission-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: layout.$pixel-unit * 2.75 layout.$pixel-unit * 3.5;
-  padding: layout.$pixel-unit * 3.75;
-  margin: layout.$pixel-unit * 2.5 0;
+  margin: layout.$pixel-unit * 2 0;
   border: layout.$session-border-width solid colors.$session-frame-ink;
   border-radius: layout.$pixel-unit * 4.25;
   color: colors.$session-paper-ink;
   background: colors.$host-control-paper;
   box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
     rgba(colors.$session-frame-ink, effects.$submission-shadow-opacity);
-  align-items: center;
+  overflow: hidden;
 
+  &__summary {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    gap: layout.$pixel-unit * 2.5;
+    align-items: center;
+    padding: layout.$pixel-unit * 2;
+    cursor: pointer;
+    list-style: none;
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+  &__thumb {
+    display: grid;
+    place-items: center;
+    width: layout.$pixel-unit * 16;
+    height: layout.$pixel-unit * 16;
+    border: layout.$session-border-width solid colors.$session-frame-ink;
+    border-radius: layout.$radius-lg;
+    background: colors.$comic-lavender;
+    overflow: hidden;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
   &__info {
     display: grid;
-    gap: layout.$pixel-unit;
+    gap: layout.$pixel-unit * 0.5;
     min-width: 0;
-    strong {
-      color: colors.$session-paper-ink;
-      font-size: fonts.$size-body;
-    }
-    span {
-      color: colors.$submission-title;
-      font-size: fonts.$size-small;
-      font-weight: fonts.$weight-extra-bold;
-    }
     small {
       color: colors.$submission-time;
       font-size: fonts.$size-micro;
     }
   }
+  &__challenge {
+    color: colors.$session-paper-ink;
+    font-family: fonts.$family-display;
+    overflow-wrap: anywhere;
+  }
+  &__player {
+    display: flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.5;
+    color: colors.$submission-title;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-extra-bold;
+  }
+  &__result {
+    display: grid;
+    justify-items: end;
+    gap: layout.$pixel-unit * 0.5;
+  }
+  &__points {
+    font-family: fonts.$family-display;
+  }
+  &__open {
+    transition: transform 0.15s ease;
+  }
+  &[open] &__open {
+    transform: rotate(90deg);
+  }
+  &__detail {
+    display: grid;
+    gap: layout.$pixel-unit * 2.5;
+    padding: layout.$pixel-unit * 3;
+    border-top: layout.$session-border-width solid colors.$session-frame-ink;
+    background: colors.$white;
+  }
+  &__description {
+    margin: 0;
+    font-size: fonts.$size-small;
+  }
   @media (max-width: layout.$session-compact-breakpoint) {
-    grid-template-columns: 1fr;
+    &__summary {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+    &__result {
+      grid-column: 2 / 3;
+      grid-row: 2;
+      justify-items: start;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &__open {
+      transition: none;
+    }
   }
 }

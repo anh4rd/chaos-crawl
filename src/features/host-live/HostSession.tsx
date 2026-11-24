@@ -2,6 +2,8 @@ import { useClipboard } from "../../components/ui/useClipboard";
 import { useHostScoreAdjustments } from "./useHostScoreAdjustments";
 import { useNavigationFocus } from "../../components/ui/useNavigationFocus";
 import Button from "../../components/ui/Button";
+import HostPointsOverview, { type PointsChallenge } from "./HostPointsOverview";
+import HostReviewOverview, { type ReviewFilter } from "./HostReviewOverview";
 import { useHostTour } from "./useHostTour";
 import SessionChallengeCard from "../../components/session/SessionChallengeCard";
 import SessionFeedback from "../../components/session/SessionFeedback";
@@ -13,7 +15,6 @@ import SessionState from "../../components/session/SessionState";
 import SessionTourPrompt from "../../components/session/SessionTourPrompt";
 import SessionMemories from "../../components/session/SessionMemories";
 import type { SessionMemoryItem } from "../../components/session/types";
-import TabList from "../../components/ui/TabList";
 import TabPanel from "../../components/ui/TabPanel";
 import Icon from "../../components/ui/Icon";
 import { sessionEvidenceUrl } from "../../lib/sessionMedia";
@@ -71,17 +72,17 @@ import SessionMainChallengeCard from "../../components/session/SessionMainChalle
 import SessionPreview from "../../components/session/SessionPreview";
 import GuidedTour from "../../components/tour/GuidedTour";
 import { upcomingStageModel } from "./upcomingStageModel";
+import HostWorkspaceNavigation from "../../components/session/HostWorkspaceNavigation";
 import StagePreview from "../../components/session/StagePreview";
 import PanelGrid from "../../components/ui/PanelGrid";
 
 const hostManagementSections = [
-  { id: "overrides", label: "Control overrides" },
-  { id: "review", label: "Review" },
-  { id: "roster", label: "Manage teams and players" },
-  { id: "schedule", label: "Game schedule" },
-  { id: "secret-missions", label: "Secret mission schedule" },
-  { id: "settings", label: "Settings" },
-  { id: "memories", label: "Memories" },
+  { id: "overrides", label: "Controls", icon: "gamepad2" },
+  { id: "review", label: "Review", icon: "trophy" },
+  { id: "roster", label: "Teams", icon: "users" },
+  { id: "schedule", label: "Schedule", icon: "calendar-days" },
+  { id: "settings", label: "Settings", icon: "settings" },
+  { id: "memories", label: "Memories", icon: "film" },
 ] as const;
 type HostManagementSection = (typeof hostManagementSections)[number]["id"];
 
@@ -130,6 +131,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   const [actionError, setError] = useState("");
   const [activeTab, setActiveTab] = useState<HostTab>("game");
   const [tourDismissed, setTourDismissed] = useState(false);
+  const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("main");
   const [activeHostSection, setActiveHostSection] =
     useState<HostManagementSection>("overrides");
   const hostManagementId = useId();
@@ -734,6 +736,121 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     document.getElementById(`${hostManagementId}-tab-${section}`)?.focus();
     setActiveHostSection(section);
   }
+  const sumPoints = (items: { awarded_points: number }[]) =>
+    items.reduce((sum, item) => sum + item.awarded_points, 0);
+  const mainSubmissions = submissions.filter(
+    (item) => challengeById.get(item.challenge_id)?.kind === "main",
+  );
+  const reviewPending = {
+    main: submissions.filter(
+      (item) =>
+        item.status === "submitted" &&
+        challengeById.get(item.challenge_id)?.kind === "main",
+    ).length,
+    side: sideSubmissions.filter((item) => item.status === "submitted").length,
+    secret: secretAssignments.filter((item) => item.status === "submitted")
+      .length,
+  };
+  const evidenceRequired = (kind: ReviewFilter) =>
+    challenges.some((item) => item.kind === kind && item.allow_photo_upload) ||
+    (kind === "main"
+      ? mainSubmissions.length > 0
+      : kind === "side"
+        ? sideSubmissions.length > 0
+        : secretAssignments.length > 0);
+  const visibleReviewFilters = (["main", "side", "secret"] as const).filter(
+    evidenceRequired,
+  );
+  const activeReviewFilter = visibleReviewFilters.includes(reviewFilter)
+    ? reviewFilter
+    : (visibleReviewFilters[0] ?? reviewFilter);
+  const hostAwardedPoints = (challengeId: string) => {
+    const roundIds = new Set(
+      rewardRounds
+        .filter(
+          (round) =>
+            round.challenge_id === challengeId && round.status === "completed",
+        )
+        .map((round) => round.id),
+    );
+    return rewardAwards
+      .filter((award) => roundIds.has(award.reward_round_id))
+      .reduce((sum, award) => sum + award.points_awarded, 0);
+  };
+  const pointsByChallenge: PointsChallenge[] = challenges
+    .map((challenge): PointsChallenge => {
+      const entries: PointsChallenge["entries"] = [];
+      const playerName = (id: string | null) =>
+        playerById.get(id ?? "")?.name ?? "Player";
+      const finalVotesFor = (playerId: string) =>
+        finalVotes.filter(
+          (vote) =>
+            vote.challenge_id === challenge.id &&
+            evidence.find((item) => item.id === vote.evidence_id)?.player_id ===
+              playerId,
+        ).length;
+      if (challenge.kind === "secret") {
+        secretAssignments
+          .filter(
+            (item) =>
+              item.challenge_id === challenge.id && item.awarded_points > 0,
+          )
+          .forEach((item) =>
+            entries.push({
+              id: item.id,
+              name: playerName(item.player_id),
+              points: item.awarded_points,
+              votes: secretReviewAssignments.find(
+                (review) => review.assignment_id === item.id,
+              )?.success_votes,
+            }),
+          );
+      } else {
+        submissions
+          .filter(
+            (item) =>
+              item.challenge_id === challenge.id && item.awarded_points > 0,
+          )
+          .forEach((item) =>
+            entries.push({
+              id: item.id,
+              name: playerName(item.player_id),
+              points: item.awarded_points,
+              votes:
+                challenge.kind === "side"
+                  ? finalVotesFor(item.player_id)
+                  : undefined,
+            }),
+          );
+      }
+      const roundIds = new Set(
+        rewardRounds
+          .filter((round) => round.challenge_id === challenge.id)
+          .map((round) => round.id),
+      );
+      rewardAwards
+        .filter(
+          (award) =>
+            roundIds.has(award.reward_round_id) && award.points_awarded > 0,
+        )
+        .forEach((award) =>
+          entries.push({
+            id: award.id,
+            name: award.winner_team_id
+              ? (teamById.get(award.winner_team_id)?.name ?? "Team")
+              : playerName(award.winner_player_id),
+            points: award.points_awarded,
+            votes: award.votes_received,
+          }),
+        );
+      return {
+        id: challenge.id,
+        title: challenge.title,
+        kind: challenge.kind,
+        entries,
+      };
+    })
+    .filter((item) => item.entries.length > 0);
   const secretReviewControls = (
     <HostSecretReview
       secretReviewOptions={secretReviewOptions}
@@ -885,18 +1002,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
               ? "LEADER"
               : "HOST",
       }}
-      game={
-        session.status === "lobby"
-          ? null
-          : {
-              name: session.name,
-              code: session.join_code,
-              photoUrl: gamePhotoUrl,
-              tourTarget: "host-overview",
-              copied: codeCopied && codeCopyTarget === "titlebar",
-              onCopy: () => void copyCode("titlebar"),
-            }
-      }
+      game={null}
       toolbar={
         session.status !== "lobby" && !tourDismissed ? (
           <HostManagement>
@@ -1227,35 +1333,20 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
             )}
           <HostManagement>
             {activeTab === "host-controls" && (
-              <TabList label="Host management sections" variant="workspace">
-                {hostManagementSections
-                  .filter(
-                    (section) =>
-                      section.id !== "memories" ||
-                      session.status === "completed",
-                  )
-                  .map((section) => (
-                    <Button
-                      key={section.id}
-                      variant="workspace-tab"
-                      fullWidth={false}
-                      type="button"
-                      role="tab"
-                      id={`${hostManagementId}-tab-${section.id}`}
-                      aria-controls={`${hostManagementId}-panel-${section.id}`}
-                      tabIndex={activeHostSection === section.id ? 0 : -1}
-                      aria-selected={activeHostSection === section.id}
-                      className={
-                        activeHostSection === section.id
-                          ? "btn--workspace-selected"
-                          : ""
-                      }
-                      onClick={() => setActiveHostSection(section.id)}
-                    >
-                      {section.label}
-                    </Button>
-                  ))}
-              </TabList>
+              <HostWorkspaceNavigation
+                idPrefix={hostManagementId}
+                active={activeHostSection}
+                items={hostManagementSections.filter(
+                  (section) =>
+                    section.id !== "memories" || session.status === "completed",
+                )}
+                onSelect={(id) => {
+                  const section = hostManagementSections.find(
+                    (item) => item.id === id,
+                  );
+                  if (section) setActiveHostSection(section.id);
+                }}
+              />
             )}
             {hostManagementSections.map((section) => (
               <TabPanel
@@ -1271,64 +1362,161 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                   activeHostSection === section.id &&
                   section.id === "overrides" && (
                     <>
-                      <PanelGrid data-tour="host-controls-tab">
-                        <HostControlOverrides
-                          key={`${session.id}:${session.current_round_number}`}
-                          rounds={mainRounds}
-                          currentRound={session.current_round_number}
-                          status={session.status}
-                          busy={busy}
-                          rewardActive={Boolean(activeRewardRound)}
-                          timerReady={roundTimerHydrated}
-                          onBreak={hostBreakActive}
-                          timerRunning={roundClockRunning}
-                          timerSeconds={roundClockSeconds}
-                          timerText={roundClockText}
-                          onMoveRound={(round) =>
-                            requestMoveToRound(round, true)
-                          }
-                          onToggleTimer={toggleTimer}
-                          onResetTimer={resetRoundTimer}
-                          onRestartTimer={restartRoundTimer}
-                          onSetTimer={setRoundTimerSeconds}
-                          onAddMinutes={addRoundTimerMinutes}
-                          onEditBreak={openBreakTimerEditor}
-                          onStartBreak={requestStartBreak}
-                          onEditChallenge={(id) => {
-                            const challenge = mainRounds.find(
-                              (round) => round.id === id,
+                      <HostControlOverrides
+                        key={`${session.id}:${session.current_round_number}`}
+                        rounds={mainRounds}
+                        currentRound={session.current_round_number}
+                        status={session.status}
+                        busy={busy}
+                        rewardActive={Boolean(activeRewardRound)}
+                        timerReady={roundTimerHydrated}
+                        onBreak={hostBreakActive}
+                        timerRunning={roundClockRunning}
+                        timerSeconds={roundClockSeconds}
+                        timerText={roundClockText}
+                        onMoveRound={(round) => requestMoveToRound(round, true)}
+                        onToggleTimer={toggleTimer}
+                        onResetTimer={resetRoundTimer}
+                        onRestartTimer={restartRoundTimer}
+                        onSetTimer={setRoundTimerSeconds}
+                        onAddMinutes={addRoundTimerMinutes}
+                        onEditBreak={openBreakTimerEditor}
+                        onStartBreak={requestStartBreak}
+                        onEditChallenge={(id) => {
+                          const challenge = mainRounds.find(
+                            (round) => round.id === id,
+                          );
+                          if (challenge) openBreakChallengeEditor(challenge);
+                        }}
+                        onReviewPoints={() => {
+                          setShowRewardOverlay(false);
+                          setShowRewardSetup(!activeRewardRound);
+                          if (!activeRewardRound && currentChallenge) {
+                            setRewardChallengeId(currentChallenge.id);
+                            setRewardPoints(currentChallenge.points);
+                            setRewardTargetKind(
+                              session.teams_enabled ? "team" : "player",
                             );
-                            if (challenge) openBreakChallengeEditor(challenge);
-                          }}
-                          onReviewPoints={() => {
-                            setShowRewardOverlay(false);
-                            setShowRewardSetup(!activeRewardRound);
-                            if (!activeRewardRound && currentChallenge) {
-                              setRewardChallengeId(currentChallenge.id);
-                              setRewardPoints(currentChallenge.points);
-                              setRewardTargetKind(
-                                session.teams_enabled ? "team" : "player",
-                              );
-                              setSelectedRewardWinnerIds([]);
-                            }
-                            setActiveTab("reward-round");
-                            restoreFocus();
-                          }}
-                          onReviewSubmissions={() => openHostSection("review")}
-                          onSecretReview={() =>
-                            openHostSection("secret-missions")
+                            setSelectedRewardWinnerIds([]);
                           }
-                          onSchedule={() => openHostSection("schedule")}
-                          onFinish={() => {
-                            void finishGame().then((finished) => {
-                              if (finished) {
-                                setActiveHostSection("memories");
-                                restoreFocus();
+                          setActiveTab("reward-round");
+                          restoreFocus();
+                        }}
+                        onReviewSubmissions={() => openHostSection("review")}
+                        onSecretReview={() => openHostSection("overrides")}
+                        onSchedule={() => openHostSection("schedule")}
+                        onFinish={() => {
+                          void finishGame().then((finished) => {
+                            if (finished) {
+                              setActiveHostSection("memories");
+                              restoreFocus();
+                            }
+                          });
+                        }}
+                        onMemories={() => openHostSection("memories")}
+                        currentRoundPointsAwarded={currentRoundPointsAwarded}
+                        resumeRound={breakResumeRound}
+                        onNextRound={() =>
+                          requestMoveToRound(session.current_round_number + 1)
+                        }
+                        sideChallengeControls={
+                          <HostFinalRound
+                            canVote={canParticipate}
+                            participantView={canParticipate}
+                            selectedFinalChallengeEvidence={
+                              selectedFinalChallengeEvidence
+                            }
+                            sideChallenges={sideChallenges}
+                            selectedFinalChallengeId={selectedFinalChallengeId}
+                            busy={busy}
+                            selectedFinalChallengeStatus={
+                              selectedFinalChallengeStatus
+                            }
+                            selectFinalChallenge={selectFinalChallenge}
+                            setFinalGallery={setFinalGallery}
+                            selectedFinalChallengeVotes={
+                              selectedFinalChallengeVotes
+                            }
+                            players={players}
+                            session={session}
+                            selectedFinalChallengeState={
+                              selectedFinalChallengeState
+                            }
+                            reopenFinalChallengeVoting={
+                              reopenFinalChallengeVoting
+                            }
+                            nextPendingFinalChallenge={
+                              nextPendingFinalChallenge
+                            }
+                            advanceFinalChallenge={advanceFinalChallenge}
+                            isFinalSlideshowConnected={
+                              isFinalSlideshowConnected
+                            }
+                            selectedFinalEvidenceIndex={
+                              selectedFinalEvidenceIndex
+                            }
+                            setFinalSlideshow={setFinalSlideshow}
+                            selectedFinalEvidence={selectedFinalEvidence}
+                            disconnectFinalSlideshow={disconnectFinalSlideshow}
+                            castFinalSlideshow={castFinalSlideshow}
+                            selectedFinalChallenge={selectedFinalChallenge}
+                            playerById={playerById}
+                            evidenceUrl={evidenceUrl}
+                            castHostFinalVote={castHostFinalVote}
+                            finalWinningEvidenceIds={finalWinningEvidenceIds}
+                            rankedPlayers={rankedPlayers}
+                          />
+                        }
+                        secretMissionControls={
+                          <>
+                            {secretReviewControls}
+                            <HostSecretMissions
+                              secretAssignments={secretAssignments}
+                              votingAssignmentId={
+                                secretReviewVotingOpen
+                                  ? selectedSecretReviewAssignmentId
+                                  : null
                               }
-                            });
-                          }}
-                          onMemories={() => openHostSection("memories")}
-                        />
+                              session={session}
+                              assignSecretMission={assignSecretMission}
+                              selectedSecretPlayerId={selectedSecretPlayerId}
+                              setSelectedSecretPlayerId={
+                                setSelectedSecretPlayerId
+                              }
+                              busy={busy}
+                              players={players}
+                              selectedSecretChallengeId={
+                                selectedSecretChallengeId
+                              }
+                              setSelectedSecretChallengeId={
+                                setSelectedSecretChallengeId
+                              }
+                              secretChallenges={secretChallenges}
+                              secretScheduleAt={secretScheduleAt}
+                              setSecretScheduleAt={setSecretScheduleAt}
+                              createSecretChallenge={createSecretChallenge}
+                              newSecretTitle={newSecretTitle}
+                              setNewSecretTitle={setNewSecretTitle}
+                              newSecretDescription={newSecretDescription}
+                              setNewSecretDescription={setNewSecretDescription}
+                              newSecretPoints={newSecretPoints}
+                              setNewSecretPoints={setNewSecretPoints}
+                              newSecretEvidenceRequired={
+                                newSecretEvidenceRequired
+                              }
+                              setNewSecretEvidenceRequired={
+                                setNewSecretEvidenceRequired
+                              }
+                              playerById={playerById}
+                              challengeById={challengeById}
+                              evidenceForAssignment={evidenceForAssignment}
+                              evidenceUrl={evidenceUrl}
+                              rescheduleSecretMission={rescheduleSecretMission}
+                            />
+                          </>
+                        }
+                      />
+                      <PanelGrid>
                         <SessionInvite
                           joinUrl={joinUrl}
                           onCopy={() => copyCode("invite")}
@@ -1339,45 +1527,6 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                           hostChoosesTeams={session.host_chooses_teams}
                         />
                       </PanelGrid>
-                      {secretReviewControls}
-                      <HostFinalRound
-                        canVote={canParticipate}
-                        participantView={canParticipate}
-                        selectedFinalChallengeEvidence={
-                          selectedFinalChallengeEvidence
-                        }
-                        sideChallenges={sideChallenges}
-                        selectedFinalChallengeId={selectedFinalChallengeId}
-                        busy={busy}
-                        selectedFinalChallengeStatus={
-                          selectedFinalChallengeStatus
-                        }
-                        selectFinalChallenge={selectFinalChallenge}
-                        setFinalGallery={setFinalGallery}
-                        selectedFinalChallengeVotes={
-                          selectedFinalChallengeVotes
-                        }
-                        players={players}
-                        session={session}
-                        selectedFinalChallengeState={
-                          selectedFinalChallengeState
-                        }
-                        reopenFinalChallengeVoting={reopenFinalChallengeVoting}
-                        nextPendingFinalChallenge={nextPendingFinalChallenge}
-                        advanceFinalChallenge={advanceFinalChallenge}
-                        isFinalSlideshowConnected={isFinalSlideshowConnected}
-                        selectedFinalEvidenceIndex={selectedFinalEvidenceIndex}
-                        setFinalSlideshow={setFinalSlideshow}
-                        selectedFinalEvidence={selectedFinalEvidence}
-                        disconnectFinalSlideshow={disconnectFinalSlideshow}
-                        castFinalSlideshow={castFinalSlideshow}
-                        selectedFinalChallenge={selectedFinalChallenge}
-                        playerById={playerById}
-                        evidenceUrl={evidenceUrl}
-                        castHostFinalVote={castHostFinalVote}
-                        finalWinningEvidenceIds={finalWinningEvidenceIds}
-                        rankedPlayers={rankedPlayers}
-                      />
                       {canParticipate && session.final_gallery_open && (
                         <SessionParticipant
                           key={`${session.id}:${hostPlayerToken}:final`}
@@ -1395,7 +1544,39 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                   activeHostSection === section.id &&
                   section.id === "review" && (
                     <>
-                      {secretReviewState?.is_open &&
+                      <HostReviewOverview
+                        submissionCount={
+                          mainSubmissions.length +
+                          sideSubmissions.length +
+                          secretAssignments.length
+                        }
+                        pendingCount={
+                          reviewPending.main +
+                          reviewPending.side +
+                          reviewPending.secret
+                        }
+                        pending={reviewPending}
+                        pointsAwarded={
+                          [...mainSubmissions, ...sideSubmissions].reduce(
+                            (sum, item) => sum + item.awarded_points,
+                            0,
+                          ) +
+                          secretAssignments.reduce(
+                            (sum, item) => sum + item.awarded_points,
+                            0,
+                          )
+                        }
+                        counts={{
+                          main: mainSubmissions.length,
+                          side: sideSubmissions.length,
+                          secret: secretAssignments.length,
+                        }}
+                        visible={visibleReviewFilters}
+                        filter={activeReviewFilter}
+                        onFilter={setReviewFilter}
+                      />
+                      {activeReviewFilter === "secret" &&
+                        secretReviewState?.is_open &&
                         secretReviewState.current_assignment_id ===
                           selectedSecretReviewAssignmentId && (
                           <HostSecretScreenControls
@@ -1418,22 +1599,71 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                             }
                           />
                         )}
-                      {secretReviewControls}
-                      <HostMainSubmissions
-                        submissions={submissions}
-                        challengeById={challengeById}
-                        playerById={playerById}
-                        evidenceForChallenge={evidenceForChallenge}
-                        evidenceUrl={evidenceUrl}
-                        busy={busy}
-                        reviewSubmission={reviewSubmission}
-                      />
-                      <HostSideSubmissions
-                        sideSubmissions={sideSubmissions}
-                        playerById={playerById}
-                        challengeById={challengeById}
-                        evidenceForChallenge={evidenceForChallenge}
-                        evidenceUrl={evidenceUrl}
+                      {activeReviewFilter === "secret" && secretReviewControls}
+                      {activeReviewFilter === "main" && (
+                        <HostMainSubmissions
+                          submissions={submissions}
+                          teamById={teamById}
+                          challengeById={challengeById}
+                          playerById={playerById}
+                          evidenceForChallenge={evidenceForChallenge}
+                          evidenceUrl={evidenceUrl}
+                          busy={busy}
+                          reviewSubmission={reviewSubmission}
+                        />
+                      )}
+                      {activeReviewFilter === "side" && (
+                        <HostSideSubmissions
+                          sideSubmissions={sideSubmissions}
+                          teamById={teamById}
+                          playerById={playerById}
+                          challengeById={challengeById}
+                          evidenceForChallenge={evidenceForChallenge}
+                          evidenceUrl={evidenceUrl}
+                          votingEnabled={session.reward_methods.includes(
+                            "voting",
+                          )}
+                          hostAwardsEnabled={session.reward_methods.includes(
+                            "host_awards",
+                          )}
+                          busy={busy}
+                          hostAwardedPoints={hostAwardedPoints}
+                          onReviewChallenge={(challengeId) =>
+                            void selectFinalChallenge(challengeId).then(() =>
+                              openHostSection("overrides"),
+                            )
+                          }
+                          onAwardPoints={(challenge) => {
+                            setShowRewardOverlay(false);
+                            setRewardChallengeId(challenge.id);
+                            setRewardPoints(challenge.points);
+                            setRewardMethod("host_awards");
+                            setRewardTargetKind(
+                              session.teams_enabled ? "team" : "player",
+                            );
+                            setSelectedRewardWinnerIds([]);
+                            setShowRewardSetup(true);
+                            setActiveTab("reward-round");
+                            restoreFocus();
+                          }}
+                        />
+                      )}
+                      <HostPointsOverview
+                        challenges={pointsByChallenge}
+                        mainPoints={sumPoints(mainSubmissions)}
+                        sidePoints={sumPoints(sideSubmissions)}
+                        secretPoints={sumPoints(secretAssignments)}
+                        teams={teams.map((team) => ({
+                          id: team.id,
+                          name: team.name,
+                          score: players
+                            .filter((player) => player.team_id === team.id)
+                            .reduce(
+                              (sum, player) => sum + player.score,
+                              team.manual_score_adjustment,
+                            ),
+                        }))}
+                        players={[...players].sort((a, b) => b.score - a.score)}
                       />
                     </>
                   )}
@@ -1469,6 +1699,12 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                   activeHostSection === section.id &&
                   section.id === "schedule" && (
                     <HostGameSchedule
+                      eventName={session.name}
+                      startTime={session.start_time}
+                      sessionStatus={session.status}
+                      currentRound={session.current_round_number}
+                      secretAssignments={secretAssignments}
+                      playerById={playerById}
                       schedule={gameSchedule}
                       challenges={challenges}
                       busy={busy}
@@ -1478,52 +1714,12 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                   )}
                 {activeTab === "host-controls" &&
                   activeHostSection === section.id &&
-                  section.id === "secret-missions" && (
-                    <HostSecretMissions
-                      secretAssignments={secretAssignments}
-                      votingAssignmentId={
-                        secretReviewVotingOpen
-                          ? selectedSecretReviewAssignmentId
-                          : null
-                      }
-                      session={session}
-                      assignSecretMission={assignSecretMission}
-                      selectedSecretPlayerId={selectedSecretPlayerId}
-                      setSelectedSecretPlayerId={setSelectedSecretPlayerId}
-                      busy={busy}
-                      players={players}
-                      selectedSecretChallengeId={selectedSecretChallengeId}
-                      setSelectedSecretChallengeId={
-                        setSelectedSecretChallengeId
-                      }
-                      secretChallenges={secretChallenges}
-                      secretScheduleAt={secretScheduleAt}
-                      setSecretScheduleAt={setSecretScheduleAt}
-                      createSecretChallenge={createSecretChallenge}
-                      newSecretTitle={newSecretTitle}
-                      setNewSecretTitle={setNewSecretTitle}
-                      newSecretDescription={newSecretDescription}
-                      setNewSecretDescription={setNewSecretDescription}
-                      newSecretPoints={newSecretPoints}
-                      setNewSecretPoints={setNewSecretPoints}
-                      newSecretEvidenceRequired={newSecretEvidenceRequired}
-                      setNewSecretEvidenceRequired={
-                        setNewSecretEvidenceRequired
-                      }
-                      playerById={playerById}
-                      challengeById={challengeById}
-                      evidenceForAssignment={evidenceForAssignment}
-                      evidenceUrl={evidenceUrl}
-                      rescheduleSecretMission={rescheduleSecretMission}
-                    />
-                  )}
-                {activeTab === "host-controls" &&
-                  activeHostSection === section.id &&
                   section.id === "settings" && (
                     <HostSettings
                       key={session.id}
                       session={session}
                       playerCount={players.length}
+                      joinUrl={joinUrl}
                       busy={busy}
                       onSave={saveSettings}
                       onHostParticipationChange={setHostParticipation}

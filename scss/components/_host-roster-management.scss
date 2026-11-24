@@ -1,3 +1,5 @@
+@use "../variables/colors";
+@use "../variables/fonts";
 @use "../variables/layout";
 @use "../tools/compact-input";
 @use "../tools/compact-select";
@@ -6,29 +8,224 @@
   display: grid;
   gap: layout.$pixel-unit * 3;
 
-  &__fields {
+  &__stats {
     display: grid;
-    gap: layout.$pixel-unit * 3;
+    grid-template-columns: repeat(3, 1fr);
+    margin: 0;
+    border: layout.$session-border-width solid colors.$comic-ink;
+    border-radius: layout.$radius-lg;
+    background: colors.$white;
+    box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
+      colors.$comic-ink;
+    color: colors.$comic-ink;
+    div {
+      display: grid;
+      justify-items: center;
+      padding: layout.$pixel-unit * 2;
+      & + div {
+        border-left: layout.$session-border-width solid colors.$comic-ink;
+      }
+    }
+    dd {
+      margin: 0;
+      font-family: fonts.$family-display;
+      font-size: fonts.$size-control-timer;
+      line-height: 1;
+    }
+    dt {
+      font-size: fonts.$size-small;
+      font-weight: fonts.$weight-heavy;
+    }
+  }
+  &__section {
+    display: grid;
+    gap: layout.$pixel-unit * 2.5;
     min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    &--unassigned {
+      padding: layout.$pixel-unit * 3;
+      border: layout.$session-border-width dashed colors.$accent-soft;
+      border-radius: layout.$radius-lg;
+    }
   }
-  &__player {
+  &__heading {
     display: flex;
-    flex-wrap: wrap;
-    align-items: end;
+    align-items: center;
+    justify-content: space-between;
     gap: layout.$pixel-unit * 2;
+    h3 {
+      margin: 0;
+      color: colors.$white;
+      font-family: fonts.$family-display;
+      text-transform: uppercase;
+    }
   }
-  &__player label,
+  &__list {
+    display: grid;
+    gap: layout.$pixel-unit * 2;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  &__note {
+    margin: 0;
+    font-size: fonts.$size-small;
+  }
   &__capacity {
     display: grid;
-    flex: 1 1 layout.$pixel-unit * 35;
     gap: layout.$pixel-unit;
     min-width: 0;
   }
-  &__player input {
+  &__search input {
     @include compact-input.compact-input;
+    width: 100%;
   }
-  &__player select,
   &__capacity select {
     @include compact-select.compact-select;
+  }
+}
+
+.roster-player {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: layout.$pixel-unit * 2;
+  padding: layout.$pixel-unit * 2;
+  border: layout.$session-border-width solid colors.$comic-ink;
+  border-radius: layout.$radius-lg;
+  background: colors.$white;
+  color: colors.$comic-ink;
+  &__name {
+    display: flex;
+    flex: 1 1 layout.$pixel-unit * 20;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.5;
+    min-width: 0;
+    font-weight: fonts.$weight-heavy;
+    overflow-wrap: anywhere;
+  }
+  &__host {
+    padding: 0 layout.$pixel-unit * 1.5;
+    border: layout.$session-border-width solid colors.$comic-ink;
+    border-radius: layout.$radius-pill;
+    background: colors.$lime;
+    font-size: fonts.$size-small;
+  }
+  &__team {
+    @include compact-select.compact-select;
+    flex: 0 1 layout.$pixel-unit * 35;
+  }
+  &__edit {
+    display: flex;
+    flex: 1 0 100%;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: layout.$pixel-unit * 2;
+    label {
+      display: grid;
+      flex: 1 1 layout.$pixel-unit * 35;
+      gap: layout.$pixel-unit;
+    }
+    input {
+      @include compact-input.compact-input;
+    }
+  }
+}
+
+// Team cards cycle through Chaos palette accents.
+.roster-team {
+  --roster-team-accent: #{colors.$lime};
+  border: layout.$session-border-width solid colors.$comic-ink;
+  border-radius: layout.$radius-lg;
+  background: colors.$comic-lavender;
+  box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
+    colors.$comic-ink;
+  color: colors.$comic-ink;
+  overflow: hidden;
+  &--pink {
+    --roster-team-accent: #{colors.$pink};
+  }
+  &--purple {
+    --roster-team-accent: #{colors.$purple-mid};
+  }
+  &--lavender {
+    --roster-team-accent: #{colors.$white};
+  }
+  &__summary {
+    display: flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 2.5;
+    padding: layout.$pixel-unit * 2.5 layout.$pixel-unit * 3;
+    background: var(--roster-team-accent);
+    cursor: pointer;
+    list-style: none;
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+  &__copy {
+    display: grid;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  &__name {
+    font-family: fonts.$family-display;
+    overflow-wrap: anywhere;
+  }
+  &__avatars {
+    display: inline-flex;
+    .avatar + .avatar {
+      margin-left: layout.$pixel-unit * -2;
+    }
+  }
+  &__open {
+    transition: transform 0.15s ease;
+  }
+  &[open] > &__summary &__open {
+    transform: rotate(90deg);
+  }
+  &__body {
+    display: grid;
+    gap: layout.$pixel-unit * 2.5;
+    padding: layout.$pixel-unit * 3;
+    border-top: layout.$session-border-width solid colors.$comic-ink;
+    p {
+      margin: 0;
+    }
+  }
+  &__members {
+    display: grid;
+    gap: layout.$pixel-unit * 2;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    li {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: layout.$pixel-unit * 2;
+    }
+    &-name {
+      flex: 1 1 layout.$pixel-unit * 15;
+      font-weight: fonts.$weight-heavy;
+    }
+    select {
+      @include compact-select.compact-select;
+      flex: 0 1 layout.$pixel-unit * 30;
+    }
+  }
+  &__edit > summary {
+    display: inline-flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 1.5;
+    font-weight: fonts.$weight-heavy;
+    cursor: pointer;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &__open {
+      transition: none;
+    }
   }
 }

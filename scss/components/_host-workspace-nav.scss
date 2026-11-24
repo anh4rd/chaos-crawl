@@ -1,0 +1,91 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+@use "../variables/motion";
+
+// Secondary host section switcher. Deliberately a light, scrollable panel of
+// separate tiles so it never reads as the dark fixed bottom dock.
+.host-workspace-nav {
+  position: sticky;
+  z-index: 10;
+  top: 0;
+  display: flex;
+  gap: layout.$pixel-unit * 2;
+  margin-bottom: layout.$pixel-unit * 4;
+  padding: layout.$pixel-unit * 2;
+  border: layout.$session-border-width solid colors.$comic-ink;
+  border-radius: layout.$radius-lg;
+  background: colors.$comic-lavender;
+  box-shadow: layout.$pixel-unit * 0.5 layout.$pixel-unit * 0.5 0
+    colors.$comic-ink;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  &__tab {
+    position: relative;
+    display: flex;
+    flex: 1 0 layout.$pixel-unit * 16;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: layout.$pixel-unit * 0.75;
+    min-height: layout.$control-height;
+    padding: layout.$pixel-unit * 1.5 layout.$pixel-unit * 2;
+    border: layout.$session-border-width solid colors.$choice-lavender;
+    border-radius: layout.$pixel-unit * 3;
+    background: colors.$white;
+    color: colors.$purple-dark;
+    font: inherit;
+    font-size: fonts.$size-navigation-min;
+    font-weight: fonts.$weight-heavy;
+    line-height: 1.1;
+    cursor: pointer;
+    scroll-snap-align: center;
+    transition:
+      background motion.$duration-interaction,
+      transform motion.$duration-interaction;
+    &:hover {
+      transform: translateY(-(layout.$pixel-unit * 0.25));
+    }
+    &:focus-visible {
+      outline: layout.$focus-ring-width solid colors.$purple;
+      outline-offset: layout.$pixel-unit * 0.5;
+    }
+    &--active {
+      border: layout.$pixel-unit * 0.75 solid colors.$comic-ink;
+      background: colors.$lime;
+      color: colors.$comic-ink;
+      box-shadow: layout.$pixel-unit * 0.5 layout.$pixel-unit * 0.5 0
+        colors.$comic-ink;
+      // Non-colour active cue: a bar under the label.
+      &::after {
+        content: "";
+        position: absolute;
+        bottom: layout.$pixel-unit * 0.5;
+        width: layout.$pixel-unit * 5;
+        height: layout.$pixel-unit * 0.75;
+        border-radius: layout.$radius-pill;
+        background: colors.$comic-ink;
+      }
+    }
+  }
+  &__tab--active {
+    padding-bottom: layout.$pixel-unit * 2.5;
+  }
+  &__icon {
+    width: layout.$pixel-unit * 6;
+    height: layout.$pixel-unit * 6;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &__tab {
+      transition: none;
+    }
+    &__tab:hover {
+      transform: none;
+    }
+  }
+}

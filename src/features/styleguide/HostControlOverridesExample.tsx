@@ -5,14 +5,25 @@ import SessionPreview from "../../components/session/SessionPreview";
 import { Example } from "./Example";
 
 const rounds = [
-  { id: "one", title: "Make an entrance", round_number: 1 },
-  { id: "two", title: "Team portrait", round_number: 2 },
+  {
+    id: "one",
+    title: "Make an entrance",
+    description: "Show your best entrance.",
+    round_number: 1,
+  },
+  {
+    id: "two",
+    title: "Team portrait",
+    description: "Capture your team together.",
+    round_number: 2,
+  },
 ];
 
 export default function HostControlOverridesExample() {
   const [round, setRound] = useState(1);
   const [seconds, setSeconds] = useState(300);
   const [running, setRunning] = useState(false);
+  const [onBreak, setOnBreak] = useState(false);
   const [notice, setNotice] = useState("Try the local override controls.");
   const time = `${Math.floor(seconds / 60)
     .toString()
@@ -32,7 +43,12 @@ export default function HostControlOverridesExample() {
             busy={false}
             rewardActive={false}
             timerReady
-            onBreak={false}
+            onBreak={onBreak}
+            currentRoundPointsAwarded={false}
+            resumeRound={2}
+            onNextRound={() => setNotice("Sample next round selected.")}
+            sideChallengeControls={<p>Local side challenge controls.</p>}
+            secretMissionControls={<p>Local secret mission controls.</p>}
             timerRunning={running}
             timerSeconds={seconds}
             timerText={time}
@@ -54,7 +70,10 @@ export default function HostControlOverridesExample() {
             onSetTimer={setSeconds}
             onAddMinutes={(value) => setSeconds(seconds + value * 60)}
             onEditBreak={() => setNotice("Sample break timer selected.")}
-            onStartBreak={() => setNotice("Sample break selected.")}
+            onStartBreak={() => {
+              setOnBreak(true);
+              setNotice("Sample break started.");
+            }}
             onEditChallenge={() => setNotice("Sample challenge edit selected.")}
             onReviewPoints={() =>
               setNotice("Sample challenge review selected.")
