@@ -1621,13 +1621,18 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
 };
 
-// Discover modules without importing them or starting their live data hooks.
-const modules = import.meta.glob([
-  "/src/components/**/*.tsx",
-  "/src/features/**/*.tsx",
-  "!/src/**/*.test.tsx",
-  "!/src/features/styleguide/**",
-]);
+// Only the paths are used. The "?raw" query makes each entry a separate text
+// asset, so the real modules are never imported (no live data hooks start) and
+// Vite does not warn about dynamic imports of statically imported modules.
+const modules = import.meta.glob(
+  [
+    "/src/components/**/*.tsx",
+    "/src/features/**/*.tsx",
+    "!/src/**/*.test.tsx",
+    "!/src/features/styleguide/**",
+  ],
+  { query: "?raw" },
+);
 
 export const componentCatalog = Object.keys(modules)
   .sort()
