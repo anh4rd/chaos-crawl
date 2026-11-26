@@ -1,0 +1,1 @@
+import{i as e}from"./apiResult-DfXIJP5C.js";import{t}from"./sessionSupabase-D6QlC7aV.js";function n({id:n}){return e(()=>t.from(`host_favourites`).delete().eq(`id`,n))}export{n as t};
