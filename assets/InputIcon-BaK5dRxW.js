@@ -1,0 +1,1 @@
+import{t as e}from"./Icon-D1fDM2Fb.js";import{t}from"./jsx-runtime-CU_pEDDh.js";var n=t();function r({icon:t,children:r,variant:i,iconClassName:a=`icon--size-18`}){return(0,n.jsxs)(`div`,{className:`input-icon${i?` input-icon--${i}`:``}`,children:[(0,n.jsx)(e,{name:t,className:a,"aria-hidden":`true`}),r]})}export{r as t};

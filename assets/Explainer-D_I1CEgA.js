@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-CU_pEDDh.js";var t=e();function n({className:e=``,variant:n,...r}){return(0,t.jsx)(`div`,{...r,className:`form-grid${n?` form-grid--${n}`:``} ${e}`.trim()})}function r({tone:e,variant:n,className:r=``,...i}){return(0,t.jsx)(`div`,{...i,className:`explainer${n?` explainer--${n}`:``}${e?` explainer--${e}`:``} ${r}`.trim()})}export{n,r as t};

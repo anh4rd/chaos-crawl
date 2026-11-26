@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-CU_pEDDh.js";var t=e();function n({as:e=`span`,className:n=``,variant:r,...i}){return(0,t.jsx)(e,{...i,className:`count-badge${r===`console-rank-first`?` count-badge--console-rank count-badge--first`:``}${r?` count-badge--${r}`:``} ${n}`.trim()})}export{n as t};

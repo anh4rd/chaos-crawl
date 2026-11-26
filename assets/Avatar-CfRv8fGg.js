@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-CU_pEDDh.js";var t=e();function n({name:e,imageSrc:n,variant:r=`account`,as:i=`span`,className:a=``,...o}){return(0,t.jsx)(i,{...o,className:`avatar avatar--${r} ${a}`.trim(),children:n?(0,t.jsx)(`img`,{src:n,alt:``}):e.slice(0,1).toUpperCase()})}export{n as t};

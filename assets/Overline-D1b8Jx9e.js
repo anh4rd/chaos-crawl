@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-CU_pEDDh.js";var t=e();function n({tone:e,variant:n,withIcon:r=!1,as:i=`span`,className:a=``,...o}){return(0,t.jsx)(i,{...o,className:`overline${n?` overline--${n}`:``}${r?` overline--icon`:``}${e?` overline--${e}`:``} ${a}`.trim()})}export{n as t};

@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-CU_pEDDh.js";var t=e();function n({children:e,htmlFor:n,spaced:r=!1,variant:i,className:a=``,...o}){return(0,t.jsx)(`label`,{...o,htmlFor:n,className:`form-label${r?` form-label--spaced`:``}${i===`session`||i===`session-checkbox`?` form-label--session`:``}${i&&i!==`session`?` form-label--${i}`:``} ${a}`.trim(),children:e})}export{n as t};

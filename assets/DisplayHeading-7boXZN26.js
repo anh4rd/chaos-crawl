@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-CU_pEDDh.js";var t=e();function n({children:e,as:n=`h2`,hero:r=!1,variant:i,className:a=``}){return(0,t.jsx)(n,{className:`display-heading${r?` display-heading--hero`:``}${i?` display-heading--${i}`:``}${a?` ${a}`:``}`,children:e})}export{n as t};

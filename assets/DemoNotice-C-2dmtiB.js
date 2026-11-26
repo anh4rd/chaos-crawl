@@ -1,0 +1,1 @@
+import{t as e}from"./Icon-D1fDM2Fb.js";import{t}from"./jsx-runtime-CU_pEDDh.js";var n=t();function r({children:t,actionLabel:r,onAction:i}){return(0,n.jsxs)(`div`,{className:`demo-notice`,children:[(0,n.jsx)(e,{name:`sparkles`,className:`icon--size-16`}),t,` `,(0,n.jsx)(`button`,{type:`button`,onClick:i,children:r})]})}export{r as t};

@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-CU_pEDDh.js";var t=e();function n({compact:e=!1,variant:n,as:r=`p`,className:i=``,...a}){return(0,t.jsx)(r,{...a,className:`note${r===`small`?` note--inline`:``}${e?` note--compact`:``}${n?` note--${n}`:``} ${i}`.trim()})}export{n as t};

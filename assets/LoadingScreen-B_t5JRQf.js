@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-CU_pEDDh.js";var t=e();function n(){return(0,t.jsx)(`span`,{className:`spinner`})}function r({children:e,as:r=`main`}){return(0,t.jsxs)(r,{className:`loading-screen`,children:[(0,t.jsx)(n,{}),e]})}export{r as t};

@@ -1,0 +1,1 @@
+import{n as e,t}from"./jsx-runtime-CU_pEDDh.js";e();var n=t();function r({label:e,hint:t,children:r,variant:i}){return(0,n.jsxs)(`label`,{className:`field${i?` field--${i}`:``}`,children:[(0,n.jsx)(`span`,{children:e}),r,t&&(0,n.jsx)(`small`,{children:t})]})}export{r as t};

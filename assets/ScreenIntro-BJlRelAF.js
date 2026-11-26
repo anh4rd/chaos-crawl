@@ -1,0 +1,1 @@
+import{t as e}from"./Card-DTxev2ur.js";import{t}from"./jsx-runtime-CU_pEDDh.js";var n=t();function r({title:t,description:r}){return(0,n.jsxs)(e,{className:`screen-intro`,children:[(0,n.jsx)(`h1`,{className:`screen-intro__title`,children:t}),(0,n.jsx)(`p`,{className:`screen-intro__description`,children:r})]})}export{r as t};

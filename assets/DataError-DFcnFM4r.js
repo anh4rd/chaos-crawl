@@ -1,1 +1,0 @@
-import{t as e}from"./Button-BUHCCB7T.js";import{t}from"./index-BEoegnHP.js";var n=t();function r({error:t,retry:r}){return(0,n.jsxs)(`main`,{className:`mx-auto max-w-md space-y-4 p-6`,children:[(0,n.jsx)(`p`,{role:`alert`,children:t.message}),(0,n.jsx)(e,{type:`button`,onClick:()=>{r()},children:`Try again`})]})}export{r as t};

@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-CU_pEDDh.js";var t=e();function n({className:e=``,variant:n,dismissible:r=!1,...i}){return(0,t.jsx)(`div`,{...i,className:`panel-heading${r?` panel-heading--dismissible`:``}${n?` panel-heading--${n}`:``} ${e}`.trim()})}export{n as t};

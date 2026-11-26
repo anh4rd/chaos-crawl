@@ -1,0 +1,1 @@
+import{t as e}from"./Button-CHcw8Yfu.js";import{t}from"./jsx-runtime-CU_pEDDh.js";var n=t();function r({error:t,retry:r,as:i=`main`}){return(0,n.jsxs)(i,{className:`data-error`,children:[(0,n.jsx)(`p`,{role:`alert`,children:t.message}),(0,n.jsx)(e,{type:`button`,onClick:()=>{r()},children:`Try again`})]})}export{r as t};

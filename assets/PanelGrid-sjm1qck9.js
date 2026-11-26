@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime-CU_pEDDh.js";var t=e();function n({className:e=``,variant:n,...r}){return(0,t.jsx)(`div`,{...r,className:`panel-grid${n?` panel-grid--${n}`:``} ${e}`.trim()})}export{n as t};
