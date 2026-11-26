@@ -1,1 +1,0 @@
-import{t as e}from"./jsx-runtime-CU_pEDDh.js";var t=e();function n({variant:e,className:n=``,...r}){return(0,t.jsx)(`div`,{...r,className:`dialog-actions${e?` dialog-actions--${e}`:``} ${n}`.trim()})}export{n as t};

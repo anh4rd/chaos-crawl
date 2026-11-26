@@ -1,1 +1,0 @@
-import{t as e}from"./index-Or3ShW7A.js";import{n as t}from"./usePlayers-C5Rhg33g.js";var n=[],r=t=>e.from(`teams`).select(`id, name`).order(`name`).abortSignal(t);function i(){return t(`teams`,r,n)}export{i as t};
