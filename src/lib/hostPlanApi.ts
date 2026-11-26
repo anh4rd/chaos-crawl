@@ -1,4 +1,4 @@
-import { runApi } from "./apiResult";
+import { failedResult, runApi } from "./apiResult";
 import { supabase } from "./sessionSupabase";
 import type {
   StoredPlan,
@@ -15,14 +15,9 @@ export function readPlanFavourites(hostId: string) {
       .eq("host_id", hostId),
   );
 }
-export function readHostPlan(id: string, hostId: string) {
+export function readHostPlan(id: string) {
   return runApi<StoredPlan>(() =>
-    supabase
-      .from("host_games")
-      .select("*")
-      .eq("id", id)
-      .eq("host_id", hostId)
-      .maybeSingle(),
+    supabase.from("host_games").select("*").eq("id", id).maybeSingle(),
   );
 }
 export function readApprovedPlanTask(id: string) {
@@ -60,7 +55,7 @@ export function createHostPlan(payload: PlanWrite) {
     supabase.from("host_games").insert(payload).select("id").single(),
   );
 }
-export function updateHostPlan({
+export async function updateHostPlan({
   hostGameId,
   hostId,
   values,
@@ -69,13 +64,18 @@ export function updateHostPlan({
   hostId: string;
   values: Omit<PlanWrite, "host_id">;
 }) {
-  return runApi<unknown>(() =>
+  const result = await runApi<{ id: string }>(() =>
     supabase
       .from("host_games")
       .update(values)
       .eq("id", hostGameId)
-      .eq("host_id", hostId),
+      .eq("host_id", hostId)
+      .select("id")
+      .maybeSingle(),
   );
+  if (!result.error && !result.data)
+    return failedResult(new Error("This game is no longer available to you."));
+  return result;
 }
 export function uploadPlanCover(path: string, file: File) {
   return runApi<unknown>(() =>

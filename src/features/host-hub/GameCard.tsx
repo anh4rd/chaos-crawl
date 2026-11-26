@@ -14,12 +14,16 @@ export function GameCard({
   onPlay,
   playing,
   readOnly = false,
+  shared = false,
+  onManageCohosts,
 }: {
   game: HostGame;
   onEdit: (id: string) => void;
   onPlay: (game: HostGame) => void;
   playing: boolean;
   readOnly?: boolean;
+  shared?: boolean;
+  onManageCohosts?: (game: HostGame) => void;
 }) {
   const completed =
     game.status === "completed" ||
@@ -49,7 +53,9 @@ export function GameCard({
     ? "Past game"
     : readOnly
       ? "Host game"
-      : "Your game";
+      : shared
+        ? "Shared game"
+        : "Your game";
   const editLabel = completed
     ? "View plan"
     : game.status === "draft"
@@ -123,6 +129,16 @@ export function GameCard({
                 <Icon name="play" className="icon--size-15" />
               )}
               {playLabel}
+            </Button>
+          )}
+          {onManageCohosts && !readOnly && (
+            <Button
+              type="button"
+              variant="comic-secondary"
+              fullWidth={false}
+              onClick={() => onManageCohosts(game)}
+            >
+              <Icon name="users" className="icon--size-15" /> Co-hosts
             </Button>
           )}
           {readOnly && (

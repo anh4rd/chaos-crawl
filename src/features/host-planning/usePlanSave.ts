@@ -7,12 +7,14 @@ import type { ApiError } from "../../lib/apiResult";
 export function usePlanSave({
   id,
   form,
+  ownerId,
   navigate,
   setError,
   setNotice,
 }: {
   id?: string;
   form: SetupForm;
+  ownerId?: string | null;
   navigate: (path: string, options?: { replace?: boolean }) => void;
   setError: (message: string) => void;
   setNotice: (message: string) => void;
@@ -50,10 +52,14 @@ export function usePlanSave({
       let savedId = id;
       let saveError: ApiError | null = null;
       if (id) {
-        const { host_id: hostId, ...values } = payload;
+        if (!ownerId) {
+          setError("Couldn't verify the owner of this game plan.");
+          return;
+        }
+        const { host_id: _hostId, ...values } = payload;
         const { error } = await updateHostPlan({
           hostGameId: id,
-          hostId,
+          hostId: ownerId,
           values,
         });
         saveError = error;

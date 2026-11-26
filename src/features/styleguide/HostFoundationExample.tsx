@@ -10,6 +10,7 @@ import PanelGrid from "../../components/ui/PanelGrid";
 import PanelHeading from "../../components/ui/PanelHeading";
 import TabList from "../../components/ui/TabList";
 import { GameCard } from "../host-hub/GameCard";
+import CohostDialog from "../host-hub/CohostDialog";
 import HostDirectory from "../host-hub/HostDirectory";
 import { Example } from "./Example";
 
@@ -24,6 +25,11 @@ export default function HostFoundationExample() {
   const [error, setError] = useState(false);
   const [notice, setNotice] = useState(
     "All workspace actions stay in this reference.",
+  );
+  const [cohostOpen, setCohostOpen] = useState(false);
+  const [cohostEmail, setCohostEmail] = useState("");
+  const [cohosts, setCohosts] = useState<{ user_id: string; email: string }[]>(
+    [],
   );
   const game = {
     id: "local-plan",
@@ -167,6 +173,7 @@ export default function HostFoundationExample() {
                       readOnly={preview}
                       onEdit={() => setNotice("Edit selected locally.")}
                       onPlay={() => setNotice("Play selected locally.")}
+                      onManageCohosts={() => setCohostOpen(true)}
                     />
                   </PanelGrid>
                 )}
@@ -194,6 +201,37 @@ export default function HostFoundationExample() {
             </div>
           </HostShell>
         </div>
+        {cohostOpen && (
+          <CohostDialog
+            gameName={game.name}
+            email={cohostEmail}
+            cohosts={cohosts}
+            loading={false}
+            busy={false}
+            error=""
+            canRetry={false}
+            onEmailChange={setCohostEmail}
+            onAdd={(event) => {
+              event.preventDefault();
+              const email = cohostEmail.trim();
+              if (!email) return;
+              setCohosts((current) =>
+                current.some((cohost) => cohost.email === email)
+                  ? current
+                  : [...current, { user_id: email, email }],
+              );
+              setCohostEmail("");
+            }}
+            onRemove={(id) =>
+              setCohosts((current) =>
+                current.filter((cohost) => cohost.user_id !== id),
+              )
+            }
+            onClose={() => setCohostOpen(false)}
+            onDismissError={() => {}}
+            onRetry={() => {}}
+          />
+        )}
         <Note as="output">{notice}</Note>
       </Example>
     </section>

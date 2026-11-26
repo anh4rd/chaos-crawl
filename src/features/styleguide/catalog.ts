@@ -906,7 +906,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   HostDashboard: {
     usage:
-      "Host hub selected by route view/preview ID. Overview and Your games use roving tab stops, wrapping Left/Right and Home/End, and a named games panel. Local host workspace furniture demonstrates the same keyboard contract without connected controllers.",
+      "Host hub selected by route view/preview ID. Overview and Your games use roving tab stops, wrapping Left/Right and Home/End, and a named games panel. Local host workspace furniture demonstrates the keyboard contract and co-host dialog with local state only.",
     dependencies:
       "useHostHub, connected HostWorkspace and feature presentation panels; do not mount in local demos.",
   },

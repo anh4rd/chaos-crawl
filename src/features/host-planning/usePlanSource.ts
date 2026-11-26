@@ -32,6 +32,15 @@ export function usePlanSource({
   setNotice: (message: string) => void;
 }) {
   const [attempt, setAttempt] = useState(0);
+  const [ownership, setOwnership] = useState<{
+    planId?: string;
+    ownerId: string | null;
+    canChangeHostParticipation: boolean;
+  }>({ planId: id, ownerId: null, canChangeHostParticipation: !id });
+  const currentOwnership =
+    ownership.planId === id
+      ? ownership
+      : { ownerId: null, canChangeHostParticipation: !id };
   const [loading, setLoading] = useState(
     Boolean(id || communityTaskId || exploreTaskJson),
   );
@@ -39,6 +48,11 @@ export function usePlanSource({
     let live = true;
     async function load() {
       setError("");
+      setOwnership({
+        planId: id,
+        ownerId: null,
+        canChangeHostParticipation: !id,
+      });
       setLoading(Boolean(id || communityTaskId || exploreTaskJson));
       const { data: auth, error: authError } = await runApi<{
         user: User | null;
@@ -53,13 +67,26 @@ export function usePlanSource({
       await loadFavourites(userId);
       if (!live) return;
       if (id) {
-        const { data, error: loadError } = await readHostPlan(id, userId).catch(
-          failedResult,
-        );
+        const { data, error: loadError } =
+          await readHostPlan(id).catch(failedResult);
         if (!live) return;
         if (loadError || !data) setError("Couldn't load this game plan.");
         else {
-          setForm(hydratePlan(data));
+          const isOwner = data.host_id === userId;
+          setOwnership({
+            planId: id,
+            ownerId: data.host_id,
+            canChangeHostParticipation: isOwner,
+          });
+          const form = hydratePlan(data);
+          setForm(
+            isOwner
+              ? form
+              : {
+                  ...form,
+                  hostParticipates: data.plan_data?.hostParticipates === true,
+                },
+          );
           setStage("build");
         }
       } else if (communityTaskId) {
@@ -108,5 +135,10 @@ export function usePlanSource({
     setError,
     setNotice,
   ]);
-  return { loading, reload: () => setAttempt((value) => value + 1) };
+  return {
+    loading,
+    ownerId: currentOwnership.ownerId,
+    canChangeHostParticipation: currentOwnership.canChangeHostParticipation,
+    reload: () => setAttempt((value) => value + 1),
+  };
 }

@@ -2,8 +2,21 @@
 
 This is a staged migration, not a completed whole-app rewrite. The root
 [AGENTS.md](../AGENTS.md) defines the target rules and temporary exceptions.
-No deployment, database migration, policy changes, or live backend writes are
-included.
+No deployment, production database migrations, policy changes, or live backend
+writes are included.
+
+## In progress
+
+Co-host management lets a game owner add or remove a verified existing account
+by email; it does not send an invitation. Shared games appear in the co-host's
+Host Hub and can be edited and hosted. The owner alone controls their player
+participation; co-hosts do not receive the owner's player token. Three migrations
+provide membership, policies and host RPC access. They were replayed against an
+isolated schema-only copy, not deployed to production. Local SQL checks cover
+membership, access and revocation, token isolation, launching, scoring, rewards,
+secret assignment and the final gallery. All 25 changed host RPCs were
+mechanically compared to their baseline; not every workflow was exercised.
+Review the migrations and test against a disposable backend before deployment.
 
 ## Delivered slices
 

@@ -29,6 +29,7 @@ const player: SessionPlayer = {
 function options(): Parameters<typeof useHostSessionActions>[0] {
   return {
     autoplayEnabled: false,
+    isGameOwner: true,
     players: [player],
     session: hostSessionFixture(),
     teams: [],
@@ -58,6 +59,23 @@ beforeEach(() => {
     fn.mockResolvedValue({ data: null, error: null });
 });
 afterEach(cleanup);
+it("does not disable the owner's participation when a co-host starts the game", async () => {
+  const props = options();
+  props.isGameOwner = false;
+  props.session = hostSessionFixture({
+    status: "lobby",
+    host_participates: true,
+    host_player_id: null,
+  });
+  const { result } = renderHook(() => useHostSessionActions(props));
+  await act(async () => {
+    await result.current.startGame(true);
+  });
+  expect(mocks.start).not.toHaveBeenCalled();
+  expect(props.setError).toHaveBeenCalledWith(
+    "Ask the game owner to join as a player or turn off host participation before starting.",
+  );
+});
 it("rejects empty rosters and incomplete team assignments before starting", async () => {
   const props = options();
   props.players = [];

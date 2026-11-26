@@ -51,6 +51,7 @@ export default function HostSettings({
   busy,
   onSave,
   onHostParticipationChange,
+  canChangeHostParticipation = true,
 }: {
   session: GameSession;
   playerCount: number;
@@ -58,6 +59,7 @@ export default function HostSettings({
   busy: boolean;
   onSave: (values: HostSessionSettings) => Promise<void>;
   onHostParticipationChange: (participates: boolean) => Promise<boolean>;
+  canChangeHostParticipation?: boolean;
 }) {
   const [draft, setDraft] = useState(() => initialDraft(session));
   const readOnly = session.status === "completed";
@@ -183,21 +185,25 @@ export default function HostSettings({
           description="Teams, team size, assignment and host play."
           summary={`${draft.teams_enabled ? `Teams of ${draft.team_size}` : "Individual play"} · Host ${session.host_participates ? "plays" : "not playing"}`}
         >
-          <Toggle
-            title="Host participates"
-            detail="Joining or leaving the player list also updates your host player access."
-            checked={session.host_participates}
-            onChange={(value) => {
-              if (
-                session.status === "live" &&
-                !window.confirm(
-                  "Change host participation during a live game? Your host player access updates immediately.",
+          {canChangeHostParticipation ? (
+            <Toggle
+              title="Host participates"
+              detail="Joining or leaving the player list also updates your host player access."
+              checked={session.host_participates}
+              onChange={(value) => {
+                if (
+                  session.status === "live" &&
+                  !window.confirm(
+                    "Change host participation during a live game? Your host player access updates immediately.",
+                  )
                 )
-              )
-                return;
-              void onHostParticipationChange(value);
-            }}
-          />
+                  return;
+                void onHostParticipationChange(value);
+              }}
+            />
+          ) : (
+            <p>Only the game owner can change host participation.</p>
+          )}
           <Toggle
             title="Use teams"
             detail="Players compete in teams instead of individually."

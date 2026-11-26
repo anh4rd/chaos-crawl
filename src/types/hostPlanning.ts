@@ -94,6 +94,7 @@ export interface SetupForm {
 
 export interface StoredPlan {
   id: string;
+  host_id: string;
   name: string | null;
   event_date: string | null;
   start_time: string | null;

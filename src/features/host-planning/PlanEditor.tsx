@@ -72,7 +72,12 @@ export default function PlanEditor({
   } = usePlanFavourites({
     setError,
   });
-  const { loading, reload: reloadSource } = usePlanSource({
+  const {
+    loading,
+    ownerId,
+    canChangeHostParticipation,
+    reload: reloadSource,
+  } = usePlanSource({
     id,
     communityTaskId,
     exploreTaskJson,
@@ -122,6 +127,7 @@ export default function PlanEditor({
   const { saving, save } = usePlanSave({
     id,
     form,
+    ownerId,
     navigate,
     setError,
     setNotice,
@@ -301,7 +307,13 @@ export default function PlanEditor({
             />
           }
         >
-          {tab === "players" && <PlayerSetup form={form} update={update} />}
+          {tab === "players" && (
+            <PlayerSetup
+              form={form}
+              update={update}
+              canChangeHostParticipation={canChangeHostParticipation}
+            />
+          )}
 
           {(tab === "main" || tab === "side" || tab === "secret") && (
             <ChallengeLibrary

@@ -5,6 +5,7 @@ import { communityPlanTask, explorePlanTask } from "./planImports";
 it("restores legacy selected IDs using saved row fields as authoritative values", () => {
   const form = hydratePlan({
     id: "legacy",
+    host_id: "host-one",
     name: "Saved name",
     event_date: "2030-02-03",
     start_time: "19:20:00",
@@ -31,6 +32,7 @@ it("restores legacy selected IDs using saved row fields as authoritative values"
 it("preserves challenge artwork URLs in saved plans", () => {
   const form = hydratePlan({
     id: "artwork",
+    host_id: "host-one",
     name: "Artwork plan",
     event_date: null,
     start_time: null,

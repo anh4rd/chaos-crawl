@@ -27,6 +27,7 @@ interface Props {
   setHostAvatarFile: Dispatch<SetStateAction<File | null>>;
   setHostAvatarPreview: Dispatch<SetStateAction<string>>;
   hostPlayerToken: string | null;
+  isGameOwner: boolean;
   busy: boolean;
   setHostParticipation: (participates: boolean) => Promise<boolean>;
   ensureHostPlayerToken: () => Promise<string | null>;
@@ -65,6 +66,7 @@ export default function HostLobby({
   setHostAvatarFile,
   setHostAvatarPreview,
   hostPlayerToken,
+  isGameOwner,
   busy,
   setHostParticipation,
   ensureHostPlayerToken,
@@ -121,6 +123,10 @@ export default function HostLobby({
   }
 
   async function advanceFromParticipation() {
+    if (!isGameOwner) {
+      goToLobbyStep(3);
+      return;
+    }
     if (advanceLock.current || choiceLock.current) return;
     advanceLock.current = true;
     setAdvancing(true);
@@ -157,7 +163,7 @@ export default function HostLobby({
             (
               [
                 "Share the invite",
-                "Enter your details",
+                isGameOwner ? "Enter your details" : "Host participation",
                 "Players & teams",
                 "Choose your teams",
                 "Name your teams",
@@ -171,7 +177,9 @@ export default function HostLobby({
             (
               [
                 "Share the game link, code or QR so players can join.",
-                "Decide whether you’d like to play alongside everyone.",
+                isGameOwner
+                  ? "Decide whether you’d like to play alongside everyone."
+                  : "The game owner controls their own player profile.",
                 "See who has joined and set the team capacity.",
                 "Move players into teams and check who is ready.",
                 "Give each team a name and picture.",
@@ -212,20 +220,23 @@ export default function HostLobby({
         />
       )}
 
-      {lobbyStep === 2 && (
-        <LobbyParticipationStep
-          hostAvatarPreview={hostAvatarPreview}
-          setHostAvatarFile={(file) => {
-            setPhotoNeedsSaving(true);
-            setHostAvatarFile(file);
-          }}
-          setHostAvatarPreview={setHostAvatarPreview}
-          hostJoinChoice={participates}
-          busy={busy || advancing || choosing}
-          setHostParticipation={chooseParticipation}
-          hostPlayer={hostPlayer}
-        />
-      )}
+      {lobbyStep === 2 &&
+        (isGameOwner ? (
+          <LobbyParticipationStep
+            hostAvatarPreview={hostAvatarPreview}
+            setHostAvatarFile={(file) => {
+              setPhotoNeedsSaving(true);
+              setHostAvatarFile(file);
+            }}
+            setHostAvatarPreview={setHostAvatarPreview}
+            hostJoinChoice={participates}
+            busy={busy || advancing || choosing}
+            setHostParticipation={chooseParticipation}
+            hostPlayer={hostPlayer}
+          />
+        ) : (
+          <p>Only the game owner can change host participation.</p>
+        ))}
 
       {lobbyStep === 3 && (
         <>

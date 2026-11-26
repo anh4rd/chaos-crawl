@@ -28,6 +28,7 @@ function options(): Parameters<typeof useHostParticipation>[0] {
   return {
     sessionId: "session",
     session: hostSessionFixture(),
+    canUseHostPlayer: true,
     hostPlayerName: "  Named Host  ",
     setBusy: vi.fn(() => true),
     setError: vi.fn(),
@@ -70,6 +71,53 @@ it("returns an existing valid host credential without joining or moving navigati
   expect(token).toBe("saved-token");
   expect(recovered).not.toHaveBeenCalled();
   expect(commands.updateHostParticipation).not.toHaveBeenCalled();
+});
+it("does not reuse or recover the owner's stored player credential for a co-host", async () => {
+  localStorage.setItem(hostPlayerStorageKey("session"), "owner-token");
+  const props = { ...options(), canUseHostPlayer: false };
+  props.session = hostSessionFixture({
+    host_participates: true,
+    host_player_id: "host-player",
+  });
+  const { result } = renderHook(() => useHostParticipation(props));
+  expect(result.current.hostPlayerToken).toBeNull();
+  await act(async () => {
+    expect(await result.current.ensureHostPlayerToken()).toBeNull();
+    expect(await result.current.setHostParticipation(true)).toBe(false);
+  });
+  expect(commands.hostJoinAsPlayer).not.toHaveBeenCalled();
+  expect(commands.updateHostParticipation).not.toHaveBeenCalled();
+  expect(localStorage.getItem(hostPlayerStorageKey("session"))).toBe(
+    "owner-token",
+  );
+});
+it("ignores an owner join that completes after co-host capability replaces it", async () => {
+  let resolve: (value: unknown) => void = () => {};
+  commands.hostJoinAsPlayer.mockReturnValue(
+    new Promise((finish) => {
+      resolve = finish;
+    }),
+  );
+  const props = options();
+  const { result, rerender } = renderHook(
+    ({ value }) => useHostParticipation(value),
+    { initialProps: { value: props } },
+  );
+  let joining: Promise<string | null> = Promise.resolve(null);
+  act(() => {
+    joining = result.current.openHostPlayerView();
+  });
+  rerender({ value: { ...props, canUseHostPlayer: false } });
+  await act(async () => {
+    resolve({
+      data: { player_token: "late-owner-token", join_code: "123456" },
+      error: null,
+    });
+    expect(await joining).toBeNull();
+  });
+  expect(localStorage.getItem(hostPlayerStorageKey("session"))).toBeNull();
+  expect(localStorage.getItem("chaos-crawl-session-player:123456")).toBeNull();
+  expect(props.setActiveTab).not.toHaveBeenCalled();
 });
 it.each(["participation", "profile", "token"])(
   "recovers a missing %s through the same ordered commands and storage keys",

@@ -12,8 +12,14 @@ export interface HostPreviewIdentity {
   display_name: string | null;
 }
 
+export interface GameCohost {
+  user_id: string;
+  email: string;
+}
+
 export interface HostGame {
   id: string;
+  host_id?: string;
   name: string;
   event_date: string | null;
   start_time: string | null;

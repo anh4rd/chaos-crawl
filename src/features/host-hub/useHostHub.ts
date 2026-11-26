@@ -34,6 +34,7 @@ export function useHostHub({
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     let current = true;
@@ -51,10 +52,9 @@ export function useHostHub({
       }
 
       const userId = userData.user.id;
+      setUserId(userId);
       const dateKey = localDateKey();
-      const gamesRequest = readHostGames(userId, view, dateKey).catch(
-        failedResult,
-      );
+      const gamesRequest = readHostGames(view, dateKey).catch(failedResult);
       const [{ data: adminData, error: adminError }, gamesResult] =
         await Promise.all([
           readPlatformAdmin().catch(failedResult),
@@ -177,6 +177,7 @@ export function useHostHub({
     loading,
     error: actionError || error,
     playingId,
+    userId,
     editGame,
     playGame,
   };

@@ -58,7 +58,7 @@ beforeEach(() => {
 afterEach(cleanup);
 it("keeps the latest view when an earlier game read finishes late", async () => {
   const old = pending<ApiResult<HostGame[]>>();
-  mocks.games.mockImplementation((_hostId: string, view: string) =>
+  mocks.games.mockImplementation((view: string) =>
     view === "home"
       ? old.promise
       : Promise.resolve({ data: [game("new")], error: null }),
