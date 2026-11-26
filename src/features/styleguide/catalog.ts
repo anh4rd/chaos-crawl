@@ -268,7 +268,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   PlatformGames: {
     usage:
-      "Connected platform-games coordinator mounted by SuperAdmin. Owns local filters and composes separate list and inspector hooks inside HostWorkspace; never mount in local examples.",
+      "Connected platform-games coordinator mounted by SuperAdmin. Owns local filters and composes separate list, inspector and session-player hooks inside HostWorkspace; never mount in local examples.",
     dependencies:
       "Typed superAdminQueries frontend-inferred contracts and existing HostPortal/HostPlanning styling. Backend authorization remains server-owned.",
   },
@@ -286,7 +286,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   GameInspector: {
     usage:
-      "Controlled native inspector dialog with supplied detail/loading, feedback and retry/close callbacks. Displays incoming sessions and player/team score copy without sorting or persistence.",
+      "Controlled native inspector dialog with supplied detail/loading, feedback and retry/close callbacks. Displays incoming sessions and player/team score copy without sorting or persistence; an optional supplied player view edits local or connected session players.",
     dependencies:
       "Shared Dialog/DialogPanel inspector, IconButton panel-close, supplied feedback, ContentPanel record and ControlRow/Note metadata and score rows. Frontend-inferred PlatformGameDetail is not deployed schema. Connected lifecycle stays in useGameInspector; local examples never mount it.",
   },

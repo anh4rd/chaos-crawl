@@ -15,12 +15,16 @@ export default function GameInspector({
   onClose,
   onRetry,
   feedback,
+  playerContent,
+  onManagePlayers,
 }: {
   selected: PlatformGameDetail | null;
   detailLoading: boolean;
   onClose: () => void;
   onRetry: () => void;
   feedback?: ReactNode;
+  playerContent?: ReactNode;
+  onManagePlayers?: (sessionId: string) => void;
 }) {
   return (
     <Dialog label="Game inspector" variant="inspector" onClose={onClose}>
@@ -34,7 +38,9 @@ export default function GameInspector({
           onClick={onClose}
         />
         {feedback}
-        {detailLoading ? (
+        {playerContent ? (
+          playerContent
+        ) : detailLoading ? (
           <p>Loading game details…</p>
         ) : selected ? (
           <>
@@ -61,6 +67,16 @@ export default function GameInspector({
                     <b>{player.score} pts</b>
                   </ControlRow>
                 ))}
+                {onManagePlayers && (
+                  <Button
+                    type="button"
+                    variant="comic-secondary"
+                    fullWidth={false}
+                    onClick={() => onManagePlayers(session.id)}
+                  >
+                    Manage players in {session.name}
+                  </Button>
+                )}
               </ContentPanel>
             ))}
           </>

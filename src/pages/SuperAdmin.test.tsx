@@ -290,3 +290,127 @@ it("names every platform table column with explicit column scope", async () => {
     headers.every((header) => header.getAttribute("scope") === "col"),
   ).toBe(true);
 });
+
+it("edits a session player through the super-admin commands and refreshes the inspector", async () => {
+  const sessionPlayers = {
+    session_id: "session-one",
+    session_name: "Friday session",
+    teams: [{ id: "team-one", name: "Lime" }],
+    players: [
+      {
+        id: "player-one",
+        name: "Alex",
+        avatar_url: null,
+        team_id: null,
+        score: 0,
+        phone: "07111111111",
+        joined_at: "2030-01-01",
+        last_seen_at: "2030-01-01",
+      },
+    ],
+  };
+  rpc.mockImplementation((name: string) =>
+    Promise.resolve({
+      data:
+        name === "cc_super_admin_list_games"
+          ? games
+          : name === "cc_super_admin_game_detail"
+            ? detail
+            : name === "cc_super_admin_session_players"
+              ? sessionPlayers
+              : null,
+      error: null,
+    }),
+  );
+  renderPage();
+  await screen.findByText("Garden chaos");
+  fireEvent.click(screen.getAllByRole("button", { name: "Inspect" })[0]);
+  fireEvent.click(
+    await screen.findByRole("button", {
+      name: "Manage players in Friday session",
+    }),
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "Edit Alex" }));
+  fireEvent.change(screen.getByLabelText("Player name"), {
+    target: { value: " Updated " },
+  });
+  fireEvent.change(screen.getByLabelText("Reconnect phone"), {
+    target: { value: "07333333333" },
+  });
+  fireEvent.change(screen.getByLabelText("Score"), { target: { value: "17" } });
+  fireEvent.change(screen.getByLabelText("Team"), {
+    target: { value: "team-one" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Save player" }));
+  await screen.findByRole("button", { name: "Edit Alex" });
+  expect(rpc).toHaveBeenCalledWith("cc_super_admin_update_session_player", {
+    p_session_id: "session-one",
+    p_player_id: "player-one",
+    p_name: "Updated",
+    p_avatar_url: null,
+    p_team_id: "team-one",
+    p_score: 17,
+    p_phone: "07333333333",
+    p_expected: {
+      name: "Alex",
+      avatar_url: null,
+      team_id: null,
+      score: 0,
+      phone: "07111111111",
+    },
+  });
+  expect(
+    rpc.mock.calls.filter(([name]) => name === "cc_super_admin_game_detail"),
+  ).toHaveLength(2);
+});
+
+it("keeps a failed player update visible and retryable inside the inspector", async () => {
+  rpc.mockImplementation((name: string) =>
+    Promise.resolve({
+      data:
+        name === "cc_super_admin_list_games"
+          ? games
+          : name === "cc_super_admin_game_detail"
+            ? detail
+            : name === "cc_super_admin_session_players"
+              ? {
+                  session_id: "session-one",
+                  session_name: "Friday session",
+                  teams: [],
+                  players: [
+                    {
+                      id: "host",
+                      name: "Host",
+                      avatar_url: null,
+                      team_id: null,
+                      score: 0,
+                      phone: null,
+                      joined_at: "today",
+                      last_seen_at: "today",
+                    },
+                  ],
+                }
+              : null,
+      error:
+        name === "cc_super_admin_update_session_player"
+          ? { message: "Update denied" }
+          : null,
+    }),
+  );
+  renderPage();
+  await screen.findByText("Garden chaos");
+  fireEvent.click(screen.getAllByRole("button", { name: "Inspect" })[0]);
+  fireEvent.click(
+    await screen.findByRole("button", {
+      name: "Manage players in Friday session",
+    }),
+  );
+  fireEvent.click(await screen.findByRole("button", { name: "Edit Host" }));
+  expect(screen.queryByLabelText("Reconnect phone")).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Save player" }));
+  expect(await screen.findByText("Update denied")).toBeTruthy();
+  expect(
+    screen.getByRole<HTMLButtonElement>("button", { name: "Save player" })
+      .disabled,
+  ).toBe(false);
+});

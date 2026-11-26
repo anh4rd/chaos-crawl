@@ -33,6 +33,8 @@ export default function PlatformGamesView({
   onInspect,
   onCloseInspector,
   onBack,
+  playerContent,
+  onManagePlayers,
 }: {
   games: PlatformGame[];
   filtered: PlatformGame[];
@@ -52,6 +54,8 @@ export default function PlatformGamesView({
   onInspect: (id: string) => void;
   onCloseInspector: () => void;
   onBack?: (event: MouseEvent<HTMLAnchorElement>) => void;
+  playerContent?: ReactNode;
+  onManagePlayers?: (sessionId: string) => void;
 }) {
   return (
     <>
@@ -156,6 +160,8 @@ export default function PlatformGamesView({
           onClose={onCloseInspector}
           feedback={inspectorFeedback}
           onRetry={onRetryInspection}
+          playerContent={playerContent}
+          onManagePlayers={onManagePlayers}
         />
       )}
     </>

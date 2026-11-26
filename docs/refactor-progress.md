@@ -7,6 +7,14 @@ writes are included.
 
 ## In progress
 
+Super Admin can inspect and edit V2 session-player names, avatars, teams, scores
+and reconnect phone numbers. Session timestamps are read-only; player tokens,
+host reconnect identities and messaging consent are not exposed or edited.
+The new admin-only RPC migration requires review and has not been deployed.
+Local SQL regressions cover authorization, credential isolation, team capacity,
+phone normalization and concurrent-edit rejection.
+Legacy player records are not included.
+
 Co-host management lets a game owner add or remove a verified existing account
 by email; it does not send an invitation. Shared games appear in the co-host's
 Host Hub and can be edited and hosted. The owner alone controls their player

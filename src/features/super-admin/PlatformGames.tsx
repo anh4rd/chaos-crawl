@@ -4,6 +4,9 @@ import HostWorkspace from "../host-workspace/HostWorkspace";
 import PlatformGamesView from "./PlatformGamesView";
 import { usePlatformGames } from "./usePlatformGames";
 import { useGameInspector } from "./useGameInspector";
+import { usePlatformPlayers } from "./usePlatformPlayers";
+import SessionPlayers from "./SessionPlayers";
+import Button from "../../components/ui/Button";
 
 export default function PlatformGames() {
   const [queryError, setQueryError] = useState("");
@@ -13,6 +16,7 @@ export default function PlatformGames() {
   const { games, loading, denied, load } = usePlatformGames(setQueryError);
   const { selected, detailLoading, isOpen, openGame, close, retry } =
     useGameInspector(setDetailError);
+  const players = usePlatformPlayers(setDetailError, () => void retry());
   const error = detailError || queryError;
   function clearFeedback() {
     setQueryError("");
@@ -55,10 +59,47 @@ export default function PlatformGames() {
         onQueryChange={setQuery}
         onStatusChange={setStatus}
         onInspect={(id) => {
+          players.close();
           clearFeedback();
           void openGame(id);
         }}
-        onCloseInspector={close}
+        onCloseInspector={() => {
+          players.close();
+          close();
+        }}
+        onManagePlayers={(sessionId) => void players.open(sessionId)}
+        playerContent={
+          players.isOpen ? (
+            <>
+              <Button
+                type="button"
+                variant="comic-secondary"
+                fullWidth={false}
+                onClick={players.close}
+              >
+                Back to game
+              </Button>
+              {players.loading ? (
+                <p>Loading players…</p>
+              ) : players.data ? (
+                <SessionPlayers
+                  data={players.data}
+                  busy={players.busy}
+                  onSave={players.save}
+                />
+              ) : (
+                <Button
+                  type="button"
+                  variant="comic-secondary"
+                  fullWidth={false}
+                  onClick={players.retry}
+                >
+                  Retry loading players
+                </Button>
+              )}
+            </>
+          ) : undefined
+        }
       />
     </HostWorkspace>
   );
