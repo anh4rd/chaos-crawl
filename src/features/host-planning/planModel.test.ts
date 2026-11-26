@@ -1,7 +1,12 @@
 import { expect, it } from "vitest";
 import { defaultForm } from "./catalog";
-import { createPlanWrite, hydratePlan } from "./planModel";
-import { communityPlanTask, explorePlanTask } from "./planImports";
+import { createPlanWrite, hydratePlan, initialSchedule } from "./planModel";
+import {
+  attachPlanTask,
+  communityPlanTask,
+  explorePlanTask,
+  savedSecretTasks,
+} from "./planImports";
 it("restores legacy selected IDs using saved row fields as authoritative values", () => {
   const form = hydratePlan({
     id: "legacy",
@@ -129,4 +134,101 @@ it("rejects malformed Explore objects before they enter the planning form", () =
     expect(() => explorePlanTask(JSON.stringify(value), "main")).toThrow(
       "Invalid Explore challenge.",
     );
+});
+
+it("selects and enables imported secret missions without changing other selections", () => {
+  const task = explorePlanTask(
+    JSON.stringify({ id: "one", title: "Secret", description: "Task" }),
+    "secret",
+  );
+  const form = attachPlanTask(attachPlanTask(defaultForm, task), task);
+  expect(task).toMatchObject({ kind: "secret", evidenceRequired: true });
+  expect(form).toMatchObject({
+    secretMissions: true,
+    selectedSecret: ["explore-one"],
+    selectedMain: defaultForm.selectedMain,
+    selectedSide: defaultForm.selectedSide,
+  });
+  expect(initialSchedule(form)).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ type: "secret-reveal" }),
+    ]),
+  );
+  expect(
+    communityPlanTask(
+      {
+        id: "two",
+        title: "Community",
+        description: "Task",
+        payload: {},
+        status: "approved",
+      },
+      "secret",
+    ),
+  ).toMatchObject({ kind: "secret", evidenceRequired: true });
+});
+
+it("projects saved secret challenges while excluding other saved items and reports malformed missions", () => {
+  const result = savedSecretTasks([
+    {
+      id: "fav",
+      item_id: "community-one",
+      item_type: "task",
+      item_data: {
+        id: "community-one",
+        title: "Hidden mission",
+        description: "A private challenge",
+        kind: "secret",
+        points: 15,
+        minutes: 5,
+        tags: ["sneaky"],
+        setup: "basic",
+      },
+    },
+    {
+      id: "custom",
+      item_id: "custom-one",
+      item_type: "task",
+      item_data: {
+        id: "custom-one",
+        title: "Custom mission",
+        description: "Use a prop",
+        kind: "secret",
+        points: 7,
+        minutes: 3,
+        vibe: ["creative"],
+        accessibility: ["standing"],
+        equipment: ["Hat"],
+        setup: "Bring a hat.",
+        prep: "Find a hat.",
+      },
+    },
+    {
+      id: "other",
+      item_id: "side",
+      item_type: "task",
+      item_data: { kind: "side" },
+    },
+    {
+      id: "broken",
+      item_id: "broken",
+      item_type: "task",
+      item_data: { kind: "secret" },
+    },
+  ]);
+  expect(result.invalid).toBe(1);
+  expect(result.tasks).toMatchObject([
+    {
+      id: "community-one",
+      title: "Hidden mission",
+      kind: "secret",
+      evidenceRequired: true,
+    },
+    {
+      id: "custom-one",
+      equipment: ["Hat"],
+      setup: "Bring a hat.",
+      prep: "Find a hat.",
+    },
+  ]);
 });

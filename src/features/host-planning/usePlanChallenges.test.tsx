@@ -53,3 +53,45 @@ it.each(["side", "secret"] as const)(
     expect(result.current.dragged).toBeNull();
   },
 );
+
+it("copies a selected saved mission into the plan so it survives unfavouriting", () => {
+  const task = {
+    id: "saved-secret",
+    title: "Saved secret",
+    description: "A mission",
+    kind: "secret" as const,
+    minutes: 5,
+    points: 10,
+    vibe: [],
+    accessibility: [],
+    equipment: [],
+    setup: "",
+    prep: "",
+    evidenceRequired: true,
+  };
+  const { result } = renderHook(() => {
+    const [form, setForm] = useState(defaultForm);
+    const update: UpdatePlan = (field, value) =>
+      setForm((current) => ({ ...current, [field]: value }));
+    return {
+      form,
+      ...usePlanChallenges({
+        form,
+        update,
+        tab: "secret",
+        allTasks: [...derivePlan(form).allTasks, task],
+        favourites: [],
+        toggleFavourite: vi.fn(),
+        dragged: null,
+        setDragged: vi.fn(),
+      }),
+    };
+  });
+  act(() => result.current.selectTask(task));
+  expect(result.current.form).toMatchObject({
+    secretMissions: true,
+    selectedSecret: ["saved-secret"],
+    customTasks: [task],
+    schedule: [{ type: "secret-reveal" }],
+  });
+});

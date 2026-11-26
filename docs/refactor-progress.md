@@ -36,6 +36,19 @@ Review the migrations and test against a disposable backend before deployment.
 
 ## Delivered slices
 
+Explore challenges can be added as main, side or secret to a draft or planned
+game. One eligible game is updated directly; multiple games use a picker, and
+an empty list offers game creation. Live and completed games are excluded.
+Plans with an existing lobby or live session are rejected because updating a
+plan does not update that session. The update checks the saved plan timestamp
+for concurrent changes and retains unknown
+metadata. Planning also offers the host's saved secret missions; selecting one
+snapshots it into the plan so removing the favourite does not remove it.
+The session check and plan update are separate requests, so starting a session
+concurrently with an addition is not atomic; server-side coordination is needed
+to eliminate that race. Older or malformed plans need to be opened and saved
+before direct additions.
+
 Host management includes a roster tab using the existing team, score and invite
 flows, plus a session-scoped player-name update. Player creation and deletion,
 and team deletion, remain unavailable until their backend contracts and data

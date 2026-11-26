@@ -440,9 +440,15 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   TaskCard: {
     usage:
-      "Task idea with supplied saved/busy values, optional admin actions and main/side callbacks. The caller decides availability and resolves community records.",
+      "Task idea with supplied saved/busy values, optional admin actions and main/side/secret callbacks. The caller decides availability and resolves community records.",
     dependencies:
       "TaskCardModel, shared Card idea, Badge idea/tag, MetadataList/MetadataItem, TagList, Button/IconButton/Icon and the retained PlusMark. See Local catalogue; no SDK access or navigation.",
+  },
+  GameSelectionDialog: {
+    usage:
+      "Controlled game picker for adding a catalogue challenge. Shows loading, retry, an empty-state create action or caller-supplied game choices.",
+    dependencies:
+      "Native Dialog and caller-supplied data and callbacks. Local catalogue uses local game choices only.",
   },
   LocationCard: {
     usage:

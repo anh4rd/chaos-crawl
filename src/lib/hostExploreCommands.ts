@@ -11,6 +11,29 @@ interface ChallengeInput {
   payload: CommunityChallengePayload;
 }
 
+export function updateExploreGamePlan({
+  id,
+  status,
+  updatedAt,
+  plan,
+}: {
+  id: string;
+  status: string;
+  updatedAt: string;
+  plan: Record<string, unknown>;
+}) {
+  return runApi<{ id: string }>(() =>
+    supabase
+      .from("host_games")
+      .update({ plan_data: plan })
+      .eq("id", id)
+      .eq("status", status)
+      .eq("updated_at", updatedAt)
+      .select("id")
+      .maybeSingle(),
+  );
+}
+
 export function saveExploreFavourite({
   hostId,
   itemType,

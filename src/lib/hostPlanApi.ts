@@ -11,7 +11,7 @@ export function readPlanFavourites(hostId: string) {
   return runApi<Favourite[]>(() =>
     supabase
       .from("host_favourites")
-      .select("id,item_type,item_id")
+      .select("id,item_type,item_id,item_data")
       .eq("host_id", hostId),
   );
 }
@@ -46,7 +46,7 @@ export function addPlanFavourite(hostId: string, task: Task) {
         item_id: task.id,
         item_data: task,
       })
-      .select("id,item_type,item_id")
+      .select("id,item_type,item_id,item_data")
       .single(),
   );
 }

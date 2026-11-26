@@ -12,7 +12,7 @@ export interface TaskCardModel {
   saved: boolean;
   busy: boolean;
   onToggleSaved: () => void;
-  onAdd: (kind: "main" | "side") => void;
+  onAdd: (kind: CatalogTask["kind"]) => void;
   adminActions?: { busy: boolean; onEdit: () => void; onDelete: () => void };
 }
 export interface LocationCardModel {

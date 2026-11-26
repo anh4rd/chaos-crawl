@@ -10,6 +10,15 @@ import {
   explorePlanTask,
 } from "./planImports";
 import type { SetupForm, TaskKind } from "./types";
+function importedTaskNotice(title: string, kind: TaskKind) {
+  const section =
+    kind === "main"
+      ? "Main Challenges"
+      : kind === "side"
+        ? "Side challenges"
+        : "Secret missions";
+  return `Added “${title}” as a ${kind} challenge. Finish the game details, then find it in ${section}.`;
+}
 export function usePlanSource({
   id,
   communityTaskId,
@@ -100,17 +109,13 @@ export function usePlanSource({
         else {
           const task = communityPlanTask(submission, requestedChallengeKind);
           setForm((current) => attachPlanTask(current, task));
-          setNotice(
-            `Added “${task.title}” as a ${task.kind} challenge. Finish the game details, then find it in ${task.kind === "main" ? "Main Challenges" : "Side challenges"}.`,
-          );
+          setNotice(importedTaskNotice(task.title, task.kind));
         }
       } else if (exploreTaskJson) {
         try {
           const task = explorePlanTask(exploreTaskJson, requestedChallengeKind);
           setForm((current) => attachPlanTask(current, task));
-          setNotice(
-            `Added “${task.title}” as a ${task.kind} challenge. Finish the game details, then find it in ${task.kind === "main" ? "Main Challenges" : "Side challenges"}.`,
-          );
+          setNotice(importedTaskNotice(task.title, task.kind));
         } catch {
           setError(
             "Couldn't add that Explore challenge. Return to Explore and try again.",

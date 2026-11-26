@@ -667,6 +667,7 @@ test("built-in, community and venue plan imports preserve route query contracts"
   page,
 }) => {
   const { backend } = await installExploreBackend(page);
+  backend.rows.host_games = [];
   await openExplore(page);
   await page
     .getByRole("textbox", { name: "Search tasks", exact: true })
@@ -677,6 +678,12 @@ test("built-in, community and venue plan imports preserve route query contracts"
       name: "Add as main",
       exact: true,
     }),
+  );
+  await activateByKeyboard(
+    page,
+    page
+      .getByRole("dialog", { name: "Add challenge to a game" })
+      .getByRole("button", { name: "Create game" }),
   );
   await expect(page).toHaveURL(
     /#\/host\/games\/new\?exploreTask=.*&challengeKind=main$/,
@@ -701,6 +708,12 @@ test("built-in, community and venue plan imports preserve route query contracts"
       exact: true,
     }),
   );
+  await activateByKeyboard(
+    page,
+    page
+      .getByRole("dialog", { name: "Add challenge to a game" })
+      .getByRole("button", { name: "Create game" }),
+  );
   await expect(page).toHaveURL(
     /#\/host\/games\/new\?communityTask=approved-challenge&challengeKind=side$/,
   );
@@ -721,6 +734,248 @@ test("built-in, community and venue plan imports preserve route query contracts"
     /#\/host\/games\/new\?venueIdea=loc-community-hall$/,
   );
   await expect(page.getByLabel("Game name", { exact: true })).toBeVisible();
+  backend.verify();
+});
+
+test("adds to one game directly and asks which game when there are several", async ({
+  page,
+}) => {
+  const { backend } = await installExploreBackend(page);
+  const initialPlan = {
+    customTasks: [],
+    selectedTasks: [],
+    selectedTaskIds: [],
+    selectedMain: [],
+    selectedSide: [],
+    selectedSecret: [],
+    schedule: [],
+    sideChallenges: false,
+    secretMissions: false,
+    secretRevealMode: "scheduled",
+    untouched: { retained: true },
+  };
+  const games = [
+    {
+      id: "one",
+      name: "First game",
+      status: "planned",
+      plan_data: structuredClone(initialPlan),
+      updated_at: "2030-01-01T00:00:00Z",
+    },
+  ];
+  const writes: Array<{
+    id: string | null;
+    status: string | null;
+    updatedAt: string | null;
+    body: { plan_data: typeof initialPlan };
+  }> = [];
+  await page.route("**/rest/v1/cc_game_sessions**", async (route) => {
+    if (route.request().method() === "GET") await route.fulfill({ json: [] });
+    else await route.fallback();
+  });
+  await page.route("**/rest/v1/host_games**", async (route) => {
+    const request = route.request();
+    const url = new URL(request.url());
+    const id = url.searchParams.get("id")?.replace(/^eq\./, "");
+    if (request.method() === "GET") {
+      await route.fulfill({
+        json: id ? games.filter((game) => game.id === id) : games,
+      });
+    } else if (request.method() === "PATCH") {
+      const body = request.postDataJSON();
+      writes.push({
+        id: id ?? null,
+        status: url.searchParams.get("status"),
+        updatedAt: url.searchParams.get("updated_at"),
+        body,
+      });
+      const game = games.find((item) => item.id === id);
+      if (game) game.plan_data = body.plan_data;
+      await route.fulfill({ json: game ? [{ id: game.id }] : [] });
+    } else await route.fallback();
+  });
+  await openExplore(page);
+  await page
+    .getByRole("textbox", { name: "Search tasks", exact: true })
+    .fill("Obtain the best thing");
+  await activateByKeyboard(
+    page,
+    card(page, "Obtain the best thing").getByRole("button", {
+      name: "Add as main",
+      exact: true,
+    }),
+  );
+  await expect(
+    page.getByRole("status").filter({
+      hasText: "Added “Obtain the best thing” to First game as main.",
+    }),
+  ).toBeVisible();
+  expect(writes[0]).toMatchObject({
+    id: "one",
+    status: "eq.planned",
+    updatedAt: "eq.2030-01-01T00:00:00Z",
+    body: {
+      plan_data: {
+        selectedMain: ["explore-task-best-thing"],
+        untouched: { retained: true },
+        schedule: expect.arrayContaining([
+          expect.objectContaining({
+            type: "challenge",
+            taskId: "explore-task-best-thing",
+          }),
+        ]),
+      },
+    },
+  });
+  expect(page.url()).toContain("#/host/explore");
+  games.push({
+    id: "two",
+    name: "Second game",
+    status: "draft",
+    plan_data: structuredClone(initialPlan),
+    updated_at: "2030-01-01T00:00:00Z",
+  });
+  await activateByKeyboard(
+    page,
+    card(page, "Obtain the best thing").getByRole("button", {
+      name: "Add as secret",
+      exact: true,
+    }),
+  );
+  const dialog = page.getByRole("dialog", { name: "Add challenge to a game" });
+  await expect(
+    dialog.getByRole("button", { name: "Second game (draft)" }),
+  ).toBeVisible();
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Second game (draft)" }),
+  );
+  await expect(
+    page.getByRole("status").filter({
+      hasText: "Added “Obtain the best thing” to Second game as secret.",
+    }),
+  ).toBeVisible();
+  expect(writes[1]).toMatchObject({
+    id: "two",
+    body: {
+      plan_data: {
+        secretMissions: true,
+        selectedSecret: ["explore-task-best-thing"],
+      },
+    },
+  });
+  backend.verify();
+});
+
+test("adds built-in and community challenges as secret missions to a new plan", async ({
+  page,
+}) => {
+  const { backend } = await installExploreBackend(page);
+  backend.rows.host_games = [];
+  for (const [title, expectedId] of [
+    ["Obtain the best thing", "explore-task-best-thing"],
+    ["Community paper tower", "community-approved-challenge"],
+  ] as const) {
+    await openExplore(page);
+    await page
+      .getByRole("textbox", { name: "Search tasks", exact: true })
+      .fill(title);
+    await activateByKeyboard(
+      page,
+      card(page, title).getByRole("button", {
+        name: "Add as secret",
+        exact: true,
+      }),
+    );
+    if (title === "Community paper tower") {
+      backend.rows.cc_catalog_submissions = [exploreSubmissions()[0]];
+    }
+    await activateByKeyboard(
+      page,
+      page
+        .getByRole("dialog", { name: "Add challenge to a game" })
+        .getByRole("button", { name: "Create game" }),
+    );
+    await expect(page).toHaveURL(/challengeKind=secret$/);
+    await expect(
+      page.getByText(
+        `Added “${title}” as a secret challenge. Finish the game details, then find it in Secret missions.`,
+      ),
+    ).toBeVisible();
+    await page.getByLabel("Game name", { exact: true }).fill("Secret import");
+    await page
+      .getByRole("button", { name: /Next: Players/i })
+      .first()
+      .click();
+    await activateByKeyboard(
+      page,
+      page
+        .getByRole("navigation", { name: "Game setup steps" })
+        .getByRole("button")
+        .filter({ has: page.getByText("Secret missions", { exact: true }) }),
+    );
+    await expect(
+      page.getByRole("heading", { name: "Selected secret missions" }),
+    ).toBeVisible();
+    await expect(
+      page.locator(".selected-challenge").filter({ hasText: title }),
+    ).toBeVisible();
+    const previousWrites = backend.requests.filter(
+      (r) => r.name === "host_games" && r.method === "POST",
+    ).length;
+    await page.getByRole("button", { name: "Save draft", exact: true }).click();
+    await expect
+      .poll(
+        () =>
+          backend.requests.filter(
+            (r) => r.name === "host_games" && r.method === "POST",
+          ).length,
+      )
+      .toBe(previousWrites + 1);
+    const writes = backend.requests.filter(
+      (r) => r.name === "host_games" && r.method === "POST",
+    );
+    expect(writes[previousWrites]?.body).toMatchObject({
+      plan_data: {
+        secretMissions: true,
+        selectedSecret: [expectedId],
+        customTasks: [
+          expect.objectContaining({
+            id: expectedId,
+            kind: "secret",
+            evidenceRequired: true,
+          }),
+        ],
+        schedule: expect.arrayContaining([
+          expect.objectContaining({ type: "secret-reveal" }),
+        ]),
+      },
+    });
+  }
+  backend.verify();
+});
+
+test("local game picker uses only local data", async ({ page }) => {
+  const { backend } = await installExploreBackend(page);
+  await page.goto("#/styleguide");
+  const example = page.locator(".component-example").filter({
+    has: page.getByRole("heading", { name: "Local catalogue", exact: true }),
+  });
+  await activateByKeyboard(
+    page,
+    example.getByRole("button", { name: "Preview game selection" }),
+  );
+  const dialog = page.getByRole("dialog", { name: "Add challenge to a game" });
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Local crawl (planned)" }),
+  );
+  await expect(example.getByRole("status")).toHaveText(
+    "Selected Local crawl locally.",
+  );
+  expect(
+    backend.requests.filter((request) => request.name === "host_games"),
+  ).toEqual([]);
   backend.verify();
 });
 
@@ -759,6 +1014,21 @@ test("local catalogue uses controlled views for saves, moderation and forms with
   );
   await expect(example.getByRole("status")).toHaveText(
     "Selected Obtain the best thing as side locally.",
+  );
+  await activateByKeyboard(
+    page,
+    example
+      .locator(".card--idea")
+      .filter({
+        has: page.getByRole("heading", {
+          name: "Obtain the best thing",
+          exact: true,
+        }),
+      })
+      .getByRole("button", { name: "Add as secret", exact: true }),
+  );
+  await expect(example.getByRole("status")).toHaveText(
+    "Selected Obtain the best thing as secret locally.",
   );
   await expect(page).toHaveURL(/#\/styleguide$/);
   const moderation = example.getByRole("checkbox", {

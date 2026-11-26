@@ -44,6 +44,7 @@ export type Favourite = {
   id: string;
   item_type: "task" | "venue" | "route";
   item_id: string;
+  item_data?: unknown;
 };
 
 export interface SetupForm {

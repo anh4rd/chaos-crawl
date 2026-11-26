@@ -286,6 +286,87 @@ test("Explore imports preserve side challenge identity and payload", async ({
   });
   backend.verify();
 });
+test("saved secret missions can be selected and remain in a saved plan", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  backend.rows.host_favourites = [
+    {
+      id: "saved-secret",
+      host_id: "00000000-0000-4000-8000-000000000001",
+      item_type: "task",
+      item_id: "community-sneaky",
+      item_data: {
+        id: "community-sneaky",
+        title: "Hidden high five",
+        description: "Get a high five unnoticed",
+        kind: "secret",
+        minutes: 8,
+        points: 15,
+        tags: ["sneaky"],
+        setup: "none",
+      },
+    },
+    {
+      id: "saved-side",
+      host_id: "00000000-0000-4000-8000-000000000001",
+      item_type: "task",
+      item_id: "other-side",
+      item_data: {
+        id: "other-side",
+        title: "Side only",
+        description: "Side challenge",
+        kind: "side",
+      },
+    },
+  ];
+  await start(page, "Saved secret plan");
+  await section(page, "Secret missions");
+  const card = page
+    .locator(".challenge-tile")
+    .filter({ hasText: "Hidden high five" });
+  await expect(card).toBeVisible();
+  await expect(page.getByText("Side only")).toHaveCount(0);
+  await activateByKeyboard(
+    page,
+    card.getByRole("button", { name: "Add", exact: true }),
+  );
+  await expect(
+    page.locator(".selected-challenge").filter({ hasText: "Hidden high five" }),
+  ).toBeVisible();
+  await activateByKeyboard(
+    page,
+    card.getByRole("button", { name: "Favourite Hidden high five" }),
+  );
+  await expect(
+    card.getByRole("button", { name: "Favourite Hidden high five" }),
+  ).toHaveAttribute("aria-pressed", "false");
+  await page.getByRole("button", { name: "Save draft", exact: true }).click();
+  await expect(page).toHaveURL(/\/test-plan\/edit$/);
+  expect(
+    backend.requests.find((r) => r.name === "host_games" && r.method === "POST")
+      ?.body,
+  ).toMatchObject({
+    plan_data: {
+      secretMissions: true,
+      selectedSecret: ["community-sneaky"],
+      customTasks: [
+        expect.objectContaining({
+          id: "community-sneaky",
+          title: "Hidden high five",
+          kind: "secret",
+        }),
+      ],
+      schedule: expect.arrayContaining([
+        expect.objectContaining({ type: "secret-reveal" }),
+      ]),
+    },
+  });
+  backend.verify();
+});
 test("invalid Explore JSON keeps a usable planning form", async ({ page }) => {
   const backend = await installSessionBackend(page, {
     host: true,

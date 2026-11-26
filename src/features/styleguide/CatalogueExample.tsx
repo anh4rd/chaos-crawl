@@ -3,6 +3,8 @@ import { useState } from "react";
 import CatalogueView from "../host-explore/CatalogueView";
 import ChallengeContributionDialog from "../host-explore/ChallengeContributionDialog";
 import ChallengeContributionForm from "../host-explore/ChallengeContributionForm";
+import GameSelectionDialog from "../host-explore/GameSelectionDialog";
+import Button from "../../components/ui/Button";
 import { tasks, locations, routes } from "../host-explore/catalogue";
 import {
   categoriesForTab,
@@ -33,6 +35,7 @@ export default function CatalogueExample() {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(createChallengeDraft);
   const [notice, setNotice] = useState("");
+  const [choosingGame, setChoosingGame] = useState(false);
   function toggleSaved(id: string) {
     setSaved((current) =>
       current.includes(id)
@@ -58,7 +61,7 @@ export default function CatalogueExample() {
     saved: saved.includes(task.id),
     busy,
     onToggleSaved: () => toggleSaved(task.id),
-    onAdd: (kind: "main" | "side") =>
+    onAdd: (kind: CatalogTask["kind"]) =>
       setNotice(`Selected ${task.title} as ${kind} locally.`),
     adminActions: admin
       ? {
@@ -242,6 +245,32 @@ export default function CatalogueExample() {
           dialog={dialog}
         />
       </HostPatternPreview>
+      <Button
+        type="button"
+        variant="comic-secondary"
+        fullWidth={false}
+        onClick={() => setChoosingGame(true)}
+      >
+        Preview game selection
+      </Button>
+      {choosingGame && (
+        <GameSelectionDialog
+          games={[
+            { id: "local-one", name: "Local party", status: "draft" },
+            { id: "local-two", name: "Local crawl", status: "planned" },
+          ]}
+          loading={false}
+          saving={false}
+          error=""
+          onChoose={(game) => {
+            setNotice(`Selected ${game.name} locally.`);
+            setChoosingGame(false);
+          }}
+          onCreate={() => setNotice("Create game selected locally.")}
+          onRetry={() => setNotice("Retry selected locally.")}
+          onClose={() => setChoosingGame(false)}
+        />
+      )}
       <p role="status">{notice}</p>
     </Example>
   );

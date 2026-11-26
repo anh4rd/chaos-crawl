@@ -1,4 +1,4 @@
-import type { Task, TaskKind, SetupForm } from "./types";
+import type { Favourite, Task, TaskKind, SetupForm } from "./types";
 import type { CommunityPlanTask } from "../../types/hostPlanning";
 interface ExploreIdea {
   id: string;
@@ -62,17 +62,19 @@ export function communityPlanTask(
       payload.setup === "none"
         ? "No preparation required."
         : "Check the challenge setup before the event.",
-    evidenceRequired: kind === "side",
+    evidenceRequired: kind !== "main",
     tags: Array.isArray(payload.tags)
       ? payload.tags.map(String)
       : ["Community"],
   };
 }
-export function explorePlanTask(json: string, kind: TaskKind): Task {
-  const idea: unknown = JSON.parse(json);
-  if (!isExploreIdea(idea)) throw new Error("Invalid Explore challenge.");
+function taskFromExploreIdea(
+  idea: ExploreIdea,
+  kind: TaskKind,
+  id: string,
+): Task {
   return {
-    id: `explore-${idea.id}`,
+    id,
     title: idea.title,
     description: idea.description,
     kind,
@@ -90,9 +92,64 @@ export function explorePlanTask(json: string, kind: TaskKind): Task {
           ? "Some preparation may be needed."
           : "No special setup.",
     prep: "No preparation required.",
-    evidenceRequired: kind === "side",
+    evidenceRequired: kind !== "main",
     tags: idea.tags ?? [],
   };
+}
+export function explorePlanTask(json: string, kind: TaskKind): Task {
+  const idea: unknown = JSON.parse(json);
+  if (!isExploreIdea(idea)) throw new Error("Invalid Explore challenge.");
+  return taskFromExploreIdea(idea, kind, `explore-${idea.id}`);
+}
+
+export function savedSecretTasks(favourites: Favourite[]) {
+  const tasks: Task[] = [];
+  let invalid = 0;
+  for (const favourite of favourites) {
+    const data = favourite.item_data;
+    if (
+      favourite.item_type !== "task" ||
+      typeof data !== "object" ||
+      data === null ||
+      !("kind" in data) ||
+      data.kind !== "secret"
+    )
+      continue;
+    if (!isExploreIdea(data)) {
+      invalid += 1;
+      continue;
+    }
+    const task = taskFromExploreIdea(data, "secret", favourite.item_id);
+    if (
+      "vibe" in data &&
+      Array.isArray(data.vibe) &&
+      data.vibe.every((value) => typeof value === "string")
+    )
+      task.vibe = data.vibe;
+    if (
+      "accessibility" in data &&
+      Array.isArray(data.accessibility) &&
+      data.accessibility.every((value) => typeof value === "string")
+    )
+      task.accessibility = data.accessibility;
+    if (
+      "equipment" in data &&
+      Array.isArray(data.equipment) &&
+      data.equipment.every((value) => typeof value === "string")
+    )
+      task.equipment = data.equipment;
+    if (
+      "setup" in data &&
+      typeof data.setup === "string" &&
+      !["none", "basic", "some"].includes(data.setup)
+    )
+      task.setup = data.setup;
+    if ("prep" in data && typeof data.prep === "string") task.prep = data.prep;
+    if ("instructions" in data && typeof data.instructions === "string")
+      task.instructions = data.instructions;
+    tasks.push(task);
+  }
+  return { tasks, invalid };
 }
 export function attachPlanTask(current: SetupForm, task: Task): SetupForm {
   const kind = task.kind;
@@ -110,6 +167,11 @@ export function attachPlanTask(current: SetupForm, task: Task): SetupForm {
       kind === "side"
         ? [...new Set([...current.selectedSide, task.id])]
         : current.selectedSide,
+    selectedSecret:
+      kind === "secret"
+        ? [...new Set([...current.selectedSecret, task.id])]
+        : current.selectedSecret,
     sideChallenges: kind === "side" ? true : current.sideChallenges,
+    secretMissions: kind === "secret" ? true : current.secretMissions,
   };
 }

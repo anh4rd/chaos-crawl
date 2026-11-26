@@ -25,6 +25,7 @@ import { usePlanSchedule } from "./usePlanSchedule";
 import { usePlanSave } from "./usePlanSave";
 import { usePlanPhoto } from "./usePlanPhoto";
 import { derivePlan } from "./planModel";
+import { savedSecretTasks } from "./planImports";
 import { defaultForm, tabItems } from "./catalog";
 import type { BuilderTab, SetupForm, TaskKind } from "./types";
 import { openMojiSelection } from "../../lib/openmoji";
@@ -72,6 +73,13 @@ export default function PlanEditor({
   } = usePlanFavourites({
     setError,
   });
+  const savedSecrets = savedSecretTasks(favourites);
+  const libraryTasks = [
+    ...allTasks,
+    ...savedSecrets.tasks.filter(
+      (task) => !allTasks.some((existing) => existing.id === task.id),
+    ),
+  ];
   const {
     loading,
     ownerId,
@@ -111,7 +119,7 @@ export default function PlanEditor({
     form,
     update,
     tab,
-    allTasks,
+    allTasks: libraryTasks,
     favourites,
     toggleFavourite,
     dragged,
@@ -281,6 +289,12 @@ export default function PlanEditor({
           {notice}
         </FeedbackNotice>
       )}
+      {tab === "secret" && savedSecrets.invalid > 0 && (
+        <FeedbackNotice tone="error">
+          Some saved secret missions have incomplete details and cannot be
+          displayed. Check them in your saved items.
+        </FeedbackNotice>
+      )}
       {stage === "create" ? (
         <GameBasicsForm
           form={form}
@@ -319,7 +333,7 @@ export default function PlanEditor({
             <ChallengeLibrary
               tab={tab}
               selectedIds={selectedIds}
-              allTasks={allTasks}
+              allTasks={libraryTasks}
               setDragged={setDragged}
               dropTask={dropTask}
               moveTask={moveTask}

@@ -12,6 +12,7 @@ import type {
   Favourite,
   UpdatePlan,
 } from "./types";
+import { taskLibrary } from "./catalog";
 export function usePlanChallenges({
   form,
   update,
@@ -73,6 +74,15 @@ export function usePlanChallenges({
           : "selectedSecret";
     const list = form[key];
     const removing = list.includes(task.id);
+    if (
+      task.kind === "secret" &&
+      !removing &&
+      !taskLibrary.some((item) => item.id === task.id) &&
+      !form.customTasks.some((item) => item.id === task.id)
+    ) {
+      update("customTasks", [...form.customTasks, task]);
+      update("secretMissions", true);
+    }
     update(
       key,
       removing ? list.filter((x) => x !== task.id) : [...list, task.id],
