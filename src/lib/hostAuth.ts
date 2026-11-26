@@ -20,10 +20,18 @@ export function registerHost({
   password: string;
   name: string;
 }) {
+  const confirmationUrl = new URL(
+    import.meta.env.BASE_URL,
+    window.location.origin,
+  );
+  confirmationUrl.searchParams.set("host_confirmation", "1");
   return supabase.auth.signUp({
     email,
     password,
-    options: { data: { display_name: name } },
+    options: {
+      data: { display_name: name },
+      emailRedirectTo: confirmationUrl.href,
+    },
   });
 }
 export function readHostIdentity() {

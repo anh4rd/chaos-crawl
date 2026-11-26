@@ -83,7 +83,13 @@ it("preserves signup metadata and the confirmation notice without navigating", a
   expect(signUp).toHaveBeenCalledWith({
     email: "host@example.test",
     password: "secret-pass",
-    options: { data: { display_name: "Alex Chaos" } },
+    options: {
+      data: { display_name: "Alex Chaos" },
+      emailRedirectTo: new URL(
+        `${import.meta.env.BASE_URL}?host_confirmation=1`,
+        window.location.origin,
+      ).href,
+    },
   });
   expect(
     screen.queryByRole("heading", { name: "Host hub destination" }),

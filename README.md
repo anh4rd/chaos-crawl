@@ -24,6 +24,22 @@ Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to the project's public
 Supabase connection values. The client validates them on first use and reports
 connection errors in the UI. Never place a service-role key in a Vite variable.
 
+### Host email confirmation
+
+In Supabase Authentication > URL Configuration, set the Site URL to the
+production app URL (`https://anh4rd.github.io/chaos-crawl/`) and add
+`https://anh4rd.github.io/chaos-crawl/?host_confirmation=1` to Redirect URLs.
+Add the equivalent URL for each local development origin and port you use,
+for example `http://localhost:5173/chaos-crawl/?host_confirmation=1`. The app
+requests a redirect to the origin and base path where signup began; a URL not
+on the allow list may fall back to the Site URL.
+
+The Confirm signup email template should use Supabase's
+`{{ .ConfirmationURL }}` rather than a hard-coded localhost URL. After changing
+the configuration and deploying the app, request a fresh confirmation email;
+old or already-used links cannot be repaired by changing the redirect. Email
+security scanners can also consume single-use links before the recipient clicks.
+
 The legacy database schema, storage bucket setup, triggers, and access policies are
 managed outside this repository. The application contracts are documented in
 `src/types/database.ts`; they are inferred from existing queries, not generated

@@ -63,8 +63,12 @@ test("keyboard-selected account mode preserves native signup fields and the exis
 }) => {
   const backend = await installSessionBackend(page, { savedPlayer: false });
   const writes: unknown[] = [];
+  const redirects: (string | null)[] = [];
   await page.route("**/auth/v1/signup**", async (route) => {
     writes.push(route.request().postDataJSON());
+    redirects.push(
+      new URL(route.request().url()).searchParams.get("redirect_to"),
+    );
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -103,12 +107,62 @@ test("keyboard-selected account mode preserves native signup fields and the exis
   await page.keyboard.press("Enter");
   await expect(page.getByRole("status")).toContainText("Check your email");
   expect(writes).toHaveLength(1);
+  expect(redirects).toEqual([
+    new URL("/chaos-crawl/?host_confirmation=1", page.url()).href,
+  ]);
   expect(writes[0]).toMatchObject({
     email: "host@example.test",
     password: "secret-pass",
     data: { display_name: "Alex Chaos" },
   });
+
   await expect(page).toHaveURL(/\/host\/login$/);
+  backend.verify();
+});
+
+test("email confirmation consumes the auth fragment before opening the host hub", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  const expiresAt = Math.floor(Date.now() / 1000) + 3600;
+  await page.goto(
+    `?host_confirmation=1#access_token=confirmation-token&refresh_token=confirmation-refresh&token_type=bearer&expires_in=3600&expires_at=${expiresAt}&type=signup`,
+  );
+  await expect(page).toHaveURL(/\/chaos-crawl\/#\/host$/);
+  await expect(
+    page.getByRole("heading", { name: "Your Host Hub" }),
+  ).toBeVisible();
+  backend.verify();
+});
+
+test("expired confirmation shows feedback and a working login link", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  await page.goto(
+    "?host_confirmation=1#error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid+or+has+expired",
+  );
+  await expect(page.getByRole("alert")).toHaveText(
+    "Email link is invalid or has expired",
+  );
+  expect(new URL(page.url()).hash).toBe("");
+  await page.getByRole("link", { name: "Go to host login" }).click();
+  await expect(page.getByLabel("Email address")).toBeVisible();
+  await expect(page).toHaveURL(/#\/host\/login$/);
+  backend.verify();
+});
+
+test("a confirmation callback without a session offers login instead of reporting success", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  await page.goto("?host_confirmation=1");
+  await expect(page.getByRole("alert")).toContainText(
+    "No sign-in session was returned",
+  );
+  await expect(
+    page.getByRole("link", { name: "Go to host login" }),
+  ).toBeVisible();
   backend.verify();
 });
 

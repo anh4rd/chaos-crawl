@@ -4943,3 +4943,16 @@ pink label with a decorative coffee icon. The current-row highlight and the
 Completed grouping remain unchanged. Mocked Chrome checks exercise both row
 states, keyboard disclosure and long titles at 320px; desktop/mobile
 screenshots, build, linters and 763 unit/component tests pass.
+
+## Host email confirmation redirect
+
+Signup supplies an explicit origin/base-path confirmation URL. The callback
+initializes Supabase before the hash router starts, reports failed or missing
+sessions, and clears callback fragments before offering host login. Configure
+the hosted Site URL, redirect allow list and email template as described in
+the README; existing or already-used email links are not repaired by this
+frontend change.
+
+Mocked desktop/mobile browser checks cover the signup redirect, successful and
+expired callbacks and host login recovery. They do not verify deployed Supabase
+settings or deliver a real confirmation email.
