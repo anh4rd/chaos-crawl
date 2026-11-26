@@ -15,6 +15,7 @@ export default function SessionInvite({
   playerLimit,
   teamsEnabled,
   hostChoosesTeams,
+  bare = false,
 }: {
   joinUrl: string;
   onCopy: () => void | Promise<void>;
@@ -23,16 +24,16 @@ export default function SessionInvite({
   playerLimit: number;
   teamsEnabled: boolean;
   hostChoosesTeams: boolean;
+  bare?: boolean;
 }) {
-  return (
-    <ContentPanel variant="session" className="session-invite">
-      <Overline as="div" variant="session">
-        INVITE PLAYERS
-      </Overline>
-      <p>
-        Players can scan this QR code or enter the code shown in the game
-        header.
-      </p>
+  const content = (
+    <>
+      {!bare && (
+        <Overline as="div" variant="session">
+          INVITE PLAYERS
+        </Overline>
+      )}
+      <p>Players can scan this QR code or enter the join code.</p>
       <QrFrame variant="host">
         <QRCodeSVG value={joinUrl} size={196} level="M" marginSize={4} />
       </QrFrame>
@@ -71,6 +72,13 @@ export default function SessionInvite({
             : "Players can pick or create a team in the lobby."}
         </Note>
       )}
+    </>
+  );
+  return bare ? (
+    <div className="session-invite">{content}</div>
+  ) : (
+    <ContentPanel variant="session" className="session-invite">
+      {content}
     </ContentPanel>
   );
 }

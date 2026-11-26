@@ -8,35 +8,6 @@
   display: grid;
   gap: layout.$pixel-unit * 3;
 
-  &__stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    margin: 0;
-    border: layout.$session-border-width solid colors.$comic-ink;
-    border-radius: layout.$radius-lg;
-    background: colors.$white;
-    box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
-      colors.$comic-ink;
-    color: colors.$comic-ink;
-    div {
-      display: grid;
-      justify-items: center;
-      padding: layout.$pixel-unit * 2;
-      & + div {
-        border-left: layout.$session-border-width solid colors.$comic-ink;
-      }
-    }
-    dd {
-      margin: 0;
-      font-family: fonts.$family-display;
-      font-size: fonts.$size-control-timer;
-      line-height: 1;
-    }
-    dt {
-      font-size: fonts.$size-small;
-      font-weight: fonts.$weight-heavy;
-    }
-  }
   &__section {
     display: grid;
     gap: layout.$pixel-unit * 2.5;
@@ -44,10 +15,28 @@
     margin: 0;
     padding: 0;
     border: 0;
+    color: colors.$comic-ink;
     &--unassigned {
       padding: layout.$pixel-unit * 3;
-      border: layout.$session-border-width dashed colors.$accent-soft;
+      border: layout.$session-border-width solid colors.$comic-ink;
       border-radius: layout.$radius-lg;
+      background: colors.$comic-lavender;
+      box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
+        colors.$pink;
+    }
+  }
+  // Bare host controls and invite sit flat inside their accordion cards.
+  .score-adjustment,
+  .session-invite {
+    color: colors.$comic-ink;
+    .btn.btn--session-ghost {
+      background: colors.$white;
+      color: colors.$comic-ink;
+    }
+    *:not(.btn, .btn *, .score-adjustment__form *) {
+      color: colors.$comic-ink;
+      text-shadow: none;
+      -webkit-text-stroke: 0;
     }
   }
   &__heading {
@@ -57,7 +46,7 @@
     gap: layout.$pixel-unit * 2;
     h3 {
       margin: 0;
-      color: colors.$white;
+      color: colors.$comic-ink;
       font-family: fonts.$family-display;
       text-transform: uppercase;
     }
@@ -172,6 +161,9 @@
   }
   &__name {
     font-family: fonts.$family-display;
+    font-size: fonts.$size-heading;
+    line-height: 1.1;
+    text-transform: uppercase;
     overflow-wrap: anywhere;
   }
   &__avatars {
@@ -179,12 +171,6 @@
     .avatar + .avatar {
       margin-left: layout.$pixel-unit * -2;
     }
-  }
-  &__open {
-    transition: transform 0.15s ease;
-  }
-  &[open] > &__summary &__open {
-    transform: rotate(90deg);
   }
   &__body {
     display: grid;
@@ -222,10 +208,5 @@
     gap: layout.$pixel-unit * 1.5;
     font-weight: fonts.$weight-heavy;
     cursor: pointer;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    &__open {
-      transition: none;
-    }
   }
 }

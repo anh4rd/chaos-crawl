@@ -132,6 +132,40 @@ test("host copies show a temporary check and retain browser-failure fallback", a
   backend.verify();
 });
 
+test("host game details follow game navigation but stay hidden on host controls", async ({
+  page,
+}) => {
+  const writes: string[] = [];
+  await clipboard(page, async (text) => {
+    writes.push(text);
+  });
+  const backend = await installSessionBackend(page, { host: true });
+  await page.goto("#/host/live/test-session");
+  const details = page.getByRole("region", { name: "Game details" });
+  const navigation = page.getByRole("navigation", { name: "Game pages" });
+  for (const name of ["Game", "Scores", "Challenges"]) {
+    await navigation.getByRole("button", { name, exact: true }).click();
+    await expect(details).toBeVisible();
+    await expect(details).toContainText("Regression party");
+    await expect(details).toContainText("123456");
+  }
+  await details.getByRole("button", { name: "Copy game code" }).click();
+  await expect(
+    details.getByRole("button", { name: "Game code copied" }),
+  ).toBeVisible();
+  expect(writes).toEqual(["123456"]);
+
+  await navigation.getByRole("button", { name: "Host", exact: true }).click();
+  await expect(details).toHaveCount(0);
+  for (const name of ["Controls", "Review", "Teams", "Schedule", "Settings"]) {
+    await page.getByRole("tab", { name, exact: true }).click();
+    await expect(details).toHaveCount(0);
+  }
+  await navigation.getByRole("button", { name: "Game", exact: true }).click();
+  await expect(details).toBeVisible();
+  backend.verify();
+});
+
 test("lobby code and link copy feedback reset independently", async ({
   page,
 }) => {
@@ -198,11 +232,21 @@ test("host invitation copy changes only its own icon", async ({ page }) => {
     page,
     page.getByRole("button", { name: "Host", exact: true }),
   );
+  await activateByKeyboard(
+    page,
+    page.locator(".control-console__panel > summary").filter({
+      hasText: "Invite players",
+    }),
+  );
   const invite = page.getByRole("button", {
     name: /^(Copy join code|Join code copied)$/,
   });
   await activateByKeyboard(page, invite);
   await expect(invite.locator(".lucide-check")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Game details" })).toHaveCount(
+    0,
+  );
+  await page.getByRole("button", { name: "Game", exact: true }).click();
   await expect(
     page
       .getByRole("button", { name: "Copy game code" })
@@ -211,8 +255,6 @@ test("host invitation copy changes only its own icon", async ({ page }) => {
   await expect(
     page.getByText("Join code copied.", { exact: true }),
   ).toHaveCount(0);
-  await page.clock.runFor(1801);
-  await expect(detailLink.locator(".lucide-copy")).toBeVisible();
   expect(writes).toEqual(["123456"]);
   backend.verify();
 });

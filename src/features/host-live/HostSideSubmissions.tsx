@@ -45,7 +45,6 @@ export default function HostSideSubmissions({
   onReviewChallenge,
   onAwardPoints,
 }: Props) {
-  
   return (
     <HostReviewSection
       title="Player submissions"

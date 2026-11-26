@@ -56,8 +56,8 @@ export default function RosterTeamCard({
           ))}
         </span>
         <Icon
-          name="chevron-right"
-          className="roster-team__open icon--size-20"
+          name="chevron-down"
+          className="disclosure-chevron icon--size-20"
           aria-hidden="true"
         />
       </summary>

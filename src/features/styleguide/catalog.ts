@@ -6,6 +6,12 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     dependencies:
       "Uses supplied values and callbacks only. Host controllers own permissions, persistence and feedback; direct player creation and player/team deletion are unavailable.",
   },
+  HostGameSchedule: {
+    usage:
+      "Host timeline with caller-supplied challenges and secret assignments. Compact rows show start time, round-number pills and titles, with distinct break labels; expanded rows reveal artwork, details and editing controls. Completed items are grouped, and the current row is highlighted.",
+    dependencies:
+      "ChallengeArtwork, host schedule SCSS and caller-supplied editing callbacks. No data reads or writes.",
+  },
   SessionPreview: {
     usage:
       "Session content wrapper; inverse variant supplies the session backdrop for local previews.",
@@ -644,7 +650,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     usage:
       "Submission identity, supplied formatted time and status label, with evidence/actions as children. Main and side adapters keep their own status copy and review rules; local reference exercises approve/reject without persistence.",
     dependencies:
-      "Presentation values only, StatusPill review variant and owned submission-row SCSS. No domain queries or score calculations.",
+      "Presentation values only, StatusPill review variant, uppercase challenge heading and a rotating disclosure chevron. No domain queries or score calculations.",
   },
   SessionInvite: {
     usage:
@@ -847,6 +853,12 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
       "Summary preserves native article, semantic icon, strong value and span label in Local platform admin; the caller owns totals and formatting. Review variant renders label before value in a compact vote-count well; shown in Shared review and presentation controls. Compact variant shows only number/label with div/strong/span markup; default variant retains its icon tile. Number/content and label paired with IconBadge; accepts icon, tone, value and label. Host patterns demonstrate all three tones. Legacy/legacy-score variants retain native div/p statistics in the local GameStatus reference.",
     dependencies:
       "SCSS .stat-tile; surrounding stat-grid controls arrangement.",
+  },
+  StatSummary: {
+    usage:
+      "Three labelled values in a shared host summary strip, used for roster counts and schedule times. valueFirst retains the roster's existing markup order. The local host patterns reference demonstrates schedule values.",
+    dependencies:
+      "Caller-supplied values and SCSS .stat-summary; no data reads.",
   },
   StatusPill: {
     usage:
@@ -1382,7 +1394,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   HostControlOverrides: {
     usage:
-      "Controls-tab console: a dominant current-round surface with one dynamic primary action, compact accordion rows for breaks, side challenges (slot) and secret missions (slot), and a confirmed End game section. The local example uses state only.",
+      "Controls-tab console: a dominant current-round surface with one dynamic primary action, compact accordion rows for breaks, side challenges (slot) and secret missions (slot), and a confirmed End game section. Expanded rows have a full-width white, padded content surface. The local example uses state only.",
     dependencies:
       "Caller-supplied state and callbacks; the host coordinator retains phase guards, timer publication, persistence and navigation.",
   },

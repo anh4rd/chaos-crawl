@@ -2,6 +2,7 @@
 @use "../variables/fonts";
 @use "../variables/layout";
 @use "../variables/motion";
+@use "../tools/challenge-metadata";
 
 .main-challenge {
   position: relative;
@@ -60,15 +61,7 @@
     -webkit-text-fill-color: transparent;
   }
   &__award {
-    display: inline-flex;
-    align-items: center;
-    white-space: nowrap;
-    padding: layout.$pixel-unit * 1.75 layout.$pixel-unit * 2.5;
-    border-radius: layout.$radius-pill;
-    background: colors.$pink;
-    color: colors.$white;
-    font-size: layout.$session-label-size;
-    font-weight: fonts.$weight-heavy;
+    @include challenge-metadata.award;
   }
   &__kind,
   &__round {

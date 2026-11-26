@@ -10,17 +10,19 @@
   z-index: 10;
   top: 0;
   display: flex;
-  gap: layout.$pixel-unit * 2;
-  margin-bottom: layout.$pixel-unit * 4;
-  padding: layout.$pixel-unit * 2;
-  border: layout.$session-border-width solid colors.$comic-ink;
+  gap: layout.$pixel-unit * 1;
+  margin-bottom: layout.$pixel-unit * 2;
+  padding: (layout.$pixel-unit * 0) (layout.$pixel-unit * 0);
   border-radius: layout.$radius-lg;
-  background: colors.$comic-lavender;
-  box-shadow: layout.$pixel-unit * 0.5 layout.$pixel-unit * 0.5 0
-    colors.$comic-ink;
+  border: layout.$pixel-unit * 0.25;
+  box-shadow: layout.$pixel-unit * 0.5 layout.$pixel-unit * 0.5 0 colors.$comic-ink;
+  background: colors.$host-control-paper;
+  font-size: fonts.$size-small;
+    font-weight: fonts.$weight-heavy;
+    line-height: 1.1;
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  scroll-snap-type: x proximity;
+  scroll-snap-type: x mandatory;
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
@@ -35,16 +37,15 @@
     gap: layout.$pixel-unit * 0.75;
     min-height: layout.$control-height;
     padding: layout.$pixel-unit * 1.5 layout.$pixel-unit * 2;
-    border: layout.$session-border-width solid colors.$choice-lavender;
     border-radius: layout.$pixel-unit * 3;
-    background: colors.$white;
-    color: colors.$purple-dark;
-    font: inherit;
-    font-size: fonts.$size-navigation-min;
+    background: colors.$host-control-paper;
+    color: colors.$black;
+    font-size: fonts.$size-small;
     font-weight: fonts.$weight-heavy;
     line-height: 1.1;
     cursor: pointer;
     scroll-snap-align: center;
+    scroll-snap-type: x mandatory;
     transition:
       background motion.$duration-interaction,
       transform motion.$duration-interaction;
@@ -57,24 +58,16 @@
     }
     &--active {
       border: layout.$pixel-unit * 0.75 solid colors.$comic-ink;
-      background: colors.$lime;
-      color: colors.$comic-ink;
+      background: colors.$pink;
+      overflow: visible;
+      color: colors.$white;
       box-shadow: layout.$pixel-unit * 0.5 layout.$pixel-unit * 0.5 0
         colors.$comic-ink;
-      // Non-colour active cue: a bar under the label.
-      &::after {
-        content: "";
-        position: absolute;
-        bottom: layout.$pixel-unit * 0.5;
-        width: layout.$pixel-unit * 5;
-        height: layout.$pixel-unit * 0.75;
-        border-radius: layout.$radius-pill;
-        background: colors.$comic-ink;
-      }
     }
   }
   &__tab--active {
     padding-bottom: layout.$pixel-unit * 2.5;
+    overflow: visible;
   }
   &__icon {
     width: layout.$pixel-unit * 6;

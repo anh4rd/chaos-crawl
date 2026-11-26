@@ -63,8 +63,8 @@ export default function SubmissionRow({
           )}
         </span>
         <Icon
-          name="chevron-right"
-          className="submission-row__open icon--size-20"
+          name="chevron-down"
+          className="disclosure-chevron icon--size-20"
           aria-hidden="true"
         />
       </summary>

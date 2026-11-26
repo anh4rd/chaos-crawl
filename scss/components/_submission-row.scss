@@ -53,6 +53,9 @@
   &__challenge {
     color: colors.$session-paper-ink;
     font-family: fonts.$family-display;
+    font-size: fonts.$size-heading;
+    line-height: 1.1;
+    text-transform: uppercase;
     overflow-wrap: anywhere;
   }
   &__player {
@@ -70,12 +73,6 @@
   }
   &__points {
     font-family: fonts.$family-display;
-  }
-  &__open {
-    transition: transform 0.15s ease;
-  }
-  &[open] &__open {
-    transform: rotate(90deg);
   }
   &__detail {
     display: grid;
@@ -96,11 +93,6 @@
       grid-column: 2 / 3;
       grid-row: 2;
       justify-items: start;
-    }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    &__open {
-      transition: none;
     }
   }
 }

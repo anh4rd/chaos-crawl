@@ -2571,14 +2571,19 @@ test("shared assignment reference toggles its empty state by keyboard without ba
 test("custom secret mission creation and immediate/scheduled assignment preserve their contracts", async ({
   page,
 }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.clock.setFixedTime(new Date("2026-11-18T12:00:00Z"));
   const backend = await installSessionBackend(page, { host: true });
   backend.responses.cc_host_assign_secret_mission = null;
   await page.goto(`#/host/live/${sessionId}`);
   await page.getByRole("button", { name: "Host", exact: true }).click();
+  await page.getByRole("tab", { name: "Schedule", exact: true }).click();
   await page
-    .getByRole("tab", { name: "Secret mission schedule", exact: true })
+    .getByRole("button", { name: "Secret missions (0)", exact: true })
     .click();
+  await expect(
+    page.getByText("No secret missions assigned yet."),
+  ).toBeVisible();
   const assign = page.getByRole("button", {
     name: "Assign secret mission",
     exact: true,
@@ -2588,6 +2593,11 @@ test("custom secret mission creation and immediate/scheduled assignment preserve
     page,
     page.getByText("Add a custom secret mission to this game", { exact: true }),
   );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
   await page
     .getByLabel("Mission title", { exact: true })
     .fill(" Secret conga ");
@@ -2680,6 +2690,22 @@ test("custom secret mission creation and immediate/scheduled assignment preserve
     page.getByRole("alert").filter({ hasText: "Fixture connection failed" }),
   ).toBeVisible();
   await expect(delivery).toHaveValue("2026-11-20T18:30");
+  backend.rows.cc_game_session_secret_assignments = [
+    {
+      id: "secret-assignment",
+      session_id: sessionId,
+      player_id: "test-player",
+      challenge_id: "custom-secret-2",
+      status: "scheduled",
+      scheduled_at: scheduled,
+      sent_at: null,
+      submitted_at: null,
+      reviewed_at: null,
+      awarded_points: 0,
+      final_review_outcome: null,
+      created_at: "2026-11-18T12:00:00Z",
+    },
+  ];
   backend.failures.delete("cc_host_assign_secret_mission");
   await activateByKeyboard(page, assign);
   await expect
@@ -2701,6 +2727,72 @@ test("custom secret mission creation and immediate/scheduled assignment preserve
     p_scheduled_at: scheduled,
   });
   await expect(delivery).toHaveValue("");
+  await expect(page.getByText("Secret conga", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Assigned to Pat", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Secret missions (1)", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("tab", { name: "Controls", exact: true }).click();
+  await page.locator(".control-console__more > summary").click();
+  await page
+    .locator(".control-console__panel > summary")
+    .filter({ hasText: "Secret missions" })
+    .click();
+  await expect(assign).toBeEnabled();
+  await expect(
+    page.getByRole("combobox", { name: "Secret mission", exact: true }),
+  ).toHaveValue("custom-secret-2");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  backend.verify();
+});
+
+test("completed host schedules show secret reveals without mission controls", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.session.status = "completed";
+  backend.challenges.push({
+    ...backend.challenges[0],
+    id: "secret-challenge",
+    kind: "secret",
+    round_number: null,
+    title: "Secret toast",
+  });
+  backend.rows.cc_game_session_secret_assignments = [
+    {
+      id: "secret-assignment",
+      session_id: sessionId,
+      player_id: "test-player",
+      challenge_id: "secret-challenge",
+      status: "sent",
+      scheduled_at: "2030-01-01T18:00:00Z",
+      sent_at: "2030-01-01T18:00:00Z",
+      submitted_at: null,
+      reviewed_at: null,
+      awarded_points: 0,
+      final_review_outcome: null,
+      created_at: "2030-01-01T12:00:00Z",
+    },
+  ];
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Host", exact: true }).click();
+  await page.getByRole("tab", { name: "Schedule", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Secret missions (1)", exact: true })
+    .click();
+  await expect(page.getByText("Secret toast", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Assign secret mission", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByText("Add a custom secret mission to this game", { exact: true }),
+  ).toHaveCount(0);
   backend.verify();
 });
 

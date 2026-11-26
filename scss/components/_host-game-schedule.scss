@@ -1,17 +1,13 @@
 @use "../variables/colors";
 @use "../variables/layout";
 @use "../variables/fonts";
+@use "../tools/challenge-metadata";
 
 // Vertical running-order timeline; the rail is drawn by the list border.
 .host-game-schedule {
   display: grid;
   gap: layout.$pixel-unit * 3;
 
-  &__header p {
-    margin: layout.$pixel-unit 0 0;
-    color: colors.$comic-lavender;
-    font-size: fonts.$size-small;
-  }
   &__event {
     display: flex;
     align-items: center;
@@ -20,6 +16,27 @@
     color: colors.$white;
     font-family: fonts.$family-display;
     text-transform: uppercase;
+  }
+  &__views {
+    display: flex;
+    gap: layout.$pixel-unit * 2;
+  }
+  &__view {
+    flex: 1 1 0;
+    min-height: layout.$control-height;
+    padding: 0 layout.$pixel-unit * 2;
+    border: layout.$session-border-width solid colors.$comic-ink;
+    border-radius: layout.$radius-pill;
+    background: colors.$white;
+    color: colors.$comic-ink;
+    font: inherit;
+    font-weight: fonts.$weight-heavy;
+    cursor: pointer;
+    &[aria-pressed="true"] {
+      background: colors.$lime;
+      box-shadow: layout.$pixel-unit * 0.5 layout.$pixel-unit * 0.5 0
+        colors.$comic-ink;
+    }
   }
   &__timeline {
     display: grid;
@@ -42,7 +59,7 @@
       bottom: layout.$pixel-unit * -3;
       left: layout.$pixel-unit * 4 - layout.$session-border-width * 0.5;
       width: layout.$session-border-width;
-      background: colors.$comic-lavender;
+      background: colors.$white;
     }
     &:last-child::before {
       display: none;
@@ -63,11 +80,21 @@
     &--completed {
       opacity: 0.7;
     }
-    &--current &__card {
-      background: colors.$lime;
+    &--group {
+      --schedule-accent: #{colors.$lime};
+    }
+    // Dotted rail marks the jump from past rounds to present/future ones.
+    &--group::before {
+      width: 0;
+      background: none;
+      border-left: layout.$session-border-width dotted colors.$comic-lavender;
     }
   }
+  &__item--break &__card {
+    background: colors.$dialog-notice-surface;
+  }
   &__marker {
+    font-family: fonts.$family-display;
     display: grid;
     place-items: center;
     width: layout.$pixel-unit * 8;
@@ -78,6 +105,7 @@
     color: colors.$comic-ink;
   }
   &__card {
+    position: relative;
     display: grid;
     gap: layout.$pixel-unit * 1.5;
     justify-items: start;
@@ -93,19 +121,137 @@
       font-size: fonts.$size-small;
     }
   }
-  &__meta {
+  &__card--collapsed {
+    justify-items: stretch;
+    background: colors.$white;
+    &[open] > .host-game-schedule__summary {
+      margin-bottom: layout.$pixel-unit * 3;
+    }
+  }
+  &__summary {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: layout.$pixel-unit * 1.5 layout.$pixel-unit * 2.5;
+    gap: layout.$pixel-unit * 2;
+    cursor: pointer;
+    list-style: none;
+    &::-webkit-details-marker {
+      display: none;
+    }
+    .host-game-schedule__title {
+      flex: 1 1 auto;
+    }
+  }
+  &__row-summary {
+    display: grid;
+    gap: layout.$pixel-unit * 1.5;
+    justify-items: start;
+    width: 100%;
+    min-width: 0;
+    cursor: pointer;
+    list-style: none;
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+  &__card[open] > &__row-summary {
+    margin-bottom: layout.$pixel-unit * 3;
+  }
+  &__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: layout.$pixel-unit * 2;
+    width: 100%;
+  }
+  &__when {
+    display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: layout.$pixel-unit layout.$pixel-unit * 2.5;
     font-size: fonts.$size-small;
+  }
+  &__now {
+    color: colors.$pink;
+    font-family: fonts.$family-display;
+  }
+  &__tags {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: layout.$pixel-unit * 2;
+    font-size: fonts.$size-small;
+    font-weight: fonts.$weight-heavy;
+  }
+  &__award {
+    @include challenge-metadata.award;
+  }
+  &__mode {
+    @include challenge-metadata.mode;
+    text-align: right;
+  }
+  &__identity {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: layout.$pixel-unit * 2;
+    width: 100%;
+    min-width: 0;
+  }
+  &__identity-copy {
+    display: grid;
+    justify-items: start;
+    gap: layout.$pixel-unit * 1.5;
+    min-width: 0;
+  }
+  &__art {
+    display: block;
+    flex: 0 0 layout.$pixel-unit * 12;
+    width: layout.$pixel-unit * 12;
+    height: layout.$pixel-unit * 12;
+    img,
+    span {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+  }
+  &__details {
+    display: grid;
+    justify-items: start;
+    gap: layout.$pixel-unit * 2;
+    p {
+      margin: 0;
+      font-size: fonts.$size-small;
+    }
+  }
+  &__detail {
+    display: flex;
+    align-items: flex-start;
+    gap: layout.$pixel-unit * 2;
+    .icon {
+      flex: none;
+      margin-top: layout.$pixel-unit * 0.5;
+    }
   }
   &__time {
     font-family: fonts.$family-display;
+    font-size: fonts.$size-body;
   }
   &__kind {
-    color: colors.$purple-dark;
-    font-weight: fonts.$weight-heavy;
+    padding: layout.$pixel-unit * 0.5 layout.$pixel-unit * 1.5;
+    border-radius: layout.$radius-pill;
+    background: colors.$lime;
+    color: colors.$black;
+    font-family: fonts.$family-preview-challenge;
+    font-style: italic;
+    text-transform: uppercase;
+    transform: rotate(-3deg);
   }
   &__status {
     padding: 0 layout.$pixel-unit * 2;
@@ -119,14 +265,161 @@
   }
   &__title {
     font-family: fonts.$family-display;
+    font-size: fonts.$size-heading;
+    line-height: 1.1;
+    text-transform: uppercase;
     overflow-wrap: anywhere;
+  }
+  &__round {
+    display: inline-block;
+    padding: layout.$pixel-unit * 0.5 layout.$pixel-unit * 2;
+    border-radius: layout.$radius-pill;
+    background: colors.$purple-dark;
+    color: colors.$white;
+    font-size: fonts.$size-micro;
+    font-style: normal;
+    white-space: nowrap;
+  }
+  &__break-label {
+    display: inline-flex;
+    align-items: center;
+    gap: layout.$pixel-unit;
+    max-width: 100%;
+    padding: layout.$pixel-unit * 0.5 layout.$pixel-unit * 2;
+    border-radius: layout.$radius-pill;
+    background: colors.$timeline-break-surface;
+    color: colors.$dialog-error-ink;
+    font-style: normal;
+    .icon {
+      flex: none;
+    }
+  }
+  &__timeline--main {
+    gap: 0;
+    padding: layout.$pixel-unit * 2 0;
+    border: layout.$session-border-width solid colors.$comic-ink;
+    border-radius: layout.$radius-lg;
+    background: colors.$comic-lavender;
+    box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
+      colors.$purple-dark;
+
+    > .host-game-schedule__item {
+      grid-template-columns: layout.$pixel-unit * 10 minmax(0, 1fr);
+      gap: 0;
+      opacity: 1;
+      &::before {
+        top: 0;
+        bottom: 0;
+        left: layout.$pixel-unit * 5 - layout.$session-border-width * 0.5;
+        width: layout.$session-border-width;
+        background: colors.$comic-ink;
+      }
+      &:first-child::before {
+        top: layout.$pixel-unit * 5.5;
+      }
+      &:last-child::before {
+        display: block;
+        bottom: calc(100% - #{layout.$pixel-unit * 5.5});
+      }
+      &--group::before {
+        width: 0;
+        background: none;
+        border-left: layout.$session-border-width dotted colors.$comic-ink;
+      }
+      &--current {
+        border-radius: layout.$radius-lg;
+        background: colors.$lime;
+        box-shadow: inset 0 0 0 layout.$session-border-width colors.$comic-ink;
+      }
+    }
+    > .host-game-schedule__item > .host-game-schedule__marker {
+      position: relative;
+      z-index: 1;
+      width: layout.$pixel-unit * 4.5;
+      height: layout.$pixel-unit * 4.5;
+      margin: layout.$pixel-unit * 3.25 auto 0;
+      background: colors.$white;
+    }
+    > .host-game-schedule__item--completed > .host-game-schedule__marker,
+    > .host-game-schedule__item--current > .host-game-schedule__marker,
+    > .host-game-schedule__item--group > .host-game-schedule__marker {
+      background: colors.$lime;
+    }
+    > .host-game-schedule__item > .host-game-schedule__card {
+      display: block;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .host-game-schedule__row-summary,
+    .host-game-schedule__summary {
+      display: flex;
+      align-items: center;
+      gap: layout.$pixel-unit * 2;
+      min-height: layout.$pixel-unit * 11;
+      padding: layout.$pixel-unit * 2 layout.$pixel-unit * 3
+        layout.$pixel-unit * 2 0;
+    }
+    .host-game-schedule__card[open] > .host-game-schedule__row-summary,
+    .host-game-schedule__card[open] > .host-game-schedule__summary {
+      margin-bottom: 0;
+    }
+    .host-game-schedule__time {
+      flex: 0 0 layout.$pixel-unit * 13;
+      font-family: fonts.$family-body;
+      font-size: fonts.$size-small;
+      font-weight: fonts.$weight-heavy;
+    }
+    .host-game-schedule__title {
+      flex: 1 1 auto;
+      min-width: 0;
+      font-family: fonts.$family-body;
+      font-size: fonts.$size-small;
+      font-style: italic;
+      font-weight: fonts.$weight-heavy;
+      line-height: 1.2;
+      text-transform: none;
+    }
+    .host-game-schedule__details {
+      padding: 0 layout.$pixel-unit * 3 layout.$pixel-unit * 3 0;
+    }
+    .host-game-schedule__card[open] > summary .disclosure-chevron {
+      transform: rotate(90deg);
+    }
+  }
+  &__timeline--nested {
+    margin-bottom: layout.$pixel-unit * 2;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
   }
   &__secrets {
     display: grid;
     gap: layout.$pixel-unit * 3;
     padding: layout.$pixel-unit * 3;
-    border: layout.$session-border-width solid colors.$pink;
+    border: layout.$session-border-width solid colors.$comic-ink;
     border-radius: layout.$radius-lg;
-    background: colors.$purple-dark;
+    background: colors.$comic-lavender;
+    box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
+      colors.$pink;
+    color: colors.$comic-ink;
+  }
+  &__secrets &__event {
+    color: colors.$comic-ink;
+  }
+  &__mission-controls {
+    display: grid;
+    gap: layout.$pixel-unit * 3;
+    min-width: 0;
+    .disclosure--session > summary {
+      color: colors.$comic-ink;
+    }
+    .form-label--session small {
+      color: colors.$session-field-label;
+    }
   }
 }

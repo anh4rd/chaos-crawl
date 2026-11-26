@@ -1,5 +1,9 @@
+import { memo, useState, type ReactNode } from "react";
+import ChallengeArtwork from "../../components/challenge/ChallengeArtwork";
 import Button from "../../components/ui/Button";
-import Icon, { type IconName } from "../../components/ui/Icon";
+import Icon from "../../components/ui/Icon";
+import StatSummary from "../../components/ui/StatSummary";
+import type { PlannedTaskInfo } from "../../types/hostSession";
 import type {
   GameScheduleItem,
   SecretMissionAssignment,
@@ -11,19 +15,19 @@ import type {
 type ItemKind = "main" | "side" | "break" | "voting" | "final" | "other";
 type ItemStatus = "completed" | "current" | "upcoming";
 
-const kindMeta: Record<ItemKind, { label: string; icon: IconName }> = {
-  main: { label: "Main challenge", icon: "flag" },
-  side: { label: "Side challenge", icon: "star" },
-  break: { label: "Break", icon: "coffee" },
-  voting: { label: "Voting / review", icon: "list-checks" },
-  final: { label: "Final phase", icon: "trophy" },
-  other: { label: "Activity", icon: "circle-dot" },
+const kindMeta: Record<ItemKind, { label: string; art?: string }> = {
+  main: { label: "Main challenge" },
+  side: { label: "Side challenge" },
+  break: { label: "Break", art: "openmoji:2615" },
+  voting: {
+    label: "Voting / review",
+    art: "openmoji:1F5F3",
+  },
+  final: { label: "Final phase", art: "openmoji:1F3C6" },
+  other: { label: "Activity" },
 };
-const statusLabel: Record<ItemStatus, string> = {
-  completed: "Completed",
-  current: "Current",
-  upcoming: "Upcoming",
-};
+
+const ScheduleArtwork = memo(ChallengeArtwork);
 
 function classify(
   item: { type: string; phase?: string },
@@ -48,13 +52,18 @@ function clock(minutes: number) {
 }
 
 interface Props {
-  eventName: string;
   startTime: string | null;
+  teamsEnabled: boolean;
+  onBreak: boolean;
+  onEditBreak: () => void;
+  defaultBreakMinutes: number;
+  plannedTasks: PlannedTaskInfo[];
   sessionStatus: SessionStatus;
   currentRound: number;
   schedule: GameScheduleItem[];
   challenges: SessionChallenge[];
   secretAssignments: SecretMissionAssignment[];
+  secretMissionForms: ReactNode;
   playerById: Map<string, SessionPlayer>;
   busy: boolean;
   editable: boolean;
@@ -62,13 +71,18 @@ interface Props {
 }
 
 export default function HostGameSchedule({
-  eventName,
   startTime,
+  teamsEnabled,
+  onBreak,
+  onEditBreak,
+  defaultBreakMinutes,
+  plannedTasks,
   sessionStatus,
   currentRound,
   schedule,
   challenges,
   secretAssignments,
+  secretMissionForms,
   playerById,
   busy,
   editable,
@@ -101,8 +115,7 @@ export default function HostGameSchedule({
     (challenge) =>
       challenge.kind !== "secret" && !scheduledChallengeIds.has(challenge.id),
   );
-  const itemCount = scheduledItems.length + unlistedChallenges.length;
-  const items = [
+  const listed = [
     ...scheduledItems,
     ...unlistedChallenges.map((challenge) => ({
       id: challenge.id,
@@ -113,11 +126,37 @@ export default function HostGameSchedule({
       challenge,
     })),
   ];
-  const currentIndex = items.findIndex(
+  // Breaks between challenges follow the host timer: planned break items,
+  // otherwise the plan's default break length.
+  const items = listed.flatMap((item, index) => {
+    const next = listed[index + 1];
+    if (!item.challenge || !next?.challenge || defaultBreakMinutes <= 0)
+      return [item];
+    return [
+      item,
+      {
+        id: `break-after-${item.id}`,
+        title: "Break",
+        duration: defaultBreakMinutes,
+        type: "break",
+        phase: undefined as string | undefined,
+        challenge: undefined,
+      },
+    ];
+  });
+  const itemCount = items.length;
+  const challengeIndex = items.findIndex(
     (item) => item.challenge?.round_number === currentRound,
   );
+  // A running break belongs to the break right after the current round.
+  const breakActive =
+    onBreak &&
+    challengeIndex >= 0 &&
+    items[challengeIndex + 1]?.type === "break";
+  const currentIndex = breakActive ? challengeIndex + 1 : challengeIndex;
   const totalMinutes = items.reduce((sum, item) => sum + item.duration, 0);
-  let elapsed = startMinutes(startTime);
+  const firstStart = startMinutes(startTime);
+  let elapsed = firstStart;
   const rows = items.map((item, index) => {
     const start = elapsed;
     if (elapsed !== null) elapsed += item.duration;
@@ -131,96 +170,281 @@ export default function HostGameSchedule({
             : index === currentIndex
               ? "current"
               : "upcoming";
-    return { ...item, start, status, kind: classify(item, item.challenge) };
+    return {
+      ...item,
+      start,
+      status,
+      kind: classify(item, item.challenge),
+      nextTitle: items[index + 1]?.title,
+    };
   });
+  const completedRows = rows.filter((row) => row.status === "completed");
+  const activeRows = rows.filter((row) => row.status !== "completed");
+  const plannedFor = (challenge: SessionChallenge) =>
+    plannedTasks.find(
+      (task) => task.id === challenge.id || task.title === challenge.title,
+    );
+  const renderRow = (item: (typeof rows)[number]) => {
+    const meta = kindMeta[item.kind];
+    const challenge = item.challenge;
+    const planned = challenge ? plannedFor(challenge) : undefined;
+    const isBreak = item.kind === "break";
+    return (
+      <li
+        key={item.id}
+        className={`host-game-schedule__item host-game-schedule__item--${item.status} host-game-schedule__item--${item.kind}`}
+        aria-current={item.status === "current" ? "step" : undefined}
+      >
+        <span className="host-game-schedule__marker" aria-hidden="true" />
+        <details className="host-game-schedule__card">
+          <summary className="host-game-schedule__row-summary">
+            {item.status === "current" && (
+              <span className="u-visually-hidden">Current: </span>
+            )}
+            <span className="host-game-schedule__time">
+              {item.start === null ? (
+                <>
+                  <span aria-hidden="true">--:--</span>
+                  <span className="u-visually-hidden">Start time not set</span>
+                </>
+              ) : (
+                clock(item.start)
+              )}
+            </span>
+            <strong className="host-game-schedule__title">
+              {challenge?.round_number ? (
+                <>
+                  <span className="host-game-schedule__round">
+                    Round {challenge.round_number}
+                  </span>{" "}
+                </>
+              ) : null}
+              {isBreak ? (
+                <span className="host-game-schedule__break-label">
+                  <Icon
+                    name="coffee"
+                    className="icon--size-16"
+                    aria-hidden="true"
+                  />
+                  {item.title}
+                </span>
+              ) : (
+                item.title
+              )}
+            </strong>
+            <Icon
+              name="chevron-right"
+              className="disclosure-chevron icon--size-20"
+              aria-hidden="true"
+            />
+          </summary>
+          <div className="host-game-schedule__details">
+            <div className="host-game-schedule__identity">
+              <div className="host-game-schedule__identity-copy">
+                {item.status === "current" && (
+                  <span className="host-game-schedule__now">NOW</span>
+                )}
+                {!isBreak && (
+                  <span className="host-game-schedule__kind">{meta.label}</span>
+                )}
+                <span>{item.duration} min</span>
+              </div>
+              <span className="host-game-schedule__art" aria-hidden="true">
+                <ScheduleArtwork
+                  selection={planned?.artUrl ?? meta.art}
+                  title={item.title}
+                  description={challenge?.description}
+                />
+              </span>
+            </div>
+            {challenge && (
+              <div className="host-game-schedule__tags">
+                <span className="host-game-schedule__award">
+                  +{challenge.points} POINTS
+                </span>
+                <span className="host-game-schedule__mode">
+                  {teamsEnabled ? "Compete in teams" : "Compete individually"}
+                </span>
+              </div>
+            )}
+            {item.phase && <p>{item.phase}</p>}
+            {isBreak && item.nextTitle && (
+              <p>After the break: {item.nextTitle}</p>
+            )}
+            {challenge?.description && <p>{challenge.description}</p>}
+            {planned?.prep && (
+              <p className="host-game-schedule__detail">
+                <Icon
+                  name="clipboard-list"
+                  className="icon--size-16"
+                  aria-hidden="true"
+                />
+                <span className="u-visually-hidden">Preparation: </span>
+                {planned.prep}
+              </p>
+            )}
+            {planned?.setup && (
+              <p className="host-game-schedule__detail">
+                <Icon
+                  name="settings"
+                  className="icon--size-16"
+                  aria-hidden="true"
+                />
+                <span className="u-visually-hidden">Setup: </span>
+                {planned.setup}
+              </p>
+            )}
+            {planned?.equipment && planned.equipment.length > 0 && (
+              <p className="host-game-schedule__detail">
+                <Icon
+                  name="shopping-bag"
+                  className="icon--size-16"
+                  aria-hidden="true"
+                />
+                <span className="u-visually-hidden">Equipment: </span>
+                {planned.equipment.join(", ")}
+              </p>
+            )}
+            {isBreak && (
+              <>
+                <Button
+                  type="button"
+                  variant="session-action"
+                  fullWidth={false}
+                  disabled={busy || !editable || item.status !== "current"}
+                  aria-label="Edit break timer"
+                  onClick={onEditBreak}
+                >
+                  <Icon name="pencil" className="icon--size-16" /> Edit
+                </Button>
+                {item.status !== "current" && (
+                  <p>Break length can be edited while the break is running.</p>
+                )}
+              </>
+            )}
+            {challenge && (
+              <Button
+                type="button"
+                variant="session-action"
+                fullWidth={false}
+                disabled={busy || !editable}
+                aria-label={`Edit ${challenge.title}`}
+                onClick={() => onEdit(challenge)}
+              >
+                <Icon name="pencil" className="icon--size-16" /> Edit
+              </Button>
+            )}
+          </div>
+        </details>
+      </li>
+    );
+  };
   const secretRows = [...secretAssignments]
     .filter((assignment) => assignment.status !== "cancelled")
     .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at))
-    .map((assignment) => ({
-      id: assignment.id,
-      title:
-        challenges.find((challenge) => challenge.id === assignment.challenge_id)
-          ?.title ?? "Secret mission",
-      player: playerById.get(assignment.player_id)?.name,
-      time: new Date(assignment.scheduled_at).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      revealed:
-        assignment.status !== "scheduled" || Boolean(assignment.sent_at),
-    }));
+    .map((assignment) => {
+      const challenge = challenges.find(
+        (item) => item.id === assignment.challenge_id,
+      );
+      return {
+        id: assignment.id,
+        title: challenge?.title ?? "Secret mission",
+        description: challenge?.description,
+        artUrl: challenge ? plannedFor(challenge)?.artUrl : undefined,
+        player: playerById.get(assignment.player_id)?.name,
+        time: new Date(assignment.scheduled_at).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        revealed:
+          assignment.status !== "scheduled" || Boolean(assignment.sent_at),
+      };
+    });
+
+  const [view, setView] = useState<"main" | "secret">("main");
+  const showSecrets = view === "secret";
 
   return (
     <div className="host-game-schedule">
       <header className="host-game-schedule__header">
-        <h3 className="host-game-schedule__event">{eventName}</h3>
-        <p>
-          {itemCount} items · {totalMinutes} min total
-        </p>
+        <StatSummary
+          items={[
+            {
+              label: "Starts",
+              value: firstStart === null ? "Not set" : clock(firstStart),
+            },
+            {
+              label: "Ends",
+              value:
+                firstStart === null
+                  ? "Not set"
+                  : clock(firstStart + totalMinutes),
+            },
+            {
+              label: "Length",
+              value: `${itemCount} items · ${totalMinutes} min`,
+            },
+          ]}
+        />
       </header>
-      {itemCount === 0 ? (
+      <div
+        className="host-game-schedule__views"
+        role="group"
+        aria-label="Schedule view"
+      >
+        <button
+          type="button"
+          className="host-game-schedule__view"
+          aria-pressed={!showSecrets}
+          onClick={() => setView("main")}
+        >
+          Main schedule ({itemCount})
+        </button>
+        <button
+          type="button"
+          className="host-game-schedule__view"
+          aria-pressed={showSecrets}
+          onClick={() => setView("secret")}
+        >
+          Secret missions ({secretRows.length})
+        </button>
+      </div>
+      {showSecrets ? null : itemCount === 0 ? (
         <p>No game schedule is available for this session.</p>
       ) : (
-        <ol className="host-game-schedule__timeline" aria-label="Running order">
-          {rows.map((item) => {
-            const meta = kindMeta[item.kind];
-            const challenge = item.challenge;
-            return (
-              <li
-                key={item.id}
-                className={`host-game-schedule__item host-game-schedule__item--${item.status} host-game-schedule__item--${item.kind}`}
-                aria-current={item.status === "current" ? "step" : undefined}
-              >
-                <span className="host-game-schedule__marker" aria-hidden="true">
-                  <Icon name={meta.icon} className="icon--size-14" />
-                </span>
-                <div className="host-game-schedule__card">
-                  <div className="host-game-schedule__meta">
-                    {item.start !== null && (
-                      <strong className="host-game-schedule__time">
-                        {clock(item.start)}
-                      </strong>
-                    )}
-                    <span>{item.duration} min</span>
-                    <span className="host-game-schedule__kind">
-                      {meta.label}
-                      {challenge?.round_number
-                        ? ` · Round ${challenge.round_number}`
-                        : ""}
-                    </span>
-                    <span className="host-game-schedule__status">
-                      {statusLabel[item.status]}
-                    </span>
-                  </div>
-                  <strong className="host-game-schedule__title">
-                    {item.title}
-                  </strong>
-                  {(item.phase || challenge) && (
-                    <small>
-                      {item.phase}
-                      {item.phase && challenge ? " · " : ""}
-                      {challenge ? `${challenge.points} points` : ""}
-                    </small>
-                  )}
-                  {challenge && (
-                    <Button
-                      type="button"
-                      variant="session-secondary"
-                      fullWidth={false}
-                      disabled={busy || !editable}
-                      aria-label={`Edit ${challenge.title}`}
-                      onClick={() => onEdit(challenge)}
-                    >
-                      <Icon name="pencil" className="icon--size-14" /> Edit
-                    </Button>
-                  )}
-                </div>
-              </li>
-            );
-          })}
+        <ol
+          className="host-game-schedule__timeline host-game-schedule__timeline--main"
+          aria-label="Running order"
+        >
+          {completedRows.length > 0 && (
+            <li className="host-game-schedule__item host-game-schedule__item--group">
+              <span className="host-game-schedule__marker" aria-hidden="true" />
+              <details className="host-game-schedule__card host-game-schedule__card--collapsed">
+                <summary className="host-game-schedule__summary">
+                  <span className="host-game-schedule__title">Completed</span>
+                  <span className="host-game-schedule__status">
+                    {completedRows.length}{" "}
+                    {completedRows.length === 1 ? "item" : "items"}
+                  </span>
+                  <Icon
+                    name="chevron-right"
+                    className="disclosure-chevron icon--size-20"
+                    aria-hidden="true"
+                  />
+                </summary>
+                <ol
+                  className="host-game-schedule__timeline host-game-schedule__timeline--main host-game-schedule__timeline--nested"
+                  aria-label="Completed items"
+                >
+                  {completedRows.map(renderRow)}
+                </ol>
+              </details>
+            </li>
+          )}
+          {activeRows.map(renderRow)}
         </ol>
       )}
-      {secretRows.length > 0 && (
+      {showSecrets && (
         <section
           className="host-game-schedule__secrets"
           aria-labelledby="host-schedule-secrets"
@@ -229,6 +453,12 @@ export default function HostGameSchedule({
             <Icon name="lock-keyhole" className="icon--size-20" /> Secret
             mission reveals
           </h3>
+          {editable && (
+            <div className="host-game-schedule__mission-controls">
+              {secretMissionForms}
+            </div>
+          )}
+          {secretRows.length === 0 && <p>No secret missions assigned yet.</p>}
           <ol className="host-game-schedule__timeline">
             {secretRows.map((row) => (
               <li
@@ -247,9 +477,21 @@ export default function HostGameSchedule({
                       {row.revealed ? "Revealed" : "Scheduled"}
                     </span>
                   </div>
-                  <strong className="host-game-schedule__title">
-                    {row.title}
-                  </strong>
+                  <div className="host-game-schedule__identity">
+                    <strong className="host-game-schedule__title">
+                      {row.title}
+                    </strong>
+                    <span
+                      className="host-game-schedule__art"
+                      aria-hidden="true"
+                    >
+                      <ScheduleArtwork
+                        selection={row.artUrl}
+                        title={row.title}
+                        description={row.description}
+                      />
+                    </span>
+                  </div>
                   {row.player && <small>Assigned to {row.player}</small>}
                 </div>
               </li>

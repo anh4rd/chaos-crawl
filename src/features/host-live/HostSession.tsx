@@ -25,6 +25,8 @@ import BreakTimerEditor from "./BreakTimerEditor";
 import ChallengeEditor from "./ChallengeEditor";
 import HostFinalRound from "./HostFinalRound";
 import HostGameSchedule from "./HostGameSchedule";
+import MissionAssignmentForm from "./MissionAssignmentForm";
+import MissionCreationForm from "./MissionCreationForm";
 import HostAddSideChallengeCard from "./HostAddSideChallengeCard";
 import HostSideChallengeDialog from "./HostSideChallengeDialog";
 import SessionInvite from "../../components/session/SessionInvite";
@@ -74,7 +76,6 @@ import GuidedTour from "../../components/tour/GuidedTour";
 import { upcomingStageModel } from "./upcomingStageModel";
 import HostWorkspaceNavigation from "../../components/session/HostWorkspaceNavigation";
 import StagePreview from "../../components/session/StagePreview";
-import PanelGrid from "../../components/ui/PanelGrid";
 
 const hostManagementSections = [
   { id: "overrides", label: "Controls", icon: "gamepad2" },
@@ -851,6 +852,34 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
       };
     })
     .filter((item) => item.entries.length > 0);
+  const secretMissionForms = (
+    <>
+      <MissionAssignmentForm
+        assignSecretMission={assignSecretMission}
+        selectedSecretPlayerId={selectedSecretPlayerId}
+        setSelectedSecretPlayerId={setSelectedSecretPlayerId}
+        busy={busy}
+        players={players}
+        selectedSecretChallengeId={selectedSecretChallengeId}
+        setSelectedSecretChallengeId={setSelectedSecretChallengeId}
+        secretChallenges={secretChallenges}
+        secretScheduleAt={secretScheduleAt}
+        setSecretScheduleAt={setSecretScheduleAt}
+      />
+      <MissionCreationForm
+        createSecretChallenge={createSecretChallenge}
+        newSecretTitle={newSecretTitle}
+        setNewSecretTitle={setNewSecretTitle}
+        newSecretDescription={newSecretDescription}
+        setNewSecretDescription={setNewSecretDescription}
+        newSecretPoints={newSecretPoints}
+        setNewSecretPoints={setNewSecretPoints}
+        newSecretEvidenceRequired={newSecretEvidenceRequired}
+        setNewSecretEvidenceRequired={setNewSecretEvidenceRequired}
+        busy={busy}
+      />
+    </>
+  );
   const secretReviewControls = (
     <HostSecretReview
       secretReviewOptions={secretReviewOptions}
@@ -1002,7 +1031,20 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
               ? "LEADER"
               : "HOST",
       }}
-      game={null}
+      game={
+        session.status !== "lobby" &&
+        activeTab !== "host-controls" &&
+        activeTab !== "reward-round"
+          ? {
+              name: session.name,
+              code: session.join_code,
+              photoUrl: gamePhotoUrl,
+              tourTarget: "host-overview",
+              copied: codeCopied && codeCopyTarget === "titlebar",
+              onCopy: () => void copyCode("titlebar"),
+            }
+          : null
+      }
       toolbar={
         session.status !== "lobby" && !tourDismissed ? (
           <HostManagement>
@@ -1467,6 +1509,17 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                             rankedPlayers={rankedPlayers}
                           />
                         }
+                        inviteControls={
+                          <SessionInvite
+                            joinUrl={joinUrl}
+                            onCopy={() => copyCode("invite")}
+                            copied={codeCopied && codeCopyTarget === "invite"}
+                            playerCount={players.length}
+                            playerLimit={session.player_limit}
+                            teamsEnabled={session.teams_enabled}
+                            hostChoosesTeams={session.host_chooses_teams}
+                          />
+                        }
                         secretMissionControls={
                           <>
                             {secretReviewControls}
@@ -1478,35 +1531,9 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                                   : null
                               }
                               session={session}
-                              assignSecretMission={assignSecretMission}
-                              selectedSecretPlayerId={selectedSecretPlayerId}
-                              setSelectedSecretPlayerId={
-                                setSelectedSecretPlayerId
-                              }
+                              forms={secretMissionForms}
                               busy={busy}
-                              players={players}
-                              selectedSecretChallengeId={
-                                selectedSecretChallengeId
-                              }
-                              setSelectedSecretChallengeId={
-                                setSelectedSecretChallengeId
-                              }
                               secretChallenges={secretChallenges}
-                              secretScheduleAt={secretScheduleAt}
-                              setSecretScheduleAt={setSecretScheduleAt}
-                              createSecretChallenge={createSecretChallenge}
-                              newSecretTitle={newSecretTitle}
-                              setNewSecretTitle={setNewSecretTitle}
-                              newSecretDescription={newSecretDescription}
-                              setNewSecretDescription={setNewSecretDescription}
-                              newSecretPoints={newSecretPoints}
-                              setNewSecretPoints={setNewSecretPoints}
-                              newSecretEvidenceRequired={
-                                newSecretEvidenceRequired
-                              }
-                              setNewSecretEvidenceRequired={
-                                setNewSecretEvidenceRequired
-                              }
                               playerById={playerById}
                               challengeById={challengeById}
                               evidenceForAssignment={evidenceForAssignment}
@@ -1516,17 +1543,6 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                           </>
                         }
                       />
-                      <PanelGrid>
-                        <SessionInvite
-                          joinUrl={joinUrl}
-                          onCopy={() => copyCode("invite")}
-                          copied={codeCopied && codeCopyTarget === "invite"}
-                          playerCount={players.length}
-                          playerLimit={session.player_limit}
-                          teamsEnabled={session.teams_enabled}
-                          hostChoosesTeams={session.host_chooses_teams}
-                        />
-                      </PanelGrid>
                       {canParticipate && session.final_gallery_open && (
                         <SessionParticipant
                           key={`${session.id}:${hostPlayerToken}:final`}
@@ -1699,11 +1715,16 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                   activeHostSection === section.id &&
                   section.id === "schedule" && (
                     <HostGameSchedule
-                      eventName={session.name}
                       startTime={session.start_time}
+                      teamsEnabled={session.teams_enabled}
+                      onBreak={hostBreakActive}
+                      onEditBreak={openBreakTimerEditor}
+                      defaultBreakMinutes={defaultBreakMinutes}
+                      plannedTasks={plannedTasks}
                       sessionStatus={session.status}
                       currentRound={session.current_round_number}
                       secretAssignments={secretAssignments}
+                      secretMissionForms={secretMissionForms}
                       playerById={playerById}
                       schedule={gameSchedule}
                       challenges={challenges}

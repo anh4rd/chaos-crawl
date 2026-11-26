@@ -33,6 +33,7 @@ import ControlRow from "../../components/ui/ControlRow";
 import Note from "../../components/ui/Note";
 import BrandLink from "../../components/ui/BrandLink";
 import InputIcon from "../../components/ui/InputIcon";
+import StatSummary from "../../components/ui/StatSummary";
 import { Field } from "../../components/ui/Field";
 import SessionPreview from "../../components/session/SessionPreview";
 import { Example } from "./Example";
@@ -132,6 +133,21 @@ export default function HostExamples() {
       <PlanningPrimitivesExample />
       <LobbyPrimitivesExample />
       <HostRosterExample />
+      <Example
+        title="Shared stat summary"
+        source="src/components/ui/StatSummary.tsx"
+        code='<StatSummary items={[{ label: "Starts", value: "18:00" }, { label: "Ends", value: "20:30" }, { label: "Length", value: "8 items · 150 min" }]} />'
+      >
+        <SessionPreview>
+          <StatSummary
+            items={[
+              { label: "Starts", value: "18:00" },
+              { label: "Ends", value: "20:30" },
+              { label: "Length", value: "8 items · 150 min" },
+            ]}
+          />
+        </SessionPreview>
+      </Example>
       <HostChromeExample />
       <HostControlOverridesExample />
       <TimerControlsExample />

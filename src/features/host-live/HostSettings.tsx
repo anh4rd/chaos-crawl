@@ -354,6 +354,11 @@ function SettingsCategory({
             <small>{description}</small>
             <small className="host-settings__values">{summary}</small>
           </span>
+          <Icon
+            name="chevron-down"
+            className="disclosure-chevron icon--size-20"
+            aria-hidden="true"
+          />
         </span>
       }
     >

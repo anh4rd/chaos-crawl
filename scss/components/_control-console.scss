@@ -81,6 +81,7 @@
     display: flex;
     align-items: center;
     gap: layout.$pixel-unit * 2;
+    width: 100%;
   }
   &__summary-icon {
     display: inline-grid;
@@ -93,23 +94,12 @@
     background: colors.$lime;
     color: colors.$comic-ink;
   }
-  &__chevron {
-    flex: none;
-    transition: transform 0.15s ease;
-    @media (prefers-reduced-motion: reduce) {
-      transition: none;
-    }
-  }
-  &__panel[open] &__chevron {
-    transform: rotate(180deg);
-  }
   &__panel > summary {
     list-style: none;
     &::-webkit-details-marker {
       display: none;
     }
   }
-  // Panel content sits flat on the card instead of nesting another card.
   &__panel.disclosure {
     .content-panel,
     .session-final-round,
@@ -117,10 +107,10 @@
     .empty-state,
     .disclosure {
       border: 0;
-      border-radius: 0;
-      background: transparent;
+      border-radius: layout.$radius-lg;
+      background: colors.$white;
       box-shadow: none;
-      padding: 0;
+      padding: 0%;
       color: colors.$comic-ink;
     }
     *:not(.btn, .btn *, .count-badge, .badge, .status-pill) {
@@ -129,17 +119,35 @@
       -webkit-text-stroke: 0;
     }
   }
-  &__panel > :not(summary) {
-    margin-top: layout.$pixel-unit * 3;
+  &__panel-content {
+    display: grid;
+    gap: layout.$pixel-unit * 3;
+    min-width: 0;
+    padding: layout.$pixel-unit * 3;
+    border-radius: layout.$radius-lg;
+    background: colors.$white;
+    color: colors.$comic-ink;
+  }
+  &__more &__panel-content {
+    .form-label--review {
+      color: colors.$comic-ink;
+    }
   }
   &__summary-title {
+    min-width: 0;
     font-family: fonts.$family-display;
+    font-size: fonts.$size-heading;
+    line-height: 1.1;
+    text-transform: uppercase;
+    overflow-wrap: anywhere;
   }
   &__summary-status {
     margin-left: auto;
+    min-width: 0;
     color: colors.$purple-dark;
     font-size: fonts.$size-small;
     text-align: right;
+    overflow-wrap: anywhere;
     &--live {
       padding: 0 layout.$pixel-unit * 2;
       border-radius: layout.$radius-pill;
@@ -178,14 +186,12 @@
   &__tools {
     display: grid;
     gap: layout.$pixel-unit * 3;
-    margin-top: layout.$pixel-unit * 3;
   }
   &__breaks {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: layout.$pixel-unit * 2;
-    margin-top: layout.$pixel-unit * 2;
   }
   &__actions {
     display: grid;
@@ -211,10 +217,28 @@
     border: layout.$session-border-width solid colors.$comic-ink;
     border-radius: layout.$radius-lg;
     background: colors.$comic-lavender;
-    padding: layout.$pixel-unit * 2.5 layout.$pixel-unit * 3;
+    padding: 0;
     summary {
       color: colors.$comic-ink;
     }
+    > summary {
+      padding: layout.$pixel-unit * 2.5 layout.$pixel-unit * 3;
+    }
+  }
+  &__more > summary {
+    list-style: none;
+    &::-webkit-details-marker {
+      display: none;
+    }
+  }
+  &__more-summary {
+    display: flex;
+    align-items: center;
+    gap: layout.$pixel-unit * 2;
+    font-family: fonts.$family-display;
+    font-size: fonts.$size-heading;
+    line-height: 1.1;
+    text-transform: uppercase;
   }
   &__panel {
     box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
@@ -224,6 +248,22 @@
       border-color: colors.$comic-ink;
       box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
         colors.$pink;
+    }
+    &--invite .session-invite {
+      display: grid;
+      gap: layout.$pixel-unit * 3;
+      justify-items: center;
+      text-align: center;
+      &::before {
+        content: none;
+      }
+      > p {
+        margin: 0;
+      }
+    }
+    &--invite .session-invite__count {
+      margin-top: 0;
+      border-top-color: colors.$comic-ink;
     }
     &--end {
       box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0

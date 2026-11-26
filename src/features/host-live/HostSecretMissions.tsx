@@ -1,6 +1,4 @@
 import { secretAssignmentStatus } from "./secretAssignmentStatus";
-import MissionAssignmentForm from "./MissionAssignmentForm";
-import MissionCreationForm from "./MissionCreationForm";
 import Button from "../../components/ui/Button";
 import AssignmentList from "../../components/session/AssignmentList";
 import EmptyState from "../../components/ui/EmptyState";
@@ -11,8 +9,7 @@ import FormLabel from "../../components/ui/FormLabel";
 import PanelHeading from "../../components/ui/PanelHeading";
 import Overline from "../../components/ui/Overline";
 import CountBadge from "../../components/ui/CountBadge";
-import type { Dispatch, SetStateAction } from "react";
-import { useState, type FormEvent } from "react";
+import { useState, type ReactNode } from "react";
 import Icon from "../../components/ui/Icon";
 import { challengeIcon } from "../../lib/challengeVisuals";
 import type {
@@ -27,25 +24,9 @@ interface Props {
   secretAssignments: SecretMissionAssignment[];
   votingAssignmentId: string | null;
   session: GameSession;
-  assignSecretMission: (event: FormEvent<HTMLFormElement>) => Promise<void>;
-  selectedSecretPlayerId: string;
-  setSelectedSecretPlayerId: Dispatch<SetStateAction<string>>;
+  forms: ReactNode;
   busy: boolean;
-  players: SessionPlayer[];
-  selectedSecretChallengeId: string;
-  setSelectedSecretChallengeId: Dispatch<SetStateAction<string>>;
   secretChallenges: SessionChallenge[];
-  secretScheduleAt: string;
-  setSecretScheduleAt: Dispatch<SetStateAction<string>>;
-  createSecretChallenge: (event: FormEvent<HTMLFormElement>) => Promise<void>;
-  newSecretTitle: string;
-  setNewSecretTitle: Dispatch<SetStateAction<string>>;
-  newSecretDescription: string;
-  setNewSecretDescription: Dispatch<SetStateAction<string>>;
-  newSecretPoints: number;
-  setNewSecretPoints: Dispatch<SetStateAction<number>>;
-  newSecretEvidenceRequired: boolean;
-  setNewSecretEvidenceRequired: Dispatch<SetStateAction<boolean>>;
   playerById: Map<string, SessionPlayer>;
   challengeById: Map<string, SessionChallenge>;
   evidenceForAssignment: (assignmentId: string) => SessionEvidence[];
@@ -68,25 +49,9 @@ export default function HostSecretMissions({
   secretAssignments,
   votingAssignmentId,
   session,
-  assignSecretMission,
-  selectedSecretPlayerId,
-  setSelectedSecretPlayerId,
+  forms,
   busy,
-  players,
-  selectedSecretChallengeId,
-  setSelectedSecretChallengeId,
   secretChallenges,
-  secretScheduleAt,
-  setSecretScheduleAt,
-  createSecretChallenge,
-  newSecretTitle,
-  setNewSecretTitle,
-  newSecretDescription,
-  setNewSecretDescription,
-  newSecretPoints,
-  setNewSecretPoints,
-  newSecretEvidenceRequired,
-  setNewSecretEvidenceRequired,
   playerById,
   challengeById,
   evidenceForAssignment,
@@ -120,35 +85,7 @@ export default function HostSecretMissions({
         </CountBadge>
       </PanelHeading>
 
-      {session.status !== "completed" && (
-        <>
-          <MissionAssignmentForm
-            assignSecretMission={assignSecretMission}
-            selectedSecretPlayerId={selectedSecretPlayerId}
-            setSelectedSecretPlayerId={setSelectedSecretPlayerId}
-            busy={busy}
-            players={players}
-            selectedSecretChallengeId={selectedSecretChallengeId}
-            setSelectedSecretChallengeId={setSelectedSecretChallengeId}
-            secretChallenges={secretChallenges}
-            secretScheduleAt={secretScheduleAt}
-            setSecretScheduleAt={setSecretScheduleAt}
-          />
-
-          <MissionCreationForm
-            createSecretChallenge={createSecretChallenge}
-            newSecretTitle={newSecretTitle}
-            setNewSecretTitle={setNewSecretTitle}
-            newSecretDescription={newSecretDescription}
-            setNewSecretDescription={setNewSecretDescription}
-            newSecretPoints={newSecretPoints}
-            setNewSecretPoints={setNewSecretPoints}
-            newSecretEvidenceRequired={newSecretEvidenceRequired}
-            setNewSecretEvidenceRequired={setNewSecretEvidenceRequired}
-            busy={busy}
-          />
-        </>
-      )}
+      {session.status !== "completed" && forms}
 
       {secretAssignments.length > 0 ? (
         <AssignmentList>

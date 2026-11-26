@@ -1,6 +1,7 @@
 @use "../variables/colors";
 @use "../variables/fonts";
 @use "../variables/layout";
+@use "../tools/challenge-metadata";
 
 .session-challenge-card {
   position: relative;
@@ -54,13 +55,7 @@
 
   &__team-mode {
     margin: auto 0 0;
-    color: colors.$purple;
-    font-family: fonts.$family-display;
-    font-size: layout.$session-small-size;
-    font-style: italic;
-    font-weight: fonts.$weight-action;
-    line-height: 1;
-    text-transform: uppercase;
+    @include challenge-metadata.mode;
   }
 
   &__content {

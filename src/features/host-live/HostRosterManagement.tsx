@@ -1,3 +1,4 @@
+import HostAccordion from "./HostAccordion";
 import {
   useState,
   type Dispatch,
@@ -8,6 +9,7 @@ import SessionInvite from "../../components/session/SessionInvite";
 import Icon from "../../components/ui/Icon";
 import Button from "../../components/ui/Button";
 import Note from "../../components/ui/Note";
+import StatSummary from "../../components/ui/StatSummary";
 import RosterPlayerRow from "./RosterPlayerRow";
 import RosterTeamCard from "./RosterTeamCard";
 import CreateTeamForm from "./CreateTeamForm";
@@ -101,97 +103,110 @@ export default function HostRosterManagement({
       {readOnly && (
         <Note variant="session">This completed game is read-only.</Note>
       )}
-      <dl className="host-roster-management__stats">
-        <div>
-          <dd>{players.length}</dd>
-          <dt>Players</dt>
-        </div>
-        <div>
-          <dd>{teams.length}</dd>
-          <dt>Teams</dt>
-        </div>
-        <div>
-          <dd>{unassigned.length}</dd>
-          <dt>Unassigned</dt>
-        </div>
-      </dl>
-      <fieldset disabled={readOnly} className="host-roster-management__section">
-        <legend className="u-visually-hidden">Teams</legend>
-        <div className="host-roster-management__heading">
-          <h3>Teams</h3>
-          {teamsEnabled && (
-            <Button
-              type="button"
-              variant="session-action"
-              fullWidth={false}
-              aria-expanded={addingTeam}
-              onClick={() => setAddingTeam((value) => !value)}
-            >
-              <Icon name="plus" className="icon--size-15" aria-hidden="true" />{" "}
-              Add team
-            </Button>
-          )}
-        </div>
-        {!teamsEnabled ? (
-          <p>Enable teams in session settings to manage them here.</p>
-        ) : (
-          <>
-            {addingTeam && (
-              <CreateTeamForm
-                teamName={teamName}
-                setTeamName={setTeamName}
-                teamCount={teams.length}
-                busy={busy}
-                createTeam={createTeam}
-              />
-            )}
-            <label className="host-roster-management__capacity">
-              Players per team
-              <select
-                value={session.team_size}
-                disabled={busy}
-                onChange={(event) =>
-                  void updatePlayersPerTeam(Number(event.target.value))
-                }
+      <StatSummary
+        valueFirst
+        items={[
+          { label: "Players", value: players.length },
+          { label: "Teams", value: teams.length },
+          { label: "Unassigned", value: unassigned.length },
+        ]}
+      />
+      <HostAccordion
+        icon="users"
+        title="Teams"
+        status={
+          teamsEnabled
+            ? `${teams.length} ${teams.length === 1 ? "team" : "teams"}`
+            : "Off"
+        }
+      >
+        <fieldset
+          disabled={readOnly}
+          className="host-roster-management__section"
+        >
+          <legend className="u-visually-hidden">Teams</legend>
+          <div className="host-roster-management__heading">
+            {teamsEnabled && (
+              <Button
+                type="button"
+                variant="session-action"
+                fullWidth={false}
+                aria-expanded={addingTeam}
+                onClick={() => setAddingTeam((value) => !value)}
               >
-                {[...new Set([session.team_size, 2, 3, 4, 5, 6, 8, 10, 12])]
-                  .sort((a, b) => a - b)
-                  .filter(
-                    (size) => size === session.team_size || size >= largestTeam,
-                  )
-                  .map((size) => (
-                    <option key={size} value={size}>
-                      {size} players
-                    </option>
-                  ))}
-              </select>
-            </label>
-            {teams.length === 0 && <p>No teams yet. Add the first one.</p>}
-            {teams.map((team, index) => (
-              <RosterTeamCard
-                key={team.id}
-                team={team}
-                teams={teams}
-                members={players.filter((player) => player.team_id === team.id)}
-                teamSize={session.team_size}
-                index={index}
-                photoUrl={teamPhotoUrls[team.id]}
-                nameEdit={teamNameEdits[team.id]}
-                onNameChange={(name) =>
-                  setTeamNameEdits((values) => ({
-                    ...values,
-                    [team.id]: name,
-                  }))
-                }
-                busy={busy}
-                renameTeam={renameTeam}
-                uploadTeamPhoto={uploadTeamPhoto}
-                assignTeam={assignTeam}
-              />
-            ))}
-          </>
-        )}
-      </fieldset>
+                <Icon
+                  name="plus"
+                  className="icon--size-15"
+                  aria-hidden="true"
+                />{" "}
+                Add team
+              </Button>
+            )}
+          </div>
+          {!teamsEnabled ? (
+            <p>Enable teams in session settings to manage them here.</p>
+          ) : (
+            <>
+              {addingTeam && (
+                <CreateTeamForm
+                  teamName={teamName}
+                  setTeamName={setTeamName}
+                  teamCount={teams.length}
+                  busy={busy}
+                  createTeam={createTeam}
+                />
+              )}
+              <label className="host-roster-management__capacity">
+                Players per team
+                <select
+                  value={session.team_size}
+                  disabled={busy}
+                  onChange={(event) =>
+                    void updatePlayersPerTeam(Number(event.target.value))
+                  }
+                >
+                  {[...new Set([session.team_size, 2, 3, 4, 5, 6, 8, 10, 12])]
+                    .sort((a, b) => a - b)
+                    .filter(
+                      (size) =>
+                        size === session.team_size || size >= largestTeam,
+                    )
+                    .map((size) => (
+                      <option key={size} value={size}>
+                        {size} players
+                      </option>
+                    ))}
+                </select>
+              </label>
+              {teams.length === 0 && <p>No teams yet. Add the first one.</p>}
+              {teams.map((team, index) => (
+                <RosterTeamCard
+                  key={team.id}
+                  team={team}
+                  teams={teams}
+                  members={players.filter(
+                    (player) => player.team_id === team.id,
+                  )}
+                  teamSize={session.team_size}
+                  index={index}
+                  photoUrl={teamPhotoUrls[team.id]}
+                  nameEdit={teamNameEdits[team.id]}
+                  onNameChange={(name) =>
+                    setTeamNameEdits((values) => ({
+                      ...values,
+                      [team.id]: name,
+                    }))
+                  }
+                  busy={busy}
+                  renameTeam={renameTeam}
+                  uploadTeamPhoto={uploadTeamPhoto}
+                  assignTeam={assignTeam}
+                />
+              ))}
+            </>
+          )}
+        </fieldset>
+      </HostAccordion>
       {unassigned.length > 0 && (
         <fieldset
           disabled={readOnly}
@@ -206,46 +221,62 @@ export default function HostRosterManagement({
           </ul>
         </fieldset>
       )}
-      <fieldset disabled={readOnly} className="host-roster-management__section">
-        <legend className="u-visually-hidden">Players</legend>
-        <div className="host-roster-management__heading">
-          <h3>Players</h3>
-        </div>
-        <label className="host-roster-management__search">
-          <span className="u-visually-hidden">Search players</span>
-          <input
-            type="search"
-            placeholder="Search players"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </label>
-        {players.length === 0 && <p>No players have joined yet.</p>}
-        <ul className="host-roster-management__list">
-          {assigned.map(renderPlayer)}
-        </ul>
-        <p className="host-roster-management__note">
-          Players join with the game code. Adding or deleting players and teams
-          directly isn&apos;t available yet.
-        </p>
-      </fieldset>
-      <ScoreAdjustmentForm
-        players={players}
-        teams={session.teams_enabled ? teams : []}
-        teamsEnabled={session.teams_enabled}
-        busy={busy || readOnly}
-        onAdjust={adjustScore}
-        successCount={scoreAdjustmentCount}
-      />
-      <SessionInvite
-        joinUrl={joinUrl}
-        onCopy={copyCode}
-        copied={codeCopied}
-        playerCount={players.length}
-        playerLimit={session.player_limit}
-        teamsEnabled={session.teams_enabled}
-        hostChoosesTeams={session.host_chooses_teams}
-      />
+      <HostAccordion
+        icon="medal"
+        title="Players"
+        status={`${players.length} ${players.length === 1 ? "player" : "players"}`}
+      >
+        <fieldset
+          disabled={readOnly}
+          className="host-roster-management__section"
+        >
+          <legend className="u-visually-hidden">Players</legend>
+          <label className="host-roster-management__search">
+            <span className="u-visually-hidden">Search players</span>
+            <input
+              type="search"
+              placeholder="Search players"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
+          {players.length === 0 && <p>No players have joined yet.</p>}
+          <ul className="host-roster-management__list">
+            {assigned.map(renderPlayer)}
+          </ul>
+          <p className="host-roster-management__note">
+            Players join with the game code. Adding or deleting players and
+            teams directly isn&apos;t available yet.
+          </p>
+        </fieldset>
+      </HostAccordion>
+      <HostAccordion
+        icon="settings"
+        title="Host controls"
+        status="Add or remove points"
+      >
+        <ScoreAdjustmentForm
+          bare
+          players={players}
+          teams={session.teams_enabled ? teams : []}
+          teamsEnabled={session.teams_enabled}
+          busy={busy || readOnly}
+          onAdjust={adjustScore}
+          successCount={scoreAdjustmentCount}
+        />
+      </HostAccordion>
+      <HostAccordion icon="send" title="Invite players" status="Code and link">
+        <SessionInvite
+          bare
+          joinUrl={joinUrl}
+          onCopy={copyCode}
+          copied={codeCopied}
+          playerCount={players.length}
+          playerLimit={session.player_limit}
+          teamsEnabled={session.teams_enabled}
+          hostChoosesTeams={session.host_chooses_teams}
+        />
+      </HostAccordion>
     </div>
   );
 }

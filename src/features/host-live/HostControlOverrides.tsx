@@ -7,39 +7,9 @@ import DialogPanel from "../../components/ui/DialogPanel";
 import Disclosure from "../../components/ui/Disclosure";
 import FormLabel from "../../components/ui/FormLabel";
 import Icon from "../../components/ui/Icon";
+import { PanelSummary } from "./HostAccordion";
 import TimerReadout from "../../components/ui/TimerReadout";
 import type { SessionChallenge } from "./types";
-
-function PanelSummary({
-  icon,
-  title,
-  status,
-  live = false,
-}: {
-  icon: "coffee" | "star" | "lock-keyhole" | "flag";
-  title: string;
-  status: string;
-  live?: boolean;
-}) {
-  return (
-    <span className="control-console__summary">
-      <span className="control-console__summary-icon">
-        <Icon name={icon} className="icon--size-16" aria-hidden="true" />
-      </span>
-      <span className="control-console__summary-title">{title}</span>
-      <span
-        className={`control-console__summary-status${live ? " control-console__summary-status--live" : ""}`}
-      >
-        {status}
-      </span>
-      <Icon
-        name="chevron-down"
-        className="control-console__chevron icon--size-16"
-        aria-hidden="true"
-      />
-    </span>
-  );
-}
 
 interface Props {
   rounds: Pick<
@@ -77,6 +47,7 @@ interface Props {
   sideChallengeControls: ReactNode;
   secretMissionControls: ReactNode;
   endGameControls?: ReactNode;
+  inviteControls?: ReactNode;
 }
 
 export default function HostControlOverrides({
@@ -112,6 +83,7 @@ export default function HostControlOverrides({
   sideChallengeControls,
   secretMissionControls,
   endGameControls,
+  inviteControls,
 }: Props) {
   const [selectedId, setSelectedId] = useState("");
   const [timerMinutes, setTimerMinutes] = useState<string | null>(null);
@@ -304,9 +276,18 @@ export default function HostControlOverrides({
         <Disclosure
           variant="session"
           className="control-console__more"
-          summary="More round tools"
+          summary={
+            <span className="control-console__more-summary">
+              <span>More round tools</span>
+              <Icon
+                name="chevron-down"
+                className="disclosure-chevron icon--size-20"
+                aria-hidden="true"
+              />
+            </span>
+          }
         >
-          <div className="control-console__tools">
+          <div className="control-console__panel-content control-console__tools">
             <FormLabel variant="review">
               Choose round
               <select
@@ -424,7 +405,7 @@ export default function HostControlOverrides({
           />
         }
       >
-        <div className="control-console__breaks">
+        <div className="control-console__panel-content control-console__breaks">
           {onBreak ? (
             <Button
               type="button"
@@ -474,7 +455,9 @@ export default function HostControlOverrides({
           />
         }
       >
-        {sideChallengeControls}
+        <div className="control-console__panel-content">
+          {sideChallengeControls}
+        </div>
       </Disclosure>
 
       <Disclosure
@@ -488,18 +471,36 @@ export default function HostControlOverrides({
           />
         }
       >
-        <ControlRow>
-          <Button
-            type="button"
-            variant="session-secondary"
-            fullWidth={false}
-            onClick={onSecretReview}
-          >
-            Manage secret missions
-          </Button>
-        </ControlRow>
-        {secretMissionControls}
+        <div className="control-console__panel-content">
+          <ControlRow>
+            <Button
+              type="button"
+              variant="session-secondary"
+              fullWidth={false}
+              onClick={onSecretReview}
+            >
+              Manage secret missions
+            </Button>
+          </ControlRow>
+          {secretMissionControls}
+        </div>
       </Disclosure>
+
+      {inviteControls && (
+        <Disclosure
+          variant="session"
+          className="control-console__panel control-console__panel--invite"
+          summary={
+            <PanelSummary
+              icon="users"
+              title="Invite players"
+              status="QR code and join link"
+            />
+          }
+        >
+          <div className="control-console__panel-content">{inviteControls}</div>
+        </Disclosure>
+      )}
 
       <Disclosure
         variant="session"
@@ -512,49 +513,51 @@ export default function HostControlOverrides({
           />
         }
       >
-        <p className="control-console__description">
-          Finish the game to access the uploads and social clip creator.
-        </p>
-        <ControlRow>
-          {status === "completed" ? (
-            <Button
-              type="button"
-              variant="session-secondary"
-              fullWidth={false}
-              onClick={onMemories}
-            >
-              Open memories and social assets
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="session-action"
-              fullWidth={false}
-              disabled={busy || !live || rewardActive}
-              onClick={() => {
-                if (
-                  window.confirm(
-                    "End the game and open the end phase? This cannot be undone.",
+        <div className="control-console__panel-content">
+          <p className="control-console__description">
+            Finish the game to access the uploads and social clip creator.
+          </p>
+          <ControlRow>
+            {status === "completed" ? (
+              <Button
+                type="button"
+                variant="session-secondary"
+                fullWidth={false}
+                onClick={onMemories}
+              >
+                Open memories and social assets
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="session-action"
+                fullWidth={false}
+                disabled={busy || !live || rewardActive}
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "End the game and open the end phase? This cannot be undone.",
+                    )
                   )
-                )
-                  onFinish();
-              }}
-            >
-              End game and open end phase
-            </Button>
-          )}
-          {onEndGameReview && (
-            <Button
-              type="button"
-              variant="session-secondary"
-              fullWidth={false}
-              onClick={onEndGameReview}
-            >
-              Review end game
-            </Button>
-          )}
-        </ControlRow>
-        {endGameControls}
+                    onFinish();
+                }}
+              >
+                End game and open end phase
+              </Button>
+            )}
+            {onEndGameReview && (
+              <Button
+                type="button"
+                variant="session-secondary"
+                fullWidth={false}
+                onClick={onEndGameReview}
+              >
+                Review end game
+              </Button>
+            )}
+          </ControlRow>
+          {endGameControls}
+        </div>
       </Disclosure>
 
       {timerMinutes !== null && !timerDisabled && !onBreak && (

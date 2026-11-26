@@ -4862,3 +4862,84 @@ skips a scheduled break and still respects reward and autoplay guards. Timers
 remain attached to the current round or break. Completing the game opens the
 existing Memories view, which downloads individual originals and creates a photo
 reel; it does not provide a bulk archive. Local override examples use state only.
+The host session's game, scores and challenges pages retain the game name and
+copyable join code; host management and its reward view omit the titlebar.
+
+## Host disclosure headings
+
+Host tab cards use a consistent right-aligned chevron and larger uppercase
+headings. The shared submission-row example uses the same marker. Native
+disclosures retain their existing content and keyboard behavior.
+At 390 × 844, the host tabs and shared submission example pass focused
+geometry and keyboard checks in Chrome. The production build, unit tests,
+JavaScript and SCSS linters pass; the full format gate still reports unrelated
+existing formatting in `_main-challenge.scss` and `_session-challenge-card.scss`.
+
+The console display font loads from the existing local Lost in South asset rather
+than the unavailable external stylesheet. The development stylesheet and
+production font URL both return successfully.
+
+## Secret missions in the host schedule
+
+The schedule's secret reveal view remains available before any assignments
+exist. It reuses the host's existing creation and assignment controller and
+forms; completed games show reveals without editing controls.
+
+Verification: production build, JavaScript and SCSS linters, 763 unit/component
+tests, and four mocked Chrome desktop/mobile journeys pass. The journeys cover
+empty schedules, creation, immediate and scheduled assignment, failure/retry,
+the existing Controls view, and completed-game read-only presentation. The
+repository-wide formatting gate reports unrelated existing files.
+
+## Host accordion content surfaces
+
+Expanded Controls, Review and Teams cards place their contents on a full-width
+white rounded surface, with padding inside the surface and on the header only.
+Native disclosure behavior and the existing controls remain unchanged.
+
+Verification: production build, JavaScript and SCSS linters, 763 unit/component
+tests, and focused mocked Chrome checks pass. Mobile and desktop screenshots and
+computed geometry confirm the surface width, padding and rounded corners. The
+repository-wide formatting gate still reports unrelated existing files.
+
+## Host schedule statistics
+
+Schedule times and roster counts use the same three-column stat summary. Values
+remain caller-supplied; long values wrap without overflowing on mobile.
+The host patterns reference demonstrates the shared summary with local data.
+
+Verification: JavaScript and SCSS linters, 763 unit/component tests and mocked
+desktop/mobile Chrome checks pass. Screenshots and computed layout checks cover
+both viewport sizes; schedule values and unset times remain unchanged.
+
+## Host schedule card details
+
+Schedule cards use the selected or matched OpenMoji artwork, with dedicated
+break, voting and final artwork. Challenge awards share the main-challenge
+styling, and play-mode labels share the existing challenge treatment. Breaks
+have no challenge-type label. NOW identifies current items in their details.
+
+Verification: mocked desktop/mobile checks cover selected and matched artwork,
+zero points, both play modes, completed and running-break cards, and break
+editing. Desktop/mobile screenshots and computed-style checks verify the card
+presentation. Existing challenge award and mode styling is shared unchanged.
+
+## Compact host schedule timeline
+
+The main schedule uses a single connected timeline. Collapsed rows show start
+time, round number where applicable, and title; their native disclosures contain
+the remaining details and edit actions. Completed items remain together in an
+expandable Completed row. The current row is highlighted, while the separate
+secret-mission view retains its existing presentation.
+
+Verification: desktop/mobile mocked Chrome checks cover keyboard disclosure,
+completed items, break editing, both play modes, missing times and responsive
+layout. Desktop and mobile screenshots were checked against the supplied
+reference. Production build, JavaScript/SCSS lint and 763 unit/component tests
+pass; the repository-wide format gate reports unrelated existing files.
+
+Round numbers now appear in purple pills, while break titles use a distinct
+pink label with a decorative coffee icon. The current-row highlight and the
+Completed grouping remain unchanged. Mocked Chrome checks exercise both row
+states, keyboard disclosure and long titles at 320px; desktop/mobile
+screenshots, build, linters and 763 unit/component tests pass.

@@ -25,12 +25,12 @@
     gap: layout.$pixel-unit * 0.75;
     min-width: 0;
     min-height: layout.$pixel-unit * 12.25;
-    padding: layout.$pixel-unit * 1.25 layout.$pixel-unit * 5;
+    padding: layout.$pixel-unit * 1.25 layout.$pixel-unit * 4;
     border: layout.$pixel-unit * 0.5 solid transparent;
     border-radius: layout.$pixel-unit * 3;
     background: transparent;
     color: rgba(colors.$white, 0.75);
-    font-size: fonts.$size-navigation-min;
+    font-size: fonts.$size-navigation-caption;
     font-weight: fonts.$weight-heavy;
     line-height: 1.1;
     text-decoration: none;

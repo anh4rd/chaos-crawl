@@ -97,51 +97,9 @@
 }
 
 .host-review-section {
-  // Opaque purple surface shared by every review section; no stroke or shadow.
-  &.disclosure {
-    border: layout.$session-border-width solid colors.$comic-ink;
-    border-radius: layout.$radius-lg;
-    background: colors.$comic-lavender;
-    padding: layout.$pixel-unit * 2.5 layout.$pixel-unit * 3;
-    box-shadow: layout.$pixel-unit * 0.75 layout.$pixel-unit * 0.75 0
-      colors.$comic-ink;
-    summary {
-      color: colors.$comic-ink;
-    }
-  }
-  > summary {
-    padding: layout.$pixel-unit * 2.5 layout.$pixel-unit * 3;
-  }
-  &__summary {
-    display: inline-flex;
-    align-items: center;
-    gap: layout.$pixel-unit * 2;
-    width: calc(100% - #{layout.$pixel-unit * 4});
-    font-family: fonts.$family-display;
-  }
-  &__summary {
-    display: inline-flex;
-    align-items: center;
-    gap: layout.$pixel-unit * 2;
-    width: calc(100% - #{layout.$pixel-unit * 4});
-    font-family: fonts.$family-display;
-  }
-  &__title {
-    flex: 1 1 auto;
-  }
-  &__count {
-    padding: 0 layout.$pixel-unit * 2;
-    border-radius: layout.$radius-pill;
-    background: colors.$lime;
-    color: colors.$comic-ink;
-    font-family: fonts.$family-body;
-    font-size: fonts.$size-small;
-    font-weight: fonts.$weight-heavy;
-  }
   &__body {
     display: grid;
     gap: layout.$pixel-unit * 2;
-    padding: 0 layout.$pixel-unit * 3 layout.$pixel-unit * 3;
   }
 }
 

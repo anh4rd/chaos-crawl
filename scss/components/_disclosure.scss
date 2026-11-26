@@ -39,3 +39,16 @@
     }
   }
 }
+
+.disclosure-chevron {
+  flex: none;
+  margin-left: auto;
+  transition: transform 0.15s ease;
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+[open] > summary .disclosure-chevron {
+  transform: rotate(180deg);
+}

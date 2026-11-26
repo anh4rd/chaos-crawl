@@ -9,3 +9,9 @@
   font-display: swap;
   font-weight: fonts.$weight-action;
 }
+
+@font-face {
+  font-family: "Lost in South";
+  src: url("/fonts/Lost%20in%20South.woff2") format("woff2");
+  font-display: swap;
+}

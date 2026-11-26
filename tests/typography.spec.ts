@@ -51,6 +51,28 @@ async function undersizedText(page: Page) {
   });
 }
 
+test("the console display font loads locally without the blocked font provider", async ({
+  page,
+}) => {
+  const providerRequests: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("db.onlinewebfonts.com"))
+      providerRequests.push(request.url());
+  });
+  const fontResponse = page.waitForResponse((response) =>
+    response.url().includes("/fonts/Lost%20in%20South.woff2"),
+  );
+  await page.goto("#/styleguide");
+  const faces = await page.evaluate(async () =>
+    (await document.fonts.load('24px "Lost in South"')).map(
+      (face) => face.status,
+    ),
+  );
+  expect(faces).toEqual(["loaded"]);
+  expect((await fontResponse).status()).toBe(200);
+  expect(providerRequests).toEqual([]);
+});
+
 test("styleguide text respects the typography minimums", async ({ page }) => {
   const backend = await installSessionBackend(page);
   await page.goto("#/styleguide");
