@@ -12,6 +12,7 @@ import TabList from "../../components/ui/TabList";
 import { GameCard } from "../host-hub/GameCard";
 import CohostDialog from "../host-hub/CohostDialog";
 import HostDirectory from "../host-hub/HostDirectory";
+import HostChallengesView from "../host-hub/HostChallengesView";
 import { Example } from "./Example";
 
 export default function HostFoundationExample() {
@@ -178,6 +179,32 @@ export default function HostFoundationExample() {
                   </PanelGrid>
                 )}
               </section>
+              {preview && (
+                <HostChallengesView
+                  data={{
+                    liked: [
+                      {
+                        id: "local-liked",
+                        title: "Photo hunt",
+                        description: "Find a colourful landmark.",
+                        source: "Saved challenge",
+                        status: null,
+                        details: { kind: "side", points: 10 },
+                      },
+                    ],
+                    created: [
+                      {
+                        id: "local-created",
+                        title: "Team entrance",
+                        description: "Make an entrance together.",
+                        source: "Custom challenge in game plan: Demo party",
+                        status: null,
+                        details: { kind: "main", minutes: 5 },
+                      },
+                    ],
+                  }}
+                />
+              )}
               <HostDirectory
                 className="host-dashboard__section"
                 hosts={

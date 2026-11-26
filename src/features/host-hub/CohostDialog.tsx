@@ -32,7 +32,7 @@ export default function CohostDialog({
   canRetry: boolean;
   onEmailChange: (email: string) => void;
   onAdd: (event: FormEvent<HTMLFormElement>) => void;
-  onRemove: (userId: string) => void;
+  onRemove?: (userId: string) => void;
   onClose: () => void;
   onDismissError: () => void;
   onRetry: () => void;
@@ -72,16 +72,18 @@ export default function CohostDialog({
             {cohosts.map((cohost) => (
               <li key={cohost.user_id}>
                 {cohost.email}{" "}
-                <Button
-                  type="button"
-                  variant="dialog"
-                  fullWidth={false}
-                  disabled={busy}
-                  aria-label={`Remove ${cohost.email}`}
-                  onClick={() => onRemove(cohost.user_id)}
-                >
-                  Remove
-                </Button>
+                {onRemove && (
+                  <Button
+                    type="button"
+                    variant="dialog"
+                    fullWidth={false}
+                    disabled={busy}
+                    aria-label={`Remove ${cohost.email}`}
+                    onClick={() => onRemove(cohost.user_id)}
+                  >
+                    Remove
+                  </Button>
+                )}
               </li>
             ))}
           </ul>

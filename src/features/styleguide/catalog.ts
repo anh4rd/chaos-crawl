@@ -1,5 +1,11 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
+  HostChallengesView: {
+    usage:
+      "Read-only liked and created challenge summaries, with their saved, submission or game-plan origin.",
+    dependencies:
+      "Receives presentation data only; the host preview owns admin authorization, loading and retry.",
+  },
   HostRosterManagement: {
     usage:
       "Controlled host roster panel for player names, team assignments, team settings, scores and invitations. The local host roster example uses local state.",
@@ -274,13 +280,13 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   PlatformGamesView: {
     usage:
-      "Controlled platform list and inspector composition. Receives complete/filtered records, feedback/loading/access state and callbacks; no backend, auth or route parameters.",
+      "Controlled platform list and inspector composition. Receives complete/filtered records, feedback/loading/access state and callbacks, including optional co-host management; no backend, auth or route parameters.",
     dependencies:
       "Shared heading/statistics/panels, controlled GameTable and GameInspector, and owned SCSS. Existing totals use complete records rather than filtered rows; optional onBack intercepts navigation in the local reference only.",
   },
   GameTable: {
     usage:
-      "Controlled platform-game table preserving supplied order, fallback host/venue copy and inspect callbacks. Never queries or chooses authorization.",
+      "Controlled platform-game table preserving supplied order, fallback host/venue copy and inspect/co-host callbacks. Never queries or chooses authorization.",
     dependencies:
       "Frontend-inferred PlatformGame records, native DataTable slots, StatusPill table and Button table-action. Preserve incoming order, native column scope, literal status/fallback copy and supplied inspect callbacks.",
   },

@@ -93,3 +93,22 @@ it("lets the owner retry a failed list read", async () => {
   await waitFor(() => expect(mocks.list).toHaveBeenCalledTimes(2));
   expect(await screen.findByText("No co-hosts have been added.")).toBeTruthy();
 });
+
+it("allows administrators to add and list without exposing removal", async () => {
+  mocks.list.mockResolvedValue({
+    data: [{ user_id: "member", email: "host@example.test" }],
+    error: null,
+  });
+  render(
+    <GameCohostManager game={game} allowRemove={false} onClose={vi.fn()} />,
+  );
+  await screen.findByText("host@example.test");
+  expect(screen.queryByRole("button", { name: /Remove/ })).toBeNull();
+  fireEvent.change(screen.getByLabelText("Host email"), {
+    target: { value: "new@example.test" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Add co-host" }));
+  await waitFor(() =>
+    expect(mocks.add).toHaveBeenCalledWith("game", "new@example.test"),
+  );
+});

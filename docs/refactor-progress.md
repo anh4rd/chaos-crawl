@@ -7,6 +7,14 @@ writes are included.
 
 ## In progress
 
+Super Admin can list and add co-hosts from platform games; only the owner can
+remove them. A read-only host preview shows saved challenges, community
+submissions and custom challenges in game plans. Plan entries identify their
+origin rather than proving who authored them. The admin-only database migration
+requires review and has not been deployed. Admin and existing owner/co-host SQL
+regressions passed in a rolled-back local transaction, alongside mocked
+desktop/mobile preview and co-host keyboard journeys.
+
 Super Admin can inspect and edit V2 session-player names, avatars, teams, scores
 and reconnect phone numbers. Session timestamps are read-only; player tokens,
 host reconnect identities and messaging consent are not exposed or edited.

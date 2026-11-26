@@ -14,9 +14,11 @@ import CohostDialog from "./CohostDialog";
 export default function GameCohostManager({
   game,
   onClose,
+  allowRemove = true,
 }: {
-  game: HostGame;
+  game: Pick<HostGame, "id" | "name">;
   onClose: () => void;
+  allowRemove?: boolean;
 }) {
   const [email, setEmail] = useState("");
   const [cohosts, setCohosts] = useState<GameCohost[]>([]);
@@ -99,8 +101,10 @@ export default function GameCohostManager({
       canRetry={queryFailed}
       onEmailChange={setEmail}
       onAdd={add}
-      onRemove={(userId) =>
-        void change(() => removeGameCohost(game.id, userId))
+      onRemove={
+        allowRemove
+          ? (userId) => void change(() => removeGameCohost(game.id, userId))
+          : undefined
       }
       onClose={onClose}
       onDismissError={() => {

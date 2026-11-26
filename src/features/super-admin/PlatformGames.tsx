@@ -7,12 +7,15 @@ import { useGameInspector } from "./useGameInspector";
 import { usePlatformPlayers } from "./usePlatformPlayers";
 import SessionPlayers from "./SessionPlayers";
 import Button from "../../components/ui/Button";
+import GameCohostManager from "../host-hub/GameCohostManager";
+import type { PlatformGame } from "../../types/superAdmin";
 
 export default function PlatformGames() {
   const [queryError, setQueryError] = useState("");
   const [detailError, setDetailError] = useState("");
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
+  const [cohostGame, setCohostGame] = useState<PlatformGame | null>(null);
   const { games, loading, denied, load } = usePlatformGames(setQueryError);
   const { selected, detailLoading, isOpen, openGame, close, retry } =
     useGameInspector(setDetailError);
@@ -68,6 +71,7 @@ export default function PlatformGames() {
           close();
         }}
         onManagePlayers={(sessionId) => void players.open(sessionId)}
+        onManageCohosts={setCohostGame}
         playerContent={
           players.isOpen ? (
             <>
@@ -101,6 +105,14 @@ export default function PlatformGames() {
           ) : undefined
         }
       />
+      {cohostGame && (
+        <GameCohostManager
+          key={cohostGame.game_id}
+          game={{ id: cohostGame.game_id, name: cohostGame.name }}
+          allowRemove={false}
+          onClose={() => setCohostGame(null)}
+        />
+      )}
     </HostWorkspace>
   );
 }

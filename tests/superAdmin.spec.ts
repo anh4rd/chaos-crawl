@@ -54,6 +54,52 @@ const detail = {
   ],
 };
 
+test("super admin adds co-hosts to another host's game using the keyboard", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.responses.cc_super_admin_list_games = games;
+  backend.responses.cc_list_game_cohosts = [
+    { user_id: "member", email: "existing@example.test" },
+  ];
+  backend.responses.cc_add_game_cohost = null;
+  await page.goto("#/host/super-admin");
+  const opener = page.getByRole("button", {
+    name: "Manage co-hosts for Garden chaos",
+  });
+  await activateByKeyboard(page, opener);
+  const dialog = page.getByRole("dialog", {
+    name: "Manage co-hosts for Garden chaos",
+  });
+  await expect(dialog.getByText("existing@example.test")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: /Remove/ })).toHaveCount(0);
+  await tabTo(page, dialog.getByLabel("Host email"));
+  await page.keyboard.type("new@example.test");
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Add co-host" }),
+  );
+  await expect
+    .poll(
+      () =>
+        backend.requests.filter((item) => item.name === "cc_add_game_cohost")
+          .length,
+    )
+    .toBe(1);
+  expect(
+    backend.requests.find((item) => item.name === "cc_add_game_cohost")?.body,
+  ).toEqual({
+    p_host_game_id: "planned-game",
+    p_email: "new@example.test",
+  });
+  await expect(
+    dialog.getByRole("button", { name: "Close", exact: true }),
+  ).toBeEnabled();
+  await page.keyboard.press("Escape");
+  await expect(opener).toBeFocused();
+  backend.verify();
+});
+
 test("super admin edits a session player using the keyboard", async ({
   page,
 }) => {

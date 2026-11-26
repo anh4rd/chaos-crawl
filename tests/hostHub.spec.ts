@@ -245,11 +245,35 @@ test("platform host preview keeps cards read-only and returns to the host hub", 
     },
     games,
   };
+  backend.responses.cc_super_admin_host_challenges = {
+    liked: [
+      {
+        id: "liked",
+        title: "Favourite challenge",
+        description: null,
+        source: "Saved challenge",
+        status: null,
+        details: {},
+      },
+    ],
+    created: [
+      {
+        id: "created",
+        title: "Submitted challenge",
+        description: "An original challenge.",
+        source: "Community submission",
+        status: "pending",
+        details: {},
+      },
+    ],
+  };
   await page.goto("#/host");
   await page
     .getByRole("button", { name: "View Host Hub", exact: true })
     .click();
   await expect(page).toHaveURL(/viewAs=preview-host/);
+  await expect(page.getByText("Favourite challenge")).toBeVisible();
+  await expect(page.getByText("Submitted challenge")).toBeVisible();
   await expect(
     page.getByText("Viewing as Preview Host", { exact: true }),
   ).toBeVisible();

@@ -24,8 +24,8 @@ export default function HostDirectory({
           <Overline variant="directory">PLATFORM ADMIN</Overline>
           <h2>Host accounts</h2>
           <p>
-            Open a read-only Host Hub dashboard view to see the games another
-            host sees.
+            Open a read-only Host Hub preview to see a host's games and
+            challenges.
           </p>
         </div>
         <CountBadge variant="workspace">{hosts.length} hosts</CountBadge>

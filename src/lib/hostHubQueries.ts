@@ -5,6 +5,7 @@ import type {
   GameCohost,
   HostGame,
   HostPreviewIdentity,
+  HostChallengeOverview,
 } from "../types/hostHub";
 const summaryFields =
   "id,host_id,name,event_date,start_time,end_time,player_count,venue_name,status,plan_data";
@@ -60,5 +61,11 @@ export function readPlatformAdmin() {
 export function readGameCohosts(hostGameId: string) {
   return runApi<GameCohost[]>(() =>
     supabase.rpc("cc_list_game_cohosts", { p_host_game_id: hostGameId }),
+  );
+}
+
+export function readHostChallengeOverview(hostId: string) {
+  return runApi<HostChallengeOverview>(() =>
+    supabase.rpc("cc_super_admin_host_challenges", { p_host_id: hostId }),
   );
 }

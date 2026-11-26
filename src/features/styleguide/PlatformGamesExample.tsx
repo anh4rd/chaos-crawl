@@ -11,6 +11,7 @@ import HostPatternPreview from "./HostPatternPreview";
 import SessionPreview from "../../components/session/SessionPreview";
 import Button from "../../components/ui/Button";
 import SessionPlayers from "../super-admin/SessionPlayers";
+import CohostDialog from "../host-hub/CohostDialog";
 
 const games: PlatformGame[] = [
   {
@@ -81,6 +82,11 @@ export default function PlatformGamesExample() {
   const [selected, setSelected] = useState<PlatformGameDetail | null>(null);
   const [notice, setNotice] = useState("");
   const [playerView, setPlayerView] = useState(false);
+  const [cohostGame, setCohostGame] = useState<PlatformGame | null>(null);
+  const [cohostEmail, setCohostEmail] = useState("");
+  const [cohosts, setCohosts] = useState<
+    Record<string, { user_id: string; email: string }[]>
+  >({});
   const [players, setPlayers] = useState<PlatformSessionPlayers>({
     session_id: "local-session",
     session_name: "Friday session",
@@ -204,6 +210,7 @@ export default function PlatformGamesExample() {
               setSelected(previewDetail(activeId));
             }}
             onManagePlayers={() => setPlayerView(true)}
+            onManageCohosts={setCohostGame}
             playerContent={
               playerView ? (
                 <>
@@ -238,6 +245,34 @@ export default function PlatformGamesExample() {
           />
         </HostPatternPreview>
       </SessionPreview>
+      {cohostGame && (
+        <CohostDialog
+          gameName={cohostGame.name}
+          email={cohostEmail}
+          cohosts={cohosts[cohostGame.game_id] ?? []}
+          loading={false}
+          busy={false}
+          error=""
+          canRetry={false}
+          onEmailChange={setCohostEmail}
+          onAdd={(event) => {
+            event.preventDefault();
+            setCohosts((current) => ({
+              ...current,
+              [cohostGame.game_id]: [
+                ...(current[cohostGame.game_id] ?? []).filter(
+                  (cohost) => cohost.email !== cohostEmail,
+                ),
+                { user_id: cohostEmail, email: cohostEmail },
+              ],
+            }));
+            setCohostEmail("");
+          }}
+          onClose={() => setCohostGame(null)}
+          onDismissError={() => {}}
+          onRetry={() => {}}
+        />
+      )}
       <output>{notice}</output>
     </Example>
   );

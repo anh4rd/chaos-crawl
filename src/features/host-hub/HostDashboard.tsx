@@ -15,6 +15,7 @@ import GameContext from "./GameContext";
 import HostDirectory from "./HostDirectory";
 import { GameCard } from "./GameCard";
 import GameCohostManager from "./GameCohostManager";
+import HostChallenges from "./HostChallenges";
 import { useHostHub } from "./useHostHub";
 import type { HostGame } from "../../types/hostHub";
 export default function HostDashboard({
@@ -321,6 +322,11 @@ export default function HostDashboard({
           </section>
         )}
 
+        {viewAsHostId &&
+          isPlatformAdmin &&
+          viewingHost?.id === viewAsHostId && (
+            <HostChallenges key={viewAsHostId} hostId={viewAsHostId} />
+          )}
         {isPlatformAdmin && !viewAsHostId && (
           <HostDirectory
             className="host-dashboard__section"

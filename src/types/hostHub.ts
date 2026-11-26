@@ -16,6 +16,18 @@ export interface GameCohost {
   user_id: string;
   email: string;
 }
+export interface HostChallengeSummary {
+  id: string;
+  title: string;
+  description: string | null;
+  source: string;
+  status: string | null;
+  details: unknown;
+}
+export interface HostChallengeOverview {
+  liked: HostChallengeSummary[];
+  created: HostChallengeSummary[];
+}
 
 export interface HostGame {
   id: string;

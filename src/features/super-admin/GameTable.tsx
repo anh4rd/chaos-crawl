@@ -6,9 +6,11 @@ import type { PlatformGame } from "../../types/superAdmin";
 export default function GameTable({
   games,
   onInspect,
+  onManageCohosts,
 }: {
   games: PlatformGame[];
   onInspect: (id: string) => void;
+  onManageCohosts?: (game: PlatformGame) => void;
 }) {
   return (
     <DataTable>
@@ -51,6 +53,17 @@ export default function GameTable({
                 >
                   Inspect
                 </Button>
+                {onManageCohosts && (
+                  <Button
+                    type="button"
+                    variant="table-action"
+                    fullWidth={false}
+                    aria-label={`Manage co-hosts for ${game.name}`}
+                    onClick={() => onManageCohosts(game)}
+                  >
+                    Co-hosts
+                  </Button>
+                )}
               </td>
             </tr>
           );

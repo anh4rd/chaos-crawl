@@ -35,6 +35,7 @@ export default function PlatformGamesView({
   onBack,
   playerContent,
   onManagePlayers,
+  onManageCohosts,
 }: {
   games: PlatformGame[];
   filtered: PlatformGame[];
@@ -56,6 +57,7 @@ export default function PlatformGamesView({
   onBack?: (event: MouseEvent<HTMLAnchorElement>) => void;
   playerContent?: ReactNode;
   onManagePlayers?: (sessionId: string) => void;
+  onManageCohosts?: (game: PlatformGame) => void;
 }) {
   return (
     <>
@@ -140,7 +142,11 @@ export default function PlatformGamesView({
         {loading ? (
           <Note variant="inverse">Loading platform games…</Note>
         ) : filtered.length ? (
-          <GameTable games={filtered} onInspect={onInspect} />
+          <GameTable
+            games={filtered}
+            onInspect={onInspect}
+            onManageCohosts={onManageCohosts}
+          />
         ) : (
           <Note variant="inverse">No games match this search.</Note>
         )}
