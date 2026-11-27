@@ -1,10 +1,17 @@
 import { useState } from "react";
 import PlatformGamesView from "../super-admin/PlatformGamesView";
 import SessionFeedback from "../../components/session/SessionFeedback";
-import type { PlatformGame, PlatformGameDetail } from "../../types/superAdmin";
+import type {
+  PlatformGame,
+  PlatformGameDetail,
+  PlatformSessionPlayers,
+} from "../../types/superAdmin";
 import { Example } from "./Example";
 import HostPatternPreview from "./HostPatternPreview";
 import SessionPreview from "../../components/session/SessionPreview";
+import Button from "../../components/ui/Button";
+import SessionPlayers from "../super-admin/SessionPlayers";
+import CohostDialog from "../host-hub/CohostDialog";
 
 const games: PlatformGame[] = [
   {
@@ -74,6 +81,29 @@ export default function PlatformGamesExample() {
   const [activeId, setActiveId] = useState("garden");
   const [selected, setSelected] = useState<PlatformGameDetail | null>(null);
   const [notice, setNotice] = useState("");
+  const [playerView, setPlayerView] = useState(false);
+  const [cohostGame, setCohostGame] = useState<PlatformGame | null>(null);
+  const [cohostEmail, setCohostEmail] = useState("");
+  const [cohosts, setCohosts] = useState<
+    Record<string, { user_id: string; email: string }[]>
+  >({});
+  const [players, setPlayers] = useState<PlatformSessionPlayers>({
+    session_id: "local-session",
+    session_name: "Friday session",
+    teams: [{ id: "lime", name: "Lime" }],
+    players: [
+      {
+        id: "alex",
+        name: "Alex",
+        score: 0,
+        avatar_url: null,
+        team_id: "lime",
+        phone: "07123456789",
+        joined_at: "2030-01-01",
+        last_seen_at: "2030-01-01",
+      },
+    ],
+  });
   const filtered = games.filter(
     (game) =>
       (status === "all" || game.status === status) &&
@@ -160,6 +190,7 @@ export default function PlatformGamesExample() {
             onQueryChange={setQuery}
             onStatusChange={setStatus}
             onInspect={(id) => {
+              setPlayerView(false);
               setActiveId(id);
               setPageError(false);
               setInspectorError(fail && !pending);
@@ -167,6 +198,7 @@ export default function PlatformGamesExample() {
               setInspectorOpen(true);
             }}
             onCloseInspector={() => {
+              setPlayerView(false);
               setInspectorOpen(false);
               setSelected(null);
               setInspectorError(false);
@@ -177,6 +209,35 @@ export default function PlatformGamesExample() {
               setInspectorError(false);
               setSelected(previewDetail(activeId));
             }}
+            onManagePlayers={() => setPlayerView(true)}
+            onManageCohosts={setCohostGame}
+            playerContent={
+              playerView ? (
+                <>
+                  <Button
+                    type="button"
+                    variant="comic-secondary"
+                    fullWidth={false}
+                    onClick={() => setPlayerView(false)}
+                  >
+                    Back to game
+                  </Button>
+                  <SessionPlayers
+                    data={players}
+                    busy={false}
+                    onSave={async (id, values) => {
+                      setPlayers((current) => ({
+                        ...current,
+                        players: current.players.map((player) =>
+                          player.id === id ? { ...player, ...values } : player,
+                        ),
+                      }));
+                      return true;
+                    }}
+                  />
+                </>
+              ) : undefined
+            }
             onBack={(event) => {
               event.preventDefault();
               setNotice("Back selected locally.");
@@ -184,6 +245,34 @@ export default function PlatformGamesExample() {
           />
         </HostPatternPreview>
       </SessionPreview>
+      {cohostGame && (
+        <CohostDialog
+          gameName={cohostGame.name}
+          email={cohostEmail}
+          cohosts={cohosts[cohostGame.game_id] ?? []}
+          loading={false}
+          busy={false}
+          error=""
+          canRetry={false}
+          onEmailChange={setCohostEmail}
+          onAdd={(event) => {
+            event.preventDefault();
+            setCohosts((current) => ({
+              ...current,
+              [cohostGame.game_id]: [
+                ...(current[cohostGame.game_id] ?? []).filter(
+                  (cohost) => cohost.email !== cohostEmail,
+                ),
+                { user_id: cohostEmail, email: cohostEmail },
+              ],
+            }));
+            setCohostEmail("");
+          }}
+          onClose={() => setCohostGame(null)}
+          onDismissError={() => {}}
+          onRetry={() => {}}
+        />
+      )}
       <output>{notice}</output>
     </Example>
   );

@@ -41,6 +41,57 @@ beforeEach(() => {
   mocks.remove.mockResolvedValue({ data: null, error: null });
 });
 afterEach(cleanup);
+it("uses the Explore favourite identity for catalogue tasks", async () => {
+  mocks.read.mockResolvedValueOnce({
+    data: [{ id: "saved", item_type: "task", item_id: "task", item_data: {} }],
+    error: null,
+  });
+  const { result } = renderHook(() => usePlanFavourites({ setError: vi.fn() }));
+  await act(async () => {
+    await result.current.loadFavourites("host");
+  });
+  await act(async () => {
+    await result.current.toggleFavourite({ ...task, id: "catalog:task" });
+  });
+  expect(mocks.remove).toHaveBeenCalledWith("saved");
+  expect(mocks.add).not.toHaveBeenCalled();
+});
+it("recognizes Explore favourites for equivalent built-in planning challenges", async () => {
+  mocks.read.mockResolvedValueOnce({
+    data: [
+      {
+        id: "saved",
+        item_type: "task",
+        item_id: "task-team-laugh",
+        item_data: {},
+      },
+    ],
+    error: null,
+  });
+  const { result } = renderHook(() => usePlanFavourites({ setError: vi.fn() }));
+  await act(async () => {
+    await result.current.loadFavourites("host");
+  });
+  await act(async () => {
+    await result.current.toggleFavourite({ ...task, id: "team-laugh" });
+  });
+  expect(mocks.remove).toHaveBeenCalledWith("saved");
+  expect(mocks.add).not.toHaveBeenCalled();
+});
+it("saves a catalogue favourite under its Explore identity", async () => {
+  mocks.read.mockResolvedValueOnce({ data: [], error: null });
+  const { result } = renderHook(() => usePlanFavourites({ setError: vi.fn() }));
+  await act(async () => {
+    await result.current.loadFavourites("host");
+  });
+  await act(async () => {
+    await result.current.toggleFavourite({ ...task, id: "catalog:task" });
+  });
+  expect(mocks.add).toHaveBeenCalledWith(
+    "host",
+    expect.objectContaining({ id: "task" }),
+  );
+});
 it("blocks an unknown collection, preserves its snapshot on failure and recovers before choosing delete", async () => {
   const setError = vi.fn();
   const { result } = renderHook(() => usePlanFavourites({ setError }));

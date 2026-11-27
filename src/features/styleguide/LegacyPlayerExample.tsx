@@ -9,7 +9,13 @@ import VoteResultsView from "../voting/VoteResultsView";
 import Note from "../../components/ui/Note";
 import { Example } from "./Example";
 
-const player = { id: "local-player", name: "Pat", team: "Ducks", score: 0 };
+const player = {
+  id: "local-player",
+  name: "Pat",
+  team: "Ducks",
+  score: 0,
+  avatar_url: `${import.meta.env.BASE_URL}chaos-monster-peek.png`,
+};
 const players = [player];
 
 export default function LegacyPlayerExample() {
@@ -107,7 +113,14 @@ export default function LegacyPlayerExample() {
       <VoteResultsView
         contentAs="div"
         challenge="Best entrance"
-        results={[{ id: "local-player", name: "Pat", votes: 1 }]}
+        results={[
+          {
+            id: "local-player",
+            name: "Pat",
+            votes: 1,
+            avatarUrl: player.avatar_url,
+          },
+        ]}
       />
       <Note role="status">
         {notice || "All names, votes and actions stay in this preview."}

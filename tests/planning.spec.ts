@@ -1,7 +1,8 @@
 import { tabTo, activateByKeyboard } from "./support/keyboard";
 import { expect, test, type Page } from "@playwright/test";
 import { Buffer } from "node:buffer";
-import { installSessionBackend } from "./support/sessionBackend";
+import { hostId, installSessionBackend } from "./support/sessionBackend";
+import { exploreSubmissions } from "./support/hostExplore";
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-11-17T12:00:00Z"));
 });
@@ -20,6 +21,174 @@ async function start(page: Page, name = "Planning regression") {
     .first()
     .click();
 }
+test("builder includes Explore and approved community challenges and saves their selections", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  const catalogueQueries: URL[] = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname.endsWith("/cc_catalog_submissions"))
+      catalogueQueries.push(url);
+  });
+  backend.rows.cc_catalog_submissions = exploreSubmissions();
+  await start(page);
+  await section(page, "Main Challenges");
+  await expect(
+    page.getByText("Obtain the best thing", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Pending contribution", { exact: true }),
+  ).toHaveCount(0);
+  expect(catalogueQueries[0]?.searchParams.get("item_type")).toBe(
+    "eq.challenge",
+  );
+  expect(catalogueQueries[0]?.searchParams.get("status")).toBe("eq.approved");
+  await section(page, "Side challenges");
+  const community = page
+    .locator("article")
+    .filter({ hasText: "Community paper tower" });
+  await expect(community).toBeVisible();
+  await community.getByRole("button", { name: "Add", exact: true }).click();
+  await section(page, "Secret missions");
+  const secret = page
+    .locator("article")
+    .filter({ hasText: "Friendly sabotage" });
+  await expect(secret).toBeVisible();
+  await secret.getByRole("button", { name: "Add", exact: true }).click();
+  await section(page, "Schedule");
+  await page
+    .getByRole("combobox", { name: "Add a challenge", exact: true })
+    .selectOption("catalog:task-best-thing");
+  await page.getByRole("button", { name: "Save draft", exact: true }).click();
+  await expect
+    .poll(
+      () =>
+        backend.requests.find(
+          (r) => r.name === "host_games" && r.method === "POST",
+        )?.body,
+    )
+    .toMatchObject({
+      plan_data: {
+        selectedMain: ["catalog:task-best-thing"],
+        selectedSide: expect.arrayContaining([
+          "catalog:community-approved-challenge",
+        ]),
+        selectedSecret: expect.arrayContaining(["catalog:task-sabotage"]),
+        customTasks: expect.arrayContaining([
+          expect.objectContaining({
+            id: "catalog:task-best-thing",
+            title: "Obtain the best thing",
+          }),
+          expect.objectContaining({
+            id: "catalog:community-approved-challenge",
+            title: "Community paper tower",
+          }),
+          expect.objectContaining({
+            id: "catalog:task-sabotage",
+            title: "Friendly sabotage",
+          }),
+        ]),
+      },
+    });
+  backend.verify();
+});
+test("Explore favourites carry into a new game's challenge library and saved plan", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  backend.rows.cc_catalog_submissions = exploreSubmissions();
+  await page.goto("#/host/explore");
+  await expect(page.getByText("Checking your saved items…")).toHaveCount(0);
+  for (const title of ["Obtain the best thing", "Community paper tower"]) {
+    const card = page.locator(".card--idea").filter({
+      has: page.getByRole("heading", { name: title, exact: true }),
+    });
+    await card.getByRole("button", { name: `Save ${title}` }).click();
+    await expect(
+      card.getByRole("button", { name: `Unsave ${title}` }),
+    ).toBeVisible();
+  }
+  backend.failures.add("cc_catalog_submissions");
+  await start(page, "Favourite plan");
+  await section(page, "Main Challenges");
+  await page.getByRole("button", { name: "Favourites", exact: true }).click();
+  const main = page
+    .locator(".challenge-tile")
+    .filter({ hasText: "Obtain the best thing" });
+  await expect(main).toHaveCount(1);
+  await expect(
+    main.getByRole("button", { name: "Favourite Obtain the best thing" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await section(page, "Side challenges");
+  const side = page
+    .locator(".challenge-tile")
+    .filter({ hasText: "Community paper tower" });
+  await expect(side).toHaveCount(1);
+  await expect(
+    side.getByRole("button", { name: "Favourite Community paper tower" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await side.getByRole("button", { name: "Add", exact: true }).click();
+  await section(page, "Schedule");
+  await page
+    .getByRole("combobox", { name: "Add a challenge", exact: true })
+    .selectOption("task-best-thing");
+  await page.getByRole("button", { name: "Save draft", exact: true }).click();
+  await expect
+    .poll(
+      () =>
+        backend.requests.find(
+          (r) => r.name === "host_games" && r.method === "POST",
+        )?.body,
+    )
+    .toMatchObject({
+      plan_data: {
+        selectedMain: ["task-best-thing"],
+        selectedSide: expect.arrayContaining(["community-approved-challenge"]),
+        customTasks: expect.arrayContaining([
+          expect.objectContaining({ id: "task-best-thing", kind: "main" }),
+          expect.objectContaining({
+            id: "community-approved-challenge",
+            kind: "side",
+            points: 12,
+          }),
+        ]),
+      },
+    });
+  backend.verify();
+});
+test("builder reports and retries a failed community catalogue read", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  backend.rows.cc_catalog_submissions = exploreSubmissions();
+  backend.failures.add("cc_catalog_submissions");
+  await start(page);
+  await section(page, "Side challenges");
+  await expect(
+    page.getByText(/Couldn't load community challenges/),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Community paper tower", { exact: true }),
+  ).toHaveCount(0);
+  backend.failures.delete("cc_catalog_submissions");
+  await page
+    .getByRole("button", { name: "Retry community challenges" })
+    .click();
+  await expect(
+    page.getByText("Community paper tower", { exact: true }),
+  ).toBeVisible();
+  backend.verify();
+});
 test("planning adds and removes scheduled challenges before saving the complete plan", async ({
   page,
 }) => {
@@ -179,6 +348,7 @@ test("editing a phased challenge retains selection until its final phase is dele
     {
       id: "test-plan",
       name: "Phased plan",
+      host_id: hostId,
       event_date: "2030-01-01",
       start_time: "18:00",
       end_time: "22:00",
@@ -282,6 +452,87 @@ test("Explore imports preserve side challenge identity and payload", async ({
           evidenceRequired: true,
         }),
       ],
+    },
+  });
+  backend.verify();
+});
+test("saved secret missions can be selected and remain in a saved plan", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  backend.rows.host_favourites = [
+    {
+      id: "saved-secret",
+      host_id: "00000000-0000-4000-8000-000000000001",
+      item_type: "task",
+      item_id: "community-sneaky",
+      item_data: {
+        id: "community-sneaky",
+        title: "Hidden high five",
+        description: "Get a high five unnoticed",
+        kind: "secret",
+        minutes: 8,
+        points: 15,
+        tags: ["sneaky"],
+        setup: "none",
+      },
+    },
+    {
+      id: "saved-side",
+      host_id: "00000000-0000-4000-8000-000000000001",
+      item_type: "task",
+      item_id: "other-side",
+      item_data: {
+        id: "other-side",
+        title: "Side only",
+        description: "Side challenge",
+        kind: "side",
+      },
+    },
+  ];
+  await start(page, "Saved secret plan");
+  await section(page, "Secret missions");
+  const card = page
+    .locator(".challenge-tile")
+    .filter({ hasText: "Hidden high five" });
+  await expect(card).toBeVisible();
+  await expect(page.getByText("Side only")).toHaveCount(0);
+  await activateByKeyboard(
+    page,
+    card.getByRole("button", { name: "Add", exact: true }),
+  );
+  await expect(
+    page.locator(".selected-challenge").filter({ hasText: "Hidden high five" }),
+  ).toBeVisible();
+  await activateByKeyboard(
+    page,
+    card.getByRole("button", { name: "Favourite Hidden high five" }),
+  );
+  await expect(
+    card.getByRole("button", { name: "Favourite Hidden high five" }),
+  ).toHaveAttribute("aria-pressed", "false");
+  await page.getByRole("button", { name: "Save draft", exact: true }).click();
+  await expect(page).toHaveURL(/\/test-plan\/edit$/);
+  expect(
+    backend.requests.find((r) => r.name === "host_games" && r.method === "POST")
+      ?.body,
+  ).toMatchObject({
+    plan_data: {
+      secretMissions: true,
+      selectedSecret: ["community-sneaky"],
+      customTasks: [
+        expect.objectContaining({
+          id: "community-sneaky",
+          title: "Hidden high five",
+          kind: "secret",
+        }),
+      ],
+      schedule: expect.arrayContaining([
+        expect.objectContaining({ type: "secret-reveal" }),
+      ]),
     },
   });
   backend.verify();
@@ -508,6 +759,7 @@ test("planning reorders side, secret and timeline items from the keyboard and sa
     {
       id: "test-plan",
       name: "Keyboard plan",
+      host_id: hostId,
       event_date: "2030-01-01",
       start_time: "18:00",
       end_time: "22:00",

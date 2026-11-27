@@ -10,6 +10,11 @@
   h3 {
     font-size: layout.$session-header-size;
   }
+  &__person {
+    display: inline-flex;
+    align-items: center;
+    gap: layout.$spacing-unit * 2;
+  }
   &__actions {
     display: flex;
     gap: layout.$spacing-unit * 3;

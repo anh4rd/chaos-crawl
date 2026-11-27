@@ -46,13 +46,22 @@ const media = {
 };
 const votingEntry: VotingEntry = {
   id: "photo",
-  participant: { name: "Alex" },
+  participant: {
+    name: "Alex",
+    avatarUrl: `${import.meta.env.BASE_URL}chaos-logo.png`,
+  },
   challengeTitle: "Make an entrance",
   media,
   selected: false,
   winner: true,
   voteCount: 3,
-  voters: [{ id: "sam", name: "Sam" }],
+  voters: [
+    {
+      id: "sam",
+      name: "Sam",
+      avatarUrl: `${import.meta.env.BASE_URL}chaos-logo.png`,
+    },
+  ],
 };
 const reward: RewardPresentation = {
   title: "Make an entrance",
@@ -327,6 +336,7 @@ export default function SessionExamples() {
             title="Make a dramatic entrance"
             description="Did Alex pull it off?"
             owner="Alex"
+            ownerAvatarUrl={`${import.meta.env.BASE_URL}chaos-logo.png`}
             points={20}
             evidence={[media]}
             open

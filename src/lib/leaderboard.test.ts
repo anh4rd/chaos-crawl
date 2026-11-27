@@ -54,3 +54,17 @@ it("prefers an explicit team target on legacy rows with both targets", () => {
   expect(scores.players.find((p) => p.id === "p")?.score).toBe(0);
   expect(scores.teams.find((t) => t.id === "Other")?.score).toBe(6);
 });
+
+it("projects player and team photos without changing score totals", () => {
+  const scores = buildLeaderboards(
+    [{ ...players[0], avatar_url: "/player.jpg" }, players[1]],
+    [event("a", 6, "p")],
+    [{ name: "Team", avatar_url: "/team.jpg" }],
+  );
+  expect(scores.players[0]).toMatchObject({
+    avatarUrl: "/player.jpg",
+    score: 6,
+  });
+  expect(scores.teams[0]).toMatchObject({ avatarUrl: "/team.jpg", score: 6 });
+  expect(scores.players[1].avatarUrl).toBeUndefined();
+});

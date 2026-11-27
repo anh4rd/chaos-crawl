@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { installSessionBackend } from "./support/sessionBackend";
+import { activateByKeyboard, tabTo } from "./support/keyboard";
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-11-17T12:00:00Z"));
 });
@@ -34,6 +35,115 @@ const games = [
     status: "completed",
   },
 ];
+test("owners manage co-hosts from the hub while shared games remain distinct", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  backend.rows.host_games = [
+    games[0],
+    {
+      ...games[0],
+      id: "shared-plan",
+      host_id: "00000000-0000-4000-8000-000000000002",
+      name: "Shared plan",
+    },
+  ];
+  let members: { user_id: string; email: string }[] = [];
+  const calls: unknown[] = [];
+  await page.route("**/rest/v1/rpc/cc_list_game_cohosts", async (route) => {
+    await route.fulfill({ json: members });
+  });
+  await page.route("**/rest/v1/rpc/cc_add_game_cohost", async (route) => {
+    const body = route.request().postDataJSON();
+    calls.push(body);
+    members = [{ user_id: "member", email: body.p_email }];
+    await route.fulfill({ json: null });
+  });
+  await page.route("**/rest/v1/rpc/cc_remove_game_cohost", async (route) => {
+    calls.push(route.request().postDataJSON());
+    members = [];
+    await route.fulfill({ json: null });
+  });
+  await page.goto("#/host/games");
+  const ownerCard = page
+    .locator("article")
+    .filter({ has: page.getByRole("heading", { name: "Future plan" }) });
+  const sharedCard = page
+    .locator("article")
+    .filter({ has: page.getByRole("heading", { name: "Shared plan" }) });
+  await expect(sharedCard.getByText("Shared game")).toBeVisible();
+  await expect(
+    sharedCard.getByRole("button", { name: "Co-hosts" }),
+  ).toHaveCount(0);
+  const opener = ownerCard.getByRole("button", { name: "Co-hosts" });
+  await tabTo(page, opener);
+  await page.keyboard.press("Enter");
+  const dialog = page.getByRole("dialog", { name: /Manage co-hosts/ });
+  const email = dialog.getByLabel("Host email");
+  await expect(email).toBeFocused();
+  await email.fill("cohost@example.test");
+  await tabTo(page, dialog.getByRole("button", { name: "Add co-host" }));
+  await page.keyboard.press("Enter");
+  const remove = dialog.getByRole("button", {
+    name: "Remove cohost@example.test",
+  });
+  await expect(remove).toBeVisible();
+  await tabTo(page, remove);
+  await page.keyboard.press("Enter");
+  await expect(dialog.getByText("No co-hosts have been added.")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(opener).toBeFocused();
+  expect(calls).toEqual([
+    { p_host_game_id: "future-plan", p_email: "cohost@example.test" },
+    { p_host_game_id: "future-plan", p_user_id: "member" },
+  ]);
+  backend.verify();
+});
+test("co-hosts can start a lobby without using the owner's player profile", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    lobby: true,
+  });
+  backend.session.host_id = "00000000-0000-4000-8000-000000000002";
+  backend.session.host_participates = true;
+  backend.session.host_player_id = "host-player";
+  await page.addInitScript(() => {
+    localStorage.setItem("chaos-crawl-host-player:test-session", "owner-token");
+  });
+  await page.goto("#/host/live/test-session");
+  await activateByKeyboard(page, page.getByRole("button", { name: /Next/ }));
+  await expect(
+    page.getByText("Only the game owner can change host participation."),
+  ).toBeVisible();
+  await activateByKeyboard(page, page.getByRole("button", { name: /Next/ }));
+  await expect(
+    page.getByRole("heading", { name: "Players & teams" }),
+  ).toBeVisible();
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Start Game" }),
+  );
+  await expect
+    .poll(
+      () =>
+        backend.requests.filter(
+          (request) => request.name === "cc_host_start_game_session",
+        ).length,
+    )
+    .toBe(1);
+  expect(
+    backend.requests.filter(
+      (request) => request.name === "cc_host_join_as_player",
+    ),
+  ).toEqual([]);
+  backend.verify();
+});
 test("host hub separates upcoming and past plans without duplicated cards", async ({
   page,
 }) => {
@@ -135,11 +245,35 @@ test("platform host preview keeps cards read-only and returns to the host hub", 
     },
     games,
   };
+  backend.responses.cc_super_admin_host_challenges = {
+    liked: [
+      {
+        id: "liked",
+        title: "Favourite challenge",
+        description: null,
+        source: "Saved challenge",
+        status: null,
+        details: {},
+      },
+    ],
+    created: [
+      {
+        id: "created",
+        title: "Submitted challenge",
+        description: "An original challenge.",
+        source: "Community submission",
+        status: "pending",
+        details: {},
+      },
+    ],
+  };
   await page.goto("#/host");
   await page
     .getByRole("button", { name: "View Host Hub", exact: true })
     .click();
   await expect(page).toHaveURL(/viewAs=preview-host/);
+  await expect(page.getByText("Favourite challenge")).toBeVisible();
+  await expect(page.getByText("Submitted challenge")).toBeVisible();
   await expect(
     page.getByText("Viewing as Preview Host", { exact: true }),
   ).toBeVisible();

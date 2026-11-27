@@ -10,7 +10,9 @@ import PanelGrid from "../../components/ui/PanelGrid";
 import PanelHeading from "../../components/ui/PanelHeading";
 import TabList from "../../components/ui/TabList";
 import { GameCard } from "../host-hub/GameCard";
+import CohostDialog from "../host-hub/CohostDialog";
 import HostDirectory from "../host-hub/HostDirectory";
+import HostChallengesView from "../host-hub/HostChallengesView";
 import { Example } from "./Example";
 
 export default function HostFoundationExample() {
@@ -24,6 +26,11 @@ export default function HostFoundationExample() {
   const [error, setError] = useState(false);
   const [notice, setNotice] = useState(
     "All workspace actions stay in this reference.",
+  );
+  const [cohostOpen, setCohostOpen] = useState(false);
+  const [cohostEmail, setCohostEmail] = useState("");
+  const [cohosts, setCohosts] = useState<{ user_id: string; email: string }[]>(
+    [],
   );
   const game = {
     id: "local-plan",
@@ -167,10 +174,37 @@ export default function HostFoundationExample() {
                       readOnly={preview}
                       onEdit={() => setNotice("Edit selected locally.")}
                       onPlay={() => setNotice("Play selected locally.")}
+                      onManageCohosts={() => setCohostOpen(true)}
                     />
                   </PanelGrid>
                 )}
               </section>
+              {preview && (
+                <HostChallengesView
+                  data={{
+                    liked: [
+                      {
+                        id: "local-liked",
+                        title: "Photo hunt",
+                        description: "Find a colourful landmark.",
+                        source: "Saved challenge",
+                        status: null,
+                        details: { kind: "side", points: 10 },
+                      },
+                    ],
+                    created: [
+                      {
+                        id: "local-created",
+                        title: "Team entrance",
+                        description: "Make an entrance together.",
+                        source: "Custom challenge in game plan: Demo party",
+                        status: null,
+                        details: { kind: "main", minutes: 5 },
+                      },
+                    ],
+                  }}
+                />
+              )}
               <HostDirectory
                 className="host-dashboard__section"
                 hosts={
@@ -194,6 +228,37 @@ export default function HostFoundationExample() {
             </div>
           </HostShell>
         </div>
+        {cohostOpen && (
+          <CohostDialog
+            gameName={game.name}
+            email={cohostEmail}
+            cohosts={cohosts}
+            loading={false}
+            busy={false}
+            error=""
+            canRetry={false}
+            onEmailChange={setCohostEmail}
+            onAdd={(event) => {
+              event.preventDefault();
+              const email = cohostEmail.trim();
+              if (!email) return;
+              setCohosts((current) =>
+                current.some((cohost) => cohost.email === email)
+                  ? current
+                  : [...current, { user_id: email, email }],
+              );
+              setCohostEmail("");
+            }}
+            onRemove={(id) =>
+              setCohosts((current) =>
+                current.filter((cohost) => cohost.user_id !== id),
+              )
+            }
+            onClose={() => setCohostOpen(false)}
+            onDismissError={() => {}}
+            onRetry={() => {}}
+          />
+        )}
         <Note as="output">{notice}</Note>
       </Example>
     </section>

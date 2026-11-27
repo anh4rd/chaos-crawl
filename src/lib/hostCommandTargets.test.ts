@@ -186,16 +186,27 @@ function commands() {
 }
 it.each(commands())(
   "$name keeps exact values and ordered distinct-ID filters",
-  async ({ run, table, values, filters }) => {
+  async ({ name, run, table, values, filters }) => {
     const result = await run();
     expect(mocks.trace).toEqual([
       ["from", table],
       ["update", values],
       ...filters.map(([key, value]) => ["eq", key, value]),
+      ...(name === "updateHostPlan" ? [["select", "id"]] : []),
     ]);
     expect(result).toEqual({ data: { changed: true }, error: null });
   },
 );
+it("reports when a plan update no longer has access to a row", async () => {
+  mocks.execute.mockResolvedValueOnce({ data: null, error: null });
+  const command = commands().find((item) => item.name === "updateHostPlan");
+  expect(command).toBeDefined();
+  if (!command) throw new Error("Missing plan update command");
+  expect(await command.run()).toEqual({
+    data: null,
+    error: { message: "This game is no longer available to you." },
+  });
+});
 it.each(commands())(
   "$name retains database and rejected transport result contracts",
   async ({ run }) => {

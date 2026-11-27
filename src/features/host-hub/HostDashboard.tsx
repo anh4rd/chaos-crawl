@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, useState } from "react";
 import PanelGrid from "../../components/ui/PanelGrid";
 import EmptyState from "../../components/ui/EmptyState";
 import PanelHeading from "../../components/ui/PanelHeading";
@@ -14,7 +14,10 @@ import HostWorkspace from "../host-workspace/HostWorkspace";
 import GameContext from "./GameContext";
 import HostDirectory from "./HostDirectory";
 import { GameCard } from "./GameCard";
+import GameCohostManager from "./GameCohostManager";
+import HostChallenges from "./HostChallenges";
 import { useHostHub } from "./useHostHub";
+import type { HostGame } from "../../types/hostHub";
 export default function HostDashboard({
   view,
   viewAsHostId,
@@ -29,6 +32,7 @@ export default function HostDashboard({
   const overviewId = `${tabId}-overview`;
   const gamesId = `${tabId}-games`;
   const panelId = `${tabId}-plans`;
+  const [cohostGame, setCohostGame] = useState<HostGame | null>(null);
   const {
     games,
     upcoming,
@@ -40,6 +44,7 @@ export default function HostDashboard({
     loading,
     error,
     playingId,
+    userId,
     editGame,
     playGame,
   } = useHostHub({ view, viewAsHostId, navigate });
@@ -214,6 +219,14 @@ export default function HostDashboard({
                     onPlay={playGame}
                     playing={playingId === game.id}
                     readOnly={Boolean(viewAsHostId)}
+                    shared={Boolean(
+                      userId && game.host_id && game.host_id !== userId,
+                    )}
+                    onManageCohosts={
+                      !viewAsHostId && game.host_id === userId
+                        ? setCohostGame
+                        : undefined
+                    }
                   />
                 ))}
               </PanelGrid>
@@ -245,6 +258,14 @@ export default function HostDashboard({
                   onPlay={playGame}
                   playing={playingId === game.id}
                   readOnly={Boolean(viewAsHostId)}
+                  shared={Boolean(
+                    userId && game.host_id && game.host_id !== userId,
+                  )}
+                  onManageCohosts={
+                    !viewAsHostId && game.host_id === userId
+                      ? setCohostGame
+                      : undefined
+                  }
                 />
               ))}
             </PanelGrid>
@@ -287,12 +308,25 @@ export default function HostDashboard({
                   onPlay={playGame}
                   playing={playingId === game.id}
                   readOnly={Boolean(viewAsHostId)}
+                  shared={Boolean(
+                    userId && game.host_id && game.host_id !== userId,
+                  )}
+                  onManageCohosts={
+                    !viewAsHostId && game.host_id === userId
+                      ? setCohostGame
+                      : undefined
+                  }
                 />
               ))}
             </PanelGrid>
           </section>
         )}
 
+        {viewAsHostId &&
+          isPlatformAdmin &&
+          viewingHost?.id === viewAsHostId && (
+            <HostChallenges key={viewAsHostId} hostId={viewAsHostId} />
+          )}
         {isPlatformAdmin && !viewAsHostId && (
           <HostDirectory
             className="host-dashboard__section"
@@ -300,6 +334,13 @@ export default function HostDashboard({
             onPreview={(hostId) =>
               navigate(`/host?viewAs=${encodeURIComponent(hostId)}`)
             }
+          />
+        )}
+        {cohostGame && (
+          <GameCohostManager
+            key={cohostGame.id}
+            game={cohostGame}
+            onClose={() => setCohostGame(null)}
           />
         )}
       </div>

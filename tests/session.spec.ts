@@ -1374,7 +1374,26 @@ test("host and player scores use the same team totals", async ({ page }) => {
   backend.session.teams_enabled = true;
   const team = { id: "team-1", name: "Team Chaos", member_count: 2 };
   const pat = { ...backend.player, team_id: team.id, team_name: team.name };
-  const sam = { ...pat, id: "sam", name: "Sam", score: 30 };
+  const playerPhoto = "/chaos-crawl/openmoji/1F600.svg";
+  const teamPhoto = "/chaos-crawl/chaos-logo.png";
+  const sam = {
+    ...pat,
+    id: "sam",
+    name: "Sam",
+    score: 30,
+    avatar_url: playerPhoto,
+  };
+  backend.responses.cc_get_session_portraits = {
+    players: { sam: playerPhoto },
+    teams: { [team.id]: teamPhoto },
+  };
+  backend.rows.host_games = [
+    {
+      id: "test-plan",
+      host_id: "00000000-0000-4000-8000-000000000001",
+      plan_data: { teamPhotoUrls: { [team.id]: teamPhoto } },
+    },
+  ];
   backend.responses.cc_get_game_session_view = {
     ...backend.view,
     player: pat,
@@ -1405,11 +1424,15 @@ test("host and player scores use the same team totals", async ({ page }) => {
     exact: true,
   });
   await expect(playersTab).toHaveAttribute("aria-selected", "true");
+  await expect(
+    page.locator(".session-rank-row").filter({ hasText: "Sam" }).locator("img"),
+  ).toHaveAttribute("src", playerPhoto);
   await playersTab.focus();
   await page.keyboard.press("ArrowRight");
   await expect(teamsTab).toBeFocused();
   await expect(teamsTab).toHaveAttribute("aria-selected", "true");
   await expect(teamRow()).toBeVisible();
+  await expect(teamRow().locator("img")).toHaveAttribute("src", teamPhoto);
   await expect(
     page.getByRole("tabpanel", { name: "Player Scores", exact: true }),
   ).toBeHidden();
@@ -1426,6 +1449,7 @@ test("host and player scores use the same team totals", async ({ page }) => {
   await hostTabs.getByRole("tab", { name: "Team Scores", exact: true }).click();
   await expect(teamRow()).toHaveCount(1);
   await expect(teamRow()).toBeVisible();
+  await expect(teamRow().locator("img")).toHaveAttribute("src", teamPhoto);
   backend.verify();
 });
 

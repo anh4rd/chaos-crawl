@@ -56,6 +56,10 @@ export default function LegacyHostExample() {
   const teamScores = shownTeams.map((name) => ({
     id: name,
     name,
+    avatarUrl:
+      name === "Owls"
+        ? `${import.meta.env.BASE_URL}chaos-monster-peek.png`
+        : undefined,
     score: shownPlayers
       .filter((p) => p.team === name)
       .reduce((total, p) => total + p.score, 0),
@@ -240,7 +244,15 @@ export default function LegacyHostExample() {
               target: leaderboardTarget,
               loading: busy,
               entries:
-                leaderboardTarget === "player" ? shownPlayers : teamScores,
+                leaderboardTarget === "player"
+                  ? shownPlayers.map((player) => ({
+                      ...player,
+                      avatarUrl:
+                        player.id === "pat"
+                          ? `${import.meta.env.BASE_URL}chaos-monster-peek.png`
+                          : undefined,
+                    }))
+                  : teamScores,
               onTargetChange: setLeaderboardTarget,
             }}
             display={{
@@ -274,6 +286,10 @@ export default function LegacyHostExample() {
               players: shownPlayers.map((player) => ({
                 ...player,
                 initial: player.name.slice(0, 1).toUpperCase(),
+                avatarUrl:
+                  player.id === "pat"
+                    ? `${import.meta.env.BASE_URL}chaos-monster-peek.png`
+                    : undefined,
                 onRename: (name) => {
                   if (name.trim())
                     setPlayers((items) =>

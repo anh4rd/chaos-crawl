@@ -150,12 +150,21 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     error: planError,
     setError: setPlanError,
   } = useHostPlan({ session });
-  const error = actionError || planError || queryError;
+  const {
+    hostPlayerName,
+    hostDisplayName,
+    userId,
+    error: identityError,
+    setError: setIdentityError,
+  } = useHostIdentity();
+  const isGameOwner = Boolean(userId && session?.host_id === userId);
+  const error = actionError || planError || queryError || identityError;
   const dismissError = useCallback(() => {
     setError("");
     setPlanError("");
     setQueryError("");
-  }, [setPlanError, setQueryError]);
+    setIdentityError("");
+  }, [setPlanError, setQueryError, setIdentityError]);
   const { adjustScore, scoreAdjustmentCount } = useHostScoreAdjustments({
     sessionId,
     setBusy,
@@ -164,7 +173,6 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     load,
   });
 
-  const { hostPlayerName, hostDisplayName } = useHostIdentity();
   const {
     mainRounds,
     sideChallenges,
@@ -484,6 +492,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   } = useHostParticipation({
     sessionId,
     session,
+    canUseHostPlayer: isGameOwner,
     setBusy,
     setError,
     setNotice,
@@ -526,6 +535,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     confirmHostOverride,
   } = useHostSessionActions({
     autoplayEnabled,
+    isGameOwner,
     players,
     session,
     teams,
@@ -700,6 +710,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
       setHostAvatarFile={setHostAvatarFile}
       setHostAvatarPreview={setHostAvatarPreview}
       hostPlayerToken={hostPlayerToken}
+      isGameOwner={isGameOwner}
       busy={busy}
       setHostParticipation={(participates) =>
         setHostParticipation(participates, { requireAvatar: true })
@@ -1195,7 +1206,13 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                   activeRewardChallenge?.title ?? "Reward round",
                   activeRewardVotes,
                   activeRewardAwards,
-                  rewardTargetRows,
+                  rewardTargetRows.map((candidate) => ({
+                    ...candidate,
+                    avatarUrl:
+                      activeRewardRound.target_kind === "team"
+                        ? teamPhotoUrls[candidate.id]
+                        : playerById.get(candidate.id)?.avatar_url,
+                  })),
                   players,
                   teams,
                 )}
@@ -1253,19 +1270,21 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                     description={challenge.description}
                     teamsEnabled={session.teams_enabled}
                   >
-                    <Button
-                      type="button"
-                      variant="session-action"
-                      className="session-challenge-card__action"
-                      aria-label={`Join and upload evidence for ${challenge.title}`}
-                      disabled={busy || session.status !== "live"}
-                      onClick={() =>
-                        void openHostSideChallengeUpload(challenge)
-                      }
-                    >
-                      <span>Upload Evidence</span>
-                      <Icon name="check" className="icon--size-16" />
-                    </Button>
+                    {isGameOwner && (
+                      <Button
+                        type="button"
+                        variant="session-action"
+                        className="session-challenge-card__action"
+                        aria-label={`Join and upload evidence for ${challenge.title}`}
+                        disabled={busy || session.status !== "live"}
+                        onClick={() =>
+                          void openHostSideChallengeUpload(challenge)
+                        }
+                      >
+                        <span>Upload Evidence</span>
+                        <Icon name="check" className="icon--size-16" />
+                      </Button>
+                    )}
                   </SessionChallengeCard>
                 ))}
                 {sideChallengeAddAction}
@@ -1279,19 +1298,22 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                 title="Hosting without playing"
                 icon="shield"
                 action={
-                  <button
-                    type="button"
-                    className="btn"
-                    disabled={busy}
-                    onClick={() => void setHostParticipation(true)}
-                  >
-                    Join and play
-                  </button>
+                  isGameOwner ? (
+                    <button
+                      type="button"
+                      className="btn"
+                      disabled={busy}
+                      onClick={() => void setHostParticipation(true)}
+                    >
+                      Join and play
+                    </button>
+                  ) : undefined
                 }
               >
                 <p>
-                  Join the player list to submit your own evidence and vote.
-                  Host controls remain in the Host tab.
+                  {isGameOwner
+                    ? "Join the player list to submit your own evidence and vote. Host controls remain in the Host tab."
+                    : "Co-host controls are available in the Host tab. The game owner's player profile is separate."}
                 </p>
               </SessionState>
             )}
@@ -1305,6 +1327,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
               teamById={teamById}
               adjustScore={adjustScore}
               scoreAdjustmentCount={scoreAdjustmentCount}
+              teamPhotoUrls={teamPhotoUrls}
             />
           )}
           {selectedSecretReviewAssignment &&
@@ -1318,6 +1341,10 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                 owner={
                   playerById.get(selectedSecretReviewAssignment.player_id)
                     ?.name ?? "Player"
+                }
+                ownerAvatarUrl={
+                  playerById.get(selectedSecretReviewAssignment.player_id)
+                    ?.avatar_url
                 }
                 points={selectedSecretReviewChallenge.points}
                 evidence={selectedSecretReviewEvidence.map((item) => ({
@@ -1361,6 +1388,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                           id: vote.player_id,
                           name:
                             playerById.get(vote.player_id)?.name ?? "Player",
+                          avatarUrl: playerById.get(vote.player_id)?.avatar_url,
                           vote: vote.vote,
                         }))
                 }
@@ -1742,6 +1770,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                       playerCount={players.length}
                       joinUrl={joinUrl}
                       busy={busy}
+                      canChangeHostParticipation={isGameOwner}
                       onSave={saveSettings}
                       onHostParticipationChange={setHostParticipation}
                     />
@@ -1798,6 +1827,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                 setRewardTargetKind={setRewardTargetKind}
                 setSelectedRewardWinnerIds={setSelectedRewardWinnerIds}
                 teams={teams}
+                teamPhotoUrls={teamPhotoUrls}
                 rewardPoints={rewardPoints}
                 activeRewardChallenge={activeRewardChallenge}
                 activeRewardVotes={activeRewardVotes}

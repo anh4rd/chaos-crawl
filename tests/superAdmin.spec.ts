@@ -54,6 +54,122 @@ const detail = {
   ],
 };
 
+test("super admin adds co-hosts to another host's game using the keyboard", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.responses.cc_super_admin_list_games = games;
+  backend.responses.cc_list_game_cohosts = [
+    { user_id: "member", email: "existing@example.test" },
+  ];
+  backend.responses.cc_add_game_cohost = null;
+  await page.goto("#/host/super-admin");
+  const opener = page.getByRole("button", {
+    name: "Manage co-hosts for Garden chaos",
+  });
+  await activateByKeyboard(page, opener);
+  const dialog = page.getByRole("dialog", {
+    name: "Manage co-hosts for Garden chaos",
+  });
+  await expect(dialog.getByText("existing@example.test")).toBeVisible();
+  await expect(dialog.getByRole("button", { name: /Remove/ })).toHaveCount(0);
+  await tabTo(page, dialog.getByLabel("Host email"));
+  await page.keyboard.type("new@example.test");
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Add co-host" }),
+  );
+  await expect
+    .poll(
+      () =>
+        backend.requests.filter((item) => item.name === "cc_add_game_cohost")
+          .length,
+    )
+    .toBe(1);
+  expect(
+    backend.requests.find((item) => item.name === "cc_add_game_cohost")?.body,
+  ).toEqual({
+    p_host_game_id: "planned-game",
+    p_email: "new@example.test",
+  });
+  await expect(
+    dialog.getByRole("button", { name: "Close", exact: true }),
+  ).toBeEnabled();
+  await page.keyboard.press("Escape");
+  await expect(opener).toBeFocused();
+  backend.verify();
+});
+
+test("super admin edits a session player using the keyboard", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.responses.cc_super_admin_list_games = games;
+  backend.responses.cc_super_admin_game_detail = detail;
+  backend.responses.cc_super_admin_session_players = {
+    session_id: "session-one",
+    session_name: "Friday session",
+    teams: [{ id: "team-one", name: "Lime" }],
+    players: [
+      {
+        id: "player-one",
+        name: "Alex",
+        avatar_url: null,
+        team_id: null,
+        score: 0,
+        phone: "07111111111",
+        joined_at: "2030-01-01",
+        last_seen_at: "2030-01-01",
+      },
+    ],
+  };
+  backend.responses.cc_super_admin_update_session_player = null;
+  await page.goto("#/host/super-admin");
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Inspect" }).first(),
+  );
+  const dialog = page.getByRole("dialog", { name: "Game inspector" });
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Manage players in Friday session" }),
+  );
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Edit Alex" }),
+  );
+  const name = dialog.getByLabel("Player name");
+  await expect(name).toBeFocused();
+  await tabTo(page, name);
+  await page.keyboard.press("ControlOrMeta+A");
+  await page.keyboard.type("Updated");
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "Save player" }),
+  );
+  await expect
+    .poll(
+      () =>
+        backend.requests.filter(
+          (item) => item.name === "cc_super_admin_update_session_player",
+        ).length,
+    )
+    .toBe(1);
+  expect(
+    backend.requests.find(
+      (item) => item.name === "cc_super_admin_update_session_player",
+    )?.body,
+  ).toMatchObject({
+    p_session_id: "session-one",
+    p_player_id: "player-one",
+    p_name: "Updated",
+  });
+  await expect(dialog.getByRole("button", { name: "Edit Alex" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  backend.verify();
+});
+
 test("platform games preserve RPC contracts, full totals, incoming order and local filters", async ({
   page,
 }) => {
@@ -189,7 +305,9 @@ test("game inspector preserves the detail payload and nested scores through nati
   });
   await expect(close).toBeFocused();
   await page.keyboard.press("Shift+Tab");
-  await expect(close).toBeFocused();
+  await expect(
+    dialog.getByRole("button", { name: "Manage players in Friday session" }),
+  ).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(close).toBeFocused();
   await page.keyboard.press("Escape");

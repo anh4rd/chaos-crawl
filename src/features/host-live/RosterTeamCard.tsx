@@ -39,6 +39,9 @@ export default function RosterTeamCard({
       className={`roster-team roster-team--${tones[index % tones.length]}`}
     >
       <summary className="roster-team__summary">
+        {photoUrl && (
+          <Avatar name={team.name} imageSrc={photoUrl} variant="compact" />
+        )}
         <span className="roster-team__copy">
           <strong className="roster-team__name">{team.name}</strong>
           <small>

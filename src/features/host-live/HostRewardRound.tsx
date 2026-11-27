@@ -54,6 +54,7 @@ interface HostRewardRoundProps {
   setRewardTargetKind: Dispatch<SetStateAction<RewardTargetKind>>;
   setSelectedRewardWinnerIds: Dispatch<SetStateAction<string[]>>;
   teams: SessionTeam[];
+  teamPhotoUrls: Record<string, string>;
   rewardPoints: number;
   activeRewardChallenge: SessionChallenge | undefined;
   activeRewardVotes: SessionRewardVote[];
@@ -101,6 +102,7 @@ export default function HostRewardRound({
   setRewardTargetKind,
   setSelectedRewardWinnerIds,
   teams,
+  teamPhotoUrls,
   rewardPoints,
   activeRewardChallenge,
   activeRewardVotes,
@@ -117,6 +119,13 @@ export default function HostRewardRound({
   players,
   returnFromRewardRound,
 }: HostRewardRoundProps) {
+  const candidates = rewardTargetRows.map((candidate) => ({
+    ...candidate,
+    avatarUrl:
+      activeRewardRound?.target_kind === "team"
+        ? teamPhotoUrls[candidate.id]
+        : players.find((player) => player.id === candidate.id)?.avatar_url,
+  }));
   const content = (
     <ContentPanel
       variant="session"
@@ -208,7 +217,7 @@ export default function HostRewardRound({
               activeRewardChallenge?.title ?? "Reward round",
               activeRewardVotes,
               activeRewardAwards,
-              rewardTargetRows,
+              candidates,
               players,
               teams,
               hostRewardVoteTargetId,
@@ -293,7 +302,7 @@ export default function HostRewardRound({
                 rewardFinalPoints={rewardFinalPoints}
                 setRewardFinalPoints={setRewardFinalPoints}
                 busy={busy}
-                rewardTargetRows={rewardTargetRows}
+                rewardTargetRows={candidates}
                 selectedRewardWinnerIds={selectedRewardWinnerIds}
                 toggleRewardWinner={toggleRewardWinner}
                 cancelRewardRound={cancelRewardRound}

@@ -17,6 +17,7 @@ import type { SetHostBusy } from "./useHostOperation";
 
 interface Options {
   autoplayEnabled: boolean;
+  isGameOwner: boolean;
   players: SessionPlayer[];
   session: GameSession | null;
   teams: SessionTeam[];
@@ -43,6 +44,7 @@ interface Options {
 }
 export function useHostSessionActions({
   autoplayEnabled,
+  isGameOwner,
   players,
   session,
   teams,
@@ -130,6 +132,12 @@ export function useHostSessionActions({
 
   async function startGame(confirmedOverride = false) {
     if (!session) return;
+    if (!isGameOwner && session.host_participates && !session.host_player_id) {
+      setError(
+        "Ask the game owner to join as a player or turn off host participation before starting.",
+      );
+      return;
+    }
     if (players.length === 0) {
       setError("At least one player must join before you can start the game.");
       return;

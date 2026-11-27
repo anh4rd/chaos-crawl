@@ -52,6 +52,23 @@ beforeEach(() => {
   mocks.url.mockReturnValue("https://example.test/cover.png");
 });
 afterEach(cleanup);
+it("saves a shared plan against its owner instead of the current co-host", async () => {
+  mocks.update.mockResolvedValue({ data: { id: "shared" }, error: null });
+  const { result } = renderHook(() =>
+    usePlanSave({
+      form,
+      id: "shared",
+      ownerId: "owner",
+      navigate,
+      setError,
+      setNotice,
+    }),
+  );
+  await act(async () => result.current.save("draft"));
+  expect(mocks.update).toHaveBeenCalledWith(
+    expect.objectContaining({ hostGameId: "shared", hostId: "owner" }),
+  );
+});
 it("serializes repeated save activations into one database write", async () => {
   const deferred = pending<ApiResult<{ id: string }>>();
   mocks.create.mockReturnValue(deferred.promise);
@@ -193,7 +210,14 @@ it("prevents duplicate favourite inserts while the first one is pending", async 
 it("updates the explicit plan and owner targets without placing host_id in update values", async () => {
   mocks.update.mockResolvedValue({ data: null, error: null });
   const { result } = renderHook(() =>
-    usePlanSave({ form, id: "saved-plan-11", navigate, setError, setNotice }),
+    usePlanSave({
+      form,
+      id: "saved-plan-11",
+      ownerId: "host-one",
+      navigate,
+      setError,
+      setNotice,
+    }),
   );
   await act(async () => {
     await result.current.save("draft");

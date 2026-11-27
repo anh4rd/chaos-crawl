@@ -44,6 +44,7 @@ export type Favourite = {
   id: string;
   item_type: "task" | "venue" | "route";
   item_id: string;
+  item_data?: unknown;
 };
 
 export interface SetupForm {
@@ -94,6 +95,7 @@ export interface SetupForm {
 
 export interface StoredPlan {
   id: string;
+  host_id: string;
   name: string | null;
   event_date: string | null;
   start_time: string | null;

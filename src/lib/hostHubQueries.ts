@@ -2,13 +2,14 @@ import { runApi, type ApiResult } from "./apiResult";
 import { supabase } from "./sessionSupabase";
 import type {
   HostDirectoryEntry,
+  GameCohost,
   HostGame,
   HostPreviewIdentity,
+  HostChallengeOverview,
 } from "../types/hostHub";
 const summaryFields =
-  "id,name,event_date,start_time,end_time,player_count,venue_name,status,plan_data";
+  "id,host_id,name,event_date,start_time,end_time,player_count,venue_name,status,plan_data";
 export async function readHostGames(
-  hostId: string,
   view: "home" | "games",
   dateKey: string,
 ): Promise<ApiResult<HostGame[]>> {
@@ -17,7 +18,6 @@ export async function readHostGames(
       supabase
         .from("host_games")
         .select(summaryFields)
-        .eq("host_id", hostId)
         .order("created_at", { ascending: false }),
     );
   const [upcoming, past] = await Promise.all([
@@ -25,7 +25,6 @@ export async function readHostGames(
       supabase
         .from("host_games")
         .select(summaryFields)
-        .eq("host_id", hostId)
         .neq("status", "completed")
         .or(`event_date.is.null,event_date.gte.${dateKey}`)
         .order("created_at", { ascending: false })
@@ -35,7 +34,6 @@ export async function readHostGames(
       supabase
         .from("host_games")
         .select(summaryFields)
-        .eq("host_id", hostId)
         .or(`status.eq.completed,event_date.lt.${dateKey}`)
         .order("created_at", { ascending: false })
         .limit(3),
@@ -58,4 +56,16 @@ export function readHostDirectory() {
 }
 export function readPlatformAdmin() {
   return runApi<boolean>(() => supabase.rpc("cc_is_platform_admin"));
+}
+
+export function readGameCohosts(hostGameId: string) {
+  return runApi<GameCohost[]>(() =>
+    supabase.rpc("cc_list_game_cohosts", { p_host_game_id: hostGameId }),
+  );
+}
+
+export function readHostChallengeOverview(hostId: string) {
+  return runApi<HostChallengeOverview>(() =>
+    supabase.rpc("cc_super_admin_host_challenges", { p_host_id: hostId }),
+  );
 }

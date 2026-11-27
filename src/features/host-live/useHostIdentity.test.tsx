@@ -20,7 +20,9 @@ it.each([
   "uses the shared SDK boundary and preserves $name fallback",
   async ({ metadata, email, name }) => {
     mocks.identity.mockResolvedValue({
-      data: { user: { user_metadata: { display_name: metadata }, email } },
+      data: {
+        user: { id: "owner", user_metadata: { display_name: metadata }, email },
+      },
       error: null,
     });
     const { result } = renderHook(useHostIdentity);
@@ -29,6 +31,9 @@ it.each([
       expect(result.current).toEqual({
         hostPlayerName: name,
         hostDisplayName: name,
+        userId: "owner",
+        error: "",
+        setError: expect.any(Function),
       });
     });
     expect(mocks.direct).not.toHaveBeenCalled();
@@ -64,10 +69,18 @@ it.each(["returned", "rejected"])(
     expect(first.result.current).toEqual({
       hostPlayerName: "Host",
       hostDisplayName: "Host",
+      userId: null,
+      error: "Couldn't verify the host account. Reload this page.",
+      setError: expect.any(Function),
     });
     first.unmount();
     mocks.identity.mockResolvedValueOnce({
-      data: { user: { user_metadata: { display_name: "Recovered host" } } },
+      data: {
+        user: {
+          id: "owner",
+          user_metadata: { display_name: "Recovered host" },
+        },
+      },
       error: null,
     });
     const next = renderHook(useHostIdentity);

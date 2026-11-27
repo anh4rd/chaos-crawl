@@ -1,0 +1,10 @@
+{
+  "buildCommand": "npm run build -- --base=/",
+  "redirects": [
+    {
+      "source": "/chaos-crawl/:path*",
+      "destination": "/:path*",
+      "permanent": false
+    }
+  ]
+}

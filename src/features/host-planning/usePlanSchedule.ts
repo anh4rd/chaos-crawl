@@ -1,6 +1,7 @@
 import { useEffect, type Dispatch, type SetStateAction } from "react";
 import type { SetupForm, Task, ScheduleItem, UpdatePlan } from "./types";
 import { initialSchedule } from "./planModel";
+import { taskLibrary } from "./catalog";
 export function usePlanSchedule({
   form,
   setForm,
@@ -35,6 +36,12 @@ export function usePlanSchedule({
   function setPreGameTask(taskId: string, enabled = form.preGameEnabled) {
     update("preGameTaskId", taskId);
     const task = allTasks.find((item) => item.id === taskId);
+    if (
+      task &&
+      !taskLibrary.some((item) => item.id === task.id) &&
+      !form.customTasks.some((item) => item.id === task.id)
+    )
+      update("customTasks", [...form.customTasks, task]);
     const withoutPreGame = form.schedule.filter(
       (item) => item.type !== "pregame" && item.type !== "pregame-review",
     );
@@ -75,6 +82,11 @@ export function usePlanSchedule({
       setNotice("That challenge is already in the schedule.");
       return;
     }
+    if (
+      !taskLibrary.some((item) => item.id === task.id) &&
+      !form.customTasks.some((item) => item.id === task.id)
+    )
+      update("customTasks", [...form.customTasks, task]);
     if (!form.selectedMain.includes(taskId)) {
       update("selectedMain", [...form.selectedMain, taskId]);
     }

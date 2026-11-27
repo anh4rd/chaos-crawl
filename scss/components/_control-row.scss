@@ -63,6 +63,9 @@
     margin-top: layout.$pixel-unit * 1.5;
     align-items: normal;
     flex-wrap: nowrap;
+    > :nth-child(3) {
+      grid-column: 1 / -1;
+    }
   }
 }
 

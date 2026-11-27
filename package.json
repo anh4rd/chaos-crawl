@@ -25,7 +25,8 @@
   },
   "dependencies": {
     "@sentry/react": "^11.13.0",
-    "@supabase/supabase-js": "^2.110.0",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.119.2",
     "browser-image-compression": "^2.0.2",
     "lucide-react": "^1.23.0",
     "openmoji": "^17.0.0",
@@ -50,6 +51,7 @@
     "sass": "^1.108.2",
     "stylelint": "^18.0.0",
     "stylelint-scss": "^7.5.0",
+    "supabase": "^3.4.0",
     "typescript": "~6.0.2",
     "vite": "^8.1.1",
     "vitest": "^5.1.0"

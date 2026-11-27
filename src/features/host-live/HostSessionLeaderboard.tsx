@@ -11,6 +11,7 @@ export default function HostSessionLeaderboard({
   teamById,
   adjustScore,
   scoreAdjustmentCount,
+  teamPhotoUrls,
 }: {
   session: GameSession;
   players: SessionPlayer[];
@@ -20,6 +21,7 @@ export default function HostSessionLeaderboard({
   teamById: Map<string, SessionTeam>;
   adjustScore: (target: "player" | "team", id: string, delta: number) => void;
   scoreAdjustmentCount: number;
+  teamPhotoUrls: Record<string, string>;
 }) {
   const ranked = [...players].sort((a, b) =>
     session.status === "lobby"
@@ -30,6 +32,7 @@ export default function HostSessionLeaderboard({
     .map((team) => ({
       id: team.id,
       name: team.name,
+      avatarUrl: teamPhotoUrls[team.id],
       score: players
         .filter((player) => player.team_id === team.id)
         .reduce(

@@ -8,6 +8,7 @@ import {
   readPlanFavourites,
 } from "../../lib/hostPlanApi";
 import type { Favourite, Task } from "./types";
+import { favouriteTaskId } from "./planImports";
 export function usePlanFavourites({
   setError,
 }: {
@@ -90,8 +91,9 @@ export function usePlanFavourites({
       );
       return;
     }
-    if (pending.current.has(task.id)) return;
-    pending.current.add(task.id);
+    const sourceId = favouriteTaskId(task.id);
+    if (pending.current.has(sourceId)) return;
+    pending.current.add(sourceId);
     const request = scope.current;
     const version = collectionVersion.current;
     try {
@@ -106,7 +108,9 @@ export function usePlanFavourites({
       }
       const userId = auth.user.id;
       const found = favourites.find(
-        (f) => f.item_type === "task" && f.item_id === task.id,
+        (f) =>
+          f.item_type === "task" &&
+          (f.item_id === task.id || f.item_id === sourceId),
       );
       if (found) {
         const { error } = await removePlanFavourite(found.id).catch(
@@ -119,15 +123,16 @@ export function usePlanFavourites({
             current.filter((item) => item.id !== found.id),
           );
       } else {
-        const { data, error } = await addPlanFavourite(userId, task).catch(
-          failedResult,
-        );
+        const { data, error } = await addPlanFavourite(userId, {
+          ...task,
+          id: sourceId,
+        }).catch(failedResult);
         if (request !== scope.current) return;
         if (error) setError(error.message);
         else if (data) setFavourites((current) => [...current, data]);
       }
     } finally {
-      pending.current.delete(task.id);
+      pending.current.delete(sourceId);
     }
   }
 

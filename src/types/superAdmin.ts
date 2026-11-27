@@ -20,3 +20,26 @@ export interface PlatformGameDetail {
     players: Array<{ name: string; score: number; team_name: string | null }>;
   }>;
 }
+export interface PlatformPlayer {
+  id: string;
+  name: string;
+  avatar_url: string | null;
+  team_id: string | null;
+  score: number;
+  joined_at: string;
+  last_seen_at: string;
+  phone: string | null;
+}
+export interface PlatformSessionPlayers {
+  session_id: string;
+  session_name: string;
+  teams: Array<{ id: string; name: string }>;
+  players: PlatformPlayer[];
+}
+export interface PlatformPlayerUpdate {
+  name: string;
+  avatar_url: string | null;
+  team_id: string | null;
+  score: number;
+  phone: string | null;
+}

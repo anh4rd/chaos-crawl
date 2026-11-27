@@ -71,8 +71,8 @@ export default function LegacyHostWorkspace() {
     scheduledTime,
   } = useMemo(() => hostRoundState(rounds, game), [rounds, game]);
   const leaderboards = useMemo(
-    () => buildLeaderboards(players, scoreEvents),
-    [players, scoreEvents],
+    () => buildLeaderboards(players, scoreEvents, teams),
+    [players, scoreEvents, teams],
   );
   const playerLeaderboard = leaderboards.players;
   const teamNames = useMemo(
@@ -217,6 +217,7 @@ export default function LegacyHostWorkspace() {
           id: player.id,
           name: player.name,
           initial: player.name.trim().slice(0, 1).toUpperCase() || "?",
+          avatarUrl: player.avatar_url,
           team: player.team ?? "",
           onRename: (value) => {
             void savePlayerName(player, value);

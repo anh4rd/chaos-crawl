@@ -1,4 +1,4 @@
-import { runApi } from "./apiResult";
+import { failedResult, runApi } from "./apiResult";
 import { supabase } from "./sessionSupabase";
 import type {
   StoredPlan,
@@ -7,22 +7,31 @@ import type {
   Task,
   PlanWrite,
 } from "../types/hostPlanning";
+import type { CommunitySubmission } from "../types/hostExplore";
+
+export function readApprovedPlanningChallenges() {
+  return runApi<CommunitySubmission[]>(() =>
+    supabase
+      .from("cc_catalog_submissions")
+      .select(
+        "id,item_type,title,description,payload,status,submitted_by,review_note,created_at",
+      )
+      .eq("item_type", "challenge")
+      .eq("status", "approved")
+      .order("created_at", { ascending: false }),
+  );
+}
 export function readPlanFavourites(hostId: string) {
   return runApi<Favourite[]>(() =>
     supabase
       .from("host_favourites")
-      .select("id,item_type,item_id")
+      .select("id,item_type,item_id,item_data")
       .eq("host_id", hostId),
   );
 }
-export function readHostPlan(id: string, hostId: string) {
+export function readHostPlan(id: string) {
   return runApi<StoredPlan>(() =>
-    supabase
-      .from("host_games")
-      .select("*")
-      .eq("id", id)
-      .eq("host_id", hostId)
-      .maybeSingle(),
+    supabase.from("host_games").select("*").eq("id", id).maybeSingle(),
   );
 }
 export function readApprovedPlanTask(id: string) {
@@ -51,7 +60,7 @@ export function addPlanFavourite(hostId: string, task: Task) {
         item_id: task.id,
         item_data: task,
       })
-      .select("id,item_type,item_id")
+      .select("id,item_type,item_id,item_data")
       .single(),
   );
 }
@@ -60,7 +69,7 @@ export function createHostPlan(payload: PlanWrite) {
     supabase.from("host_games").insert(payload).select("id").single(),
   );
 }
-export function updateHostPlan({
+export async function updateHostPlan({
   hostGameId,
   hostId,
   values,
@@ -69,13 +78,18 @@ export function updateHostPlan({
   hostId: string;
   values: Omit<PlanWrite, "host_id">;
 }) {
-  return runApi<unknown>(() =>
+  const result = await runApi<{ id: string }>(() =>
     supabase
       .from("host_games")
       .update(values)
       .eq("id", hostGameId)
-      .eq("host_id", hostId),
+      .eq("host_id", hostId)
+      .select("id")
+      .maybeSingle(),
   );
+  if (!result.error && !result.data)
+    return failedResult(new Error("This game is no longer available to you."));
+  return result;
 }
 export function uploadPlanCover(path: string, file: File) {
   return runApi<unknown>(() =>

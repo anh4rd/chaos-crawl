@@ -338,8 +338,10 @@ export async function installSessionBackend(
     if (name === "host_favourites" && request.method() === "POST") {
       const favourite = {
         id: `fav-${body.item_id}`,
+        host_id: body.host_id,
         item_type: body.item_type,
         item_id: body.item_id,
+        item_data: body.item_data,
       };
       rows.host_favourites = [...(rows.host_favourites ?? []), favourite];
       await respond(favourite, 201);
@@ -502,6 +504,7 @@ export async function installSessionBackend(
       },
       cc_get_public_game_invite: { game_photo_url: null },
       cc_get_public_main_challenge_art: null,
+      cc_get_session_portraits: { players: {}, teams: {} },
       cc_get_game_session_view: {
         ...fixture.view,
         player: currentPlayer,
@@ -556,6 +559,7 @@ export async function installSessionBackend(
     }
     const tables: Record<string, unknown[]> = {
       host_favourites: [],
+      cc_catalog_submissions: [],
       host_games: [
         {
           id: "test-plan",

@@ -19,6 +19,11 @@
   &__rank {
     margin-right: layout.$spacing-unit * 3;
   }
+  &__identity {
+    display: flex;
+    align-items: center;
+    gap: layout.$spacing-unit * 2;
+  }
   &__total {
     font-size: fonts.$size-legacy-large;
     line-height: fonts.$line-height-legacy-large;

@@ -1,5 +1,6 @@
 import { isFinalVotingOpen } from "./votingState";
 import SessionFinalRound from "../../components/session/SessionFinalRound";
+import type { SessionPortraits } from "../../lib/sessionPortraits";
 import type {
   FinalGalleryItem,
   FinalGalleryView,
@@ -15,6 +16,7 @@ export default function SessionFinalGallery({
   voteForFinalMedia,
   leaderboard,
   session,
+  portraits,
 }: {
   finalGallery: FinalGalleryView | null;
   mediaUrl: (path: string) => string;
@@ -23,6 +25,7 @@ export default function SessionFinalGallery({
   leaderboard: LeaderboardEntry[];
   player: SessionPlayerInfo;
   session: SessionInfo;
+  portraits: SessionPortraits;
   teamLeaderboard: {
     score: number;
     id: string;
@@ -45,7 +48,8 @@ export default function SessionFinalGallery({
         id: item.id,
         participant: {
           name: item.player_name,
-          avatarUrl: item.player_avatar_url,
+          avatarUrl:
+            portraits.players[item.player_id] ?? item.player_avatar_url,
         },
         challengeTitle: item.challenge_title,
         media: {
@@ -61,7 +65,7 @@ export default function SessionFinalGallery({
           ? item.voters.map((voter) => ({
               id: voter.id,
               name: voter.name,
-              avatarUrl: voter.avatar_url,
+              avatarUrl: portraits.players[voter.id] ?? voter.avatar_url,
             }))
           : undefined,
       }))}
@@ -77,7 +81,7 @@ export default function SessionFinalGallery({
         id: entry.player_id,
         name: entry.name,
         score: entry.score,
-        avatarUrl: entry.avatar_url,
+        avatarUrl: portraits.players[entry.player_id] ?? entry.avatar_url,
         teamName: entry.team_name,
       }))}
     />

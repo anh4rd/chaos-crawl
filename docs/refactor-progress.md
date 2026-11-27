@@ -2,10 +2,71 @@
 
 This is a staged migration, not a completed whole-app rewrite. The root
 [AGENTS.md](../AGENTS.md) defines the target rules and temporary exceptions.
-No deployment, database migration, policy changes, or live backend writes are
-included.
+No deployment, production database migrations, policy changes, or live backend
+writes are included.
+
+## In progress
+
+Session portrait views use uploaded player and team photos in team choices,
+scoreboards, reward candidates, roster summaries and review cards. A new
+session-scoped RPC validates the player credential and returns only portrait
+URLs for members of that session; its migration requires review and deployment.
+Existing initial fallbacks remain when photos are absent.
+
+Legacy host roster, ballot and published score/vote results also project stored
+player and team avatars. Legacy team reads include the inferred `avatar_url`
+column; the deployed database schema still requires verification.
+
+The game builder now includes the built-in Explore challenges and approved
+community challenges alongside its existing library. It reads only approved
+community challenge rows and offers retry on failure. Selected catalogue tasks
+are saved with the plan, including scheduled and pre-game tasks, and retain
+their Explore favourite identities. Saved main, side and secret challenge
+snapshots also appear in the matching challenge library; saved locations and
+routes are not game-planner selections. Mocked tests do not verify deployed
+schema or policies.
+
+Super Admin can list and add co-hosts from platform games; only the owner can
+remove them. A read-only host preview shows saved challenges, community
+submissions and custom challenges in game plans. Plan entries identify their
+origin rather than proving who authored them. The admin-only database migration
+requires review and has not been deployed. Admin and existing owner/co-host SQL
+regressions passed in a rolled-back local transaction, alongside mocked
+desktop/mobile preview and co-host keyboard journeys.
+
+Super Admin can inspect and edit V2 session-player names, avatars, teams, scores
+and reconnect phone numbers. Session timestamps are read-only; player tokens,
+host reconnect identities and messaging consent are not exposed or edited.
+The new admin-only RPC migration requires review and has not been deployed.
+Local SQL regressions cover authorization, credential isolation, team capacity,
+phone normalization and concurrent-edit rejection.
+Legacy player records are not included.
+
+Co-host management lets a game owner add or remove a verified existing account
+by email; it does not send an invitation. Shared games appear in the co-host's
+Host Hub and can be edited and hosted. The owner alone controls their player
+participation; co-hosts do not receive the owner's player token. Three migrations
+provide membership, policies and host RPC access. They were replayed against an
+isolated schema-only copy, not deployed to production. Local SQL checks cover
+membership, access and revocation, token isolation, launching, scoring, rewards,
+secret assignment and the final gallery. All 25 changed host RPCs were
+mechanically compared to their baseline; not every workflow was exercised.
+Review the migrations and test against a disposable backend before deployment.
 
 ## Delivered slices
+
+Explore challenges can be added as main, side or secret to a draft or planned
+game. One eligible game is updated directly; multiple games use a picker, and
+an empty list offers game creation. Live and completed games are excluded.
+Plans with an existing lobby or live session are rejected because updating a
+plan does not update that session. The update checks the saved plan timestamp
+for concurrent changes and retains unknown
+metadata. Planning also offers the host's saved secret missions; selecting one
+snapshots it into the plan so removing the favourite does not remove it.
+The session check and plan update are separate requests, so starting a session
+concurrently with an addition is not atomic; server-side coordination is needed
+to eliminate that race. Older or malformed plans need to be opened and saved
+before direct additions.
 
 Host management includes a roster tab using the existing team, score and invite
 flows, plus a session-scoped player-name update. Player creation and deletion,
@@ -4943,3 +5004,16 @@ pink label with a decorative coffee icon. The current-row highlight and the
 Completed grouping remain unchanged. Mocked Chrome checks exercise both row
 states, keyboard disclosure and long titles at 320px; desktop/mobile
 screenshots, build, linters and 763 unit/component tests pass.
+
+## Host email confirmation redirect
+
+Signup supplies an explicit origin/base-path confirmation URL. The callback
+initializes Supabase before the hash router starts, reports failed or missing
+sessions, and clears callback fragments before offering host login. Configure
+the hosted Site URL, redirect allow list and email template as described in
+the README; existing or already-used email links are not repaired by this
+frontend change.
+
+Mocked desktop/mobile browser checks cover the signup redirect, successful and
+expired callbacks and host login recovery. They do not verify deployed Supabase
+settings or deliver a real confirmation email.

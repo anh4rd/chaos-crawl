@@ -1,5 +1,11 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
+  HostChallengesView: {
+    usage:
+      "Read-only liked and created challenge summaries, with their saved, submission or game-plan origin.",
+    dependencies:
+      "Receives presentation data only; the host preview owns admin authorization, loading and retry.",
+  },
   HostRosterManagement: {
     usage:
       "Controlled host roster panel for player names, team assignments, team settings, scores and invitations. The local host roster example uses local state.",
@@ -119,7 +125,8 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
       "Owned feedback-notice SCSS and native div attributes. No default ARIA role, timers, dismissal, backend calls or feedback state ownership.",
   },
   RankingRow: {
-    usage: "Controlled console rank/name/score row preserving caller order.",
+    usage:
+      "Controlled console rank/name/score row with an optional portrait, preserving caller order.",
     dependencies:
       "Shared CountBadge and owned ranking-row SCSS; no sorting or queries.",
   },
@@ -172,13 +179,13 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   BallotView: {
     usage:
-      "Controlled legacy player/team ballot, checking/cast/rejoin states and supplied callbacks. Local legacy player screens never mounts the connected Ballot controller.",
+      "Controlled legacy player/team ballot with optional portraits, checking/cast/rejoin states and supplied callbacks. Local legacy player screens never mounts the connected Ballot controller.",
     dependencies:
       "PageFrame, Card, Button, ChoiceOption ballot and owned ballot SCSS with explicit presentation state. No queries, credential storage or navigation.",
   },
   VoteResultsView: {
     usage:
-      "Controlled legacy published result list, preserving caller order and totals. Local legacy player screens supplies sample results.",
+      "Controlled legacy published result list with optional portraits, preserving caller order and totals. Local legacy player screens supplies sample results.",
     dependencies:
       "PageFrame, shared ScreenIntro, Card and owned vote-results SCSS. The connected route guards voting/publication before passing results; this view never chooses publication policy.",
   },
@@ -268,25 +275,25 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   PlatformGames: {
     usage:
-      "Connected platform-games coordinator mounted by SuperAdmin. Owns local filters and composes separate list and inspector hooks inside HostWorkspace; never mount in local examples.",
+      "Connected platform-games coordinator mounted by SuperAdmin. Owns local filters and composes separate list, inspector and session-player hooks inside HostWorkspace; never mount in local examples.",
     dependencies:
       "Typed superAdminQueries frontend-inferred contracts and existing HostPortal/HostPlanning styling. Backend authorization remains server-owned.",
   },
   PlatformGamesView: {
     usage:
-      "Controlled platform list and inspector composition. Receives complete/filtered records, feedback/loading/access state and callbacks; no backend, auth or route parameters.",
+      "Controlled platform list and inspector composition. Receives complete/filtered records, feedback/loading/access state and callbacks, including optional co-host management; no backend, auth or route parameters.",
     dependencies:
       "Shared heading/statistics/panels, controlled GameTable and GameInspector, and owned SCSS. Existing totals use complete records rather than filtered rows; optional onBack intercepts navigation in the local reference only.",
   },
   GameTable: {
     usage:
-      "Controlled platform-game table preserving supplied order, fallback host/venue copy and inspect callbacks. Never queries or chooses authorization.",
+      "Controlled platform-game table preserving supplied order, fallback host/venue copy and inspect/co-host callbacks. Never queries or chooses authorization.",
     dependencies:
       "Frontend-inferred PlatformGame records, native DataTable slots, StatusPill table and Button table-action. Preserve incoming order, native column scope, literal status/fallback copy and supplied inspect callbacks.",
   },
   GameInspector: {
     usage:
-      "Controlled native inspector dialog with supplied detail/loading, feedback and retry/close callbacks. Displays incoming sessions and player/team score copy without sorting or persistence.",
+      "Controlled native inspector dialog with supplied detail/loading, feedback and retry/close callbacks. Displays incoming sessions and player/team score copy without sorting or persistence; an optional supplied player view edits local or connected session players.",
     dependencies:
       "Shared Dialog/DialogPanel inspector, IconButton panel-close, supplied feedback, ContentPanel record and ControlRow/Note metadata and score rows. Frontend-inferred PlatformGameDetail is not deployed schema. Connected lifecycle stays in useGameInspector; local examples never mount it.",
   },
@@ -304,7 +311,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   ScoreLeaderboard: {
     usage:
-      "Caller-ordered legacy score rows retaining native div/span/strong markup.",
+      "Caller-ordered legacy score rows with optional player or team portraits.",
     dependencies:
       "Feature-private entry models; no ledger computation, sorting or queries.",
   },
@@ -434,9 +441,15 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   TaskCard: {
     usage:
-      "Task idea with supplied saved/busy values, optional admin actions and main/side callbacks. The caller decides availability and resolves community records.",
+      "Task idea with supplied saved/busy values, optional admin actions and main/side/secret callbacks. The caller decides availability and resolves community records.",
     dependencies:
       "TaskCardModel, shared Card idea, Badge idea/tag, MetadataList/MetadataItem, TagList, Button/IconButton/Icon and the retained PlusMark. See Local catalogue; no SDK access or navigation.",
+  },
+  GameSelectionDialog: {
+    usage:
+      "Controlled game picker for adding a catalogue challenge. Shows loading, retry, an empty-state create action or caller-supplied game choices.",
+    dependencies:
+      "Native Dialog and caller-supplied data and callbacks. Local catalogue uses local game choices only.",
   },
   LocationCard: {
     usage:
@@ -576,7 +589,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
 
   ChoiceOption: {
     usage:
-      "Native choice button with supplied label, description, selected/disabled state and click callback. The local team choices reference demonstrates selected, full and busy records. Ballot variant retains the native legacy div label/optional description, selection, keyboard and disabled contracts; shown in Local legacy player screens.",
+      "Native choice button with supplied label, optional image, description, selected/disabled state and click callback. The local team choices reference demonstrates selected, full and busy records. Ballot variant retains the native legacy div label/optional description, selection, keyboard and disabled contracts; shown in Local legacy player screens.",
     dependencies:
       "Owned choice-option SCSS and Avatar choice variant; caller owns capacity, membership and persistence.",
   },
@@ -906,7 +919,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   HostDashboard: {
     usage:
-      "Host hub selected by route view/preview ID. Overview and Your games use roving tab stops, wrapping Left/Right and Home/End, and a named games panel. Local host workspace furniture demonstrates the same keyboard contract without connected controllers.",
+      "Host hub selected by route view/preview ID. Overview and Your games use roving tab stops, wrapping Left/Right and Home/End, and a named games panel. Local host workspace furniture demonstrates the keyboard contract and co-host dialog with local state only.",
     dependencies:
       "useHostHub, connected HostWorkspace and feature presentation panels; do not mount in local demos.",
   },
@@ -1298,13 +1311,13 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionCandidate: {
     usage:
-      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+      "Shared host/player candidate with a supplied portrait or initial fallback. See the interactive session example; callbacks are optional for read-only viewing.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },
   SessionVotingCard: {
     usage:
-      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+      "Shared host/player voting presentation with supplied participant and published-voter portraits. Voter identities remain hidden while voting is open.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },
@@ -1322,7 +1335,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionReview: {
     usage:
-      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+      "Shared secret review with optional owner and published-voter portraits. Voter identities remain hidden while voting is open.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },

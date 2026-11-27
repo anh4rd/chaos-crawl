@@ -107,6 +107,14 @@ export default function TaskCard({
         >
           <PlusMark /> Add as side
         </Button>
+        <Button
+          type="button"
+          variant="idea-add-secondary"
+          fullWidth={false}
+          onClick={() => onAdd("secret")}
+        >
+          <PlusMark /> Add as secret
+        </Button>
       </ControlRow>
     </Card>
   );

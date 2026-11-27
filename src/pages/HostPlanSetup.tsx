@@ -3,6 +3,7 @@ import PlanEditor from "../features/host-planning/PlanEditor";
 export default function HostPlanSetup() {
   const { id } = useParams();
   const [params] = useSearchParams();
+  const challengeKind = params.get("challengeKind");
   return (
     <PlanEditor
       key={id ?? "new"}
@@ -10,7 +11,9 @@ export default function HostPlanSetup() {
       communityTaskId={params.get("communityTask")}
       exploreTaskJson={params.get("exploreTask")}
       requestedChallengeKind={
-        params.get("challengeKind") === "side" ? "side" : "main"
+        challengeKind === "side" || challengeKind === "secret"
+          ? challengeKind
+          : "main"
       }
     />
   );

@@ -53,3 +53,96 @@ it.each(["side", "secret"] as const)(
     expect(result.current.dragged).toBeNull();
   },
 );
+
+it("copies a selected saved mission into the plan so it survives unfavouriting", () => {
+  const task = {
+    id: "saved-secret",
+    title: "Saved secret",
+    description: "A mission",
+    kind: "secret" as const,
+    minutes: 5,
+    points: 10,
+    vibe: [],
+    accessibility: [],
+    equipment: [],
+    setup: "",
+    prep: "",
+    evidenceRequired: true,
+  };
+  const { result } = renderHook(() => {
+    const [form, setForm] = useState(defaultForm);
+    const update: UpdatePlan = (field, value) =>
+      setForm((current) => ({ ...current, [field]: value }));
+    return {
+      form,
+      ...usePlanChallenges({
+        form,
+        update,
+        tab: "secret",
+        allTasks: [...derivePlan(form).allTasks, task],
+        favourites: [],
+        toggleFavourite: vi.fn(),
+        dragged: null,
+        setDragged: vi.fn(),
+      }),
+    };
+  });
+
+  act(() => result.current.selectTask(task));
+  expect(result.current.form).toMatchObject({
+    secretMissions: true,
+    selectedSecret: ["saved-secret"],
+    customTasks: [task],
+    schedule: [{ type: "secret-reveal" }],
+  });
+});
+
+it("snapshots an Explore side challenge without enabling secret missions", () => {
+  const task = {
+    id: "catalog:task-side",
+    title: "Explore side",
+    description: "A side challenge",
+    kind: "side" as const,
+    minutes: 5,
+    points: 10,
+    vibe: [],
+    accessibility: [],
+    equipment: [],
+    setup: "",
+    prep: "",
+    evidenceRequired: true,
+  };
+  const { result } = renderHook(() => {
+    const [form, setForm] = useState({
+      ...defaultForm,
+      secretMissions: false,
+    });
+    const update: UpdatePlan = (field, value) =>
+      setForm((current) => ({ ...current, [field]: value }));
+    return {
+      form,
+      ...usePlanChallenges({
+        form,
+        update,
+        tab: "side",
+        allTasks: [task],
+        favourites: [
+          {
+            id: "fav",
+            item_type: "task",
+            item_id: "task-side",
+            item_data: {},
+          },
+        ],
+        toggleFavourite: vi.fn(),
+        dragged: null,
+        setDragged: vi.fn(),
+      }),
+    };
+  });
+  act(() => result.current.setFavouritesOnly(true));
+  expect(result.current.visibleTasks).toEqual([task]);
+  act(() => result.current.selectTask(task));
+  expect(result.current.form.secretMissions).toBe(false);
+  expect(derivePlan(result.current.form).sideTasks).toContainEqual(task);
+});

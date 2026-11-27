@@ -13,6 +13,51 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+it("ignores portrait responses from a previous player credential", async () => {
+  let resolveOld: (value: unknown) => void = () => {};
+  rpc.mockImplementation((name: string, args: { p_player_token?: string }) => {
+    if (name === "cc_get_game_session_view")
+      return Promise.resolve({
+        data: {
+          session: { final_gallery_open: false },
+          player: { id: args.p_player_token },
+        },
+        error: null,
+      });
+    if (name === "cc_get_session_portraits")
+      return args.p_player_token === "old"
+        ? new Promise((resolve) => {
+            resolveOld = resolve;
+          })
+        : Promise.resolve({
+            data: { players: { new: "new.jpg" }, teams: {} },
+            error: null,
+          });
+    return Promise.resolve({ data: null, error: null });
+  });
+  const { result, rerender } = renderHook(
+    ({ token }) => useSessionPlayerData("123456", token, "game"),
+    { initialProps: { token: "old" } },
+  );
+  await waitFor(() =>
+    expect(rpc).toHaveBeenCalledWith("cc_get_session_portraits", {
+      p_join_code: "123456",
+      p_player_token: "old",
+    }),
+  );
+  rerender({ token: "new" });
+  await waitFor(() =>
+    expect(result.current.portraits.players).toEqual({ new: "new.jpg" }),
+  );
+  await act(async () =>
+    resolveOld({
+      data: { players: { old: "old.jpg" }, teams: {} },
+      error: null,
+    }),
+  );
+  expect(result.current.portraits.players).toEqual({ new: "new.jpg" });
+});
+
 it("discards a pending view after the participant credential changes", async () => {
   let resolveOld: (value: unknown) => void = () => {};
   rpc.mockImplementation((name: string, args: { p_player_token?: string }) =>

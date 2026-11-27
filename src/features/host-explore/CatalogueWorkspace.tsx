@@ -19,8 +19,11 @@ import HostWorkspace from "../host-workspace/HostWorkspace";
 import CatalogueView from "./CatalogueView";
 import ChallengeContributionDialog from "./ChallengeContributionDialog";
 import ChallengeContributionForm from "./ChallengeContributionForm";
+import GameSelectionDialog from "./GameSelectionDialog";
+import { useExploreAddToGame } from "./useExploreAddToGame";
 export default function CatalogueWorkspace() {
   const navigate = useNavigate();
+  const addToGame = useExploreAddToGame({ navigate });
   const [tab, setTab] = useState<CatalogTab>("tasks");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
@@ -81,18 +84,6 @@ export default function CatalogueWorkspace() {
     [search, category],
   );
 
-  function addTaskToPlan(task: CatalogTask, kind: "main" | "side") {
-    if (task.id.startsWith("community-")) {
-      navigate(
-        `/host/games/new?communityTask=${encodeURIComponent(task.id.slice("community-".length))}&challengeKind=${kind}`,
-      );
-      return;
-    }
-    navigate(
-      `/host/games/new?exploreTask=${encodeURIComponent(JSON.stringify(task))}&challengeKind=${kind}`,
-    );
-  }
-
   function selectLocationIdea(location: LocationIdea) {
     navigate(`/host/games/new?venueIdea=${encodeURIComponent(location.id)}`);
   }
@@ -133,7 +124,7 @@ export default function CatalogueWorkspace() {
       onToggleSaved: () => {
         void toggleFavourite("task", task.id, task);
       },
-      onAdd: (kind: "main" | "side") => addTaskToPlan(task, kind),
+      onAdd: (kind: CatalogTask["kind"]) => addToGame.start(task, kind),
       adminActions:
         isPlatformAdmin && communitySubmission
           ? {
@@ -235,6 +226,13 @@ export default function CatalogueWorkspace() {
       subtitle="Browse ideas, save inspiration and contribute challenges to the shared catalogue."
       showCreate
     >
+      {addToGame.notice && (
+        <SessionFeedback
+          kind="success"
+          message={addToGame.notice}
+          onDismiss={() => addToGame.setNotice("")}
+        />
+      )}
       <CatalogueView
         filters={{
           tab,
@@ -268,6 +266,18 @@ export default function CatalogueWorkspace() {
         }}
         dialog={dialog}
       />
+      {addToGame.choice && (
+        <GameSelectionDialog
+          games={addToGame.games}
+          loading={addToGame.loading}
+          saving={addToGame.saving}
+          error={addToGame.error}
+          onChoose={addToGame.choose}
+          onCreate={addToGame.create}
+          onRetry={addToGame.retry}
+          onClose={addToGame.close}
+        />
+      )}
     </HostWorkspace>
   );
 }

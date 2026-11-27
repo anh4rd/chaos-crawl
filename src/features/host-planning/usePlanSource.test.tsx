@@ -28,6 +28,7 @@ function pending<T>() {
 function stored(id: string): StoredPlan {
   return {
     id,
+    host_id: "host-one",
     name: id,
     event_date: "2030-01-01",
     start_time: null,
@@ -57,6 +58,26 @@ beforeEach(() => {
   );
 });
 afterEach(cleanup);
+it("uses the game owner's identity for a shared plan", async () => {
+  mocks.plan.mockResolvedValue({
+    data: { ...stored("shared"), host_id: "owner" },
+    error: null,
+  });
+  const { result } = renderHook(() =>
+    usePlanSource({
+      id: "shared",
+      communityTaskId: null,
+      exploreTaskJson: null,
+      requestedChallengeKind: "main",
+      ...callbacks,
+    }),
+  );
+  await waitFor(() => expect(result.current.ownerId).toBe("owner"));
+  expect(result.current.canChangeHostParticipation).toBe(false);
+  expect(setForm).toHaveBeenCalledWith(
+    expect.objectContaining({ hostParticipates: false }),
+  );
+});
 it("does not restore an obsolete plan after switching plan identity", async () => {
   const old = pending<ApiResult<StoredPlan>>();
   mocks.plan.mockImplementation((id: string) =>
@@ -75,9 +96,7 @@ it("does not restore an obsolete plan after switching plan identity", async () =
       }),
     { initialProps: { id: "old" } },
   );
-  await waitFor(() =>
-    expect(mocks.plan).toHaveBeenCalledWith("old", "host-one"),
-  );
+  await waitFor(() => expect(mocks.plan).toHaveBeenCalledWith("old"));
   rerender({ id: "new" });
   await waitFor(() =>
     expect(setForm).toHaveBeenCalledWith(

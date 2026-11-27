@@ -24,7 +24,9 @@ import { usePlanChallenges } from "./usePlanChallenges";
 import { usePlanSchedule } from "./usePlanSchedule";
 import { usePlanSave } from "./usePlanSave";
 import { usePlanPhoto } from "./usePlanPhoto";
+import { usePlanCatalogue } from "./usePlanCatalogue";
 import { derivePlan } from "./planModel";
+import { favouriteTaskId, savedFavouriteTasks } from "./planImports";
 import { defaultForm, tabItems } from "./catalog";
 import type { BuilderTab, SetupForm, TaskKind } from "./types";
 import { openMojiSelection } from "../../lib/openmoji";
@@ -72,7 +74,25 @@ export default function PlanEditor({
   } = usePlanFavourites({
     setError,
   });
-  const { loading, reload: reloadSource } = usePlanSource({
+  const savedTasks = savedFavouriteTasks(favourites);
+  const catalogue = usePlanCatalogue();
+  const libraryTasks = [...allTasks];
+  for (const task of [...savedTasks.tasks, ...catalogue.tasks]) {
+    if (
+      !libraryTasks.some(
+        (existing) =>
+          existing.kind === task.kind &&
+          favouriteTaskId(existing.id) === favouriteTaskId(task.id),
+      )
+    )
+      libraryTasks.push(task);
+  }
+  const {
+    loading,
+    ownerId,
+    canChangeHostParticipation,
+    reload: reloadSource,
+  } = usePlanSource({
     id,
     communityTaskId,
     exploreTaskJson,
@@ -106,7 +126,7 @@ export default function PlanEditor({
     form,
     update,
     tab,
-    allTasks,
+    allTasks: libraryTasks,
     favourites,
     toggleFavourite,
     dragged,
@@ -118,10 +138,18 @@ export default function PlanEditor({
     addTaskToSchedule,
     addScheduleItem,
     deleteScheduleItem,
-  } = usePlanSchedule({ form, setForm, update, allTasks, stage, setNotice });
+  } = usePlanSchedule({
+    form,
+    setForm,
+    update,
+    allTasks: libraryTasks,
+    stage,
+    setNotice,
+  });
   const { saving, save } = usePlanSave({
     id,
     form,
+    ownerId,
     navigate,
     setError,
     setNotice,
@@ -270,11 +298,34 @@ export default function PlanEditor({
           </Button>
         </FeedbackNotice>
       )}
+      {stage === "build" && catalogue.error && (
+        <FeedbackNotice tone="error" role="alert">
+          Couldn't load community challenges: {catalogue.error}{" "}
+          <Button
+            variant="comic-ghost"
+            disabled={catalogue.loading}
+            onClick={catalogue.retry}
+          >
+            Retry community challenges
+          </Button>
+        </FeedbackNotice>
+      )}
+      {stage === "build" && catalogue.loading && (
+        <output className="muted-copy">Loading community challenges…</output>
+      )}
       {notice && (
         <FeedbackNotice tone="success" role="status">
           {notice}
         </FeedbackNotice>
       )}
+      {(tab === "main" || tab === "side" || tab === "secret") &&
+        savedTasks.invalid[tab] > 0 && (
+          <FeedbackNotice tone="error">
+            Some saved {tab === "secret" ? "secret missions" : "challenges"}{" "}
+            have incomplete details and cannot be displayed. Check them in your
+            saved items.
+          </FeedbackNotice>
+        )}
       {stage === "create" ? (
         <GameBasicsForm
           form={form}
@@ -301,13 +352,19 @@ export default function PlanEditor({
             />
           }
         >
-          {tab === "players" && <PlayerSetup form={form} update={update} />}
+          {tab === "players" && (
+            <PlayerSetup
+              form={form}
+              update={update}
+              canChangeHostParticipation={canChangeHostParticipation}
+            />
+          )}
 
           {(tab === "main" || tab === "side" || tab === "secret") && (
             <ChallengeLibrary
               tab={tab}
               selectedIds={selectedIds}
-              allTasks={allTasks}
+              allTasks={libraryTasks}
               setDragged={setDragged}
               dropTask={dropTask}
               moveTask={moveTask}
@@ -348,7 +405,7 @@ export default function PlanEditor({
               sideReviewCount={sideReviewCount}
               sideRewardPoints={sideRewardPoints}
               addTaskToSchedule={addTaskToSchedule}
-              allTasks={allTasks}
+              allTasks={libraryTasks}
               challengeArtUrls={form.challengeArtUrls}
               uploadChallengeIcon={uploadChallengeIcon}
               clearChallengeArt={clearChallengeArt}
@@ -367,7 +424,7 @@ export default function PlanEditor({
               update={update}
               preparation={preparation}
               setPreGameTask={setPreGameTask}
-              allTasks={allTasks}
+              allTasks={libraryTasks}
               customTitle={customTitle}
               customDesc={customDesc}
               setCustomTitle={setCustomTitle}

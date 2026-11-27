@@ -124,6 +124,7 @@ export default function RewardPrimitivesExample() {
             <CandidateList>
               <SessionCandidate
                 name="Alex"
+                avatarUrl={`${import.meta.env.BASE_URL}chaos-logo.png`}
                 detail="Player · 120 pts"
                 selected
                 busy

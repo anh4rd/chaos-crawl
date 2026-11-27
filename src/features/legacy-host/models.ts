@@ -137,13 +137,14 @@ export function hostTeamNames(
 }
 export function hostTeamLeaderboard(
   names: string[],
-  teams: Array<{ name: string; score: number }>,
+  teams: Array<{ name: string; score: number; avatarUrl?: string | null }>,
 ) {
   return names
     .map((name) => ({
       id: name,
       name,
       score: teams.find((team) => team.name === name)?.score ?? 0,
+      avatarUrl: teams.find((team) => team.name === name)?.avatarUrl,
     }))
     .sort((a, b) => b.score - a.score);
 }

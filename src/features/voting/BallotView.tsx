@@ -90,6 +90,7 @@ export default function BallotView({
                     variant="ballot"
                     label={option.name}
                     description={option.description}
+                    imageSrc={option.avatar_url}
                     selected={selection === option.id}
                     aria-pressed={selection === option.id}
                     disabled={ballot.submitting}

@@ -17,6 +17,12 @@
   &__copy p {
     margin: 0;
   }
+  &__participant,
+  &__voter {
+    display: inline-flex;
+    align-items: center;
+    gap: layout.$spacing-unit * 2;
+  }
   &__vote {
     display: flex;
     justify-content: center;

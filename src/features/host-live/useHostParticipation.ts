@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as hostRosterCommands from "../../lib/hostRosterCommands";
 import { gameAssetUrl } from "../../lib/sessionMedia";
 import { hostPlayerStorageKey } from "./hostParticipationStorage";
@@ -9,6 +9,7 @@ import type { SetHostBusy } from "./useHostOperation";
 interface Options {
   sessionId: string;
   session: GameSession | null;
+  canUseHostPlayer: boolean;
   setBusy: SetHostBusy;
   setError: Dispatch<SetStateAction<string>>;
   setNotice: Dispatch<SetStateAction<string>>;
@@ -23,6 +24,7 @@ interface JoinOptions {
 export function useHostParticipation({
   sessionId,
   session,
+  canUseHostPlayer,
   setBusy,
   setError,
   setNotice,
@@ -31,8 +33,30 @@ export function useHostParticipation({
   setActiveTab,
   load,
 }: Options) {
+  const mounted = useRef(false);
+  const generation = useRef(0);
+  const identity = useRef({ sessionId, canUseHostPlayer });
+  identity.current = { sessionId, canUseHostPlayer };
+  useEffect(() => {
+    mounted.current = true;
+    generation.current += 1;
+    return () => {
+      mounted.current = false;
+      generation.current += 1;
+    };
+  }, [sessionId, canUseHostPlayer]);
+  function isCurrent(request: number) {
+    return (
+      mounted.current &&
+      generation.current === request &&
+      identity.current.sessionId === sessionId &&
+      identity.current.canUseHostPlayer
+    );
+  }
   const [hostPlayerToken, setHostPlayerToken] = useState<string | null>(() =>
-    localStorage.getItem(hostPlayerStorageKey(sessionId)),
+    canUseHostPlayer
+      ? localStorage.getItem(hostPlayerStorageKey(sessionId))
+      : null,
   );
 
   const [focusedHostChallenge, setFocusedHostChallenge] = useState<
@@ -49,7 +73,10 @@ export function useHostParticipation({
     },
     [hostAvatarPreview],
   );
-  async function uploadAvatar(file: File): Promise<string | null> {
+  async function uploadAvatar(
+    file: File,
+    request: number,
+  ): Promise<string | null> {
     const extension =
       file.name
         .split(".")
@@ -60,6 +87,7 @@ export function useHostParticipation({
       upsert: true,
       contentType: file.type,
     });
+    if (!isCurrent(request)) return null;
     if (error) {
       setError(
         `You joined, but your profile photo couldn't upload: ${error.message}`,
@@ -69,9 +97,13 @@ export function useHostParticipation({
     return gameAssetUrl(path);
   }
 
-  async function attachAvatar(avatarUrl: string): Promise<boolean> {
+  async function attachAvatar(
+    avatarUrl: string,
+    request: number,
+  ): Promise<boolean> {
     const { data, error } =
       await hostRosterCommands.readHostPlayerIdentity(sessionId);
+    if (!isCurrent(request)) return false;
     if (error || !data?.host_player_id) {
       setError(
         `Your profile photo couldn't be saved: ${error?.message ?? "Host player not found."}`,
@@ -83,22 +115,28 @@ export function useHostParticipation({
       playerId: data.host_player_id,
       sessionId,
     });
+    if (!isCurrent(request)) return false;
     if (updateError) {
       setError(`Your profile photo couldn't be saved: ${updateError.message}`);
       return false;
     }
     await load();
-    return true;
+    return isCurrent(request);
   }
 
   async function saveHostAvatar(): Promise<boolean> {
+    if (!canUseHostPlayer) {
+      setError("Only the game owner can use the host player profile.");
+      return false;
+    }
     if (!hostAvatarFile) return true;
     if (!setBusy(true)) return false;
+    const request = generation.current;
     try {
       setError("");
-      const avatarUrl = await uploadAvatar(hostAvatarFile);
+      const avatarUrl = await uploadAvatar(hostAvatarFile, request);
       if (!avatarUrl) return false;
-      return await attachAvatar(avatarUrl);
+      return await attachAvatar(avatarUrl, request);
     } finally {
       setBusy(false);
     }
@@ -108,8 +146,13 @@ export function useHostParticipation({
     participates: boolean,
     options?: JoinOptions,
   ): Promise<boolean> {
+    if (!canUseHostPlayer) {
+      setError("Only the game owner can change host participation.");
+      return false;
+    }
     if (!session) return false;
     if (!setBusy(true)) return false;
+    const request = generation.current;
     setError("");
     setNotice("");
     const { error: updateError } =
@@ -118,6 +161,7 @@ export function useHostParticipation({
         session.id,
       );
     setBusy(false);
+    if (!isCurrent(request)) return false;
     if (updateError) {
       setError(updateError.message);
       return false;
@@ -134,8 +178,13 @@ export function useHostParticipation({
   async function openHostPlayerView(
     options?: JoinOptions,
   ): Promise<string | null> {
+    if (!canUseHostPlayer) {
+      setError("Only the game owner can use the host player profile.");
+      return null;
+    }
     if (!session) return null;
     if (!setBusy(true)) return null;
+    const request = generation.current;
     setError("");
     setNotice("");
     const { data, error: joinError } =
@@ -144,6 +193,7 @@ export function useHostParticipation({
         p_player_name: hostPlayerName.trim() || "Host",
       });
     setBusy(false);
+    if (!isCurrent(request)) return null;
     if (joinError) {
       setError(joinError.message);
       return null;
@@ -168,17 +218,20 @@ export function useHostParticipation({
       playerToken,
     );
     const avatarUrl = hostAvatarFile
-      ? await uploadAvatar(hostAvatarFile)
+      ? await uploadAvatar(hostAvatarFile, request)
       : null;
+    if (!isCurrent(request)) return null;
     setActiveTab("game");
     if (!options?.requireAvatar)
       setNotice(
         `You're in the game${result?.name ? ` as ${result.name}` : " as Host"}.`,
       );
     await load();
+    if (!isCurrent(request)) return null;
     const avatarSaved = avatarUrl
-      ? await attachAvatar(avatarUrl)
+      ? await attachAvatar(avatarUrl, request)
       : !hostAvatarFile;
+    if (!isCurrent(request)) return null;
     if (options?.requireAvatar) {
       if (!avatarSaved) return null;
       setNotice(
@@ -192,10 +245,16 @@ export function useHostParticipation({
     onRecovered?: () => void,
     options?: JoinOptions,
   ): Promise<string | null> {
+    if (!canUseHostPlayer) {
+      setError("Only the game owner can use the host player profile.");
+      return null;
+    }
     if (!session) return null;
+    const request = generation.current;
     let token = localStorage.getItem(hostPlayerStorageKey(session.id));
     if (!session.host_participates || !session.host_player_id || !token) {
       const joined = await setHostParticipation(true, options);
+      if (!isCurrent(request)) return null;
       if (!joined) return null;
       onRecovered?.();
       token = localStorage.getItem(hostPlayerStorageKey(session.id));
@@ -208,23 +267,33 @@ export function useHostParticipation({
   }
 
   async function openHostSideChallengeUpload(challenge: SessionChallenge) {
+    if (!canUseHostPlayer) {
+      setError("Only the game owner can use the host player profile.");
+      return;
+    }
     if (!session || session.status !== "live") return;
+    const request = generation.current;
     if (
       !session.host_participates ||
       !localStorage.getItem(hostPlayerStorageKey(session.id))
     ) {
       await setHostParticipation(true);
     }
+    if (!isCurrent(request)) return;
     if (!localStorage.getItem(hostPlayerStorageKey(session.id))) return;
     setFocusedHostChallenge(challenge.id);
     setActiveTab("side-challenges");
   }
   useEffect(() => {
-    setHostPlayerToken(localStorage.getItem(hostPlayerStorageKey(sessionId)));
+    setHostPlayerToken(
+      canUseHostPlayer
+        ? localStorage.getItem(hostPlayerStorageKey(sessionId))
+        : null,
+    );
     setFocusedHostChallenge(null);
-  }, [sessionId]);
+  }, [sessionId, canUseHostPlayer]);
   return {
-    hostPlayerToken,
+    hostPlayerToken: canUseHostPlayer ? hostPlayerToken : null,
     ensureHostPlayerToken,
     focusedHostChallenge,
     setHostAvatarFile,

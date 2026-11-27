@@ -47,6 +47,7 @@ export default function TeamChoicesExample() {
             <CandidateList spaced>
               <ChoiceOption
                 label="Alpha"
+                imageSrc={`${import.meta.env.BASE_URL}chaos-logo.png`}
                 description="2/2 players"
                 selected={selected === "alpha"}
                 disabled={busy}

@@ -1,6 +1,7 @@
 export interface Team {
   id: string | number;
   name: string;
+  avatar_url?: string | null;
 }
 
 export interface VoteTarget {
@@ -12,6 +13,7 @@ export interface VoteResult {
   id: string;
   name: string;
   votes: number;
+  avatarUrl?: string | null;
 }
 
 /** Canonical IDs take precedence when a legacy name also matches an ID. */
@@ -28,7 +30,11 @@ export function normalizeTeamVoteId(
 }
 
 function results(
-  candidates: readonly { id: string | number; name: string }[],
+  candidates: readonly {
+    id: string | number;
+    name: string;
+    avatar_url?: string | null;
+  }[],
   counts: Map<string, number>,
 ): VoteResult[] {
   return candidates
@@ -36,13 +42,18 @@ function results(
       id: String(candidate.id),
       name: candidate.name,
       votes: counts.get(String(candidate.id)) ?? 0,
+      ...(candidate.avatar_url ? { avatarUrl: candidate.avatar_url } : {}),
     }))
     .sort((a, b) => b.votes - a.votes);
 }
 
 export function tallyPlayerVotes(
   votes: readonly VoteTarget[],
-  players: readonly { id: string | number; name: string }[],
+  players: readonly {
+    id: string | number;
+    name: string;
+    avatar_url?: string | null;
+  }[],
 ): VoteResult[] {
   const counts = new Map<string, number>();
   for (const vote of votes) {

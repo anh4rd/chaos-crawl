@@ -10,6 +10,15 @@ import {
   explorePlanTask,
 } from "./planImports";
 import type { SetupForm, TaskKind } from "./types";
+function importedTaskNotice(title: string, kind: TaskKind) {
+  const section =
+    kind === "main"
+      ? "Main Challenges"
+      : kind === "side"
+        ? "Side challenges"
+        : "Secret missions";
+  return `Added “${title}” as a ${kind} challenge. Finish the game details, then find it in ${section}.`;
+}
 export function usePlanSource({
   id,
   communityTaskId,
@@ -32,6 +41,15 @@ export function usePlanSource({
   setNotice: (message: string) => void;
 }) {
   const [attempt, setAttempt] = useState(0);
+  const [ownership, setOwnership] = useState<{
+    planId?: string;
+    ownerId: string | null;
+    canChangeHostParticipation: boolean;
+  }>({ planId: id, ownerId: null, canChangeHostParticipation: !id });
+  const currentOwnership =
+    ownership.planId === id
+      ? ownership
+      : { ownerId: null, canChangeHostParticipation: !id };
   const [loading, setLoading] = useState(
     Boolean(id || communityTaskId || exploreTaskJson),
   );
@@ -39,6 +57,11 @@ export function usePlanSource({
     let live = true;
     async function load() {
       setError("");
+      setOwnership({
+        planId: id,
+        ownerId: null,
+        canChangeHostParticipation: !id,
+      });
       setLoading(Boolean(id || communityTaskId || exploreTaskJson));
       const { data: auth, error: authError } = await runApi<{
         user: User | null;
@@ -53,13 +76,26 @@ export function usePlanSource({
       await loadFavourites(userId);
       if (!live) return;
       if (id) {
-        const { data, error: loadError } = await readHostPlan(id, userId).catch(
-          failedResult,
-        );
+        const { data, error: loadError } =
+          await readHostPlan(id).catch(failedResult);
         if (!live) return;
         if (loadError || !data) setError("Couldn't load this game plan.");
         else {
-          setForm(hydratePlan(data));
+          const isOwner = data.host_id === userId;
+          setOwnership({
+            planId: id,
+            ownerId: data.host_id,
+            canChangeHostParticipation: isOwner,
+          });
+          const form = hydratePlan(data);
+          setForm(
+            isOwner
+              ? form
+              : {
+                  ...form,
+                  hostParticipates: data.plan_data?.hostParticipates === true,
+                },
+          );
           setStage("build");
         }
       } else if (communityTaskId) {
@@ -73,17 +109,13 @@ export function usePlanSource({
         else {
           const task = communityPlanTask(submission, requestedChallengeKind);
           setForm((current) => attachPlanTask(current, task));
-          setNotice(
-            `Added “${task.title}” as a ${task.kind} challenge. Finish the game details, then find it in ${task.kind === "main" ? "Main Challenges" : "Side challenges"}.`,
-          );
+          setNotice(importedTaskNotice(task.title, task.kind));
         }
       } else if (exploreTaskJson) {
         try {
           const task = explorePlanTask(exploreTaskJson, requestedChallengeKind);
           setForm((current) => attachPlanTask(current, task));
-          setNotice(
-            `Added “${task.title}” as a ${task.kind} challenge. Finish the game details, then find it in ${task.kind === "main" ? "Main Challenges" : "Side challenges"}.`,
-          );
+          setNotice(importedTaskNotice(task.title, task.kind));
         } catch {
           setError(
             "Couldn't add that Explore challenge. Return to Explore and try again.",
@@ -108,5 +140,10 @@ export function usePlanSource({
     setError,
     setNotice,
   ]);
-  return { loading, reload: () => setAttempt((value) => value + 1) };
+  return {
+    loading,
+    ownerId: currentOwnership.ownerId,
+    canChangeHostParticipation: currentOwnership.canChangeHostParticipation,
+    reload: () => setAttempt((value) => value + 1),
+  };
 }

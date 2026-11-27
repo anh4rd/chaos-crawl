@@ -10,9 +10,14 @@ import { type SetupForm } from "./types";
 interface PlayerSetupProps {
   form: SetupForm;
   update: <K extends keyof SetupForm>(key: K, value: SetupForm[K]) => void;
+  canChangeHostParticipation?: boolean;
 }
 
-export default function PlayerSetup({ form, update }: PlayerSetupProps) {
+export default function PlayerSetup({
+  form,
+  update,
+  canChangeHostParticipation = true,
+}: PlayerSetupProps) {
   return (
     <ContentPanel variant="section">
       <FormGrid>
@@ -46,12 +51,16 @@ export default function PlayerSetup({ form, update }: PlayerSetupProps) {
           </select>
         </Field>
       </FormGrid>
-      <Toggle
-        title="Host joins the game"
-        detail="You will appear as a player and can complete challenges too."
-        checked={form.hostParticipates}
-        onChange={(v) => update("hostParticipates", v)}
-      />
+      {canChangeHostParticipation ? (
+        <Toggle
+          title="Host joins the game"
+          detail="You will appear as a player and can complete challenges too."
+          checked={form.hostParticipates}
+          onChange={(v) => update("hostParticipates", v)}
+        />
+      ) : (
+        <p>Only the game owner can change host participation.</p>
+      )}
       <Toggle
         title="Use teams"
         detail="Players compete in teams instead of individually."

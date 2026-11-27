@@ -12,6 +12,8 @@ import type {
   Favourite,
   UpdatePlan,
 } from "./types";
+import { taskLibrary } from "./catalog";
+import { favouriteTaskId } from "./planImports";
 export function usePlanChallenges({
   form,
   update,
@@ -52,7 +54,11 @@ export function usePlanChallenges({
     .filter(
       (t) =>
         !favouritesOnly ||
-        favourites.some((f) => f.item_type === "task" && f.item_id === t.id),
+        favourites.some(
+          (f) =>
+            f.item_type === "task" &&
+            (f.item_id === t.id || f.item_id === favouriteTaskId(t.id)),
+        ),
     )
     .filter((t) => vibeFilter === "all" || t.vibe.includes(vibeFilter))
     .filter(
@@ -73,6 +79,14 @@ export function usePlanChallenges({
           : "selectedSecret";
     const list = form[key];
     const removing = list.includes(task.id);
+    if (
+      !removing &&
+      !taskLibrary.some((item) => item.id === task.id) &&
+      !form.customTasks.some((item) => item.id === task.id)
+    ) {
+      update("customTasks", [...form.customTasks, task]);
+      if (task.kind === "secret") update("secretMissions", true);
+    }
     update(
       key,
       removing ? list.filter((x) => x !== task.id) : [...list, task.id],
