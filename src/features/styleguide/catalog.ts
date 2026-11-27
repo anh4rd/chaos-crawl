@@ -572,7 +572,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
     usage:
       "Connected join/rejoin coordinator. The Join route supplies normalized URL code, entry mode and the successful credential redirect callback.",
     dependencies:
-      "usePlayerAccess and the typed SDK access boundary in lib/playerAccess.ts. Owns credential storage, command feedback and phase state. Pending joins are locked synchronously; unmount or target-code/mode changes invalidate their UI results without cancelling the server request. Name/mobile edits remain allowed. Never mount in a local demo. SDK error behavior is preserved rather than normalized during this extraction.",
+      "usePlayerAccess and lib/playerAccess.ts own command feedback and credential storage. Pending joins are locked synchronously and obsolete UI results are ignored. Registration uses encrypted temporary recovery storage; recovery requires the private code. Never mount in a local demo.",
   },
   PlayerAccessView: {
     usage:
@@ -582,7 +582,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   PlayerDetailsFields: {
     usage:
-      "Controlled player name/mobile fields. Rejoin omits the name; preserve the mobile recovery copy, native label associations and input constraints.",
+      "Controlled player name/mobile fields for joining and a private recovery-code input for rejoining. Preserve native label associations and input constraints.",
     dependencies:
       "Feature presentation values and callbacks, ContentPanel access-field, FormLabel/InputIcon access and Note access-help; owned SCSS. No persistence or credential work.",
   },

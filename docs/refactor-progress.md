@@ -7,6 +7,11 @@ writes are included.
 
 ## In progress
 
+Anonymous player registration and recovery have an undeployed security
+milestone; see [player recovery](./player-recovery.md) for its contracts,
+rollout constraints and verification limitations. Existing tokens are not
+rotated by the migration. Phone-only rejoin is disabled when it is applied.
+
 Session portrait views use uploaded player and team photos in team choices,
 scoreboards, reward candidates, roster summaries and review cards. A new
 session-scoped RPC validates the player credential and returns only portrait

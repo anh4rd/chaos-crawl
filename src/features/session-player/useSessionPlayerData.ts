@@ -169,7 +169,11 @@ export function useSessionPlayerData(
     );
     if (version !== requestVersion.current) return;
     if (viewError) {
-      setError(viewError.message);
+      setError(
+        /rejoin with the same mobile number/i.test(viewError.message)
+          ? "Your player session expired. Rejoin using your recovery code."
+          : viewError.message,
+      );
       setLoading(false);
       return;
     }

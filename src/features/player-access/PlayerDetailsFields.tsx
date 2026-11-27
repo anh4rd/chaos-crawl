@@ -8,11 +8,19 @@ export default function PlayerDetailsFields({
   mode,
   name,
   mobile,
+  credential,
   onNameChange,
   onMobileChange,
+  onCredentialChange,
 }: Pick<
   PlayerAccessModel,
-  "mode" | "name" | "mobile" | "onNameChange" | "onMobileChange"
+  | "mode"
+  | "name"
+  | "mobile"
+  | "credential"
+  | "onNameChange"
+  | "onMobileChange"
+  | "onCredentialChange"
 >) {
   return (
     <>
@@ -38,26 +46,50 @@ export default function PlayerDetailsFields({
           </InputIcon>
         </ContentPanel>
       )}
-      <ContentPanel as="div" variant="access-field">
-        <FormLabel variant="access" htmlFor="join-mobile">
-          Your phone number?
-        </FormLabel>
-        <Note variant="access-help">
-          Used only to reconnect you to this game. No SMS is sent.
-        </Note>
-        <InputIcon icon="users" variant="access" iconClassName="icon--size-17">
+      {mode === "join" ? (
+        <ContentPanel as="div" variant="access-field">
+          <FormLabel variant="access" htmlFor="join-mobile">
+            Your phone number?
+          </FormLabel>
+          <Note variant="access-help">
+            No SMS is sent. Your recovery code is needed to reconnect.
+          </Note>
+          <InputIcon
+            icon="users"
+            variant="access"
+            iconClassName="icon--size-17"
+          >
+            <input
+              id="join-mobile"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              placeholder="Enter your number"
+              value={mobile}
+              onChange={(event) => onMobileChange(event.target.value)}
+              required
+            />
+          </InputIcon>
+        </ContentPanel>
+      ) : (
+        <ContentPanel as="div" variant="access-field">
+          <FormLabel variant="access" htmlFor="recovery-credential">
+            Recovery code
+          </FormLabel>
           <input
-            id="join-mobile"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel"
-            placeholder="Enter your number"
-            value={mobile}
-            onChange={(event) => onMobileChange(event.target.value)}
+            id="recovery-credential"
+            type="text"
+            autoComplete="off"
+            spellCheck={false}
+            value={credential}
+            onChange={(event) => onCredentialChange(event.target.value)}
             required
           />
-        </InputIcon>
-      </ContentPanel>
+          <Note variant="access-help">
+            Enter the private code saved when you joined.
+          </Note>
+        </ContentPanel>
+      )}
     </>
   );
 }

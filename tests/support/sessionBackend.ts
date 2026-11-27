@@ -485,6 +485,15 @@ export async function installSessionBackend(
       await respond(responses[name]);
       return;
     }
+    if (url.pathname === "/functions/v1/player-identity") {
+      await respond({
+        player_token: "test-player-token",
+        join_code: sessionCode,
+        player_name: "Pat",
+        resumed: body?.action === "recover",
+      });
+      return;
+    }
     const rpcData: Record<string, unknown> = {
       cc_is_platform_admin: false,
       cc_super_admin_list_games: [

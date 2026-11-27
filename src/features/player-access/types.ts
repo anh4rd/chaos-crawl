@@ -8,6 +8,7 @@ export interface PlayerAccessModel {
   code: string;
   name: string;
   mobile: string;
+  credential: string;
   joinStep: JoinStep;
   busy: boolean;
   error: string;
@@ -16,6 +17,7 @@ export interface PlayerAccessModel {
   onCodeChange: (value: string) => void;
   onNameChange: (value: string) => void;
   onMobileChange: (value: string) => void;
+  onCredentialChange: (value: string) => void;
   onBack: () => void;
   onToggleMode: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;

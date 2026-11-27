@@ -11,6 +11,10 @@ import PlayerAccess from "./PlayerAccess";
 import { joinGameSession } from "../../lib/playerAccess";
 
 vi.mock("../../lib/playerAccess", () => ({ joinGameSession: vi.fn() }));
+vi.mock("./recoveryVault", () => ({
+  pendingRecoveryCredential: vi.fn(async () => "sample-recovery"),
+  clearPendingRecovery: vi.fn(async () => {}),
+}));
 type Reply = Awaited<ReturnType<typeof joinGameSession>>;
 const credentialKey = "chaos-crawl-session-player:123456";
 const success: Reply = {
@@ -41,8 +45,9 @@ function form() {
   if (!element) throw new Error("Join form is missing");
   return element;
 }
-function beginJoin() {
+async function beginJoin() {
   fireEvent.submit(form());
+  await act(async () => {});
   fireEvent.change(screen.getByLabelText("Your name?"), {
     target: { value: "Pat" },
   });
@@ -50,6 +55,7 @@ function beginJoin() {
     target: { value: "0712345678" },
   });
   fireEvent.submit(form());
+  await act(async () => {});
   expect(
     screen.getByRole("button", { name: "Joining…" }).hasAttribute("disabled"),
   ).toBe(true);
@@ -77,7 +83,7 @@ it("does not store credentials or redirect when a successful join finishes after
       />
     </StrictMode>,
   );
-  beginJoin();
+  await beginJoin();
   unmount();
   await act(async () => {
     request.resolve(success);
@@ -103,7 +109,7 @@ it.each(["database", "transport"] as const)(
         onJoined={onJoined}
       />,
     );
-    beginJoin();
+    await beginJoin();
     unmount();
     await act(async () => {
       if (failure === "transport")
@@ -132,7 +138,7 @@ it("discards the previous target response, unlocks the current form and allows a
       onJoined={onJoined}
     />,
   );
-  beginJoin();
+  await beginJoin();
   rerender(
     <PlayerAccess
       codeFromUrl="654321"
@@ -165,10 +171,16 @@ it("discards the previous target response, unlocks the current form and allows a
     fireEvent.submit(form());
   });
   expect(vi.mocked(joinGameSession).mock.calls[1][0]).toEqual({
-    p_join_code: "654321",
-    p_name: "Pat",
-    p_mobile: "0712345678",
+    action: "register",
+    join_code: "654321",
+    credential: "sample-recovery",
+    name: "Pat",
+    mobile: "0712345678",
   });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Continue without saving" }),
+  );
+  await act(async () => {});
   expect(onJoined).toHaveBeenCalledExactlyOnceWith(next.data);
   expect(localStorage.getItem("chaos-crawl-session-player:654321")).toBe(
     "new-token",
@@ -186,7 +198,7 @@ it("does not resurrect a pending result when the query code changes away and bac
       onJoined={onJoined}
     />,
   );
-  beginJoin();
+  await beginJoin();
   rerender(
     <PlayerAccess
       codeFromUrl="654321"
@@ -222,7 +234,7 @@ it.each(["code", "mode"] as const)(
         onJoined={onJoined}
       />,
     );
-    beginJoin();
+    await beginJoin();
     fireEvent.click(screen.getByRole("button", { name: "← Back" }));
     if (change === "code") {
       fireEvent.change(
@@ -270,7 +282,7 @@ it("keeps pending name/mobile edits compatible with the captured request and cur
       />
     </StrictMode>,
   );
-  beginJoin();
+  await beginJoin();
   fireEvent.change(screen.getByLabelText("Your name?"), {
     target: { value: "Changed name" },
   });
@@ -282,10 +294,16 @@ it("keeps pending name/mobile edits compatible with the captured request and cur
     await request.promise;
   });
   expect(joinGameSession).toHaveBeenCalledExactlyOnceWith({
-    p_join_code: "123456",
-    p_name: "Pat",
-    p_mobile: "0712345678",
+    action: "register",
+    join_code: "123456",
+    credential: "sample-recovery",
+    name: "Pat",
+    mobile: "0712345678",
   });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Continue without saving" }),
+  );
+  await act(async () => {});
   expect(onJoined).toHaveBeenCalledExactlyOnceWith(success.data);
   expect(localStorage.getItem(credentialKey)).toBe("original-token");
 });
@@ -307,6 +325,7 @@ it("locks repeated submissions synchronously while the same join is pending", as
     fireEvent.submit(form());
     fireEvent.submit(form());
   });
+  await act(async () => {});
   expect(joinGameSession).toHaveBeenCalledTimes(1);
   await act(async () => {
     request.resolve(success);
@@ -330,7 +349,7 @@ it.each(["database", "transport"] as const)(
         onJoined={onJoined}
       />,
     );
-    beginJoin();
+    await beginJoin();
     rerender(
       <PlayerAccess
         codeFromUrl="654321"
@@ -374,7 +393,7 @@ it("does not let an old instance authorize a newly mounted form for the same cod
       onJoined={oldJoined}
     />,
   );
-  beginJoin();
+  await beginJoin();
   old.unmount();
   render(
     <PlayerAccess
@@ -383,7 +402,7 @@ it("does not let an old instance authorize a newly mounted form for the same cod
       onJoined={nextJoined}
     />,
   );
-  beginJoin();
+  await beginJoin();
   await act(async () => {
     oldRequest.resolve(success);
     await oldRequest.promise;
@@ -407,6 +426,10 @@ it("does not let an old instance authorize a newly mounted form for the same cod
     newRequest.resolve(latest);
     await newRequest.promise;
   });
+  fireEvent.click(
+    screen.getByRole("button", { name: "Continue without saving" }),
+  );
+  await act(async () => {});
   expect(nextJoined).toHaveBeenCalledExactlyOnceWith(latest.data);
   expect(localStorage.getItem(credentialKey)).toBe("latest-token");
 });

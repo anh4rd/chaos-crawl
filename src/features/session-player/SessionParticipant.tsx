@@ -280,7 +280,7 @@ export default function SessionParticipant({
             </Link>
           }
         >
-          <p>Enter the game code and the mobile number you used to join.</p>
+          <p>Enter the game code and your saved recovery code.</p>
         </SessionState>
       </SessionPage>
     );
@@ -304,7 +304,7 @@ export default function SessionParticipant({
           title="We lost your place."
           action={
             <Link className="btn" to={`/join?code=${code}&returning=1`}>
-              Rejoin with mobile number
+              Rejoin with recovery code
             </Link>
           }
         >

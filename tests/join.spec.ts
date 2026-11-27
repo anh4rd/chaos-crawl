@@ -4,7 +4,9 @@ import { installSessionBackend } from "./support/sessionBackend";
 
 const credentialKey = "chaos-crawl-session-player:123456";
 const missingSession =
-  "The game didn't return a player session. Try again or ask the host for a new code.";
+  "Couldn't complete player access. Check your details and try again.";
+const recoveryCode =
+  "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa.BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc";
 
 async function enterDetails(page: Page, returning = false) {
   await page.goto(`#/join?code=123456${returning ? "&returning=1" : ""}`);
@@ -23,7 +25,7 @@ function joinRequests(
   backend: Awaited<ReturnType<typeof installSessionBackend>>,
 ) {
   return backend.requests.filter(
-    (request) => request.name === "cc_join_game_session",
+    (request) => request.name === "player-identity",
   );
 }
 
@@ -93,6 +95,7 @@ test("the player waiting screen completes join progress and hides it when play s
     .getByLabel("Your phone number?", { exact: true })
     .fill("0712345678");
   await page.getByRole("button", { name: "Join game", exact: true }).click();
+  await page.getByRole("button", { name: "Continue without saving" }).click();
   const progress = page.getByRole("progressbar", { name: "Join progress" });
   await expect(progress).toHaveAttribute("aria-valuetext", "Step 3 of 3");
   await expect(page.getByText("Join progress", { exact: true })).toBeVisible();
@@ -159,12 +162,17 @@ test("join trims its payload, stores only the V2 credential and replaces the joi
     page,
     page.getByRole("button", { name: "Join game", exact: true }),
   );
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Continue without saving" }),
+  );
   await expect(page).toHaveURL(/\/play\/123456$/);
   expect(joinRequests(backend)).toHaveLength(1);
-  expect(joinRequests(backend)[0].body).toEqual({
-    p_join_code: "123456",
-    p_name: "Pat",
-    p_mobile: "0712345678",
+  expect(joinRequests(backend)[0].body).toMatchObject({
+    action: "register",
+    join_code: "123456",
+    name: "Pat",
+    mobile: "0712345678",
   });
   expect(
     await page.evaluate((key) => localStorage.getItem(key), credentialKey),
@@ -179,11 +187,11 @@ test("join trims its payload, stores only the V2 credential and replaces the joi
   backend.verify();
 });
 
-test("rejoin uses the original mobile number and no name, preserving the resumed redirect state", async ({
+test("rejoin uses the recovery credential and preserves the resumed redirect state", async ({
   page,
 }) => {
   const backend = await installSessionBackend(page, { savedPlayer: false });
-  backend.responses.cc_join_game_session = {
+  backend.responses["player-identity"] = {
     player_token: "test-player-token",
     join_code: "123456",
     player_name: "Pat",
@@ -200,16 +208,16 @@ test("rejoin uses the original mobile number and no name, preserving the resumed
     page.getByRole("progressbar", { name: "Join progress" }),
   ).toHaveAttribute("aria-valuetext", "Step 2 of 3");
   await expect(page.getByLabel("Your name?", { exact: true })).toHaveCount(0);
-  await typeField(page, "Your phone number?", " 0712345678 ");
+  await typeField(page, "Recovery code", recoveryCode);
   await activateByKeyboard(
     page,
     page.getByRole("button", { name: "Rejoin game", exact: true }),
   );
   await expect(page).toHaveURL(/\/play\/123456$/);
   expect(joinRequests(backend)[0].body).toEqual({
-    p_join_code: "123456",
-    p_name: null,
-    p_mobile: "0712345678",
+    action: "recover",
+    join_code: "123456",
+    credential: recoveryCode,
   });
   expect(await page.evaluate(() => window.history.state.usr)).toEqual({
     welcomeBack: true,
@@ -221,7 +229,7 @@ test("failed join retains details, clears its error on mode change and retries w
   page,
 }) => {
   const backend = await installSessionBackend(page, { savedPlayer: false });
-  backend.failures.add("cc_join_game_session");
+  backend.failures.add("player-identity");
   await enterDetails(page);
   await page.getByLabel("Your name?", { exact: true }).fill("Pat");
   await page
@@ -231,9 +239,7 @@ test("failed join retains details, clears its error on mode change and retries w
     page,
     page.getByRole("button", { name: "Join game", exact: true }),
   );
-  await expect(page.getByRole("alert")).toHaveText(
-    "Couldn't join this game. Check the code and try again.",
-  );
+  await expect(page.getByRole("alert")).toHaveText(missingSession);
   await expect(page.getByLabel("Your name?", { exact: true })).toHaveValue(
     "Pat",
   );
@@ -256,17 +262,18 @@ test("failed join retains details, clears its error on mode change and retries w
     page,
     page.getByRole("button", { name: "Next", exact: true }),
   );
-  await expect(
-    page.getByLabel("Your phone number?", { exact: true }),
-  ).toHaveValue("0712345678");
-  backend.failures.delete("cc_join_game_session");
+  await typeField(page, "Recovery code", recoveryCode);
+  backend.failures.delete("player-identity");
   await activateByKeyboard(
     page,
     page.getByRole("button", { name: "Rejoin game", exact: true }),
   );
   await expect(page).toHaveURL(/\/play\/123456$/);
   expect(joinRequests(backend)).toHaveLength(2);
-  expect(joinRequests(backend)[1].body).toMatchObject({ p_name: null });
+  expect(joinRequests(backend)[1].body).toMatchObject({
+    action: "recover",
+    credential: recoveryCode,
+  });
   backend.verify();
 });
 
@@ -279,7 +286,7 @@ test("pending join disables submit, keeps fields editable and preserves the capt
     release = resolve;
   });
   let received = false;
-  await page.route("**/rest/v1/rpc/cc_join_game_session", async (route) => {
+  await page.route("**/functions/v1/player-identity", async (route) => {
     received = true;
     await gate;
     await route.fallback();
@@ -305,9 +312,10 @@ test("pending join disables submit, keeps fields editable and preserves the capt
       page.getByLabel("Your phone number?", { exact: true }),
     ).toBeEditable();
     release();
+    await page.getByRole("button", { name: "Continue without saving" }).click();
     await expect(page).toHaveURL(/\/play\/123456$/);
     expect(joinRequests(backend)).toHaveLength(1);
-    expect(joinRequests(backend)[0].body).toMatchObject({ p_name: "Pat" });
+    expect(joinRequests(backend)[0].body).toMatchObject({ name: "Pat" });
     backend.verify();
   } finally {
     release();
@@ -319,7 +327,7 @@ for (const result of [null, { join_code: "123456", player_token: "" }]) {
     page,
   }) => {
     const backend = await installSessionBackend(page, { savedPlayer: false });
-    backend.responses.cc_join_game_session = result;
+    backend.responses["player-identity"] = result;
     await enterDetails(page);
     await page.getByLabel("Your name?", { exact: true }).fill("Pat");
     await page
@@ -362,9 +370,7 @@ test("credential storage failure reports its error and leaves the join form reco
     page,
     page.getByRole("button", { name: "Join game", exact: true }),
   );
-  await expect(page.getByRole("alert")).toHaveText(
-    "Credential storage unavailable",
-  );
+  await expect(page.getByRole("alert")).toHaveText(missingSession);
   await expect(
     page.getByRole("button", { name: "Join game", exact: true }),
   ).toBeEnabled();
@@ -475,7 +481,7 @@ async function holdJoin(page: Page) {
     release = resolve;
   });
   let received = false;
-  await page.route("**/rest/v1/rpc/cc_join_game_session", async (route) => {
+  await page.route("**/functions/v1/player-identity", async (route) => {
     received = true;
     await gate;
     await route.fallback();
@@ -484,9 +490,7 @@ async function holdJoin(page: Page) {
     received: () => received,
     release,
     complete: async () => {
-      const response = page.waitForResponse(
-        "**/rest/v1/rpc/cc_join_game_session",
-      );
+      const response = page.waitForResponse("**/functions/v1/player-identity");
       release();
       await (await response).finished();
     },
@@ -546,7 +550,7 @@ for (const outcome of ["success", "failure"] as const) {
     page,
   }) => {
     const backend = await installSessionBackend(page, { savedPlayer: false });
-    if (outcome === "failure") backend.failures.add("cc_join_game_session");
+    if (outcome === "failure") backend.failures.add("player-identity");
     const held = await holdJoin(page);
     try {
       await beginPendingJoin(page, held);
@@ -566,10 +570,11 @@ for (const outcome of ["success", "failure"] as const) {
         await page.evaluate((key) => localStorage.getItem(key), credentialKey),
       ).toBeNull();
       expect(joinRequests(backend)).toHaveLength(1);
-      expect(joinRequests(backend)[0].body).toEqual({
-        p_join_code: "123456",
-        p_name: "Pat",
-        p_mobile: "0712345678",
+      expect(joinRequests(backend)[0].body).toMatchObject({
+        action: "register",
+        join_code: "123456",
+        name: "Pat",
+        mobile: "0712345678",
       });
       backend.verify();
     } finally {

@@ -101,7 +101,7 @@ export default function PlayerEditor({
               onChange={(e) => setPhone(e.target.value)}
             />
           </Field>
-          <p>Changing this changes the number used to rejoin this game.</p>
+          <p>Phone numbers cannot be used to recover a player session.</p>
         </>
       ) : (
         <p>No editable reconnect phone is available for this player.</p>

@@ -17,6 +17,7 @@ export default function PlayerAccessView({
   code,
   name,
   mobile,
+  credential,
   joinStep,
   busy,
   error,
@@ -25,6 +26,7 @@ export default function PlayerAccessView({
   onCodeChange,
   onNameChange,
   onMobileChange,
+  onCredentialChange,
   onBack,
   onToggleMode,
   onSubmit,
@@ -39,7 +41,7 @@ export default function PlayerAccessView({
     intro =
       mode === "join"
         ? "Join a game with the code from your host."
-        : "Enter the code and the same mobile number you used when you joined.";
+        : "Enter the game code and your saved recovery code.";
     submitLabel = "Next";
   }
   return (
@@ -104,8 +106,10 @@ export default function PlayerAccessView({
                 mode={mode}
                 name={name}
                 mobile={mobile}
+                credential={credential}
                 onNameChange={onNameChange}
                 onMobileChange={onMobileChange}
+                onCredentialChange={onCredentialChange}
               />
             </>
           )}

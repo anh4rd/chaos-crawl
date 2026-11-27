@@ -8,6 +8,10 @@ import {
   type FormEvent,
 } from "react";
 import { joinGameSession } from "../../lib/playerAccess";
+import {
+  clearPendingRecovery,
+  pendingRecoveryCredential,
+} from "./recoveryVault";
 import type { JoinMode, JoinStep, PlayerAccessModel } from "./types";
 
 function storageKey(code: string) {
@@ -22,11 +26,19 @@ export function usePlayerAccess({
   codeFromUrl: string;
   initialMode: JoinMode;
   onJoined: (result: JoinResult) => void;
-}): PlayerAccessModel {
+}): {
+  access: PlayerAccessModel;
+  setup: { credential: string; onContinue: () => void } | null;
+} {
   const [mode, setMode] = useState<JoinMode>(initialMode);
   const [code, setCode] = useState(codeFromUrl);
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
+  const [credential, setCredential] = useState("");
+  const [setup, setSetup] = useState<{
+    credential: string;
+    result: JoinResult;
+  } | null>(null);
   const [joinStep, setJoinStep] = useState<JoinStep>(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -46,13 +58,18 @@ export function usePlayerAccess({
     if (codeFromUrl) setCode(codeFromUrl);
   }, [codeFromUrl]);
 
+  useLayoutEffect(() => {
+    setSetup(null);
+  }, [codeFromUrl, code, mode]);
+
   const canSubmit = useMemo(
     () =>
       code.replace(/\D/g, "").length === 6 &&
-      mobile.trim().length >= 8 &&
-      (mode === "rejoin" || name.trim().length > 0) &&
+      (mode === "rejoin"
+        ? credential.trim().length > 0
+        : mobile.trim().length >= 8 && name.trim().length > 0) &&
       !busy,
-    [code, mobile, mode, name, busy],
+    [code, mobile, mode, name, credential, busy],
   );
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -70,10 +87,19 @@ export function usePlayerAccess({
       request.current.mounted && request.current.generation === generation;
     setBusy(true);
     try {
+      const cleanCode = code.replace(/\D/g, "");
+      const recoveryCredential =
+        mode === "join"
+          ? await pendingRecoveryCredential(cleanCode)
+          : credential.trim();
+      if (!isCurrent()) return;
       const { data, error: joinError } = await joinGameSession({
-        p_join_code: code.replace(/\D/g, ""),
-        p_name: mode === "join" ? name.trim() : null,
-        p_mobile: mobile.trim(),
+        action: mode === "join" ? "register" : "recover",
+        join_code: cleanCode,
+        credential: recoveryCredential,
+        ...(mode === "join"
+          ? { name: name.trim(), mobile: mobile.trim() }
+          : {}),
       });
       if (!isCurrent()) return;
       if (joinError) throw joinError;
@@ -84,15 +110,16 @@ export function usePlayerAccess({
         );
       }
       localStorage.setItem(storageKey(result.join_code), result.player_token);
-      if (result.resumed) setNotice(`Welcome back, ${result.player_name}!`);
-      onJoined(result);
-    } catch (joinError) {
+      if (mode === "join") setSetup({ credential: recoveryCredential, result });
+      else {
+        if (result.resumed) setNotice(`Welcome back, ${result.player_name}!`);
+        onJoined(result);
+      }
+    } catch {
       if (!isCurrent()) return;
-      console.error("JOIN SESSION ERROR", joinError);
+      console.error("Player access failed.");
       setError(
-        joinError instanceof Error
-          ? joinError.message
-          : "Couldn't join this game. Check the code and try again.",
+        "Couldn't complete player access. Check your details and try again.",
       );
     } finally {
       request.current.pending = false;
@@ -100,11 +127,30 @@ export function usePlayerAccess({
     }
   }
 
-  return {
+  async function completeSetup() {
+    if (!setup || request.current.pending) return;
+    request.current.pending = true;
+    const generation = request.current.generation;
+    try {
+      await clearPendingRecovery(setup.result.join_code);
+      if (request.current.mounted && request.current.generation === generation)
+        onJoined(setup.result);
+    } catch {
+      if (request.current.mounted && request.current.generation === generation)
+        setError(
+          "Your recovery code could not be cleared from temporary storage. Try again.",
+        );
+    } finally {
+      request.current.pending = false;
+    }
+  }
+
+  const access: PlayerAccessModel = {
     mode,
     code,
     name,
     mobile,
+    credential,
     joinStep,
     busy,
     error,
@@ -113,11 +159,18 @@ export function usePlayerAccess({
     onCodeChange: setCode,
     onNameChange: setName,
     onMobileChange: setMobile,
+    onCredentialChange: setCredential,
     onBack: () => setJoinStep(1),
     onToggleMode: () => {
       setMode(mode === "join" ? "rejoin" : "join");
       setError("");
     },
     onSubmit: (event) => void submit(event),
+  };
+  return {
+    access,
+    setup: setup
+      ? { credential: setup.credential, onContinue: () => void completeSetup() }
+      : null,
   };
 }

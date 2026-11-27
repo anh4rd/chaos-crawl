@@ -1,5 +1,6 @@
 import { useState } from "react";
 import PlayerAccessView from "../player-access/PlayerAccessView";
+import RecoverySetup from "../player-access/RecoverySetup";
 import type { JoinMode, JoinStep } from "../player-access/types";
 import Note from "../../components/ui/Note";
 import { Example } from "./Example";
@@ -10,13 +11,15 @@ export default function PlayerAccessExample() {
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
+  const [credential, setCredential] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [showError, setShowError] = useState(false);
   const canSubmit =
     code.length === 6 &&
-    mobile.trim().length >= 8 &&
-    (mode === "rejoin" || name.trim().length > 0) &&
+    (mode === "rejoin"
+      ? credential.trim().length > 0
+      : mobile.trim().length >= 8 && name.trim().length > 0) &&
     !busy;
   return (
     <Example
@@ -55,6 +58,7 @@ export default function PlayerAccessExample() {
           code={code}
           name={name}
           mobile={mobile}
+          credential={credential}
           busy={busy}
           error={
             showError ? "Sample join error. This reference remains local." : ""
@@ -64,6 +68,7 @@ export default function PlayerAccessExample() {
           onCodeChange={setCode}
           onNameChange={setName}
           onMobileChange={setMobile}
+          onCredentialChange={setCredential}
           onBack={() => setJoinStep(1)}
           onToggleMode={() => setMode(mode === "join" ? "rejoin" : "join")}
           onSubmit={(event) => {
@@ -74,6 +79,17 @@ export default function PlayerAccessExample() {
             }
             if (canSubmit) setNotice("Sample join submitted locally.");
           }}
+        />
+      </details>
+      <details>
+        <summary>Open local recovery setup</summary>
+        <RecoverySetup
+          as="section"
+          credential="example-recovery-code"
+          setupError=""
+          onContinue={() =>
+            setNotice("Sample recovery setup completed locally.")
+          }
         />
       </details>
     </Example>
