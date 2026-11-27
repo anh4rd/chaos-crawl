@@ -574,6 +574,10 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     setEditChallengeDescription,
     editChallengeEquipment,
     setEditChallengeEquipment,
+    editChallengeSetup,
+    setEditChallengeSetup,
+    editChallengePrep,
+    setEditChallengePrep,
     editChallengeDuration,
     setEditChallengeDuration,
     editChallengePoints,
@@ -586,6 +590,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     nextBreakChallenge,
     nextBreakTask,
     plannedTasks,
+    challenges,
     session,
     setBusy,
     setError,
@@ -1096,6 +1101,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
           {editingBreakChallenge && (
             <ChallengeEditor
               busy={busy}
+              teamsEnabled={session.teams_enabled}
               error={error}
               onDismissError={dismissError}
               setEditingBreakChallenge={setEditingBreakChallenge}
@@ -1108,6 +1114,10 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
               setEditChallengeDescription={setEditChallengeDescription}
               editChallengeEquipment={editChallengeEquipment}
               setEditChallengeEquipment={setEditChallengeEquipment}
+              editChallengeSetup={editChallengeSetup}
+              setEditChallengeSetup={setEditChallengeSetup}
+              editChallengePrep={editChallengePrep}
+              setEditChallengePrep={setEditChallengePrep}
               editChallengeDuration={editChallengeDuration}
               setEditChallengeDuration={setEditChallengeDuration}
               editChallengePoints={editChallengePoints}

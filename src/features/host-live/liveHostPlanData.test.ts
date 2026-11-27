@@ -1,5 +1,41 @@
 import { expect, it } from "vitest";
-import { projectLiveHostPlan, patchLiveHostPlanTask } from "./liveHostPlanData";
+import {
+  projectLiveHostPlan,
+  patchLiveHostPlanTask,
+  plannedTaskForChallenge,
+} from "./liveHostPlanData";
+
+it("links a live challenge to its unique saved title without guessing between duplicates", () => {
+  const task = { id: "plan-task", title: "Entrance", equipment: ["Hat"] };
+  const live = { id: "live-id", title: "Entrance" };
+  expect(plannedTaskForChallenge([task], live, [live])).toEqual(task);
+  expect(
+    plannedTaskForChallenge(
+      [task, { id: "other", title: "Entrance" }],
+      {
+        id: "live-id",
+        title: "Entrance",
+      },
+      [live],
+    ),
+  ).toBeUndefined();
+  expect(
+    plannedTaskForChallenge(
+      [task, { id: "other", title: "Entrance" }],
+      {
+        id: "plan-task",
+        title: "Entrance",
+      },
+      [live],
+    ),
+  ).toEqual(task);
+  expect(
+    plannedTaskForChallenge([task], live, [
+      live,
+      { id: "another", title: "Entrance" },
+    ]),
+  ).toBeUndefined();
+});
 it("projects the saved in-game reward choice without inventing a setting", () => {
   expect(
     projectLiveHostPlan({ decideRewardInGame: true }).decideRewardInGame,
@@ -82,6 +118,8 @@ it("does not mutate the source plan while updating all matching duplicate task I
     minutes: 1,
     points: 0,
     equipment: [],
+    setup: "",
+    prep: "",
   };
   const updated = patchLiveHostPlanTask(source, "same", patch);
   expect(updated?.planData).toEqual({

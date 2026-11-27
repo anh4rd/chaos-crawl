@@ -12,6 +12,7 @@ import type { SessionChallenge } from "./types";
 
 interface ChallengeEditorProps {
   busy: boolean;
+  teamsEnabled: boolean;
   error: string;
   onDismissError: () => void;
   setEditingBreakChallenge: Dispatch<SetStateAction<SessionChallenge | null>>;
@@ -24,6 +25,10 @@ interface ChallengeEditorProps {
   editChallengeEquipment: string;
   canEditEquipment: boolean;
   setEditChallengeEquipment: Dispatch<SetStateAction<string>>;
+  editChallengeSetup: string;
+  setEditChallengeSetup: Dispatch<SetStateAction<string>>;
+  editChallengePrep: string;
+  setEditChallengePrep: Dispatch<SetStateAction<string>>;
   editChallengeDuration: number;
   setEditChallengeDuration: Dispatch<SetStateAction<number>>;
   editChallengePoints: number;
@@ -34,6 +39,7 @@ interface ChallengeEditorProps {
 
 export default function ChallengeEditor({
   busy,
+  teamsEnabled,
   error,
   onDismissError,
   setEditingBreakChallenge,
@@ -46,6 +52,10 @@ export default function ChallengeEditor({
   editChallengeEquipment,
   canEditEquipment,
   setEditChallengeEquipment,
+  editChallengeSetup,
+  setEditChallengeSetup,
+  editChallengePrep,
+  setEditChallengePrep,
   editChallengeDuration,
   setEditChallengeDuration,
   editChallengePoints,
@@ -95,13 +105,31 @@ export default function ChallengeEditor({
           <small>
             {canEditEquipment
               ? "Separate items with commas."
-              : "Equipment can't be saved because this challenge isn't linked to a saved plan."}
+              : "Equipment, setup and preparation can't be saved because this challenge isn't linked to a saved plan."}
           </small>
           <textarea
             rows={2}
             disabled={!canEditEquipment}
             value={editChallengeEquipment}
             onChange={(event) => setEditChallengeEquipment(event.target.value)}
+          />
+        </FormLabel>
+        <FormLabel spaced>
+          Setup
+          <textarea
+            rows={2}
+            disabled={!canEditEquipment}
+            value={editChallengeSetup}
+            onChange={(event) => setEditChallengeSetup(event.target.value)}
+          />
+        </FormLabel>
+        <FormLabel spaced>
+          Preparation
+          <textarea
+            rows={2}
+            disabled={!canEditEquipment}
+            value={editChallengePrep}
+            onChange={(event) => setEditChallengePrep(event.target.value)}
           />
         </FormLabel>
         <FormGrid variant="dialog">
@@ -130,6 +158,10 @@ export default function ChallengeEditor({
             />
           </FormLabel>
         </FormGrid>
+        <p>
+          Participation: {teamsEnabled ? "teams" : "individual players"}. Change
+          this for the whole game in Host Settings.
+        </p>
         <FormLabel spaced variant="checkbox">
           <input
             type="checkbox"

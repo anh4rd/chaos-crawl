@@ -2,7 +2,10 @@ import type { PlannedTaskInfo } from "../../types/hostSession";
 import type { Dispatch, SetStateAction } from "react";
 import { useState, type FormEvent } from "react";
 import * as hostSessionCommands from "../../lib/hostSessionCommands";
-import { patchLiveHostPlanTask } from "./liveHostPlanData";
+import {
+  patchLiveHostPlanTask,
+  plannedTaskForChallenge,
+} from "./liveHostPlanData";
 import type { GameSession, SessionChallenge } from "./types";
 import type { SetHostBusy } from "./useHostOperation";
 
@@ -10,6 +13,7 @@ interface Options {
   nextBreakChallenge: SessionChallenge | undefined;
   nextBreakTask: PlannedTaskInfo | undefined;
   plannedTasks: PlannedTaskInfo[];
+  challenges: SessionChallenge[];
   session: GameSession | null;
   setBusy: SetHostBusy;
   setError: Dispatch<SetStateAction<string>>;
@@ -21,6 +25,7 @@ export function useHostChallengeEditor({
   nextBreakChallenge,
   nextBreakTask,
   plannedTasks,
+  challenges,
   session,
   setBusy,
   setError,
@@ -37,6 +42,10 @@ export function useHostChallengeEditor({
 
   const [editChallengeEquipment, setEditChallengeEquipment] = useState("");
 
+  const [editChallengeSetup, setEditChallengeSetup] = useState("");
+
+  const [editChallengePrep, setEditChallengePrep] = useState("");
+
   const [editChallengeDuration, setEditChallengeDuration] = useState(15);
 
   const [editChallengePoints, setEditChallengePoints] = useState(10);
@@ -45,18 +54,19 @@ export function useHostChallengeEditor({
 
   function plannedTaskFor(challenge: SessionChallenge) {
     return (
-      plannedTasks.find((task) => task.id === challenge.id) ??
+      plannedTaskForChallenge(plannedTasks, challenge, challenges) ??
       (nextBreakChallenge?.id === challenge.id ? nextBreakTask : undefined)
     );
   }
 
   function openBreakChallengeEditor(challenge: SessionChallenge) {
+    const plannedTask = plannedTaskFor(challenge);
     setEditingBreakChallenge(challenge);
     setEditChallengeTitle(challenge.title);
     setEditChallengeDescription(challenge.description);
-    setEditChallengeEquipment(
-      (plannedTaskFor(challenge)?.equipment ?? []).join(", "),
-    );
+    setEditChallengeEquipment((plannedTask?.equipment ?? []).join(", "));
+    setEditChallengeSetup(plannedTask?.setup ?? "");
+    setEditChallengePrep(plannedTask?.prep ?? "");
     setEditChallengeDuration(Math.max(1, challenge.duration_minutes || 15));
     setEditChallengePoints(Math.max(0, challenge.points || 0));
     setEditChallengeEvidence(challenge.allow_photo_upload);
@@ -103,10 +113,12 @@ export function useHostChallengeEditor({
             minutes: Math.max(1, Number(editChallengeDuration) || 1),
             points: Math.max(0, Number(editChallengePoints) || 0),
             equipment,
+            setup: editChallengeSetup.trim(),
+            prep: editChallengePrep.trim(),
           });
       if (!update) {
         saveError =
-          "Challenge updated for this game. Its saved plan equipment could not be updated.";
+          "Challenge updated for this game. Its saved plan details could not be updated.";
       } else {
         const { error: planError } =
           await hostSessionCommands.saveHostPlanTasks({
@@ -116,7 +128,7 @@ export function useHostChallengeEditor({
           });
         if (planError)
           saveError =
-            "Challenge updated for this game. Its saved plan equipment could not be updated.";
+            "Challenge updated for this game. Its saved plan details could not be updated.";
         else setPlannedTasks(update.plannedTasks);
       }
     }
@@ -140,6 +152,10 @@ export function useHostChallengeEditor({
     setEditChallengeDescription,
     editChallengeEquipment,
     setEditChallengeEquipment,
+    editChallengeSetup,
+    setEditChallengeSetup,
+    editChallengePrep,
+    setEditChallengePrep,
     editChallengeDuration,
     setEditChallengeDuration,
     editChallengePoints,

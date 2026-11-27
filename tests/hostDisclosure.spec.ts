@@ -461,6 +461,29 @@ for (const teamsEnabled of [false, true]) {
     await expect(
       current.getByRole("button", { name: "Edit Make an entrance" }),
     ).toBeVisible();
+    await current
+      .getByRole("button", { name: "Edit Make an entrance" })
+      .click();
+    const challengeEditor = page.getByRole("dialog", {
+      name: "Update challenge",
+    });
+    await expect(challengeEditor.getByLabel("Instructions")).toHaveValue(
+      "Show everyone your best entrance.",
+    );
+    await expect(challengeEditor.getByLabel("Points")).toHaveValue("20");
+    await expect(
+      challengeEditor.getByRole("textbox", { name: "Setup", exact: true }),
+    ).toHaveValue("Arrange the chairs");
+    await expect(
+      challengeEditor.getByRole("textbox", {
+        name: "Preparation",
+        exact: true,
+      }),
+    ).toHaveValue("Prepare the room");
+    await expect(challengeEditor).toContainText(
+      `Participation: ${teamsEnabled ? "teams" : "individual players"}`,
+    );
+    await challengeEditor.getByRole("button", { name: "Cancel" }).click();
     expect(
       await current
         .locator(".host-game-schedule__award")

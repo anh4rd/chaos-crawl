@@ -3,6 +3,7 @@ import ChallengeArtwork from "../../components/challenge/ChallengeArtwork";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
 import StatSummary from "../../components/ui/StatSummary";
+import { plannedTaskForChallenge } from "./liveHostPlanData";
 import type { PlannedTaskInfo } from "../../types/hostSession";
 import type {
   GameScheduleItem,
@@ -89,13 +90,25 @@ export default function HostGameSchedule({
   onEdit,
 }: Props) {
   const scheduledItems = schedule.map((item, index) => {
+    const plannedTask = plannedTasks.find((task) => task.id === item.taskId);
+    const matchingChallenges = challenges.filter(
+      (candidate) =>
+        candidate.kind !== "secret" &&
+        candidate.title === (plannedTask?.title ?? item.title),
+    );
+    const titleMatches =
+      matchingChallenges.length === 0 && plannedTask?.title
+        ? challenges.filter(
+            (candidate) =>
+              candidate.kind !== "secret" && candidate.title === item.title,
+          )
+        : matchingChallenges;
     const challenge =
       item.type === "challenge"
-        ? challenges.find(
+        ? (challenges.find(
             (candidate) =>
-              candidate.kind !== "secret" &&
-              (candidate.id === item.taskId || candidate.title === item.title),
-          )
+              candidate.kind !== "secret" && candidate.id === item.taskId,
+          ) ?? (titleMatches.length === 1 ? titleMatches[0] : undefined))
         : undefined;
     return {
       id: item.id ?? `${item.type}-${item.taskId ?? item.title}-${index}`,
@@ -181,9 +194,7 @@ export default function HostGameSchedule({
   const completedRows = rows.filter((row) => row.status === "completed");
   const activeRows = rows.filter((row) => row.status !== "completed");
   const plannedFor = (challenge: SessionChallenge) =>
-    plannedTasks.find(
-      (task) => task.id === challenge.id || task.title === challenge.title,
-    );
+    plannedTaskForChallenge(plannedTasks, challenge, challenges);
   const renderRow = (item: (typeof rows)[number]) => {
     const meta = kindMeta[item.kind];
     const challenge = item.challenge;
@@ -272,6 +283,13 @@ export default function HostGameSchedule({
               <p>After the break: {item.nextTitle}</p>
             )}
             {challenge?.description && <p>{challenge.description}</p>}
+            {challenge && (
+              <p>
+                {challenge.allow_photo_upload
+                  ? "Photo or video evidence required."
+                  : "Photo or video evidence not required."}
+              </p>
+            )}
             {planned?.prep && (
               <p className="host-game-schedule__detail">
                 <Icon

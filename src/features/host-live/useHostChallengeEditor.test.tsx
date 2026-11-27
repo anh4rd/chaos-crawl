@@ -25,6 +25,7 @@ function options(): Parameters<typeof useHostChallengeEditor>[0] {
     nextBreakChallenge: hostChallengeFixture(),
     nextBreakTask: { id: "task", equipment: ["Old"] },
     plannedTasks: [],
+    challenges: [hostChallengeFixture()],
     session: hostSessionFixture(),
     setBusy: vi.fn(() => true),
     setError: vi.fn(),
@@ -41,6 +42,8 @@ async function save(props: ReturnType<typeof options>) {
   act(() => {
     hook.result.current.setEditChallengeTitle("  New title  ");
     hook.result.current.setEditChallengeEquipment("Hat, , Coat ");
+    hook.result.current.setEditChallengeSetup("  Arrange chairs  ");
+    hook.result.current.setEditChallengePrep("  Set out props  ");
     hook.result.current.setEditChallengePoints(0);
   });
   let pending: Promise<void> | undefined;
@@ -97,6 +100,8 @@ it("preserves saved root metadata, unrelated task values/order and unknown task 
             minutes: 5,
             points: 0,
             equipment: ["Hat", "Coat"],
+            setup: "Arrange chairs",
+            prep: "Set out props",
           },
           plan.selectedTasks[2],
         ],
@@ -110,12 +115,25 @@ it("preserves saved root metadata, unrelated task values/order and unknown task 
   );
   expect(props.load).toHaveBeenCalledOnce();
 });
+it("edits saved-plan equipment when a live challenge has a different ID but a unique matching title", () => {
+  const props = options();
+  props.nextBreakChallenge = undefined;
+  props.nextBreakTask = undefined;
+  props.plannedTasks = [
+    { id: "plan-task", title: "Entrance", equipment: ["Hat"] },
+  ];
+  const { result } = renderHook(() => useHostChallengeEditor(props));
+  act(() => result.current.openBreakChallengeEditor(hostChallengeFixture()));
+  expect(result.current.canEditEquipment).toBe(true);
+  expect(result.current.editChallengeEquipment).toBe("Hat");
+});
 it.each([
   null,
   {},
   { selectedTasks: null },
   { selectedTasks: [null] },
   { selectedTasks: [{ id: "task", equipment: [42] }] },
+  { selectedTasks: [{ id: "other" }] },
 ])(
   "does not overwrite malformed saved data after a live edit: %j",
   async (plan) => {
@@ -128,7 +146,7 @@ it.each([
     expect(commands.saveBreakChallenge).toHaveBeenCalledOnce();
     expect(commands.saveHostPlanTasks).not.toHaveBeenCalled();
     expect(props.setError).toHaveBeenLastCalledWith(
-      "Challenge updated for this game. Its saved plan equipment could not be updated.",
+      "Challenge updated for this game. Its saved plan details could not be updated.",
     );
     expect(result.current.editingBreakChallenge).toBeNull();
     expect(props.load).toHaveBeenCalledOnce();
@@ -143,7 +161,7 @@ it("does not overwrite a plan after a failed read", async () => {
   await save(props);
   expect(commands.saveHostPlanTasks).not.toHaveBeenCalled();
   expect(props.setError).toHaveBeenLastCalledWith(
-    "Challenge updated for this game. Its saved plan equipment could not be updated.",
+    "Challenge updated for this game. Its saved plan details could not be updated.",
   );
 });
 it("reports a failed saved-plan write as a visible error after updating the live challenge", async () => {
@@ -158,7 +176,7 @@ it("reports a failed saved-plan write as a visible error after updating the live
   const props = options();
   await save(props);
   expect(props.setError).toHaveBeenLastCalledWith(
-    "Challenge updated for this game. Its saved plan equipment could not be updated.",
+    "Challenge updated for this game. Its saved plan details could not be updated.",
   );
   expect(props.load).toHaveBeenCalledOnce();
 });

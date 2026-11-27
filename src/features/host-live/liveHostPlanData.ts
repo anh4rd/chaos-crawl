@@ -45,6 +45,19 @@ function projectTask(
     ...(task.prep !== undefined ? { prep: task.prep } : {}),
   };
 }
+export function plannedTaskForChallenge(
+  plannedTasks: PlannedTaskInfo[],
+  challenge: { id: string; title: string },
+  challenges: { id: string; title: string }[],
+): PlannedTaskInfo | undefined {
+  const byId = plannedTasks.find((task) => task.id === challenge.id);
+  if (byId) return byId;
+  if (challenges.filter((item) => item.title === challenge.title).length !== 1)
+    return undefined;
+  const byTitle = plannedTasks.filter((task) => task.title === challenge.title);
+  return byTitle.length === 1 ? byTitle[0] : undefined;
+}
+
 function isScheduleItem(value: unknown): value is GameScheduleItem {
   return (
     isRecord(value) &&
@@ -108,12 +121,15 @@ export function patchLiveHostPlanTask(
     minutes: number;
     points: number;
     equipment: string[];
+    setup: string;
+    prep: string;
   },
 ) {
   if (
     !isRecord(value) ||
     !Array.isArray(value.selectedTasks) ||
-    !value.selectedTasks.every(isPlannedTask)
+    !value.selectedTasks.every(isPlannedTask) ||
+    !value.selectedTasks.some((task) => task.id === id)
   )
     return null;
   const selectedTasks = value.selectedTasks.map((task) =>

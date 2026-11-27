@@ -7,6 +7,11 @@ writes are included.
 
 ## In progress
 
+The live host schedule links uniquely identifiable planned challenge phases to
+their live challenge. Its editor includes saved setup and preparation alongside
+the existing live fields and equipment. Participation is still configured for
+the entire game; per-challenge individual/team rules are not implemented.
+
 Adding a catalogue challenge to a game now rejects a second challenge type
 instead of creating a suffixed duplicate. Planner selections and scheduling
 apply the same guard across saved and catalogue ID aliases. Existing duplicate
