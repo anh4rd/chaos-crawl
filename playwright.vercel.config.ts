@@ -10,7 +10,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535)
 
 export default defineConfig({
   testDir: "./tests",
-  testMatch: "vercel-build.spec.ts",
+  testMatch: ["vercel-build.spec.ts", "pwa-production.spec.ts"],
   use: {
     baseURL: `http://127.0.0.1:${port}/`,
   },

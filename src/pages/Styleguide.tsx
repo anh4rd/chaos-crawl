@@ -17,6 +17,7 @@ import SessionExamples from "../features/styleguide/SessionExamples";
 import SessionMemoriesExample from "../features/styleguide/SessionMemoriesExample";
 import TeamChoicesExample from "../features/styleguide/TeamChoicesExample";
 import PlayerAccessExample from "../features/styleguide/PlayerAccessExample";
+import InstallPromptExample from "../features/styleguide/InstallPromptExample";
 import PrivateMissionExample from "../features/styleguide/PrivateMissionExample";
 import SlideshowExample from "../features/styleguide/SlideshowExample";
 import LegacySlideshowExample from "../features/styleguide/LegacySlideshowExample";
@@ -69,6 +70,7 @@ export default function Styleguide() {
         <LegacyHostExample />
         <SessionStatusExample />
         <PlayerAccessExample />
+        <InstallPromptExample />
         <ParticipationExamples />
       </Section>
       <Section

@@ -4,6 +4,7 @@ import ReactDOM from "react-dom/client";
 import { HashRouter } from "react-router-dom";
 import App from "./App";
 import HostConfirmation from "./features/host-access/HostConfirmation";
+import InstallPromptController from "./features/install/InstallPromptController";
 import "./instrument";
 import "../scss/style.scss";
 
@@ -12,6 +13,14 @@ if (!rootElement) throw new Error("Application root element is missing.");
 // Supabase's confirmation tokens use the hash, so process them before routing.
 const isHostConfirmation =
   new URLSearchParams(window.location.search).get("host_confirmation") === "1";
+
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  void navigator.serviceWorker
+    .register(`${import.meta.env.BASE_URL}sw.js`)
+    .catch((error: unknown) => {
+      console.error("Could not register the offline page.", error);
+    });
+}
 
 ReactDOM.createRoot(rootElement, {
   onUncaughtError: Sentry.reactErrorHandler(),
@@ -30,9 +39,12 @@ ReactDOM.createRoot(rootElement, {
       {isHostConfirmation ? (
         <HostConfirmation />
       ) : (
-        <HashRouter>
-          <App />
-        </HashRouter>
+        <>
+          <InstallPromptController />
+          <HashRouter>
+            <App />
+          </HashRouter>
+        </>
       )}
     </Sentry.ErrorBoundary>
   </React.StrictMode>,

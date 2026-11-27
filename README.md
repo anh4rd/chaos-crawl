@@ -9,6 +9,21 @@ Vercel builds for the domain root using `vercel.json`, so the equivalent route
 is `/#/admin`. Old `/chaos-crawl/` links redirect to the root. The build command
 in `vercel.json` overrides the Vercel dashboard build command.
 
+### Install and notifications
+
+On supported Android browsers, the app offers installation when the browser
+signals it is eligible; otherwise use the browser's install or add-to-home-screen
+menu. On iOS, use Share > Add to Home Screen, then open the
+installed app. After installation, an optional button requests notification
+permission; iOS web push requires iOS/iPadOS 16.4 or newer and a Home Screen
+app. Availability and timing depend on the browser and device settings.
+
+Permission alone does not enable push notifications. Supabase subscription
+storage, a push service worker handler, VAPID keys, and a server-side sender
+must still be implemented before notifications can be delivered. Never put
+private VAPID keys in the frontend. The service worker only provides an offline
+message for navigation; games and host operations require a connection.
+
 V2 uses `/join` (six-digit session code), `/play/:joinCode`, and the authenticated
 `/host` routes. The cleaned-up legacy workflows remain available at `/legacy/join`,
 `/game`, and `/admin-legacy`; both admin routes require a host login. Legacy players
@@ -120,6 +135,7 @@ and [Vite source-map guide](https://docs.sentry.io/platforms/javascript/guides/r
 | `npm run format:check`                                     | Check formatting                                                     |
 | `npm run test:e2e -- tests/smoke.spec.ts`                  | Test actual hash routes with a mocked backend                        |
 | `npx playwright test --config playwright.vercel.config.ts` | Build and smoke-test the Vercel root deployment                      |
+| `npx playwright test --config playwright.pwa.config.ts`    | Build and test PWA assets at the GitHub Pages base                   |
 | `npm run test:e2e`                                         | Run deterministic desktop/mobile browser tests with a mocked backend |
 | `npm run test:e2e:live`                                    | Explicitly run live journeys against a disposable test backend       |
 | `npm run test:e2e:ui`                                      | Open Playwright's interactive test runner                            |

@@ -1,5 +1,11 @@
 /** Notes describe the existing contracts; components stay owned by their features. */
 const notes: Record<string, { usage: string; dependencies: string }> = {
+  InstallPrompt: {
+    usage:
+      "Controlled install guidance and notification permission prompt. The styleguide example uses local actions only.",
+    dependencies:
+      "The install controller owns browser events and permission requests; the view never requests permissions or accesses a backend.",
+  },
   HostChallengesView: {
     usage:
       "Read-only liked and created challenge summaries, with their saved, submission or game-plan origin.",

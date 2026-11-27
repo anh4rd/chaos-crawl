@@ -1,0 +1,29 @@
+@use "../variables/colors";
+@use "../variables/fonts";
+@use "../variables/layout";
+
+.install-prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: layout.$spacing-unit * 3;
+  padding: layout.$spacing-unit * 3;
+  background: colors.$white;
+  color: colors.$ink;
+  font-family: fonts.$family-body;
+
+  &__copy {
+    max-width: layout.$content-width;
+  }
+
+  &__copy p {
+    margin: layout.$spacing-unit 0 0;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: layout.$spacing-unit * 2;
+  }
+}

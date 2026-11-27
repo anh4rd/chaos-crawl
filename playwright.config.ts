@@ -8,7 +8,11 @@ const baseURL = `http://127.0.0.1:${port}/chaos-crawl/`;
 export default defineConfig({
   testDir: "./tests",
   testMatch: "**/*.spec.ts",
-  testIgnore: ["**/live/**", "**/vercel-build.spec.ts"],
+  testIgnore: [
+    "**/live/**",
+    "**/vercel-build.spec.ts",
+    "**/pwa-production.spec.ts",
+  ],
 
   fullyParallel: false,
 
