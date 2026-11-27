@@ -5,6 +5,11 @@ import {
   readSessionTeamAdjustments,
   type SessionTeamAdjustment,
 } from "../../lib/sessionTeamAdjustments";
+import {
+  readSessionPortraits,
+  type SessionPortraits,
+} from "../../lib/sessionPortraits";
+import { failedResult } from "../../lib/apiResult";
 import type {
   FinalGalleryView,
   LeaderboardEntry,
@@ -23,6 +28,10 @@ export function useSessionPlayerData(
 ) {
   const requestVersion = useRef(0);
   const [view, setView] = useState<SessionView | null>(null);
+  const [portraits, setPortraits] = useState<SessionPortraits>({
+    players: {},
+    teams: {},
+  });
 
   const [secretMissions, setSecretMissions] = useState<SecretMission[]>([]);
 
@@ -79,6 +88,7 @@ export function useSessionPlayerData(
 
   useEffect(() => {
     setView(null);
+    setPortraits({ players: {}, teams: {} });
     setSecretMissions([]);
     setSecretReview(null);
     setEvidence([]);
@@ -169,6 +179,16 @@ export function useSessionPlayerData(
       setLastUpdated(new Date());
     }
 
+    const portraitResult = await readSessionPortraits(code, token).catch(
+      failedResult,
+    );
+    if (version !== requestVersion.current) return;
+    if (portraitResult.error || !portraitResult.data) {
+      nextError = `Player and team photos couldn't refresh: ${portraitResult.error?.message ?? "No photo data was returned."}`;
+    } else {
+      setPortraits(portraitResult.data);
+    }
+
     const { data: rewardData, error: rewardError } = await supabase.rpc(
       "cc_player_get_session_reward_round",
       {
@@ -178,7 +198,9 @@ export function useSessionPlayerData(
     );
     if (version !== requestVersion.current) return;
     if (rewardError) {
-      nextError = `Your game loaded, but reward points couldn't refresh: ${rewardError.message}`;
+      nextError =
+        nextError ||
+        `Your game loaded, but reward points couldn't refresh: ${rewardError.message}`;
     } else {
       setRewardRound((rewardData ?? null) as PlayerRewardRound | null);
     }
@@ -327,6 +349,7 @@ export function useSessionPlayerData(
   }, [code, token, view?.player.id]);
   return {
     view,
+    portraits,
     secretMissions,
     secretReview,
     leaderboard,

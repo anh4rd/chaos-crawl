@@ -67,7 +67,12 @@ export interface RewardPresentation {
   completed: boolean;
   votesCast: number;
   selectedId?: string | null;
-  candidates: { id: string; name: string; detail: string }[];
+  candidates: {
+    id: string;
+    name: string;
+    detail: string;
+    avatarUrl?: string | null;
+  }[];
   winners: { id: string; name: string; points: number; votes: number }[];
   leaderboard: RankedParticipant[];
 }

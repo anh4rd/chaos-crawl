@@ -1,4 +1,5 @@
 import SharedLeaderboard from "../../components/session/SessionLeaderboard";
+import type { SessionPortraits } from "../../lib/sessionPortraits";
 import type { LeaderboardEntry, SessionInfo, SessionPlayerInfo } from "./types";
 
 export default function SessionLeaderboard({
@@ -7,6 +8,7 @@ export default function SessionLeaderboard({
   player,
   teamLeaderboard,
   teamScoresUnavailable,
+  portraits,
 }: {
   session: SessionInfo;
   leaderboard: LeaderboardEntry[];
@@ -18,6 +20,7 @@ export default function SessionLeaderboard({
     member_count: number;
   }[];
   teamScoresUnavailable: boolean;
+  portraits: SessionPortraits;
 }) {
   return (
     <SharedLeaderboard
@@ -35,7 +38,7 @@ export default function SessionLeaderboard({
         id: entry.player_id,
         name: entry.name,
         score: entry.score,
-        avatarUrl: entry.avatar_url,
+        avatarUrl: portraits.players[entry.player_id] ?? entry.avatar_url,
         teamId: entry.team_id,
         teamName: entry.team_name,
       }))}
@@ -44,6 +47,7 @@ export default function SessionLeaderboard({
           ? teamLeaderboard.map((team) => ({
               id: team.id,
               name: team.name,
+              avatarUrl: portraits.teams[team.id],
               score: team.score,
               detail: `${team.member_count} players`,
             }))

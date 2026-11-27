@@ -125,7 +125,8 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
       "Owned feedback-notice SCSS and native div attributes. No default ARIA role, timers, dismissal, backend calls or feedback state ownership.",
   },
   RankingRow: {
-    usage: "Controlled console rank/name/score row preserving caller order.",
+    usage:
+      "Controlled console rank/name/score row with an optional portrait, preserving caller order.",
     dependencies:
       "Shared CountBadge and owned ranking-row SCSS; no sorting or queries.",
   },
@@ -178,13 +179,13 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   BallotView: {
     usage:
-      "Controlled legacy player/team ballot, checking/cast/rejoin states and supplied callbacks. Local legacy player screens never mounts the connected Ballot controller.",
+      "Controlled legacy player/team ballot with optional portraits, checking/cast/rejoin states and supplied callbacks. Local legacy player screens never mounts the connected Ballot controller.",
     dependencies:
       "PageFrame, Card, Button, ChoiceOption ballot and owned ballot SCSS with explicit presentation state. No queries, credential storage or navigation.",
   },
   VoteResultsView: {
     usage:
-      "Controlled legacy published result list, preserving caller order and totals. Local legacy player screens supplies sample results.",
+      "Controlled legacy published result list with optional portraits, preserving caller order and totals. Local legacy player screens supplies sample results.",
     dependencies:
       "PageFrame, shared ScreenIntro, Card and owned vote-results SCSS. The connected route guards voting/publication before passing results; this view never chooses publication policy.",
   },
@@ -310,7 +311,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   ScoreLeaderboard: {
     usage:
-      "Caller-ordered legacy score rows retaining native div/span/strong markup.",
+      "Caller-ordered legacy score rows with optional player or team portraits.",
     dependencies:
       "Feature-private entry models; no ledger computation, sorting or queries.",
   },
@@ -588,7 +589,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
 
   ChoiceOption: {
     usage:
-      "Native choice button with supplied label, description, selected/disabled state and click callback. The local team choices reference demonstrates selected, full and busy records. Ballot variant retains the native legacy div label/optional description, selection, keyboard and disabled contracts; shown in Local legacy player screens.",
+      "Native choice button with supplied label, optional image, description, selected/disabled state and click callback. The local team choices reference demonstrates selected, full and busy records. Ballot variant retains the native legacy div label/optional description, selection, keyboard and disabled contracts; shown in Local legacy player screens.",
     dependencies:
       "Owned choice-option SCSS and Avatar choice variant; caller owns capacity, membership and persistence.",
   },
@@ -1310,13 +1311,13 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionCandidate: {
     usage:
-      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+      "Shared host/player candidate with a supplied portrait or initial fallback. See the interactive session example; callbacks are optional for read-only viewing.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },
   SessionVotingCard: {
     usage:
-      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+      "Shared host/player voting presentation with supplied participant and published-voter portraits. Voter identities remain hidden while voting is open.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },
@@ -1334,7 +1335,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionReview: {
     usage:
-      "Shared host/player presentation. See the interactive session example and source props; callbacks are optional where read-only viewing is supported.",
+      "Shared secret review with optional owner and published-voter portraits. Voter identities remain hidden while voting is open.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },

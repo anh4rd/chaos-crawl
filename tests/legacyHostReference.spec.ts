@@ -18,6 +18,9 @@ test("local legacy host console supports native controls without backend or cred
     name: "Host navigation",
   });
   await navigation.getByRole("button", { name: "Players" }).click();
+  const rosterPhoto = preview.locator(".avatar--console img");
+  await expect(rosterPhoto).toBeVisible();
+  await expect(rosterPhoto).toHaveCSS("object-fit", "cover");
   await preview
     .getByRole("textbox", { name: "New team name" })
     .fill("  Bears  ");

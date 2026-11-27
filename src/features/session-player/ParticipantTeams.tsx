@@ -19,6 +19,7 @@ interface Props {
   createTeam: (event: FormEvent<HTMLFormElement>) => Promise<void>;
   teamName: string;
   setTeamName: (name: string) => void;
+  teamPhotoUrls?: Record<string, string>;
 }
 export default function ParticipantTeams({
   session,
@@ -29,6 +30,7 @@ export default function ParticipantTeams({
   createTeam,
   teamName,
   setTeamName,
+  teamPhotoUrls = {},
 }: Props) {
   return (
     <ContentPanel variant="choice">
@@ -50,6 +52,7 @@ export default function ParticipantTeams({
             <ChoiceOption
               key={team.id}
               label={team.name}
+              imageSrc={teamPhotoUrls[team.id]}
               description={description}
               selected={selected}
               disabled={busyKey !== null || full}

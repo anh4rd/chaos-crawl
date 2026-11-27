@@ -15,6 +15,7 @@ export default function PlayerRow({
         as="div"
         variant="console"
         name={player.initial}
+        imageSrc={player.avatarUrl}
         aria-hidden="true"
       />
       <div className="roster-row__controls">

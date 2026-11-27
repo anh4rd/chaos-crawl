@@ -10,6 +10,7 @@ import Card from "../components/ui/Card";
 import DataError from "../components/ui/DataError";
 
 import { usePlayers } from "../game/hooks/usePlayers";
+import { useTeams } from "../game/hooks/useTeams";
 
 import { useScoreEvents } from "../game/hooks/useScoreEvents";
 
@@ -22,6 +23,7 @@ export default function Leaderboard() {
 
   const playersQuery = usePlayers();
   const { data: players } = playersQuery;
+  const teamsQuery = useTeams();
 
   const scoreQuery = useScoreEvents();
   const { data: scoreEvents, loading } = scoreQuery;
@@ -31,8 +33,8 @@ export default function Leaderboard() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const boards = useMemo(
-    () => buildLeaderboards(players, scoreEvents),
-    [players, scoreEvents],
+    () => buildLeaderboards(players, scoreEvents, teamsQuery.data),
+    [players, scoreEvents, teamsQuery.data],
   );
   const leaderboard = boards[mode];
 
@@ -40,7 +42,9 @@ export default function Leaderboard() {
     ? playersQuery
     : scoreQuery.error
       ? scoreQuery
-      : null;
+      : teamsQuery.error
+        ? teamsQuery
+        : null;
   if (failed?.error)
     return <DataError error={failed.error} retry={failed.reload} />;
 
@@ -73,7 +77,7 @@ export default function Leaderboard() {
         </Button>
       </div>
 
-      {loading || playersQuery.loading ? (
+      {loading || playersQuery.loading || teamsQuery.loading ? (
         <Card>
           <p>Loading scores...</p>
         </Card>

@@ -1,6 +1,7 @@
 import SessionState from "../../components/session/SessionState";
 import { isSecretVotingOpen } from "./votingState";
 import SessionReview from "../../components/session/SessionReview";
+import type { SessionPortraits } from "../../lib/sessionPortraits";
 import type { SecretReviewView, SessionPlayerInfo } from "./types";
 export default function SecretMissionReview({
   secretReview,
@@ -8,12 +9,14 @@ export default function SecretMissionReview({
   busyKey,
   voteOnSecretReview,
   player,
+  portraits,
 }: {
   secretReview: SecretReviewView;
   mediaUrl: (path: string) => string;
   busyKey: string | null;
   voteOnSecretReview: (vote: "success" | "fail") => Promise<void>;
   player: SessionPlayerInfo;
+  portraits: SessionPortraits;
 }) {
   const mission = secretReview.mission;
   if (!mission)
@@ -24,6 +27,9 @@ export default function SecretMissionReview({
       title={mission.title}
       description={mission.description}
       owner={mission.player_name}
+      ownerAvatarUrl={
+        portraits.players[mission.player_id] ?? mission.player_avatar_url
+      }
       points={mission.points}
       evidence={secretReview.media.map((item) => ({
         id: item.id,
@@ -49,6 +55,7 @@ export default function SecretMissionReview({
           : secretReview.voters.map((voter) => ({
               id: voter.id,
               name: voter.name,
+              avatarUrl: portraits.players[voter.id] ?? voter.avatar_url,
               vote: voter.vote,
             }))
       }
@@ -59,7 +66,7 @@ export default function SecretMissionReview({
               id: entry.player_id,
               name: entry.name,
               score: entry.score,
-              avatarUrl: entry.avatar_url,
+              avatarUrl: portraits.players[entry.player_id] ?? entry.avatar_url,
               teamId: entry.team_id,
               teamName: entry.team_name,
             }))

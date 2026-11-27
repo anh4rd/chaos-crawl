@@ -49,7 +49,12 @@ export interface ScoreAdjustmentModel {
 export interface ScoreLeaderboardModel {
   target: ScoreTarget;
   loading: boolean;
-  entries: Array<{ id: string; name: string; score: number }>;
+  entries: Array<{
+    id: string;
+    name: string;
+    score: number;
+    avatarUrl?: string | null;
+  }>;
   onTargetChange: (target: ScoreTarget) => void;
 }
 
@@ -115,6 +120,7 @@ export interface PlayerRowModel {
   id: string;
   name: string;
   initial: string;
+  avatarUrl?: string | null;
   team: string;
   onRename: (value: string) => void;
   onAssignTeam: (value: string) => void;

@@ -197,6 +197,11 @@ test("local legacy player views join and vote without connected controllers", as
     }),
   });
   await expect(example).toBeVisible();
+  const ballotPhoto = example
+    .getByRole("button", { name: "Pat Ducks", exact: true })
+    .locator("img");
+  await expect(ballotPhoto).toBeVisible();
+  await expect(ballotPhoto).toHaveCSS("object-fit", "cover");
   await example
     .getByRole("textbox", { name: "Your name", exact: true })
     .fill("Nora");

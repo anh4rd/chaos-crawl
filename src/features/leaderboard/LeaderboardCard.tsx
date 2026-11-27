@@ -1,5 +1,6 @@
 import { useId } from "react";
 import Card from "../../components/ui/Card";
+import Avatar from "../../components/ui/Avatar";
 import { type LeaderboardEntry } from "../../lib/leaderboard";
 import { ScoreHistoryRow } from "./ScoreHistoryRow";
 
@@ -35,7 +36,13 @@ export function LeaderboardCard({
                     ? "🥉"
                     : `${index + 1}.`}
             </span>
-
+            {entry.avatarUrl && (
+              <Avatar
+                name={entry.name}
+                imageSrc={entry.avatarUrl}
+                variant="compact"
+              />
+            )}
             <div>
               <h2 className="leaderboard-card__name">{entry.name}</h2>
 

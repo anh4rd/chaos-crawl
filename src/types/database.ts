@@ -10,6 +10,7 @@ export type Player = {
   team_id?: string | number | null;
   score: number;
   points?: number | null;
+  avatar_url?: string | null;
 };
 export type Pub = {
   id: number;
@@ -89,7 +90,7 @@ export type ScoreEvent = {
   reason: string | null;
   awarded_at: string;
 };
-export type Team = { id: string; name: string };
+export type Team = { id: string; name: string; avatar_url?: string | null };
 export type Vote = {
   id: string | number;
   voter_id: string;

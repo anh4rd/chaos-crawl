@@ -5,6 +5,23 @@ import { LeaderboardCard } from "./LeaderboardCard";
 const entry = { id: "Ducks team", name: "Ducks", score: 0, events: [] };
 afterEach(cleanup);
 
+it("renders an uploaded portrait alongside the candidate name", () => {
+  render(
+    <LeaderboardCard
+      entry={{ ...entry, avatarUrl: "/team.jpg" }}
+      index={0}
+      expanded={false}
+      onToggle={() => {}}
+    />,
+  );
+  expect(
+    screen
+      .getByRole("button", { name: /Ducks/ })
+      .querySelector("img")
+      ?.getAttribute("src"),
+  ).toBe("/team.jpg");
+});
+
 it("announces history expansion and links only the mounted history without losing focus", () => {
   const onToggle = vi.fn();
   const view = render(

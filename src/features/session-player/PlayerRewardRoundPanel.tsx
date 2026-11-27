@@ -1,16 +1,19 @@
 import SessionRewardRound from "../../components/session/SessionRewardRound";
 import type { PlayerRewardRound, SessionPlayerInfo } from "./types";
+import type { SessionPortraits } from "../../lib/sessionPortraits";
 
 export default function PlayerRewardRoundPanel({
   rewardRound,
   busyKey,
   voteInRewardRound,
   player,
+  portraits,
 }: {
   rewardRound: PlayerRewardRound;
   busyKey: string | null;
   voteInRewardRound: (id: string) => Promise<void>;
   player: SessionPlayerInfo;
+  portraits: SessionPortraits;
 }) {
   return (
     <SessionRewardRound
@@ -31,6 +34,10 @@ export default function PlayerRewardRoundPanel({
         candidates: rewardRound.candidates.map((candidate) => ({
           id: candidate.id,
           name: candidate.name,
+          avatarUrl:
+            rewardRound.target_kind === "team"
+              ? portraits.teams[candidate.id]
+              : portraits.players[candidate.id],
           detail:
             rewardRound.target_kind === "team"
               ? `${candidate.member_count ?? 0} players`
@@ -46,6 +53,7 @@ export default function PlayerRewardRoundPanel({
           id: entry.id,
           name: entry.name,
           score: entry.score,
+          avatarUrl: portraits.players[entry.id],
           teamName: entry.team_name,
         })),
       }}

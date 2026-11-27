@@ -1,6 +1,7 @@
 export default function SessionCandidate({
   name,
   detail,
+  avatarUrl,
   selected,
   busy = false,
   actionLabel = "Vote",
@@ -8,6 +9,7 @@ export default function SessionCandidate({
 }: {
   name: string;
   detail: string;
+  avatarUrl?: string | null;
   selected: boolean;
   busy?: boolean;
   actionLabel?: string;
@@ -16,7 +18,11 @@ export default function SessionCandidate({
   const content = (
     <>
       <span className="session-candidate__avatar">
-        {name.slice(0, 1).toUpperCase()}
+        {avatarUrl ? (
+          <img src={avatarUrl} alt="" />
+        ) : (
+          name.slice(0, 1).toUpperCase()
+        )}
       </span>
       <span className="session-candidate__copy">
         <strong>{name}</strong>

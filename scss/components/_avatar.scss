@@ -62,10 +62,14 @@
     place-items: center;
     width: layout.$pixel-unit * 9.25;
     height: layout.$pixel-unit * 9.25;
+    overflow: hidden;
     border-radius: 50%;
     background: colors.$choice-lavender;
     color: colors.$assignment-icon-ink;
     font-weight: fonts.$weight-heavy;
+  }
+  &--choice img {
+    @include image-cover.image-cover;
   }
 }
 
@@ -76,6 +80,7 @@
     flex: 0 0 (layout.$pixel-unit * 9.5);
     width: (layout.$pixel-unit * 9.5);
     height: (layout.$pixel-unit * 9.5);
+    overflow: hidden;
     border: (layout.$pixel-unit * 0.75) solid colors.$white;
     border-radius: layout.$radius-compact-pill;
     background: colors.$purple;
@@ -83,6 +88,9 @@
     font-size: fonts.$size-intro;
     font-weight: fonts.$weight-heading;
     box-shadow: 0 0 0 (layout.$pixel-unit * 0.5) colors.$accent-soft;
+  }
+  &--console img {
+    @include image-cover.image-cover;
   }
 }
 

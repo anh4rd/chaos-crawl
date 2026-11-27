@@ -5,6 +5,7 @@ export interface LeaderboardEntry {
   name: string;
   score: number;
   events: ScoreEvent[];
+  avatarUrl?: string | null;
 }
 
 /** Personal awards count for their player and that player's current team.
@@ -13,6 +14,7 @@ export interface LeaderboardEntry {
 export function buildLeaderboards(
   players: readonly Player[],
   events: readonly ScoreEvent[],
+  teamRecords: readonly { name: string; avatar_url?: string | null }[] = [],
 ) {
   const personal = new Map(
     players.map((player): [string, LeaderboardEntry] => [
@@ -22,6 +24,7 @@ export function buildLeaderboards(
         name: player.name,
         score: 0,
         events: [],
+        ...(player.avatar_url ? { avatarUrl: player.avatar_url } : {}),
       },
     ]),
   );
@@ -30,7 +33,16 @@ export function buildLeaderboards(
   function teamEntry(name: string) {
     const existing = teams.get(name);
     if (existing) return existing;
-    const entry: LeaderboardEntry = { id: name, name, score: 0, events: [] };
+    const avatarUrl = teamRecords.find(
+      (team) => team.name === name,
+    )?.avatar_url;
+    const entry: LeaderboardEntry = {
+      id: name,
+      name,
+      score: 0,
+      events: [],
+      ...(avatarUrl ? { avatarUrl } : {}),
+    };
     teams.set(name, entry);
     return entry;
   }

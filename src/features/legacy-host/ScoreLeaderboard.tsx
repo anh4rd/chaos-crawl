@@ -55,6 +55,7 @@ export default function ScoreLeaderboard({
               rank={index + 1}
               name={entry.name}
               score={entry.score}
+              avatarUrl={entry.avatarUrl}
             />
           ))}
         </PanelGrid>

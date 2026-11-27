@@ -40,6 +40,7 @@ export default function SessionRewardRound({
             <SessionCandidate
               key={candidate.id}
               name={candidate.name}
+              avatarUrl={candidate.avatarUrl}
               detail={candidate.detail}
               selected={candidate.id === round.selectedId}
               busy={busy}

@@ -7,6 +7,7 @@ export default function ChoiceOption({
   label,
   description,
   selected = false,
+  imageSrc,
   className = "",
   ...props
 }: Omit<ButtonHTMLAttributes<HTMLButtonElement>, "children"> & {
@@ -14,6 +15,7 @@ export default function ChoiceOption({
   label: string;
   description: string;
   selected?: boolean;
+  imageSrc?: string | null;
 }) {
   return (
     <button
@@ -23,6 +25,9 @@ export default function ChoiceOption({
     >
       {variant === "ballot" ? (
         <>
+          {imageSrc && (
+            <Avatar variant="choice" name={label} imageSrc={imageSrc} />
+          )}
           <div className="choice-option__label">{label}</div>
           {description && (
             <div className="choice-option__description">{description}</div>
@@ -30,7 +35,7 @@ export default function ChoiceOption({
         </>
       ) : (
         <>
-          <Avatar variant="choice" name={label} />
+          <Avatar variant="choice" name={label} imageSrc={imageSrc} />
           <span className="choice-option__copy">
             <strong>{label}</strong>
             <small>{description}</small>

@@ -1206,7 +1206,13 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                   activeRewardChallenge?.title ?? "Reward round",
                   activeRewardVotes,
                   activeRewardAwards,
-                  rewardTargetRows,
+                  rewardTargetRows.map((candidate) => ({
+                    ...candidate,
+                    avatarUrl:
+                      activeRewardRound.target_kind === "team"
+                        ? teamPhotoUrls[candidate.id]
+                        : playerById.get(candidate.id)?.avatar_url,
+                  })),
                   players,
                   teams,
                 )}
@@ -1321,6 +1327,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
               teamById={teamById}
               adjustScore={adjustScore}
               scoreAdjustmentCount={scoreAdjustmentCount}
+              teamPhotoUrls={teamPhotoUrls}
             />
           )}
           {selectedSecretReviewAssignment &&
@@ -1334,6 +1341,10 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                 owner={
                   playerById.get(selectedSecretReviewAssignment.player_id)
                     ?.name ?? "Player"
+                }
+                ownerAvatarUrl={
+                  playerById.get(selectedSecretReviewAssignment.player_id)
+                    ?.avatar_url
                 }
                 points={selectedSecretReviewChallenge.points}
                 evidence={selectedSecretReviewEvidence.map((item) => ({
@@ -1377,6 +1388,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                           id: vote.player_id,
                           name:
                             playerById.get(vote.player_id)?.name ?? "Player",
+                          avatarUrl: playerById.get(vote.player_id)?.avatar_url,
                           vote: vote.vote,
                         }))
                 }
@@ -1815,6 +1827,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                 setRewardTargetKind={setRewardTargetKind}
                 setSelectedRewardWinnerIds={setSelectedRewardWinnerIds}
                 teams={teams}
+                teamPhotoUrls={teamPhotoUrls}
                 rewardPoints={rewardPoints}
                 activeRewardChallenge={activeRewardChallenge}
                 activeRewardVotes={activeRewardVotes}

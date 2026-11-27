@@ -16,6 +16,7 @@ interface Props {
     name: string;
     detail: string;
     score: number;
+    avatarUrl?: string | null;
   }[];
   selectedRewardWinnerIds: string[];
   toggleRewardWinner: (id: string) => void;
@@ -64,6 +65,7 @@ export default function RewardAwardControls({
           <SessionCandidate
             key={candidate.id}
             name={candidate.name}
+            avatarUrl={candidate.avatarUrl}
             detail={`${candidate.detail} · ${candidate.score} pts`}
             selected={selectedRewardWinnerIds.includes(candidate.id)}
             busy={busy}

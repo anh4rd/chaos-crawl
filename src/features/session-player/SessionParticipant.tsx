@@ -77,6 +77,7 @@ export default function SessionParticipant({
   const token = playerToken ?? storedToken;
   const {
     view,
+    portraits,
     secretMissions,
     secretReview,
     leaderboard,
@@ -442,6 +443,7 @@ export default function SessionParticipant({
           busyKey={busyKey}
           voteOnSecretReview={voteOnSecretReview}
           player={player}
+          portraits={portraits}
         />
       )}
       {!secretReviewTakeover && (
@@ -452,6 +454,7 @@ export default function SessionParticipant({
               busyKey={busyKey}
               voteInRewardRound={voteInRewardRound}
               player={player}
+              portraits={portraits}
             />
           )}
 
@@ -534,6 +537,7 @@ export default function SessionParticipant({
                   createTeam={createTeam}
                   teamName={teamName}
                   setTeamName={setTeamName}
+                  teamPhotoUrls={portraits.teams}
                 />
               )}
 
@@ -658,6 +662,7 @@ export default function SessionParticipant({
               player={player}
               teamLeaderboard={teamLeaderboard}
               teamScoresUnavailable={teamScoresUnavailable}
+              portraits={portraits}
             />
           )}
 
@@ -686,6 +691,7 @@ export default function SessionParticipant({
               player={player}
               session={session}
               teamLeaderboard={teamLeaderboard}
+              portraits={portraits}
             />
           )}
 
@@ -750,7 +756,7 @@ export default function SessionParticipant({
               subtitle:
                 player.team_name ||
                 (session.teams_enabled ? "Choose your team" : "Solo player"),
-              avatarUrl: player.avatar_url,
+              avatarUrl: portraits.players[player.id] ?? player.avatar_url,
               score: player.score,
               rank: playerRank,
             }

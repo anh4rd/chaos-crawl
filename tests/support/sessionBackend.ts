@@ -502,6 +502,7 @@ export async function installSessionBackend(
       },
       cc_get_public_game_invite: { game_photo_url: null },
       cc_get_public_main_challenge_art: null,
+      cc_get_session_portraits: { players: {}, teams: {} },
       cc_get_game_session_view: {
         ...fixture.view,
         player: currentPlayer,

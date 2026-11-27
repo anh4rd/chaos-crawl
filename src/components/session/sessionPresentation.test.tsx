@@ -9,9 +9,55 @@ import SessionNavigation from "./SessionNavigation";
 import SessionLeaderboard from "./SessionLeaderboard";
 import SessionRewardRound from "./SessionRewardRound";
 import SessionVotingCard from "./SessionVotingCard";
+import SessionCandidate from "./SessionCandidate";
 import type { RewardPresentation, VotingEntry } from "./types";
 
 afterEach(cleanup);
+
+it("uses candidate portraits and keeps the initial fallback", () => {
+  const { rerender, container } = render(
+    <SessionCandidate
+      name="Alex"
+      detail="Player"
+      selected={false}
+      avatarUrl="/alex.png"
+    />,
+  );
+  expect(
+    container
+      .querySelector(".session-candidate__avatar img")
+      ?.getAttribute("src"),
+  ).toBe("/alex.png");
+  rerender(<SessionCandidate name="Alex" detail="Player" selected={false} />);
+  expect(
+    container.querySelector(".session-candidate__avatar")?.textContent,
+  ).toBe("A");
+});
+
+it("shows participant photos but keeps voter photos hidden until voting closes", () => {
+  const portraitEntry: VotingEntry = {
+    id: "photo",
+    participant: { name: "Alex", avatarUrl: "/alex.png" },
+    challengeTitle: "Entrance",
+    media: {
+      id: "photo",
+      url: "/evidence.png",
+      mediaType: "image",
+      description: "Evidence",
+    },
+    selected: false,
+    winner: true,
+    voteCount: 1,
+    voters: [{ id: "sam", name: "Sam", avatarUrl: "/sam.png" }],
+  };
+  const { container, rerender } = render(
+    <SessionVotingCard entry={portraitEntry} open />,
+  );
+  expect(container.querySelector('img[src="/alex.png"]')).not.toBeNull();
+  expect(container.querySelector('img[src="/sam.png"]')).toBeNull();
+  rerender(<SessionVotingCard entry={portraitEntry} open={false} />);
+  expect(container.querySelector('img[src="/sam.png"]')).not.toBeNull();
+});
 
 it("shows only supplied podium places and switches the podium with the score tab", () => {
   const { rerender } = render(

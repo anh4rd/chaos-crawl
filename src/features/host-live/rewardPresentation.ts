@@ -11,7 +11,12 @@ export function rewardPresentation(
   title: string,
   votes: SessionRewardVote[],
   awards: SessionRewardAward[],
-  candidates: { id: string; name: string; detail: string }[],
+  candidates: {
+    id: string;
+    name: string;
+    detail: string;
+    avatarUrl?: string | null;
+  }[],
   players: SessionPlayer[],
   teams: SessionTeam[],
   selectedId?: string | null,

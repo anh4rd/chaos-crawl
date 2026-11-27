@@ -7,6 +7,16 @@ writes are included.
 
 ## In progress
 
+Session portrait views use uploaded player and team photos in team choices,
+scoreboards, reward candidates, roster summaries and review cards. A new
+session-scoped RPC validates the player credential and returns only portrait
+URLs for members of that session; its migration requires review and deployment.
+Existing initial fallbacks remain when photos are absent.
+
+Legacy host roster, ballot and published score/vote results also project stored
+player and team avatars. Legacy team reads include the inferred `avatar_url`
+column; the deployed database schema still requires verification.
+
 The game builder now includes the built-in Explore challenges and approved
 community challenges alongside its existing library. It reads only approved
 community challenge rows and offers retry on failure. Selected catalogue tasks

@@ -43,7 +43,7 @@ beforeEach(() => {
 it("legacy team reads preserve the exact select/order and channel/filter/cleanup contract", async () => {
   await readLegacyHostTeams();
   expect(mocks.from).toHaveBeenCalledExactlyOnceWith("teams");
-  expect(mocks.select).toHaveBeenCalledExactlyOnceWith("id, name");
+  expect(mocks.select).toHaveBeenCalledExactlyOnceWith("id, name, avatar_url");
   expect(mocks.order).toHaveBeenCalledExactlyOnceWith("name");
   const refresh = vi.fn();
   const cleanup = subscribeLegacyHostTeams(refresh);

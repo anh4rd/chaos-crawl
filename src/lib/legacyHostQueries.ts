@@ -6,7 +6,7 @@ export async function readLegacyHostTeams(): Promise<
   ApiResult<LegacyHostTeam[]>
 > {
   return runApi<LegacyHostTeam[]>(() =>
-    supabase.from("teams").select("id, name").order("name"),
+    supabase.from("teams").select("id, name, avatar_url").order("name"),
   );
 }
 

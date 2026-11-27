@@ -55,4 +55,14 @@ describe("vote tallies", () => {
       { id: "1", name: "First", votes: 0 },
     ]);
   });
+  it("preserves candidate photos for both player and team results", () => {
+    expect(
+      tallyPlayerVotes([], [{ id: "p", name: "Pat", avatar_url: "/p.jpg" }])[0]
+        .avatarUrl,
+    ).toBe("/p.jpg");
+    expect(
+      tallyTeamVotes([], [{ id: "t", name: "Team", avatar_url: "/t.jpg" }])[0]
+        .avatarUrl,
+    ).toBe("/t.jpg");
+  });
 });
