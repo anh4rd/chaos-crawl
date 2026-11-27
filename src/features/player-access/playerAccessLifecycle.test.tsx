@@ -120,6 +120,34 @@ it("ignores a cached-session response after the game code changes", async () => 
   expect(localStorage.getItem(credentialKey)).toBe("cached-token");
 });
 
+it("ignores an in-flight phone recovery after switching recovery methods", async () => {
+  const pending = deferred();
+  vi.mocked(joinGameSession).mockReturnValue(pending.promise);
+  const onJoined = vi.fn();
+  render(
+    <PlayerAccess
+      codeFromUrl="123456"
+      initialMode="rejoin"
+      onJoined={onJoined}
+    />,
+  );
+  fireEvent.submit(form());
+  fireEvent.change(screen.getByLabelText("Your phone number?"), {
+    target: { value: "07123456789" },
+  });
+  fireEvent.submit(form());
+  fireEvent.click(
+    screen.getByRole("button", { name: "Use recovery code instead" }),
+  );
+  await act(async () => {
+    pending.resolve(success);
+    await pending.promise;
+  });
+  expect(onJoined).not.toHaveBeenCalled();
+  expect(localStorage.getItem(credentialKey)).toBeNull();
+  expect(screen.getByLabelText("Recovery code")).toBeTruthy();
+});
+
 it("does not store credentials or redirect when a successful join finishes after unmount", async () => {
   const request = deferred();
   vi.mocked(joinGameSession).mockReturnValue(request.promise);

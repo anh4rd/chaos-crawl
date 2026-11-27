@@ -171,7 +171,7 @@ export function useSessionPlayerData(
     if (viewError) {
       setError(
         /rejoin with the same mobile number/i.test(viewError.message)
-          ? "Your player session expired. Rejoin using your recovery code."
+          ? "Your player session expired. Rejoin using your phone number or recovery code."
           : viewError.message,
       );
       setLoading(false);

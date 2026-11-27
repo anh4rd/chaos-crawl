@@ -20,6 +20,49 @@ test("saved player sessions resume before asking for join details", async ({
   backend.verify();
 });
 
+test("phone recovery reuses the existing player and saves the replacement token", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  backend.responses["player-identity"] = {
+    player_token: "recovered-token",
+    join_code: "123456",
+    player_name: "Pat",
+    resumed: true,
+  };
+  await page.goto("#/join?code=123456&returning=1");
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(page.getByText(/Anyone who knows your game code/)).toBeVisible();
+  const country = page.getByLabel("Country calling code");
+  await tabTo(page, country);
+  await page.keyboard.type("United");
+  await expect(country).toHaveValue("44");
+  await tabTo(page, page.getByLabel("Your phone number?"));
+  await page.keyboard.type("07123 456789");
+  await tabTo(
+    page,
+    page.getByRole("button", { name: "Rejoin game", exact: true }),
+  );
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/#\/play\/123456/);
+  expect(
+    backend.requests.find((r) => r.name === "player-identity")?.body,
+  ).toEqual({
+    action: "recover_phone",
+    join_code: "123456",
+    mobile: "+447123456789",
+  });
+  expect(
+    await page.evaluate(() =>
+      localStorage.getItem("chaos-crawl-session-player:123456"),
+    ),
+  ).toBe("recovered-token");
+  expect(await page.evaluate(() => window.history.state.usr)).toEqual({
+    welcomeBack: true,
+  });
+  backend.verify();
+});
+
 test("players can select an international calling code", async ({ page }) => {
   const backend = await installSessionBackend(page, { savedPlayer: false });
   await page.goto("#/join?code=123456");

@@ -16,7 +16,12 @@ import {
   clearPendingRecovery,
   pendingRecoveryCredential,
 } from "./recoveryVault";
-import type { JoinMode, JoinStep, PlayerAccessModel } from "./types";
+import type {
+  JoinMode,
+  JoinStep,
+  PlayerAccessModel,
+  RecoveryMethod,
+} from "./types";
 import { formatJoinPhone, validJoinPhone } from "./phoneNumber";
 
 function storageKey(code: string) {
@@ -36,6 +41,7 @@ export function usePlayerAccess({
   setup: { credential: string; onContinue: () => void } | null;
 } {
   const [mode, setMode] = useState<JoinMode>(initialMode);
+  const [recoveryMethod, setRecoveryMethod] = useState<RecoveryMethod>("phone");
   const [code, setCode] = useState(codeFromUrl);
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
@@ -59,7 +65,7 @@ export function usePlayerAccess({
       lifecycle.mounted = false;
       lifecycle.generation += 1;
     };
-  }, [codeFromUrl, code, mode]);
+  }, [codeFromUrl, code, mode, recoveryMethod]);
 
   useEffect(() => {
     if (codeFromUrl) setCode(codeFromUrl);
@@ -73,7 +79,10 @@ export function usePlayerAccess({
     () =>
       code.replace(/\D/g, "").length === 6 &&
       (mode === "rejoin"
-        ? credential.trim().length > 0
+        ? recoveryMethod === "credential"
+          ? credential.trim().length > 0
+          : mobile.trim().length > 0 &&
+            validJoinPhone(mobile, countryCode, customCountryCode)
         : name.trim().length > 0 &&
           validJoinPhone(mobile, countryCode, customCountryCode)) &&
       !busy,
@@ -86,6 +95,7 @@ export function usePlayerAccess({
       busy,
       countryCode,
       customCountryCode,
+      recoveryMethod,
     ],
   );
 
@@ -113,7 +123,9 @@ export function usePlayerAccess({
           if (/your player session expired/i.test(result.error.message)) {
             setMode("rejoin");
             setJoinStep(2);
-            setNotice("Your saved session expired. Use your recovery code.");
+            setNotice(
+              "Your saved session expired. Rejoin using your phone number or recovery code.",
+            );
           } else {
             setError("Couldn't check your saved session. Please try again.");
           }
@@ -144,17 +156,32 @@ export function usePlayerAccess({
           ? await pendingRecoveryCredential(cleanCode)
           : credential.trim();
       if (!isCurrent()) return;
-      const { data, error: joinError } = await joinGameSession({
-        action: mode === "join" ? "register" : "recover",
-        join_code: cleanCode,
-        credential: recoveryCredential,
-        ...(mode === "join"
+      const formattedMobile = formatJoinPhone(
+        mobile,
+        countryCode,
+        customCountryCode,
+      );
+      const parameters =
+        mode === "join"
           ? {
+              action: "register" as const,
+              join_code: cleanCode,
+              credential: recoveryCredential,
               name: name.trim(),
-              mobile: formatJoinPhone(mobile, countryCode, customCountryCode),
+              mobile: formattedMobile,
             }
-          : {}),
-      });
+          : recoveryMethod === "phone"
+            ? {
+                action: "recover_phone" as const,
+                join_code: cleanCode,
+                mobile: formattedMobile,
+              }
+            : {
+                action: "recover" as const,
+                join_code: cleanCode,
+                credential: recoveryCredential,
+              };
+      const { data, error: joinError } = await joinGameSession(parameters);
       if (!isCurrent()) return;
       if (joinError) throw joinError;
       const result = data;
@@ -199,6 +226,7 @@ export function usePlayerAccess({
 
   const access: PlayerAccessModel = {
     mode,
+    recoveryMethod,
     code,
     name,
     mobile,
@@ -220,6 +248,11 @@ export function usePlayerAccess({
     onToggleMode: () => {
       setMode(mode === "join" ? "rejoin" : "join");
       setError("");
+    },
+    onToggleRecoveryMethod: () => {
+      setRecoveryMethod(recoveryMethod === "phone" ? "credential" : "phone");
+      setError("");
+      setNotice("");
     },
     onSubmit: (event) => void submit(event),
   };

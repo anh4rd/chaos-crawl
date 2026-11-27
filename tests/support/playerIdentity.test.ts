@@ -20,6 +20,56 @@ function request(body: unknown) {
 }
 
 describe("player identity handler", () => {
+  it("rate-limits phone recovery with a normalized per-game bucket", async () => {
+    const rpc = vi.fn(async (name: string, _args: Record<string, unknown>) => {
+      if (name === "cc_player_identity_rate_limit") return true;
+      return {
+        player_token: "new",
+        join_code: "123456",
+        player_name: "Pat",
+        resumed: true,
+      };
+    });
+    const base = { action: "recover_phone", join_code: "123456" };
+    const first = await handleIdentity(
+      request({ ...base, mobile: "+44 7123 456789" }),
+      rpc,
+    );
+    expect(first.status).toBe(200);
+    expect(await first.json()).toEqual({
+      player_token: "new",
+      join_code: "123456",
+      player_name: "Pat",
+      resumed: true,
+    });
+    expect(rpc).toHaveBeenCalledWith("cc_recover_player_with_phone", {
+      p_join_code: "123456",
+      p_mobile: "07123456789",
+    });
+    const firstHandle = rpc.mock.calls[0][1].p_handle;
+    rpc.mockClear();
+    await handleIdentity(request({ ...base, mobile: "07123456789" }), rpc);
+    expect(rpc.mock.calls[0][1].p_handle).toBe(firstHandle);
+    expect(firstHandle).not.toContain("07123456789");
+  });
+
+  it("rejects malformed or rate-limited phone recovery before issuing a token", async () => {
+    const rpc = vi.fn(async () => false);
+    const base = { action: "recover_phone", join_code: "123456" };
+    expect(
+      (await handleIdentity(request({ ...base, mobile: "123" }), rpc)).status,
+    ).toBe(400);
+    expect(rpc).not.toHaveBeenCalled();
+    expect(
+      (await handleIdentity(request({ ...base, mobile: "07123456789" }), rpc))
+        .status,
+    ).toBe(429);
+    expect(rpc).not.toHaveBeenCalledWith(
+      "cc_recover_player_with_phone",
+      expect.anything(),
+    );
+  });
+
   it("creates a player using a domain-separated digest, not a plaintext secret", async () => {
     const rpc = vi.fn(async (name: string) => {
       if (name === "cc_player_identity_rate_limit") return true;

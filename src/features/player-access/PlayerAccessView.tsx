@@ -14,6 +14,7 @@ import type { PlayerAccessModel } from "./types";
 export default function PlayerAccessView({
   as: Container = "main",
   mode,
+  recoveryMethod,
   code,
   name,
   mobile,
@@ -33,6 +34,7 @@ export default function PlayerAccessView({
   onCredentialChange,
   onBack,
   onToggleMode,
+  onToggleRecoveryMethod,
   onSubmit,
 }: PlayerAccessModel & { as?: "main" | "section" }) {
   let titleLead = "Enter your";
@@ -45,7 +47,7 @@ export default function PlayerAccessView({
     intro =
       mode === "join"
         ? "Join a game with the code from your host."
-        : "Enter the game code and your saved recovery code.";
+        : "Enter the game code to find your saved session.";
     submitLabel = "Next";
   }
   return (
@@ -106,8 +108,21 @@ export default function PlayerAccessView({
               <div className="form-stack__code">
                 GAME CODE <strong>{code}</strong>
               </div>
+              {mode === "rejoin" && (
+                <Button
+                  type="button"
+                  variant="access-switch"
+                  fullWidth={false}
+                  onClick={onToggleRecoveryMethod}
+                >
+                  {recoveryMethod === "phone"
+                    ? "Use recovery code instead"
+                    : "Use phone number instead"}
+                </Button>
+              )}
               <PlayerDetailsFields
                 mode={mode}
+                recoveryMethod={recoveryMethod}
                 name={name}
                 mobile={mobile}
                 countryCode={countryCode}

@@ -80,7 +80,7 @@ it("offers recovery if the cached token has expired", async () => {
     },
   });
   openJoin();
-  expect(await screen.findByLabelText("Recovery code")).toBeTruthy();
+  expect(await screen.findByLabelText("Your phone number?")).toBeTruthy();
   expect(screen.getByLabelText("Location").textContent).toBe("/join");
   expect(mocks.invoke).not.toHaveBeenCalled();
 });
@@ -249,6 +249,9 @@ it("rejoins with a recovery credential without requiring a new name", async () =
   });
   openJoin("/join?code=123456&returning=1");
   expect(screen.queryByLabelText("Your name?")).toBeNull();
+  fireEvent.click(
+    screen.getByRole("button", { name: "Use recovery code instead" }),
+  );
   fireEvent.change(screen.getByLabelText("Recovery code"), {
     target: { value: "sample-recovery" },
   });
@@ -264,6 +267,41 @@ it("rejoins with a recovery credential without requiring a new name", async () =
   );
   await waitFor(() =>
     expect(screen.getByLabelText("Location").textContent).toBe("/play/123456"),
+  );
+});
+
+it("rejoins using a formatted phone number without a recovery code", async () => {
+  mocks.invoke.mockResolvedValue({
+    data: {
+      player_token: "returning-token",
+      join_code: "123456",
+      player_name: "Pat",
+      resumed: true,
+    },
+    error: null,
+  });
+  openJoin("/join?code=123456&returning=1");
+  fireEvent.change(screen.getByLabelText("Country calling code"), {
+    target: { value: "44" },
+  });
+  fireEvent.change(screen.getByLabelText("Your phone number?"), {
+    target: { value: "07123 456789" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: /Rejoin game/ }));
+  await waitFor(() =>
+    expect(mocks.invoke).toHaveBeenCalledWith("player-identity", {
+      body: {
+        action: "recover_phone",
+        join_code: "123456",
+        mobile: "+447123456789",
+      },
+    }),
+  );
+  await waitFor(() =>
+    expect(screen.getByLabelText("Location").textContent).toBe("/play/123456"),
+  );
+  expect(localStorage.getItem("chaos-crawl-session-player:123456")).toBe(
+    "returning-token",
   );
 });
 

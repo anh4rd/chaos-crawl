@@ -11,6 +11,7 @@ is included.
 
 - Registration: `{ "action": "register", "join_code": "123456", "name": "...", "mobile": "...", "credential": "<handle>.<secret>" }`.
 - Recovery: `{ "action": "recover", "join_code": "123456", "credential": "<handle>.<secret>" }`.
+- Temporary phone recovery: `{ "action": "recover_phone", "join_code": "123456", "mobile": "..." }`.
 
 The browser generates a random UUIDv4 handle and a separate 32-byte random
 secret, encoded as unpadded base64url. The Edge Function hashes the secret as
@@ -49,14 +50,51 @@ compares the revision and previous token before replacing it. The credential
 remains reusable; there is no user-facing rotation or revocation yet. Existing
 players retain their current tokens and are not automatically enrolled. If an
 existing player loses their token without an established recovery credential,
-there is no self-service recovery; independent verification is not implemented.
+the temporary phone option below is the only self-service alternative when
+explicitly enabled for that game. Independent verification is not implemented.
 
 On the join screen, a saved player token is checked with
 `cc_get_game_session_view` before asking for details. A valid token resumes the
-existing player without rotating it. An expired token offers credential
+existing player without rotating it. An expired token offers phone or credential
 recovery; an unavailable session check reports an error instead of treating a
-network problem as lost identity. Phone-only recovery is not available because
-knowledge of a number does not verify its owner.
+network problem as lost identity.
+
+## Temporary phone recovery for the birthday event
+
+This is deliberately insecure: anyone who knows a player's game code and phone
+number can take over that player, view their game information and invalidate
+their existing token. Do not enable this on games without explicit approval.
+Players without a stored phone cannot use it; their recovery code remains an
+alternative. Recovery uses the same UK normalization as registration. It is
+limited per normalized game/number and by the existing global rate limiter.
+The temporary endpoint creates a new token and preserves existing recovery
+credentials. Concurrent requests can invalidate earlier returned tokens.
+
+[`20261127000500_temporary_phone_recovery.sql`](../supabase/migrations/20261127000500_temporary_phone_recovery.sql)
+creates an RLS-protected private game allowlist and a service-role-only RPC.
+It is **off for every game by default**, and no entry can extend beyond
+**30 November 2026 at 12:00 UTC**. After that instant the database refuses
+phone-only recovery even if an entry remains. Changing this deadline requires
+a reviewed migration. The existing recovery-code path remains available.
+
+After review, apply the migrations in order and deploy the compatible
+`player-identity` Edge Function and frontend. Verify the function is deployed
+with JWT verification disabled and its service-role key remains server-only.
+Then, using an administrator SQL console, explicitly enable only the intended
+game by replacing the placeholder with its six-digit join code:
+
+```sql
+insert into public.cc_temporary_phone_recovery (session_id, expires_at)
+select id, '2026-11-30 12:00:00+00'::timestamptz
+from public.cc_game_sessions where join_code = '<GAME_CODE>'
+on conflict (session_id) do update set expires_at = excluded.expires_at
+returning session_id, expires_at;
+```
+
+Confirm exactly one row is returned. To turn the option off sooner, delete that
+game's row from `cc_temporary_phone_recovery`; this does not change player
+tokens. Do not include phone numbers, request bodies or tokens in logs. No
+deployment or allowlist change has been performed by this work.
 
 ## Database and security
 
@@ -67,7 +105,8 @@ creation/rotation/revocation timestamps, and one active credential per player.
 have RLS enabled and no direct grants to browser roles or `service_role`.
 Security-definer functions with empty search paths expose registration,
 candidate lookup, registration retry, token replacement, and rate limiting
-only to `service_role`. `cc_join_game_session` instead raises an upgrade
+only to `service_role`. The temporary phone RPC is also service-only and checks
+the allowlist and expiry inside its transaction. `cc_join_game_session` instead raises an upgrade
 message; previously shipped clients may display their own generic error.
 The host participation RPC is unchanged.
 
@@ -99,7 +138,9 @@ and `npx playwright test tests/join.spec.ts tests/playerIdentity.spec.ts`.
 Mocked browser and handler tests never use the live backend.
 
 For SQL, apply the migrations in order only to a disposable database containing the V2
-schema and roles, then run `psql -v ON_ERROR_STOP=1 -f tests/database/player_recovery.sql`.
+schema and roles, then run `psql -v ON_ERROR_STOP=1 -f tests/database/player_recovery.sql`
+and `psql -v ON_ERROR_STOP=1 -f tests/database/temporary_phone_recovery.sql`.
+The successful phone recovery portion runs only before the hard expiry.
 The additional `tests/database/player_recovery_concurrent.sql` requires
 `dblink`, administrative local connection privileges, and a fresh disposable
 database: it creates an extension and commits test rows. Run it with

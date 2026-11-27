@@ -54,12 +54,17 @@ export function playerAccessErrorMessage(error: unknown, joining: boolean) {
   return "Couldn't complete player access. Check your details and try again.";
 }
 
-export function joinGameSession(parameters: {
-  action: "register" | "recover";
-  join_code: string;
-  credential: string;
-  name?: string;
-  mobile?: string;
-}): PromiseLike<{ data: JoinResult | null; error: unknown }> {
+export function joinGameSession(
+  parameters:
+    | {
+        action: "register";
+        join_code: string;
+        credential: string;
+        name: string;
+        mobile: string;
+      }
+    | { action: "recover"; join_code: string; credential: string }
+    | { action: "recover_phone"; join_code: string; mobile: string },
+): PromiseLike<{ data: JoinResult | null; error: unknown }> {
   return supabase.functions.invoke("player-identity", { body: parameters });
 }

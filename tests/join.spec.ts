@@ -208,6 +208,13 @@ test("rejoin uses the recovery credential and preserves the resumed redirect sta
     page.getByRole("progressbar", { name: "Join progress" }),
   ).toHaveAttribute("aria-valuetext", "Step 2 of 3");
   await expect(page.getByLabel("Your name?", { exact: true })).toHaveCount(0);
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", {
+      name: "Use recovery code instead",
+      exact: true,
+    }),
+  );
   await typeField(page, "Recovery code", recoveryCode);
   await activateByKeyboard(
     page,
@@ -263,6 +270,13 @@ test("failed join retains details, clears its error on mode change and retries w
   await activateByKeyboard(
     page,
     page.getByRole("button", { name: "Next", exact: true }),
+  );
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", {
+      name: "Use recovery code instead",
+      exact: true,
+    }),
   );
   await typeField(page, "Recovery code", recoveryCode);
   backend.failures.delete("player-identity");

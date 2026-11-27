@@ -1,13 +1,18 @@
 import { useState } from "react";
 import PlayerAccessView from "../player-access/PlayerAccessView";
 import RecoverySetup from "../player-access/RecoverySetup";
-import type { JoinMode, JoinStep } from "../player-access/types";
+import type {
+  JoinMode,
+  JoinStep,
+  RecoveryMethod,
+} from "../player-access/types";
 import Note from "../../components/ui/Note";
 import { Example } from "./Example";
 import { validJoinPhone } from "../player-access/phoneNumber";
 
 export default function PlayerAccessExample() {
   const [mode, setMode] = useState<JoinMode>("join");
+  const [recoveryMethod, setRecoveryMethod] = useState<RecoveryMethod>("phone");
   const [joinStep, setJoinStep] = useState<JoinStep>(1);
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
@@ -21,7 +26,10 @@ export default function PlayerAccessExample() {
   const canSubmit =
     code.length === 6 &&
     (mode === "rejoin"
-      ? credential.trim().length > 0
+      ? recoveryMethod === "credential"
+        ? credential.trim().length > 0
+        : mobile.trim().length > 0 &&
+          validJoinPhone(mobile, countryCode, customCountryCode)
       : name.trim().length > 0 &&
         validJoinPhone(mobile, countryCode, customCountryCode)) &&
     !busy;
@@ -58,6 +66,7 @@ export default function PlayerAccessExample() {
         <PlayerAccessView
           as="section"
           mode={mode}
+          recoveryMethod={recoveryMethod}
           joinStep={joinStep}
           code={code}
           name={name}
@@ -79,6 +88,11 @@ export default function PlayerAccessExample() {
           onCredentialChange={setCredential}
           onBack={() => setJoinStep(1)}
           onToggleMode={() => setMode(mode === "join" ? "rejoin" : "join")}
+          onToggleRecoveryMethod={() =>
+            setRecoveryMethod(
+              recoveryMethod === "phone" ? "credential" : "phone",
+            )
+          }
           onSubmit={(event) => {
             event.preventDefault();
             if (joinStep === 1) {

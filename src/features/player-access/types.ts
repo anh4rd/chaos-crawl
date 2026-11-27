@@ -2,9 +2,11 @@ import type { FormEvent } from "react";
 
 export type JoinMode = "join" | "rejoin";
 export type JoinStep = 1 | 2;
+export type RecoveryMethod = "phone" | "credential";
 
 export interface PlayerAccessModel {
   mode: JoinMode;
+  recoveryMethod: RecoveryMethod;
   code: string;
   name: string;
   mobile: string;
@@ -24,5 +26,6 @@ export interface PlayerAccessModel {
   onCredentialChange: (value: string) => void;
   onBack: () => void;
   onToggleMode: () => void;
+  onToggleRecoveryMethod: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }

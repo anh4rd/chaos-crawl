@@ -7,11 +7,12 @@ writes are included.
 
 ## In progress
 
-Player access now checks an existing browser token before requesting details.
+Player access checks an existing browser token before requesting details.
 New players can leave their phone blank or select an international calling
-code; the optional-phone migration and updated identity Edge Function require
-coordinated deployment. Phone-only recovery remains disabled because a number
-alone does not prove identity.
+code. Temporary phone-only recovery is deliberately insecure and disabled
+unless an administrator enables an individual game; it has a hard expiry of
+30 November 2026 at 12:00 UTC. See [player recovery](./player-recovery.md).
+The migration, identity Edge Function and frontend require coordinated deployment.
 
 Live hosts can reopen the host join flow from either invitation control, or
 open a separate player join link with the game code filled in. Returning from

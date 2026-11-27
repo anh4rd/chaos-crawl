@@ -6,6 +6,7 @@ import type { PlayerAccessModel } from "./types";
 
 export default function PlayerDetailsFields({
   mode,
+  recoveryMethod,
   name,
   mobile,
   countryCode,
@@ -19,6 +20,7 @@ export default function PlayerDetailsFields({
 }: Pick<
   PlayerAccessModel,
   | "mode"
+  | "recoveryMethod"
   | "name"
   | "mobile"
   | "countryCode"
@@ -54,14 +56,15 @@ export default function PlayerDetailsFields({
           </InputIcon>
         </ContentPanel>
       )}
-      {mode === "join" ? (
+      {mode === "join" || recoveryMethod === "phone" ? (
         <ContentPanel as="div" variant="access-field">
           <FormLabel variant="access" htmlFor="join-mobile">
             Your phone number?
           </FormLabel>
           <Note variant="access-help">
-            Optional. No SMS is sent. Leave this blank to join as a new player
-            without a phone number. Your recovery code is needed to reconnect.
+            {mode === "join"
+              ? "Optional. No SMS is sent. Leave this blank to join as a new player without a phone number."
+              : "No SMS is sent. Anyone who knows your game code and phone number can access your player profile. This temporary option is available only for enabled games until 30 November, 12:00 UTC."}
           </Note>
           <FormLabel variant="access" htmlFor="phone-country">
             Country calling code
@@ -133,6 +136,7 @@ export default function PlayerDetailsFields({
               placeholder="Enter your number"
               value={mobile}
               onChange={(event) => onMobileChange(event.target.value)}
+              required={mode === "rejoin"}
             />
           </InputIcon>
         </ContentPanel>

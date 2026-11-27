@@ -41,6 +41,23 @@ function candidateMatches(candidate: unknown, digest: Uint8Array) {
   return timingSafeEqual(Buffer.from(candidate.digest, "hex"), digest);
 }
 
+function normalizePhone(mobile: string) {
+  let phone = mobile.replace(/\D/g, "");
+  if (phone.startsWith("00")) phone = phone.slice(2);
+  if (phone.startsWith("44") && phone.length === 13 && phone[2] === "0")
+    return `0${phone.slice(3)}`;
+  if (phone.startsWith("44") && phone.length === 12)
+    return `0${phone.slice(2)}`;
+  return phone;
+}
+
+function phoneRateHandle(code: string, phone: string) {
+  const hash = createHash("sha256")
+    .update(`chaos-crawl:temporary-phone-recovery:v1\0${code}\0${phone}`)
+    .digest("hex");
+  return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(12, 16)}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
+}
+
 export async function handleIdentity(request: Request, rpc: Rpc) {
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers });
   if (request.method !== "POST") return response(405, { error: "Method not allowed." });
@@ -75,11 +92,18 @@ export async function handleIdentity(request: Request, rpc: Rpc) {
   } catch {
     return response(400, { error: "Invalid request." });
   }
-  if (!record(body) || (body.action !== "register" && body.action !== "recover") ||
+  if (!record(body) || (body.action !== "register" && body.action !== "recover" &&
+    body.action !== "recover_phone") ||
     typeof body.join_code !== "string" || !/^[0-9]{6}$/.test(body.join_code))
     return response(400, { error: "Invalid request." });
-  const credential = parseCredential(body.credential);
-  if (!credential) return response(400, { error: "Invalid request." });
+  if (body.action === "recover_phone" &&
+    (typeof body.mobile !== "string" || body.mobile.length > 40 ||
+      body.mobile.replace(/\D/g, "").length < 8 ||
+      body.mobile.replace(/\D/g, "").length > 15))
+    return response(400, { error: "Invalid request." });
+  const credential = body.action === "recover_phone" ? null : parseCredential(body.credential);
+  if (body.action !== "recover_phone" && !credential)
+    return response(400, { error: "Invalid request." });
   if (body.action === "register" &&
     (typeof body.name !== "string" || body.name.trim().length < 1 ||
       body.name.trim().length > 60 || typeof body.mobile !== "string" ||
@@ -89,6 +113,21 @@ export async function handleIdentity(request: Request, rpc: Rpc) {
     return response(400, { error: "Invalid request." });
 
   try {
+    if (body.action === "recover_phone") {
+      if (typeof body.mobile !== "string") return response(400, { error: "Invalid request." });
+      const phone = normalizePhone(body.mobile);
+      if (await rpc("cc_player_identity_rate_limit", {
+        p_handle: phoneRateHandle(body.join_code, phone),
+      }) !== true)
+        return response(429, { error: "Please wait before trying again." });
+      const result = await rpc("cc_recover_player_with_phone", {
+        p_join_code: body.join_code,
+        p_mobile: phone,
+      });
+      if (record(result)) return response(200, result);
+      return response(400, { error: "Unable to complete this request. Check your details and try again." });
+    }
+    if (!credential) return response(400, { error: "Invalid request." });
     if (await rpc("cc_player_identity_rate_limit", { p_handle: credential.handle }) !== true)
       return response(429, { error: "Please wait before trying again." });
     const args = { p_join_code: body.join_code, p_handle: credential.handle };
