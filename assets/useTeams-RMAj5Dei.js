@@ -1,1 +1,0 @@
-import{t as e}from"./index-Bgspp1sQ.js";import{n as t}from"./usePlayers-DB79_bOn.js";var n=[],r=t=>e.from(`teams`).select(`id, name`).order(`name`).abortSignal(t);function i(){return t(`teams`,r,n)}export{i as t};
