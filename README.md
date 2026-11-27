@@ -2,8 +2,12 @@
 
 A React and TypeScript game for hosted single-venue events and legacy pub crawls. Players join, complete challenges,
 upload images or videos, vote, and follow live screens. The host manages rounds,
-teams, submissions, and score awards. Vite builds the app for `/chaos-crawl/`;
-client routes use hash fragments, such as `/chaos-crawl/#/admin`.
+teams, submissions, and score awards. Vite builds the app for `/chaos-crawl/`
+by default; client routes use hash fragments, such as `/chaos-crawl/#/admin`.
+
+Vercel builds for the domain root using `vercel.json`, so the equivalent route
+is `/#/admin`. Old `/chaos-crawl/` links redirect to the root. The build command
+in `vercel.json` overrides the Vercel dashboard build command.
 
 V2 uses `/join` (six-digit session code), `/play/:joinCode`, and the authenticated
 `/host` routes. The cleaned-up legacy workflows remain available at `/legacy/join`,
@@ -33,6 +37,8 @@ Add the equivalent URL for each local development origin and port you use,
 for example `http://localhost:5173/chaos-crawl/?host_confirmation=1`. The app
 requests a redirect to the origin and base path where signup began; a URL not
 on the allow list may fall back to the Site URL.
+For the Vercel domain, also allow `https://www.chaosquest.fun/?host_confirmation=1`
+and any other domain where users can start signup.
 
 The Confirm signup email template should use Supabase's
 `{{ .ConfirmationURL }}` rather than a hard-coded localhost URL. After changing
@@ -102,23 +108,24 @@ and [Vite source-map guide](https://docs.sentry.io/platforms/javascript/guides/r
 
 ## Commands
 
-| Command                                   | Purpose                                                              |
-| ----------------------------------------- | -------------------------------------------------------------------- |
-| `npm run dev`                             | Start the local development server                                   |
-| `npm run build`                           | Check strict TypeScript contracts and build production assets        |
-| `npm run preview`                         | Serve the production build locally                                   |
-| `npm run lint`                            | Check TypeScript/JS, SCSS and formatting                             |
-| `npm test`                                | Run deterministic unit and component regression tests                |
-| `npm run test:watch`                      | Run unit tests in watch mode                                         |
-| `npm run format`                          | Format source, tests, configuration, and this document               |
-| `npm run format:check`                    | Check formatting                                                     |
-| `npm run test:e2e -- tests/smoke.spec.ts` | Test actual hash routes with a mocked backend                        |
-| `npm run test:e2e`                        | Run deterministic desktop/mobile browser tests with a mocked backend |
-| `npm run test:e2e:live`                   | Explicitly run live journeys against a disposable test backend       |
-| `npm run test:e2e:ui`                     | Open Playwright's interactive test runner                            |
-| `npm run test:e2e:headed`                 | Run browser tests in visible browsers                                |
-| `npm run test:e2e:report`                 | Open the last browser test report                                    |
-| `npm run deploy`                          | Build and publish `dist` to GitHub Pages                             |
+| Command                                                    | Purpose                                                              |
+| ---------------------------------------------------------- | -------------------------------------------------------------------- |
+| `npm run dev`                                              | Start the local development server                                   |
+| `npm run build`                                            | Check strict TypeScript contracts and build production assets        |
+| `npm run preview`                                          | Serve the production build locally                                   |
+| `npm run lint`                                             | Check TypeScript/JS, SCSS and formatting                             |
+| `npm test`                                                 | Run deterministic unit and component regression tests                |
+| `npm run test:watch`                                       | Run unit tests in watch mode                                         |
+| `npm run format`                                           | Format source, tests, configuration, and this document               |
+| `npm run format:check`                                     | Check formatting                                                     |
+| `npm run test:e2e -- tests/smoke.spec.ts`                  | Test actual hash routes with a mocked backend                        |
+| `npx playwright test --config playwright.vercel.config.ts` | Build and smoke-test the Vercel root deployment                      |
+| `npm run test:e2e`                                         | Run deterministic desktop/mobile browser tests with a mocked backend |
+| `npm run test:e2e:live`                                    | Explicitly run live journeys against a disposable test backend       |
+| `npm run test:e2e:ui`                                      | Open Playwright's interactive test runner                            |
+| `npm run test:e2e:headed`                                  | Run browser tests in visible browsers                                |
+| `npm run test:e2e:report`                                  | Open the last browser test report                                    |
+| `npm run deploy`                                           | Build and publish `dist` to GitHub Pages                             |
 
 Playwright starts Vite automatically. Install its browser once with
 `npx playwright install chromium`. The default suite mocks database reads and
