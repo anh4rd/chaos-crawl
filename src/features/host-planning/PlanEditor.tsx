@@ -26,7 +26,7 @@ import { usePlanSave } from "./usePlanSave";
 import { usePlanPhoto } from "./usePlanPhoto";
 import { usePlanCatalogue } from "./usePlanCatalogue";
 import { derivePlan } from "./planModel";
-import { favouriteTaskId, savedSecretTasks } from "./planImports";
+import { favouriteTaskId, savedFavouriteTasks } from "./planImports";
 import { defaultForm, tabItems } from "./catalog";
 import type { BuilderTab, SetupForm, TaskKind } from "./types";
 import { openMojiSelection } from "../../lib/openmoji";
@@ -74,10 +74,10 @@ export default function PlanEditor({
   } = usePlanFavourites({
     setError,
   });
-  const savedSecrets = savedSecretTasks(favourites);
+  const savedTasks = savedFavouriteTasks(favourites);
   const catalogue = usePlanCatalogue();
   const libraryTasks = [...allTasks];
-  for (const task of [...savedSecrets.tasks, ...catalogue.tasks]) {
+  for (const task of [...savedTasks.tasks, ...catalogue.tasks]) {
     if (
       !libraryTasks.some(
         (existing) =>
@@ -318,12 +318,14 @@ export default function PlanEditor({
           {notice}
         </FeedbackNotice>
       )}
-      {tab === "secret" && savedSecrets.invalid > 0 && (
-        <FeedbackNotice tone="error">
-          Some saved secret missions have incomplete details and cannot be
-          displayed. Check them in your saved items.
-        </FeedbackNotice>
-      )}
+      {(tab === "main" || tab === "side" || tab === "secret") &&
+        savedTasks.invalid[tab] > 0 && (
+          <FeedbackNotice tone="error">
+            Some saved {tab === "secret" ? "secret missions" : "challenges"}{" "}
+            have incomplete details and cannot be displayed. Check them in your
+            saved items.
+          </FeedbackNotice>
+        )}
       {stage === "create" ? (
         <GameBasicsForm
           form={form}

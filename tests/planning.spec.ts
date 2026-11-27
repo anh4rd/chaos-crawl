@@ -96,6 +96,73 @@ test("builder includes Explore and approved community challenges and saves their
     });
   backend.verify();
 });
+test("Explore favourites carry into a new game's challenge library and saved plan", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  backend.rows.cc_catalog_submissions = exploreSubmissions();
+  await page.goto("#/host/explore");
+  await expect(page.getByText("Checking your saved items…")).toHaveCount(0);
+  for (const title of ["Obtain the best thing", "Community paper tower"]) {
+    const card = page.locator(".card--idea").filter({
+      has: page.getByRole("heading", { name: title, exact: true }),
+    });
+    await card.getByRole("button", { name: `Save ${title}` }).click();
+    await expect(
+      card.getByRole("button", { name: `Unsave ${title}` }),
+    ).toBeVisible();
+  }
+  backend.failures.add("cc_catalog_submissions");
+  await start(page, "Favourite plan");
+  await section(page, "Main Challenges");
+  await page.getByRole("button", { name: "Favourites", exact: true }).click();
+  const main = page
+    .locator(".challenge-tile")
+    .filter({ hasText: "Obtain the best thing" });
+  await expect(main).toHaveCount(1);
+  await expect(
+    main.getByRole("button", { name: "Favourite Obtain the best thing" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await section(page, "Side challenges");
+  const side = page
+    .locator(".challenge-tile")
+    .filter({ hasText: "Community paper tower" });
+  await expect(side).toHaveCount(1);
+  await expect(
+    side.getByRole("button", { name: "Favourite Community paper tower" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await side.getByRole("button", { name: "Add", exact: true }).click();
+  await section(page, "Schedule");
+  await page
+    .getByRole("combobox", { name: "Add a challenge", exact: true })
+    .selectOption("task-best-thing");
+  await page.getByRole("button", { name: "Save draft", exact: true }).click();
+  await expect
+    .poll(
+      () =>
+        backend.requests.find(
+          (r) => r.name === "host_games" && r.method === "POST",
+        )?.body,
+    )
+    .toMatchObject({
+      plan_data: {
+        selectedMain: ["task-best-thing"],
+        selectedSide: expect.arrayContaining(["community-approved-challenge"]),
+        customTasks: expect.arrayContaining([
+          expect.objectContaining({ id: "task-best-thing", kind: "main" }),
+          expect.objectContaining({
+            id: "community-approved-challenge",
+            kind: "side",
+            points: 12,
+          }),
+        ]),
+      },
+    });
+  backend.verify();
+});
 test("builder reports and retries a failed community catalogue read", async ({
   page,
 }) => {

@@ -338,8 +338,10 @@ export async function installSessionBackend(
     if (name === "host_favourites" && request.method() === "POST") {
       const favourite = {
         id: `fav-${body.item_id}`,
+        host_id: body.host_id,
         item_type: body.item_type,
         item_id: body.item_id,
+        item_data: body.item_data,
       };
       rows.host_favourites = [...(rows.host_favourites ?? []), favourite];
       await respond(favourite, 201);

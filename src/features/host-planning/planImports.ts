@@ -128,9 +128,9 @@ export function favouriteTaskId(id: string): string {
   );
 }
 
-export function savedSecretTasks(favourites: Favourite[]) {
+export function savedFavouriteTasks(favourites: Favourite[]) {
   const tasks: Task[] = [];
-  let invalid = 0;
+  const invalid: Record<TaskKind, number> = { main: 0, side: 0, secret: 0 };
   for (const favourite of favourites) {
     const data = favourite.item_data;
     if (
@@ -138,14 +138,14 @@ export function savedSecretTasks(favourites: Favourite[]) {
       typeof data !== "object" ||
       data === null ||
       !("kind" in data) ||
-      data.kind !== "secret"
+      (data.kind !== "main" && data.kind !== "side" && data.kind !== "secret")
     )
       continue;
     if (!isExploreIdea(data)) {
-      invalid += 1;
+      invalid[data.kind] += 1;
       continue;
     }
-    const task = taskFromExploreIdea(data, "secret", favourite.item_id);
+    const task = taskFromExploreIdea(data, data.kind, favourite.item_id);
     if (
       "vibe" in data &&
       Array.isArray(data.vibe) &&

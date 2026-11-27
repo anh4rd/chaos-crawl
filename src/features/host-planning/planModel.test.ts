@@ -5,7 +5,7 @@ import {
   attachPlanTask,
   communityPlanTask,
   explorePlanTask,
-  savedSecretTasks,
+  savedFavouriteTasks,
 } from "./planImports";
 it("restores legacy selected IDs using saved row fields as authoritative values", () => {
   const form = hydratePlan({
@@ -168,8 +168,8 @@ it("selects and enables imported secret missions without changing other selectio
   ).toMatchObject({ kind: "secret", evidenceRequired: true });
 });
 
-it("projects saved secret challenges while excluding other saved items and reports malformed missions", () => {
-  const result = savedSecretTasks([
+it("projects saved challenges of each kind and reports malformed items separately", () => {
+  const result = savedFavouriteTasks([
     {
       id: "fav",
       item_id: "community-one",
@@ -207,7 +207,29 @@ it("projects saved secret challenges while excluding other saved items and repor
       id: "other",
       item_id: "side",
       item_type: "task",
-      item_data: { kind: "side" },
+      item_data: {
+        id: "side",
+        title: "Side challenge",
+        description: "An optional task",
+        kind: "side",
+      },
+    },
+    {
+      id: "main",
+      item_id: "main",
+      item_type: "task",
+      item_data: {
+        id: "main",
+        title: "Main challenge",
+        description: "A scheduled task",
+        kind: "main",
+      },
+    },
+    {
+      id: "location",
+      item_id: "location",
+      item_type: "venue",
+      item_data: { kind: "main" },
     },
     {
       id: "broken",
@@ -216,7 +238,7 @@ it("projects saved secret challenges while excluding other saved items and repor
       item_data: { kind: "secret" },
     },
   ]);
-  expect(result.invalid).toBe(1);
+  expect(result.invalid).toEqual({ main: 0, side: 0, secret: 1 });
   expect(result.tasks).toMatchObject([
     {
       id: "community-one",
@@ -230,5 +252,7 @@ it("projects saved secret challenges while excluding other saved items and repor
       setup: "Bring a hat.",
       prep: "Find a hat.",
     },
+    { id: "side", kind: "side", evidenceRequired: true },
+    { id: "main", kind: "main", evidenceRequired: false },
   ]);
 });
