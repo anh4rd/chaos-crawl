@@ -1,0 +1,1 @@
+import{p as e}from"./index-D_XaM8_V.js";import{t}from"./SessionParticipant-Bv-kmaN_.js";import{t as n}from"./jsx-runtime-CU_pEDDh.js";var r=n();function i(){let{joinCode:n=``,page:i}=e();return(0,r.jsx)(t,{joinCode:n,section:i===`leaderboard`||i===`side-challenges`||i===`final`||i===`recap`?i:`game`},n)}export{i as default};
