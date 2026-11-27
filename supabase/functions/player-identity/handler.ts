@@ -83,8 +83,9 @@ export async function handleIdentity(request: Request, rpc: Rpc) {
   if (body.action === "register" &&
     (typeof body.name !== "string" || body.name.trim().length < 1 ||
       body.name.trim().length > 60 || typeof body.mobile !== "string" ||
-      body.mobile.length > 40 || body.mobile.replace(/\D/g, "").length < 8 ||
-      body.mobile.replace(/\D/g, "").length > 15))
+      body.mobile.length > 40 || (body.mobile.trim() !== "" &&
+        (body.mobile.replace(/\D/g, "").length < 8 ||
+          body.mobile.replace(/\D/g, "").length > 15))))
     return response(400, { error: "Invalid request." });
 
   try {

@@ -54,6 +54,25 @@ begin
        'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', pg_catalog.repeat('cd', 32)) is not null then
     raise exception 'Duplicate phone was accepted';
   end if;
+  if public.cc_register_player_with_recovery('000099', 'Duplicate UK', '+44 7111 111098',
+       '44444444-4444-4444-8444-444444444444', pg_catalog.repeat('78', 32)) is not null then
+    raise exception 'UK international duplicate was accepted';
+  end if;
+  if public.cc_register_player_with_recovery('000099', 'No phone', '',
+       '11111111-1111-4111-8111-111111111111', pg_catalog.repeat('12', 32)) is null
+    or public.cc_register_player_with_recovery('000099', 'Also no phone', null,
+       '22222222-2222-4222-8222-222222222222', pg_catalog.repeat('34', 32)) is null then
+    raise exception 'Registration without a phone failed';
+  end if;
+  if (select count(*) from public.cc_game_session_player_private
+      where session_id = '20000000-0000-0000-0000-000000000099'
+        and phone_normalized is null) <> 2 then
+    raise exception 'Phone-less players were not stored separately';
+  end if;
+  if public.cc_register_player_with_recovery('000099', 'Invalid phone', 'abc',
+       '33333333-3333-4333-8333-333333333333', pg_catalog.repeat('56', 32)) is not null then
+    raise exception 'Invalid nonempty phone was accepted';
+  end if;
   candidate := public.cc_player_recovery_candidate('000099', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
   old_token := (candidate ->> 'player_token')::uuid;
   if public.cc_retry_player_registration('000099',

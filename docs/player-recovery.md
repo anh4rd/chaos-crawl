@@ -1,9 +1,9 @@
 # Anonymous player recovery
 
-This milestone is not deployed. The complete additive schema and function
-definitions are in
+The local milestone's original additive schema and function definitions are in
 [`20261127000200_player_recovery.sql`](../supabase/migrations/20261127000200_player_recovery.sql).
-No notification system is included.
+Deployment state must be verified for each environment. No notification system
+is included.
 
 ## Contract
 
@@ -21,6 +21,20 @@ again. Both operations return `join_code`, `player_name`, `player_token` and
 `resumed`. Errors are generic JSON objects with an `error` field. POST and
 OPTIONS are supported; request bodies are limited to 4096 bytes.
 
+The phone number is optional for new registrations. Leaving it blank creates a
+new player, not a recovery of an existing player; the server stores a null
+phone and still issues a player token and recovery credential. A nonempty
+number must contain 8–15 digits and cannot duplicate another player's number
+in the game. New registrations are currently accepted only while the session
+is in its lobby. This requires
+[`20261127000400_optional_player_phone.sql`](../supabase/migrations/20261127000400_optional_player_phone.sql)
+and the matching Edge Function update. Existing player records and tokens are
+not changed.
+The join form offers calling-code choices and an input for other calling codes.
+The player supplies the number as dialled from abroad; UK numbers may retain
+the leading zero. An explicitly international number beginning with `+` or
+`00` takes precedence over the selection.
+
 Before registration, the browser persists an AES-GCM encrypted pending copy in
 IndexedDB with a non-extractable key. It retries the same credential if the
 response is lost, and removes that copy on continuing past setup. This is not
@@ -36,6 +50,13 @@ remains reusable; there is no user-facing rotation or revocation yet. Existing
 players retain their current tokens and are not automatically enrolled. If an
 existing player loses their token without an established recovery credential,
 there is no self-service recovery; independent verification is not implemented.
+
+On the join screen, a saved player token is checked with
+`cc_get_game_session_view` before asking for details. A valid token resumes the
+existing player without rotating it. An expired token offers credential
+recovery; an unavailable session check reports an error instead of treating a
+network problem as lost identity. Phone-only recovery is not available because
+knowledge of a number does not verify its owner.
 
 ## Database and security
 
@@ -77,7 +98,7 @@ Run `npx vitest run tests/support/playerIdentity.test.ts src/pages/JoinV2.test.t
 and `npx playwright test tests/join.spec.ts tests/playerIdentity.spec.ts`.
 Mocked browser and handler tests never use the live backend.
 
-For SQL, apply the migration only to a disposable database containing the V2
+For SQL, apply the migrations in order only to a disposable database containing the V2
 schema and roles, then run `psql -v ON_ERROR_STOP=1 -f tests/database/player_recovery.sql`.
 The additional `tests/database/player_recovery_concurrent.sql` requires
 `dblink`, administrative local connection privileges, and a fresh disposable

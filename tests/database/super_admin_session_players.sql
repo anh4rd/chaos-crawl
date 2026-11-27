@@ -17,14 +17,16 @@ insert into public.cc_game_session_players (id, session_id, name)
 values
   ('30000000-0000-0000-0000-000000000011', '20000000-0000-0000-0000-000000000011', 'Player'),
   ('30000000-0000-0000-0000-000000000012', '20000000-0000-0000-0000-000000000011', 'Host'),
-  ('30000000-0000-0000-0000-000000000013', '20000000-0000-0000-0000-000000000011', 'Other');
+  ('30000000-0000-0000-0000-000000000013', '20000000-0000-0000-0000-000000000011', 'Other'),
+  ('30000000-0000-0000-0000-000000000014', '20000000-0000-0000-0000-000000000011', 'No phone');
 update public.cc_game_sessions set host_player_id = '30000000-0000-0000-0000-000000000012', team_size = 2
 where id = '20000000-0000-0000-0000-000000000011';
 insert into public.cc_game_session_player_private (player_id, session_id, phone_normalized, player_token)
 values
   ('30000000-0000-0000-0000-000000000011', '20000000-0000-0000-0000-000000000011', '07111111111', '50000000-0000-0000-0000-000000000011'),
   ('30000000-0000-0000-0000-000000000012', '20000000-0000-0000-0000-000000000011', 'host:owner', '50000000-0000-0000-0000-000000000012'),
-  ('30000000-0000-0000-0000-000000000013', '20000000-0000-0000-0000-000000000011', '07222222222', '50000000-0000-0000-0000-000000000013');
+  ('30000000-0000-0000-0000-000000000013', '20000000-0000-0000-0000-000000000011', '07222222222', '50000000-0000-0000-0000-000000000013'),
+  ('30000000-0000-0000-0000-000000000014', '20000000-0000-0000-0000-000000000011', null, '50000000-0000-0000-0000-000000000014');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000012', true);
@@ -53,11 +55,20 @@ declare
   v_data jsonb;
 begin
   v_data := public.cc_super_admin_session_players('20000000-0000-0000-0000-000000000011');
-  if jsonb_array_length(v_data -> 'players') <> 3
+  if jsonb_array_length(v_data -> 'players') <> 4
     or (v_data -> 'players' -> 0 ->> 'phone') <> '07111111111'
     or (v_data -> 'players' -> 1 ->> 'phone') is not null
     or (v_data -> 'players' -> 0) ? 'player_token' then
     raise exception 'Player detail or credential isolation failed';
+  end if;
+  perform public.cc_super_admin_update_session_player(
+    '20000000-0000-0000-0000-000000000011', '30000000-0000-0000-0000-000000000014',
+    'Renamed', null, null, 2, null,
+    '{"name":"No phone","avatar_url":null,"team_id":null,"score":0,"phone":null}');
+  v_data := public.cc_super_admin_session_players('20000000-0000-0000-0000-000000000011');
+  if v_data -> 'players' -> 3 ->> 'name' <> 'Renamed'
+    or (v_data -> 'players' -> 3 ->> 'score')::integer <> 2 then
+    raise exception 'Admin could not edit player without a phone';
   end if;
   perform public.cc_super_admin_update_session_player(
     '20000000-0000-0000-0000-000000000011', '30000000-0000-0000-0000-000000000011',

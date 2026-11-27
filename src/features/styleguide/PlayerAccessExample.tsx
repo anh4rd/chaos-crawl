@@ -4,6 +4,7 @@ import RecoverySetup from "../player-access/RecoverySetup";
 import type { JoinMode, JoinStep } from "../player-access/types";
 import Note from "../../components/ui/Note";
 import { Example } from "./Example";
+import { validJoinPhone } from "../player-access/phoneNumber";
 
 export default function PlayerAccessExample() {
   const [mode, setMode] = useState<JoinMode>("join");
@@ -11,6 +12,8 @@ export default function PlayerAccessExample() {
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
+  const [countryCode, setCountryCode] = useState("");
+  const [customCountryCode, setCustomCountryCode] = useState("");
   const [credential, setCredential] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
@@ -19,7 +22,8 @@ export default function PlayerAccessExample() {
     code.length === 6 &&
     (mode === "rejoin"
       ? credential.trim().length > 0
-      : mobile.trim().length >= 8 && name.trim().length > 0) &&
+      : name.trim().length > 0 &&
+        validJoinPhone(mobile, countryCode, customCountryCode)) &&
     !busy;
   return (
     <Example
@@ -58,6 +62,8 @@ export default function PlayerAccessExample() {
           code={code}
           name={name}
           mobile={mobile}
+          countryCode={countryCode}
+          customCountryCode={customCountryCode}
           credential={credential}
           busy={busy}
           error={
@@ -68,6 +74,8 @@ export default function PlayerAccessExample() {
           onCodeChange={setCode}
           onNameChange={setName}
           onMobileChange={setMobile}
+          onCountryCodeChange={setCountryCode}
+          onCustomCountryCodeChange={setCustomCountryCode}
           onCredentialChange={setCredential}
           onBack={() => setJoinStep(1)}
           onToggleMode={() => setMode(mode === "join" ? "rejoin" : "join")}

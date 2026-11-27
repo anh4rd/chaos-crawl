@@ -3,6 +3,62 @@ import { readFile } from "node:fs/promises";
 import { tabTo } from "./support/keyboard";
 import { installSessionBackend } from "./support/sessionBackend";
 
+test("saved player sessions resume before asking for join details", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page);
+  await page.goto("#/join?code=123456&returning=1");
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(page).toHaveURL(/#\/play\/123456/);
+  expect(
+    backend.requests.filter((r) => r.name === "player-identity"),
+  ).toHaveLength(0);
+  expect(
+    backend.requests.filter((r) => r.name === "cc_get_game_session_view")
+      .length,
+  ).toBeGreaterThan(0);
+  backend.verify();
+});
+
+test("players can select an international calling code", async ({ page }) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  await page.goto("#/join?code=123456");
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await page.getByLabel("Your name?").fill("Pat");
+  const phone = page.getByLabel("Your phone number?");
+  await expect(page.getByRole("button", { name: "Join game" })).toBeEnabled();
+  const country = page.getByLabel("Country calling code");
+  await tabTo(page, country);
+  await country.selectOption("44");
+  await phone.fill("07123 456789");
+  await page.getByRole("button", { name: "Join game", exact: true }).click();
+  await expect(page.getByLabel("Your recovery code")).toBeVisible();
+  expect(
+    backend.requests.find((r) => r.name === "player-identity")?.body,
+  ).toMatchObject({
+    action: "register",
+    mobile: "+447123456789",
+  });
+  backend.verify();
+});
+
+test("players can join as a new player without a phone number", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  await page.goto("#/join?code=123456");
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await page.getByLabel("Your name?").fill("Pat");
+  await page.getByRole("button", { name: "Join game", exact: true }).click();
+  await expect(page.getByLabel("Your recovery code")).toBeVisible();
+  expect(
+    backend.requests.find((r) => r.name === "player-identity")?.body,
+  ).toMatchObject({ action: "register", mobile: "" });
+  await page.getByRole("button", { name: "Continue without saving" }).click();
+  await expect(page).toHaveURL(/#\/play\/123456/);
+  backend.verify();
+});
+
 test("an interrupted registration can resume with the same encrypted pending credential", async ({
   page,
 }) => {

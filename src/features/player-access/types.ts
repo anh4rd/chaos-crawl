@@ -8,6 +8,8 @@ export interface PlayerAccessModel {
   code: string;
   name: string;
   mobile: string;
+  countryCode: string;
+  customCountryCode: string;
   credential: string;
   joinStep: JoinStep;
   busy: boolean;
@@ -17,6 +19,8 @@ export interface PlayerAccessModel {
   onCodeChange: (value: string) => void;
   onNameChange: (value: string) => void;
   onMobileChange: (value: string) => void;
+  onCountryCodeChange: (value: string) => void;
+  onCustomCountryCodeChange: (value: string) => void;
   onCredentialChange: (value: string) => void;
   onBack: () => void;
   onToggleMode: () => void;

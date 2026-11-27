@@ -52,6 +52,36 @@ describe("player identity handler", () => {
     expect(JSON.stringify(rpc.mock.calls)).not.toContain(secret);
   });
 
+  it("accepts an empty phone for a new player but rejects invalid nonempty numbers", async () => {
+    const rpc = vi.fn(async (name: string) => {
+      if (name === "cc_player_identity_rate_limit") return true;
+      if (name === "cc_player_recovery_candidate") return null;
+      return {
+        player_token: "token",
+        join_code: "123456",
+        player_name: "Pat",
+        resumed: false,
+      };
+    });
+    const body = {
+      action: "register",
+      join_code: "123456",
+      credential,
+      name: "Pat",
+      mobile: "",
+    };
+    expect((await handleIdentity(request(body), rpc)).status).toBe(200);
+    expect(rpc).toHaveBeenCalledWith(
+      "cc_register_player_with_recovery",
+      expect.objectContaining({ p_mobile: "" }),
+    );
+    rpc.mockClear();
+    expect(
+      (await handleIdentity(request({ ...body, mobile: "abc" }), rpc)).status,
+    ).toBe(400);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
   it("recovers with the correct credential and rejects another secret", async () => {
     const rpc = vi.fn(async (name: string) => {
       if (name === "cc_player_identity_rate_limit") return true;

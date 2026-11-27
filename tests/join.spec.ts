@@ -239,7 +239,9 @@ test("failed join retains details, clears its error on mode change and retries w
     page,
     page.getByRole("button", { name: "Join game", exact: true }),
   );
-  await expect(page.getByRole("alert")).toHaveText(missingSession);
+  await expect(page.getByRole("alert")).toHaveText(
+    "Player access is temporarily unavailable. Please try again or ask the host for help.",
+  );
   await expect(page.getByLabel("Your name?", { exact: true })).toHaveValue(
     "Pat",
   );

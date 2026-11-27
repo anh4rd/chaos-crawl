@@ -17,6 +17,8 @@ export default function PlayerAccessView({
   code,
   name,
   mobile,
+  countryCode,
+  customCountryCode,
   credential,
   joinStep,
   busy,
@@ -26,6 +28,8 @@ export default function PlayerAccessView({
   onCodeChange,
   onNameChange,
   onMobileChange,
+  onCountryCodeChange,
+  onCustomCountryCodeChange,
   onCredentialChange,
   onBack,
   onToggleMode,
@@ -106,9 +110,13 @@ export default function PlayerAccessView({
                 mode={mode}
                 name={name}
                 mobile={mobile}
+                countryCode={countryCode}
+                customCountryCode={customCountryCode}
                 credential={credential}
                 onNameChange={onNameChange}
                 onMobileChange={onMobileChange}
+                onCountryCodeChange={onCountryCodeChange}
+                onCustomCountryCodeChange={onCustomCountryCodeChange}
                 onCredentialChange={onCredentialChange}
               />
             </>
@@ -117,7 +125,9 @@ export default function PlayerAccessView({
             type="submit"
             variant="access"
             disabled={
-              joinStep === 1 ? code.replace(/\D/g, "").length !== 6 : !canSubmit
+              joinStep === 1
+                ? code.replace(/\D/g, "").length !== 6 || busy
+                : !canSubmit
             }
           >
             {busy ? (
@@ -126,7 +136,7 @@ export default function PlayerAccessView({
                   name="loader-circle"
                   className="icon--size-19 icon--spinning-session"
                 />{" "}
-                Joining…
+                {joinStep === 1 ? "Checking…" : "Joining…"}
               </>
             ) : (
               <>

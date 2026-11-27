@@ -7,12 +7,17 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { joinGameSession } from "../../lib/playerAccess";
+import {
+  joinGameSession,
+  playerAccessErrorMessage,
+  readCachedPlayer,
+} from "../../lib/playerAccess";
 import {
   clearPendingRecovery,
   pendingRecoveryCredential,
 } from "./recoveryVault";
 import type { JoinMode, JoinStep, PlayerAccessModel } from "./types";
+import { formatJoinPhone, validJoinPhone } from "./phoneNumber";
 
 function storageKey(code: string) {
   return `chaos-crawl-session-player:${code.replace(/\D/g, "")}`;
@@ -34,6 +39,8 @@ export function usePlayerAccess({
   const [code, setCode] = useState(codeFromUrl);
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
+  const [countryCode, setCountryCode] = useState("");
+  const [customCountryCode, setCustomCountryCode] = useState("");
   const [credential, setCredential] = useState("");
   const [setup, setSetup] = useState<{
     credential: string;
@@ -67,9 +74,19 @@ export function usePlayerAccess({
       code.replace(/\D/g, "").length === 6 &&
       (mode === "rejoin"
         ? credential.trim().length > 0
-        : mobile.trim().length >= 8 && name.trim().length > 0) &&
+        : name.trim().length > 0 &&
+          validJoinPhone(mobile, countryCode, customCountryCode)) &&
       !busy,
-    [code, mobile, mode, name, credential, busy],
+    [
+      code,
+      mobile,
+      mode,
+      name,
+      credential,
+      busy,
+      countryCode,
+      customCountryCode,
+    ],
   );
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -77,7 +94,41 @@ export function usePlayerAccess({
     setError("");
     setNotice("");
     if (joinStep === 1) {
-      if (code.replace(/\D/g, "").length === 6) setJoinStep(2);
+      const cleanCode = code.replace(/\D/g, "");
+      if (cleanCode.length !== 6 || request.current.pending) return;
+      const token = localStorage.getItem(storageKey(cleanCode));
+      if (!token) {
+        setJoinStep(2);
+        return;
+      }
+      request.current.pending = true;
+      const generation = request.current.generation;
+      const isCurrent = () =>
+        request.current.mounted && request.current.generation === generation;
+      setBusy(true);
+      try {
+        const result = await readCachedPlayer(cleanCode, token);
+        if (!isCurrent()) return;
+        if (result.error) {
+          if (/your player session expired/i.test(result.error.message)) {
+            setMode("rejoin");
+            setJoinStep(2);
+            setNotice("Your saved session expired. Use your recovery code.");
+          } else {
+            setError("Couldn't check your saved session. Please try again.");
+          }
+          return;
+        }
+        onJoined(result.data);
+      } catch {
+        if (isCurrent()) {
+          console.error("Saved player session check failed.");
+          setError("Couldn't check your saved session. Please try again.");
+        }
+      } finally {
+        request.current.pending = false;
+        if (request.current.mounted) setBusy(false);
+      }
       return;
     }
     if (!canSubmit || request.current.pending) return;
@@ -98,7 +149,10 @@ export function usePlayerAccess({
         join_code: cleanCode,
         credential: recoveryCredential,
         ...(mode === "join"
-          ? { name: name.trim(), mobile: mobile.trim() }
+          ? {
+              name: name.trim(),
+              mobile: formatJoinPhone(mobile, countryCode, customCountryCode),
+            }
           : {}),
       });
       if (!isCurrent()) return;
@@ -115,12 +169,10 @@ export function usePlayerAccess({
         if (result.resumed) setNotice(`Welcome back, ${result.player_name}!`);
         onJoined(result);
       }
-    } catch {
+    } catch (accessError) {
       if (!isCurrent()) return;
       console.error("Player access failed.");
-      setError(
-        "Couldn't complete player access. Check your details and try again.",
-      );
+      setError(playerAccessErrorMessage(accessError, mode === "join"));
     } finally {
       request.current.pending = false;
       if (request.current.mounted) setBusy(false);
@@ -150,6 +202,8 @@ export function usePlayerAccess({
     code,
     name,
     mobile,
+    countryCode,
+    customCountryCode,
     credential,
     joinStep,
     busy,
@@ -159,6 +213,8 @@ export function usePlayerAccess({
     onCodeChange: setCode,
     onNameChange: setName,
     onMobileChange: setMobile,
+    onCountryCodeChange: setCountryCode,
+    onCustomCountryCodeChange: setCustomCountryCode,
     onCredentialChange: setCredential,
     onBack: () => setJoinStep(1),
     onToggleMode: () => {

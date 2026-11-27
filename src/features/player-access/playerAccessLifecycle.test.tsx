@@ -8,9 +8,14 @@ import {
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import PlayerAccess from "./PlayerAccess";
-import { joinGameSession } from "../../lib/playerAccess";
+import { joinGameSession, readCachedPlayer } from "../../lib/playerAccess";
 
-vi.mock("../../lib/playerAccess", () => ({ joinGameSession: vi.fn() }));
+vi.mock("../../lib/playerAccess", () => ({
+  joinGameSession: vi.fn(),
+  readCachedPlayer: vi.fn(),
+  playerAccessErrorMessage: () =>
+    "Couldn't complete player access. Check your details and try again.",
+}));
 vi.mock("./recoveryVault", () => ({
   pendingRecoveryCredential: vi.fn(async () => "sample-recovery"),
   clearPendingRecovery: vi.fn(async () => {}),
@@ -68,6 +73,51 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+});
+
+it("ignores a cached-session response after the game code changes", async () => {
+  let resolve: (
+    value: Awaited<ReturnType<typeof readCachedPlayer>>,
+  ) => void = () => {
+    throw new Error("Deferred request not initialized");
+  };
+  const pending = new Promise<Awaited<ReturnType<typeof readCachedPlayer>>>(
+    (done) => {
+      resolve = done;
+    },
+  );
+  vi.mocked(readCachedPlayer).mockReturnValue(pending);
+  localStorage.setItem(credentialKey, "cached-token");
+  const onJoined = vi.fn();
+  const { rerender } = render(
+    <PlayerAccess
+      codeFromUrl="123456"
+      initialMode="join"
+      onJoined={onJoined}
+    />,
+  );
+  fireEvent.submit(form());
+  rerender(
+    <PlayerAccess
+      codeFromUrl="654321"
+      initialMode="join"
+      onJoined={onJoined}
+    />,
+  );
+  await act(async () => {
+    resolve({
+      data: {
+        join_code: "123456",
+        player_token: "cached-token",
+        player_name: "Pat",
+        resumed: true,
+      },
+      error: null,
+    });
+    await pending;
+  });
+  expect(onJoined).not.toHaveBeenCalled();
+  expect(localStorage.getItem(credentialKey)).toBe("cached-token");
 });
 
 it("does not store credentials or redirect when a successful join finishes after unmount", async () => {
