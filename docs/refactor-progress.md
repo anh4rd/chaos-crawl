@@ -7,6 +7,22 @@ writes are included.
 
 ## In progress
 
+Secret missions use one points value per game, editable under Secret missions in
+the host plan. An additive migration synchronizes active session missions and
+new custom missions; already awarded scores are not changed. The migration and
+frontend require coordinated deployment.
+
+Player identity explicitly imports `node:buffer` so registration and credential
+recovery do not depend on a Node-only global in the Edge runtime. Regressions
+exercise both paths without global credential helpers. The fix requires redeploying the
+identity Edge Function, not a database migration. The HTML includes the standard
+mobile web-app capability declaration alongside the Apple declaration.
+Verification: 45 focused tests passed; mocked desktop/mobile joins passed 38/42
+checks, with four styleguide-navigation failures. Full lint hit unrelated
+formatting failures, and build hit an unrelated planning-test type error.
+Read-only live probes confirmed successful preflight but a CORS-less HTTP 500
+when credential parsing runs. No deployment or database writes were performed.
+
 Player access checks an existing browser token before requesting details.
 New players can leave their phone blank or select an international calling
 code. Temporary phone-only recovery is deliberately insecure and available for

@@ -74,6 +74,7 @@ export interface SetupForm {
   decideRewardInGame: boolean;
   sideChallenges: boolean;
   secretMissions: boolean;
+  secretMissionPoints: number;
   slideshow: boolean;
   liveFinal: boolean;
   strictSchedule: boolean;

@@ -7,6 +7,7 @@ import FormLabel from "../../components/ui/FormLabel";
 import type { Task, TaskKind } from "./types";
 export default function SelectedChallenge({
   task,
+  points,
   index,
   count,
   tab,
@@ -18,6 +19,7 @@ export default function SelectedChallenge({
   changeSecretResponseMode,
 }: {
   task: Task;
+  points: number;
   index: number;
   count: number;
   tab: "main" | "side" | "secret";
@@ -49,8 +51,8 @@ export default function SelectedChallenge({
         <strong>{task.title}</strong>
         <small>
           {tab === "side"
-            ? `${task.points} pts`
-            : `${task.minutes} min · ${task.points} pts`}
+            ? `${points} pts`
+            : `${task.minutes} min · ${points} pts`}
           {task.preGame ? " · PRE-GAME" : ""}
         </small>
         <ChallengeTypeActions task={task} onChange={changeType} />

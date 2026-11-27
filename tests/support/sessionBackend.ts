@@ -18,6 +18,7 @@ export function sessionFixture() {
     status: "live",
     host_participates: false,
     host_player_id: null as string | null,
+    secret_mission_points: 10,
     current_round_number: 1,
     round_count: 1,
     teams_enabled: false,

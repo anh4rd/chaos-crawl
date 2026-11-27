@@ -133,6 +133,17 @@ After deploying the Edge Function, verify a browser preflight returns HTTP 204
 and allows `authorization`, `apikey`, `content-type`, and `x-client-info`.
 The Supabase gateway can return 404 for a missing function; browsers report
 that failed preflight as a CORS error before the join request is sent.
+The handler explicitly imports `Buffer` from `node:buffer`; the Edge runtime
+does not supply Node's global `Buffer`. Without that import, registration and
+credential recovery throw before returning a CORS-enabled response, even when
+preflight succeeds. Redeploy `player-identity` after updating the handler:
+
+```sh
+npx supabase functions deploy player-identity --project-ref vleewyedtktarpotechj --no-verify-jwt
+```
+
+This handler fix does not require a database migration. Keep JWT verification
+disabled for this anonymous endpoint; it validates player credentials itself.
 
 ## Testing
 

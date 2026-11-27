@@ -189,6 +189,7 @@ export const defaultForm: SetupForm = {
   decideRewardInGame: true,
   sideChallenges: true,
   secretMissions: false,
+  secretMissionPoints: 10,
   slideshow: true,
   liveFinal: true,
   strictSchedule: false,

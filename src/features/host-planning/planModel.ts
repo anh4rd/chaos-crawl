@@ -134,6 +134,12 @@ export function derivePlan(form: SetupForm) {
     calculatedEnd,
   };
 }
+export function secretMissionPointsIssue(points: number) {
+  return !Number.isInteger(points) || points < 0 || points > 10000
+    ? "Choose secret mission points between 0 and 10000."
+    : "";
+}
+
 export function validatePlan(form: SetupForm) {
   if (!form.name.trim()) return "Add a game name.";
   if (!form.eventDate) return "Choose the event date.";
@@ -145,6 +151,8 @@ export function validatePlan(form: SetupForm) {
     return "Add at least one side challenge or turn side challenges off.";
   if (form.secretMissions && !form.selectedSecret.length)
     return "Add at least one secret mission or turn secret missions off.";
+  const pointsIssue = secretMissionPointsIssue(form.secretMissionPoints);
+  if (pointsIssue) return pointsIssue;
   if (form.sideChallenges && (!form.liveFinal || !form.slideshow))
     return "Side challenges require a live final and slideshow. These have been enabled automatically.";
   return "";
@@ -178,7 +186,11 @@ export function createPlanWrite(
     version: 3,
     ...form,
     selectedTasks: projection.selectedTasks.map((task) =>
-      task.kind === "main" ? orderedMain[mainIndex++] : task,
+      task.kind === "main"
+        ? orderedMain[mainIndex++]
+        : task.kind === "secret"
+          ? { ...task, points: form.secretMissionPoints }
+          : task,
     ),
     selectedTaskIds: [
       ...form.selectedMain,
@@ -209,9 +221,31 @@ export function createPlanWrite(
 }
 export function hydratePlan(data: StoredPlan): SetupForm {
   const p = data.plan_data ?? {};
+  const legacySecretTask = Array.isArray(p.selectedTasks)
+    ? p.selectedTasks.find(
+        (task: unknown) =>
+          typeof task === "object" &&
+          task !== null &&
+          "kind" in task &&
+          task.kind === "secret" &&
+          "points" in task &&
+          typeof task.points === "number",
+      )
+    : undefined;
+  const legacyPoints =
+    typeof legacySecretTask === "object" &&
+    legacySecretTask !== null &&
+    "points" in legacySecretTask &&
+    typeof legacySecretTask.points === "number"
+      ? legacySecretTask.points
+      : defaultForm.secretMissionPoints;
   return {
     ...defaultForm,
     ...p,
+    secretMissionPoints:
+      typeof p.secretMissionPoints === "number"
+        ? p.secretMissionPoints
+        : legacyPoints,
     name: String(data.name ?? p.name ?? ""),
     eventDate: String(data.event_date ?? p.eventDate ?? today()),
     startTime: String(data.start_time ?? p.startTime ?? "18:00").slice(0, 5),

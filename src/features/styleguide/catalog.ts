@@ -625,7 +625,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   MissionCreationForm: {
     usage:
-      "Controlled custom mission form inside a native disclosure, including written-answer and photo/video options. Supply values, callbacks and busy state. Local reference never creates a backend record.",
+      "Controlled custom mission form inside a native disclosure, including the shared points value, written-answer and photo/video options. Supply values, callbacks and busy state. Local reference never creates a backend record.",
     dependencies:
       "Disclosure session, FormLabel session/checkbox and shared Button; command defaults and persistence remain in the feature controller.",
   },

@@ -5,6 +5,7 @@ import {
   derivePlan,
   hydratePlan,
   initialSchedule,
+  secretMissionPointsIssue,
 } from "./planModel";
 import {
   attachPlanTask,
@@ -13,6 +14,41 @@ import {
   explorePlanTask,
   savedFavouriteTasks,
 } from "./planImports";
+
+it("saves one editable point value for every secret mission without changing other tasks", () => {
+  const secrets = taskLibrary.filter((task) => task.kind === "secret");
+  const main = taskLibrary.find((task) => task.kind === "main");
+  if (secrets.length < 2 || !main)
+    throw new Error("Missing challenge fixtures");
+  const form = {
+    ...defaultForm,
+    secretMissionPoints: 23,
+    selectedMain: [main.id],
+    selectedSide: [],
+    selectedSecret: secrets.map((task) => task.id),
+  };
+  const saved = createPlanWrite(form, "host", "draft");
+  expect(saved.plan_data.secretMissionPoints).toBe(23);
+  expect(
+    saved.plan_data.selectedTasks.filter((task) => task.kind === "secret"),
+  ).toHaveLength(secrets.length);
+  expect(
+    saved.plan_data.selectedTasks
+      .filter((task) => task.kind === "secret")
+      .map((task) => task.points),
+  ).toEqual(secrets.map(() => 23));
+  expect(
+    saved.plan_data.selectedTasks.find((task) => task.id === main.id)?.points,
+  ).toBe(main.points);
+  expect(
+    hydratePlan({ id: "plan", ...saved, plan_data: { ...saved.plan_data } })
+      .secretMissionPoints,
+  ).toBe(23);
+  expect(secretMissionPointsIssue(-1)).not.toBe("");
+  expect(secretMissionPointsIssue(1.5)).not.toBe("");
+  expect(secretMissionPointsIssue(10001)).not.toBe("");
+  expect(secretMissionPointsIssue(0)).toBe("");
+});
 
 it.each([
   ["main", "side"],

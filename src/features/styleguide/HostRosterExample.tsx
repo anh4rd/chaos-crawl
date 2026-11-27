@@ -27,6 +27,7 @@ const sampleSession: GameSession = {
   player_limit: 12,
   host_participates: false,
   host_player_id: null,
+  secret_mission_points: 10,
   current_round_number: 1,
   reward_methods: ["host_awards"],
   created_at: "2030-01-01",

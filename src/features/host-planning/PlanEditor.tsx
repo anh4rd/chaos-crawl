@@ -419,6 +419,7 @@ export default function PlanEditor({
           {(tab === "main" || tab === "side" || tab === "secret") && (
             <ChallengeLibrary
               tab={tab}
+              secretMissionPoints={form.secretMissionPoints}
               selectedIds={selectedIds}
               allTasks={libraryTasks}
               setDragged={setDragged}

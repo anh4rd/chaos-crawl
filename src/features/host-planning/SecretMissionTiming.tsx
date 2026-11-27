@@ -15,6 +15,23 @@ export default function SecretMissionTiming({
 }: SecretMissionTimingProps) {
   return (
     <ContentPanel variant="section">
+      <h3>Secret mission points</h3>
+      <Field label="Points for each secret mission">
+        <input
+          type="number"
+          min={0}
+          max={10000}
+          step={1}
+          value={form.secretMissionPoints}
+          onChange={(event) =>
+            update("secretMissionPoints", Number(event.target.value))
+          }
+        />
+      </Field>
+      <p>
+        Every successful secret mission uses this amount. Changing it does not
+        change points already awarded.
+      </p>
       <h3>Mission reveal timing</h3>
       <p>
         Choose whether reveals happen at a planned point in the game or at a

@@ -18,7 +18,6 @@ export default function MissionFormsExample() {
     scheduleAt: "",
     title: "",
     description: "",
-    points: 10,
     evidence: false,
     textAnswer: false,
   });
@@ -70,8 +69,7 @@ export default function MissionFormsExample() {
               setNewSecretDescription={(value) =>
                 update({ description: value })
               }
-              newSecretPoints={form.points}
-              setNewSecretPoints={(value) => update({ points: value })}
+              secretMissionPoints={10}
               newSecretEvidenceRequired={form.evidence}
               setNewSecretEvidenceRequired={(value) =>
                 update({ evidence: value })

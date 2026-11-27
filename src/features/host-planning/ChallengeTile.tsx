@@ -5,6 +5,7 @@ import ChallengeTypeActions from "./ChallengeTypeActions";
 import type { Task, TaskKind } from "./types";
 export default function ChallengeTile({
   task,
+  points,
   tab,
   selected,
   saved,
@@ -14,6 +15,7 @@ export default function ChallengeTile({
   selectedKind,
 }: {
   task: Task;
+  points: number;
   tab: "main" | "side" | "secret";
   selected: boolean;
   saved: boolean;
@@ -50,7 +52,7 @@ export default function ChallengeTile({
         <p>{task.description}</p>
         <div className="tag-list">
           {tab !== "side" && <span>{task.minutes} min</span>}
-          <span>{task.points} pts</span>
+          <span>{points} pts</span>
           {task.preGame && <span>Pre-game</span>}
           {task.equipment.length > 0 && <span>Equipment</span>}
           {task.evidenceRequired && <span>Evidence required</span>}

@@ -10,8 +10,7 @@ interface Props {
   setNewSecretTitle: (value: string) => void;
   newSecretDescription: string;
   setNewSecretDescription: (value: string) => void;
-  newSecretPoints: number;
-  setNewSecretPoints: (value: number) => void;
+  secretMissionPoints: number;
   newSecretEvidenceRequired: boolean;
   setNewSecretEvidenceRequired: (value: boolean) => void;
   newSecretTextAnswer: boolean;
@@ -24,8 +23,7 @@ export default function MissionCreationForm({
   setNewSecretTitle,
   newSecretDescription,
   setNewSecretDescription,
-  newSecretPoints,
-  setNewSecretPoints,
+  secretMissionPoints,
   newSecretEvidenceRequired,
   setNewSecretEvidenceRequired,
   newSecretTextAnswer,
@@ -61,16 +59,9 @@ export default function MissionCreationForm({
             placeholder="What should this one player do?"
           />
         </FormLabel>
-        <FormLabel variant="session">
-          <span>Points</span>
-          <input
-            type="number"
-            min={0}
-            max={10000}
-            value={newSecretPoints}
-            onChange={(event) => setNewSecretPoints(Number(event.target.value))}
-          />
-        </FormLabel>
+        <p>
+          Each successful secret mission is worth {secretMissionPoints} points.
+        </p>
         <FormLabel variant="session-checkbox">
           <span>
             <input

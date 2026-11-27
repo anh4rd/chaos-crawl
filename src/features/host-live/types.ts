@@ -26,6 +26,7 @@ export interface GameSession {
   player_limit: number;
   host_participates: boolean;
   host_player_id: string | null;
+  secret_mission_points: number;
   current_round_number: number;
   reward_methods: RewardMethod[];
   created_at: string;

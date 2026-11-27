@@ -33,8 +33,6 @@ export function useHostSecretMissions({
 
   const [newSecretDescription, setNewSecretDescription] = useState("");
 
-  const [newSecretPoints, setNewSecretPoints] = useState(10);
-
   const [newSecretEvidenceRequired, setNewSecretEvidenceRequired] =
     useState(false);
   const [newSecretTextAnswer, setNewSecretTextAnswer] = useState(false);
@@ -55,7 +53,7 @@ export function useHostSecretMissions({
         round_number: null,
         title: newSecretTitle.trim(),
         description: newSecretDescription.trim(),
-        points: Math.max(0, Number(newSecretPoints) || 0),
+        points: session.secret_mission_points,
         duration_minutes: 10,
         sort_order: nextSortOrder,
         allow_photo_upload: !newSecretTextAnswer && newSecretEvidenceRequired,
@@ -68,7 +66,6 @@ export function useHostSecretMissions({
     }
     setNewSecretTitle("");
     setNewSecretDescription("");
-    setNewSecretPoints(10);
     setNewSecretEvidenceRequired(false);
     setNewSecretTextAnswer(false);
     setSelectedSecretChallengeId(data.id);
@@ -175,8 +172,6 @@ export function useHostSecretMissions({
     setNewSecretTitle,
     newSecretDescription,
     setNewSecretDescription,
-    newSecretPoints,
-    setNewSecretPoints,
     newSecretEvidenceRequired,
     setNewSecretEvidenceRequired,
     newSecretTextAnswer,

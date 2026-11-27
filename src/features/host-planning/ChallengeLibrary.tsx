@@ -14,6 +14,7 @@ import { type Favourite, type Task, type TaskKind } from "./types";
 
 interface ChallengeLibraryProps {
   tab: "main" | "side" | "secret";
+  secretMissionPoints: number;
   selectedIds: string[];
   allTasks: Task[];
   setDragged: Dispatch<SetStateAction<string | null>>;
@@ -43,6 +44,7 @@ interface ChallengeLibraryProps {
 
 export default function ChallengeLibrary({
   tab,
+  secretMissionPoints,
   selectedIds,
   allTasks,
   setDragged,
@@ -129,6 +131,7 @@ export default function ChallengeLibrary({
                 <SelectedChallenge
                   key={taskId}
                   task={task}
+                  points={tab === "secret" ? secretMissionPoints : task.points}
                   index={index}
                   count={selectedIds.length}
                   tab={tab}
@@ -209,6 +212,7 @@ export default function ChallengeLibrary({
                 <ChallengeTile
                   key={task.id}
                   task={task}
+                  points={tab === "secret" ? secretMissionPoints : task.points}
                   tab={tab}
                   selected={selected}
                   saved={saved}

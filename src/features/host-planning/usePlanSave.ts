@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { readHostIdentity } from "../../lib/hostAuth";
 import { createHostPlan, updateHostPlan } from "../../lib/hostPlanApi";
-import { createPlanWrite, validatePlan } from "./planModel";
+import {
+  createPlanWrite,
+  secretMissionPointsIssue,
+  validatePlan,
+} from "./planModel";
 import type { SetupForm } from "./types";
 import type { ApiError } from "../../lib/apiResult";
 export function usePlanSave({
@@ -31,7 +35,10 @@ export function usePlanSave({
   }, [id]);
   async function save(status: "draft" | "planned") {
     if (busy.current) return;
-    const issue = status === "planned" ? validatePlan(form) : "";
+    const issue =
+      status === "planned"
+        ? validatePlan(form)
+        : secretMissionPointsIssue(form.secretMissionPoints);
     if (issue) {
       setError(issue);
       return;

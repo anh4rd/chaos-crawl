@@ -406,8 +406,6 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     setNewSecretTitle,
     newSecretDescription,
     setNewSecretDescription,
-    newSecretPoints,
-    setNewSecretPoints,
     newSecretEvidenceRequired,
     setNewSecretEvidenceRequired,
     newSecretTextAnswer,
@@ -922,8 +920,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
         setNewSecretTitle={setNewSecretTitle}
         newSecretDescription={newSecretDescription}
         setNewSecretDescription={setNewSecretDescription}
-        newSecretPoints={newSecretPoints}
-        setNewSecretPoints={setNewSecretPoints}
+        secretMissionPoints={session?.secret_mission_points ?? 10}
         newSecretEvidenceRequired={newSecretEvidenceRequired}
         setNewSecretEvidenceRequired={setNewSecretEvidenceRequired}
         newSecretTextAnswer={newSecretTextAnswer}

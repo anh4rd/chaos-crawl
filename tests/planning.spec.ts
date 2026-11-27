@@ -22,6 +22,10 @@ test("a planned secret mission saves its written-answer mode", async ({
     .getByRole("button", { name: "Add Make the best noise as secret mission" })
     .click();
   await section(page, "Secret missions");
+  const missionPoints = page.getByLabel("Points for each secret mission");
+  await tabTo(page, missionPoints);
+  await page.keyboard.press("ControlOrMeta+A");
+  await page.keyboard.type("23");
   await page
     .getByLabel("Mission response for Make the best noise")
     .selectOption("text");
@@ -35,10 +39,12 @@ test("a planned secret mission saves its written-answer mode", async ({
     )
     .toMatchObject({
       plan_data: {
+        secretMissionPoints: 23,
         selectedTasks: expect.arrayContaining([
           expect.objectContaining({
             title: "Make the best noise",
             kind: "secret",
+            points: 23,
             secretResponseMode: "text",
           }),
         ]),

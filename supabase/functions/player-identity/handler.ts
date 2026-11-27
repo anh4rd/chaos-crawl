@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
+import { Buffer } from "node:buffer";
 
 type Rpc = (name: string, args: Record<string, unknown>) => Promise<unknown>;
 

@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { createHash } from "node:crypto";
+import { Buffer } from "node:buffer";
 import { describe, expect, it, vi } from "vitest";
 import { handleIdentity } from "../../supabase/functions/player-identity/handler";
 
@@ -20,6 +21,36 @@ function request(body: unknown) {
 }
 
 describe("player identity handler", () => {
+  it.each(["register", "recover"])(
+    "handles %s without global Buffer credential helpers",
+    async (action) => {
+      const rpc = vi.fn(async (name: string) => {
+        if (name === "cc_player_identity_rate_limit") return true;
+        if (name === "cc_player_recovery_candidate")
+          return { digest, revision: 1, player_token: "old" };
+        return { player_token: "new", player_name: "Pat", resumed: true };
+      });
+      const input = request({
+        action,
+        join_code: "123456",
+        credential,
+        name: "Pat",
+        mobile: "",
+      });
+      // Node's Response needs byteLength; credential helpers must use the import.
+      vi.stubGlobal("Buffer", { byteLength: Buffer.byteLength });
+      let result: Response;
+      try {
+        result = await handleIdentity(input, rpc);
+      } finally {
+        vi.unstubAllGlobals();
+      }
+      expect(result.status).toBe(200);
+      expect(result.headers.get("access-control-allow-origin")).toBe("*");
+      expect(await result.json()).toMatchObject({ player_token: "new" });
+    },
+  );
+
   it("allows the Supabase client headers in the browser preflight", async () => {
     const rpc = vi.fn();
     const result = await handleIdentity(
