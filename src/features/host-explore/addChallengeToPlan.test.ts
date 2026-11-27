@@ -57,20 +57,49 @@ it.each(["main", "side", "secret"] as const)(
     expect(addChallengeToPlan(result.plan, task).added).toBe(false);
   },
 );
-it("preserves both types when the same challenge is added to different categories", () => {
-  const first = addChallengeToPlan(plan(), explorePlanTask(idea, "main"));
-  const second = addChallengeToPlan(
-    first.plan,
-    explorePlanTask(idea, "secret"),
+it.each([
+  ["main", "side"],
+  ["main", "secret"],
+  ["side", "main"],
+  ["side", "secret"],
+  ["secret", "main"],
+  ["secret", "side"],
+] as const)(
+  "rejects adding a %s challenge as %s without changing the plan",
+  (firstKind, nextKind) => {
+    const first = addChallengeToPlan(plan(), explorePlanTask(idea, firstKind));
+    const before = structuredClone(first.plan);
+    expect(() =>
+      addChallengeToPlan(first.plan, explorePlanTask(idea, nextKind)),
+    ).toThrow(`already in this game as ${firstKind}`);
+    expect(first.plan).toEqual(before);
+  },
+);
+
+it("recognizes a catalogue alias and a previously suffixed duplicate", () => {
+  const main = addChallengeToPlan(plan(), explorePlanTask(idea, "main"));
+  const alias = { ...explorePlanTask(idea, "side"), id: "catalog:idea" };
+  expect(() => addChallengeToPlan(main.plan, alias)).toThrow(
+    /already in this game as main/,
   );
-  expect(second.plan).toMatchObject({
-    selectedMain: ["explore-idea"],
+  const saved = explorePlanTask(idea, "secret");
+  const legacy = {
+    ...plan(),
+    customTasks: [{ ...saved, id: "explore-idea-secret" }],
     selectedSecret: ["explore-idea-secret"],
-    selectedTasks: expect.arrayContaining([
-      expect.objectContaining({ id: "explore-idea", kind: "main" }),
-      expect.objectContaining({ id: "explore-idea-secret", kind: "secret" }),
-    ]),
-  });
+  };
+  expect(() =>
+    addChallengeToPlan(legacy, explorePlanTask(idea, "side")),
+  ).toThrow(/already in this game as secret/);
+});
+it("allows a different type after the old type has been removed", () => {
+  const old = explorePlanTask(idea, "side");
+  const removed = { ...plan(), customTasks: [old] };
+  const result = addChallengeToPlan(removed, explorePlanTask(idea, "secret"));
+  expect(result.plan.customTasks).toEqual([
+    expect.objectContaining({ id: old.id, kind: "secret" }),
+  ]);
+  expect(result.plan.selectedSecret).toEqual([old.id]);
 });
 it("rejects malformed or legacy metadata without overwriting it", () => {
   expect(() =>

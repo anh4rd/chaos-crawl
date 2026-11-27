@@ -843,6 +843,14 @@ test("adds to one game directly and asks which game when there are several", asy
     }),
   );
   const dialog = page.getByRole("dialog", { name: "Add challenge to a game" });
+  await activateByKeyboard(
+    page,
+    dialog.getByRole("button", { name: "First game (planned)" }),
+  );
+  await expect(dialog.getByRole("alert")).toContainText(
+    "already in this game as main",
+  );
+  expect(writes).toHaveLength(1);
   await expect(
     dialog.getByRole("button", { name: "Second game (draft)" }),
   ).toBeVisible();

@@ -1,5 +1,11 @@
 import type { User } from "@supabase/supabase-js";
-import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import { failedResult, runApi } from "../../lib/apiResult";
 import { readHostIdentity } from "../../lib/hostAuth";
 import { readHostPlan, readApprovedPlanTask } from "../../lib/hostPlanApi";
@@ -8,8 +14,9 @@ import {
   attachPlanTask,
   communityPlanTask,
   explorePlanTask,
+  selectedChallengeKind,
 } from "./planImports";
-import type { SetupForm, TaskKind } from "./types";
+import type { SetupForm, Task, TaskKind } from "./types";
 function importedTaskNotice(title: string, kind: TaskKind) {
   const section =
     kind === "main"
@@ -24,6 +31,7 @@ export function usePlanSource({
   communityTaskId,
   exploreTaskJson,
   requestedChallengeKind,
+  form,
   setForm,
   setStage,
   loadFavourites,
@@ -34,12 +42,15 @@ export function usePlanSource({
   communityTaskId: string | null;
   exploreTaskJson: string | null;
   requestedChallengeKind: TaskKind;
+  form: SetupForm;
   setForm: Dispatch<SetStateAction<SetupForm>>;
   setStage: Dispatch<SetStateAction<"create" | "build">>;
   loadFavourites: (hostId: string) => Promise<void>;
   setError: (message: string) => void;
   setNotice: (message: string) => void;
 }) {
+  const formRef = useRef(form);
+  formRef.current = form;
   const [attempt, setAttempt] = useState(0);
   const [ownership, setOwnership] = useState<{
     planId?: string;
@@ -55,6 +66,29 @@ export function usePlanSource({
   );
   useEffect(() => {
     let live = true;
+    function addImportedTask(task: Task) {
+      const current = formRef.current;
+      const otherKind = selectedChallengeKind(
+        current,
+        current.customTasks,
+        task,
+        task.kind,
+      );
+      if (otherKind) {
+        setError(
+          `This challenge is already in this game as ${otherKind}. Remove it there before adding it as ${task.kind}.`,
+        );
+        return;
+      }
+      if (
+        selectedChallengeKind(current, current.customTasks, task) === task.kind
+      ) {
+        setNotice(`“${task.title}” is already in this game as ${task.kind}.`);
+        return;
+      }
+      setForm((value) => attachPlanTask(value, task));
+      setNotice(importedTaskNotice(task.title, task.kind));
+    }
     async function load() {
       setError("");
       setOwnership({
@@ -108,14 +142,12 @@ export function usePlanSource({
           );
         else {
           const task = communityPlanTask(submission, requestedChallengeKind);
-          setForm((current) => attachPlanTask(current, task));
-          setNotice(importedTaskNotice(task.title, task.kind));
+          addImportedTask(task);
         }
       } else if (exploreTaskJson) {
         try {
           const task = explorePlanTask(exploreTaskJson, requestedChallengeKind);
-          setForm((current) => attachPlanTask(current, task));
-          setNotice(importedTaskNotice(task.title, task.kind));
+          addImportedTask(task);
         } catch {
           setError(
             "Couldn't add that Explore challenge. Return to Explore and try again.",

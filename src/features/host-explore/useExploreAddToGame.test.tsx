@@ -3,6 +3,8 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { defaultForm } from "../host-planning/catalog";
 import { createPlanWrite } from "../host-planning/planModel";
 import { useExploreAddToGame } from "./useExploreAddToGame";
+import { addChallengeToPlan } from "./addChallengeToPlan";
+import { explorePlanTask } from "../host-planning/planImports";
 import type { CatalogTask } from "./types";
 
 const mocks = vi.hoisted(() => ({
@@ -81,6 +83,30 @@ it("adds directly to one game with a guarded update", async () => {
     }),
   );
   expect(result.current.choice).toBeNull();
+});
+it("reports an existing different type without writing to the game", async () => {
+  mocks.games.mockResolvedValue({ data: [game], error: null });
+  const existing = addChallengeToPlan(
+    snapshot,
+    explorePlanTask(JSON.stringify(task), "main"),
+  ).plan;
+  mocks.plan.mockResolvedValue({
+    data: {
+      id: game.id,
+      status: game.status,
+      plan_data: existing,
+      updated_at: "2030-01-01T00:00:00Z",
+    },
+    error: null,
+  });
+  const { result } = renderHook(() =>
+    useExploreAddToGame({ navigate: vi.fn() }),
+  );
+  act(() => result.current.start(task, "secret"));
+  await waitFor(() =>
+    expect(result.current.error).toContain("already in this game as main"),
+  );
+  expect(mocks.update).not.toHaveBeenCalled();
 });
 it("rechecks an approved community challenge before adding it", async () => {
   mocks.games.mockResolvedValue({ data: [game], error: null });

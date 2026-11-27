@@ -97,6 +97,7 @@ export default function PlanEditor({
     communityTaskId,
     exploreTaskJson,
     requestedChallengeKind,
+    form,
     setForm,
     setStage,
     loadFavourites,
@@ -131,6 +132,7 @@ export default function PlanEditor({
     toggleFavourite,
     dragged,
     setDragged,
+    setError,
   });
   const {
     updateScheduleItem,
@@ -145,6 +147,7 @@ export default function PlanEditor({
     allTasks: libraryTasks,
     stage,
     setNotice,
+    setError,
   });
   const { saving, save } = usePlanSave({
     id,

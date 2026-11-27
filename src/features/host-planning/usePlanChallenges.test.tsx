@@ -34,6 +34,7 @@ it.each(["side", "secret"] as const)(
         toggleFavourite: vi.fn(),
         dragged,
         setDragged,
+        setError: vi.fn(),
       });
       return { form, dragged, setDragged, ...actions };
     });
@@ -84,6 +85,7 @@ it("copies a selected saved mission into the plan so it survives unfavouriting",
         toggleFavourite: vi.fn(),
         dragged: null,
         setDragged: vi.fn(),
+        setError: vi.fn(),
       }),
     };
   });
@@ -137,6 +139,7 @@ it("snapshots an Explore side challenge without enabling secret missions", () =>
         toggleFavourite: vi.fn(),
         dragged: null,
         setDragged: vi.fn(),
+        setError: vi.fn(),
       }),
     };
   });
@@ -145,4 +148,50 @@ it("snapshots an Explore side challenge without enabling secret missions", () =>
   act(() => result.current.selectTask(task));
   expect(result.current.form.secretMissions).toBe(false);
   expect(derivePlan(result.current.form).sideTasks).toContainEqual(task);
+});
+
+it("blocks a different type even when the selected challenge uses another source ID", () => {
+  const task = {
+    id: "catalog:idea",
+    title: "Idea",
+    description: "Test",
+    kind: "secret" as const,
+    minutes: 5,
+    points: 10,
+    vibe: [],
+    accessibility: [],
+    equipment: [],
+    setup: "",
+    prep: "",
+    evidenceRequired: true,
+  };
+  const notice = vi.fn();
+  const { result } = renderHook(() => {
+    const [form, setForm] = useState({
+      ...defaultForm,
+      selectedMain: ["explore-idea"],
+    });
+    const update: UpdatePlan = (field, value) =>
+      setForm((current) => ({ ...current, [field]: value }));
+    return {
+      form,
+      ...usePlanChallenges({
+        form,
+        update,
+        tab: "secret",
+        allTasks: [task],
+        favourites: [],
+        toggleFavourite: vi.fn(),
+        dragged: null,
+        setDragged: vi.fn(),
+        setError: notice,
+      }),
+    };
+  });
+  act(() => result.current.selectTask(task));
+  expect(result.current.form.selectedSecret).toEqual([]);
+  expect(result.current.form.selectedMain).toEqual(["explore-idea"]);
+  expect(notice).toHaveBeenCalledWith(
+    expect.stringContaining("already in this game as main"),
+  );
 });

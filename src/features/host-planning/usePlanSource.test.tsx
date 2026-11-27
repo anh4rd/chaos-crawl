@@ -4,6 +4,7 @@ import type { ApiResult } from "../../lib/apiResult";
 import type { StoredPlan } from "../../types/hostPlanning";
 import { usePlanFavourites } from "./usePlanFavourites";
 import { usePlanSource } from "./usePlanSource";
+import { defaultForm } from "./catalog";
 const mocks = vi.hoisted(() => ({
   identity: vi.fn(),
   favourites: vi.fn(),
@@ -45,7 +46,14 @@ const setForm = vi.fn(),
 const loadFavourites = async (hostId: string) => {
   await mocks.favourites(hostId);
 };
-const callbacks = { setForm, setStage, loadFavourites, setError, setNotice };
+const callbacks = {
+  form: defaultForm,
+  setForm,
+  setStage,
+  loadFavourites,
+  setError,
+  setNotice,
+};
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.identity.mockResolvedValue({
@@ -58,6 +66,30 @@ beforeEach(() => {
   );
 });
 afterEach(cleanup);
+it("does not import a default side challenge as a different type into a new plan", async () => {
+  const task = {
+    id: "task-team-laugh",
+    title: "Make your team laugh",
+    description:
+      "Make every teammate laugh without touching them or using your phone.",
+    kind: "side",
+    minutes: 5,
+    points: 10,
+  };
+  const { result } = renderHook(() =>
+    usePlanSource({
+      ...callbacks,
+      communityTaskId: null,
+      exploreTaskJson: JSON.stringify(task),
+      requestedChallengeKind: "main",
+    }),
+  );
+  await waitFor(() => expect(result.current.loading).toBe(false));
+  expect(setForm).not.toHaveBeenCalled();
+  expect(setError).toHaveBeenCalledWith(
+    expect.stringContaining("already in this game as side"),
+  );
+});
 it("uses the game owner's identity for a shared plan", async () => {
   mocks.plan.mockResolvedValue({
     data: { ...stored("shared"), host_id: "owner" },

@@ -7,6 +7,12 @@ writes are included.
 
 ## In progress
 
+Adding a catalogue challenge to a game now rejects a second challenge type
+instead of creating a suffixed duplicate. Planner selections and scheduling
+apply the same guard across saved and catalogue ID aliases. Existing duplicate
+plans are not rewritten; hosts must remove the existing type before adding
+another.
+
 Anonymous player registration and recovery have an undeployed security
 milestone; see [player recovery](./player-recovery.md) for its contracts,
 rollout constraints and verification limitations. Existing tokens are not

@@ -2,6 +2,7 @@ import { useEffect, type Dispatch, type SetStateAction } from "react";
 import type { SetupForm, Task, ScheduleItem, UpdatePlan } from "./types";
 import { initialSchedule } from "./planModel";
 import { taskLibrary } from "./catalog";
+import { selectedChallengeKind } from "./planImports";
 export function usePlanSchedule({
   form,
   setForm,
@@ -9,6 +10,7 @@ export function usePlanSchedule({
   allTasks,
   stage,
   setNotice,
+  setError,
 }: {
   form: SetupForm;
   setForm: Dispatch<SetStateAction<SetupForm>>;
@@ -16,6 +18,7 @@ export function usePlanSchedule({
   allTasks: Task[];
   stage: "create" | "build";
   setNotice: (message: string) => void;
+  setError: (message: string) => void;
 }) {
   useEffect(() => {
     if (stage !== "build") return;
@@ -72,21 +75,48 @@ export function usePlanSchedule({
     update("schedule", withoutPreGame);
   }
   function addTaskToSchedule(taskId: string) {
-    const task = allTasks.find((t) => t.id === taskId);
+    const task = allTasks.find((t) => t.id === taskId && t.kind === "main");
     if (!task) return;
+    const otherKind = selectedChallengeKind(
+      form,
+      form.customTasks,
+      task,
+      "main",
+    );
+    if (otherKind) {
+      setError(
+        `This challenge is already in this game as ${otherKind}. Remove it there before adding it as main.`,
+      );
+      return;
+    }
+    setError("");
     if (
       form.schedule.some(
-        (item) => item.type === "challenge" && item.taskId === taskId,
+        (item) =>
+          item.type === "challenge" &&
+          item.taskId &&
+          selectedChallengeKind(
+            {
+              selectedMain: [item.taskId],
+              selectedSide: [],
+              selectedSecret: [],
+            },
+            form.customTasks,
+            task,
+          ) === "main",
       )
     ) {
       setNotice("That challenge is already in the schedule.");
       return;
     }
-    if (
-      !taskLibrary.some((item) => item.id === task.id) &&
-      !form.customTasks.some((item) => item.id === task.id)
-    )
-      update("customTasks", [...form.customTasks, task]);
+    if (!taskLibrary.some((item) => item.id === task.id)) {
+      const saved = form.customTasks.find((item) => item.id === task.id);
+      if (!saved || saved.kind !== task.kind)
+        update("customTasks", [
+          ...form.customTasks.filter((item) => item.id !== task.id),
+          task,
+        ]);
+    }
     if (!form.selectedMain.includes(taskId)) {
       update("selectedMain", [...form.selectedMain, taskId]);
     }

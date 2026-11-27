@@ -1,4 +1,5 @@
 import type { Task } from "../host-planning/types";
+import { selectedChallengeKind } from "../host-planning/planImports";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -34,23 +35,22 @@ export function addChallengeToPlan(plan: unknown, task: Task) {
   )
     throw new Error("Open and save this game plan before adding challenges.");
 
-  const collision = customTasks.find((item) => item.id === task.id);
-  const id =
-    collision && collision.kind !== task.kind
-      ? `${task.id}-${task.kind}`
-      : task.id;
-  const existing = customTasks.find((item) => item.id === id);
-  if (existing && existing.kind !== task.kind)
+  const selection = { selectedMain, selectedSide, selectedSecret };
+  const otherKind = selectedChallengeKind(
+    selection,
+    customTasks,
+    task,
+    task.kind,
+  );
+  if (otherKind)
     throw new Error(
-      "This challenge conflicts with another saved challenge. Open the plan to add it.",
+      `This challenge is already in this game as ${otherKind}. Remove it there before adding it as ${task.kind}.`,
     );
-  const selected =
-    task.kind === "main"
-      ? selectedMain
-      : task.kind === "side"
-        ? selectedSide
-        : selectedSecret;
-  if (selected.includes(id)) return { plan, added: false };
+  if (selectedChallengeKind(selection, customTasks, task) === task.kind)
+    return { plan, added: false };
+  const id = task.id;
+  const existing = customTasks.find((item) => item.id === id);
+  const existingSameKind = existing?.kind === task.kind ? existing : undefined;
   const nextTask = { ...task, id };
   const nextSchedule = [...schedule];
   if (
@@ -105,10 +105,12 @@ export function addChallengeToPlan(plan: unknown, task: Task) {
   return {
     plan: {
       ...plan,
-      customTasks: existing ? customTasks : [...customTasks, nextTask],
+      customTasks: existingSameKind
+        ? customTasks
+        : [...customTasks.filter((item) => item.id !== id), nextTask],
       selectedTasks: [
         ...selectedTasks.filter((item) => item.id !== id),
-        existing ?? nextTask,
+        existingSameKind ?? nextTask,
       ],
       selectedTaskIds: [...new Set([...selectedTaskIds, id])],
       selectedMain: task.kind === "main" ? [...selectedMain, id] : selectedMain,

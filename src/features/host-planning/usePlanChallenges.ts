@@ -13,7 +13,7 @@ import type {
   UpdatePlan,
 } from "./types";
 import { taskLibrary } from "./catalog";
-import { favouriteTaskId } from "./planImports";
+import { favouriteTaskId, selectedChallengeKind } from "./planImports";
 export function usePlanChallenges({
   form,
   update,
@@ -23,6 +23,7 @@ export function usePlanChallenges({
   toggleFavourite,
   dragged,
   setDragged,
+  setError,
 }: {
   form: SetupForm;
   update: UpdatePlan;
@@ -32,6 +33,7 @@ export function usePlanChallenges({
   toggleFavourite: (task: Task) => Promise<void>;
   dragged: string | null;
   setDragged: Dispatch<SetStateAction<string | null>>;
+  setError: (message: string) => void;
 }) {
   const [favouritesOnly, setFavouritesOnly] = useState(false);
   const [vibeFilter, setVibeFilter] = useState("all");
@@ -79,12 +81,28 @@ export function usePlanChallenges({
           : "selectedSecret";
     const list = form[key];
     const removing = list.includes(task.id);
-    if (
-      !removing &&
-      !taskLibrary.some((item) => item.id === task.id) &&
-      !form.customTasks.some((item) => item.id === task.id)
-    ) {
-      update("customTasks", [...form.customTasks, task]);
+    if (!removing) {
+      const otherKind = selectedChallengeKind(
+        form,
+        form.customTasks,
+        task,
+        task.kind,
+      );
+      if (otherKind) {
+        setError(
+          `This challenge is already in this game as ${otherKind}. Remove it there before adding it as ${task.kind}.`,
+        );
+        return;
+      }
+    }
+    setError("");
+    if (!removing && !taskLibrary.some((item) => item.id === task.id)) {
+      const saved = form.customTasks.find((item) => item.id === task.id);
+      if (!saved || saved.kind !== task.kind)
+        update("customTasks", [
+          ...form.customTasks.filter((item) => item.id !== task.id),
+          task,
+        ]);
       if (task.kind === "secret") update("secretMissions", true);
     }
     update(

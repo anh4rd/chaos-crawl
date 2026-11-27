@@ -128,6 +128,47 @@ export function favouriteTaskId(id: string): string {
   );
 }
 
+export function selectedChallengeKind(
+  selection: Pick<
+    SetupForm,
+    "selectedMain" | "selectedSide" | "selectedSecret"
+  >,
+  tasks: {
+    id?: unknown;
+    kind?: unknown;
+    title?: unknown;
+    description?: unknown;
+  }[],
+  task: Task,
+  excludeKind?: TaskKind,
+): TaskKind | undefined {
+  const identity = favouriteTaskId(task.id);
+  const groups = [
+    ["main", selection.selectedMain],
+    ["side", selection.selectedSide],
+    ["secret", selection.selectedSecret],
+  ] as const;
+  for (const [kind, ids] of groups) {
+    if (kind === excludeKind) continue;
+    if (
+      ids.some((id) => {
+        if (favouriteTaskId(id) === identity) return true;
+        return (
+          favouriteTaskId(id) === `${identity}-${kind}` &&
+          tasks.some(
+            (saved) =>
+              saved.id === id &&
+              saved.kind === kind &&
+              saved.title === task.title &&
+              saved.description === task.description,
+          )
+        );
+      })
+    )
+      return kind;
+  }
+}
+
 export function savedFavouriteTasks(favourites: Favourite[]) {
   const tasks: Task[] = [];
   const invalid: Record<TaskKind, number> = { main: 0, side: 0, secret: 0 };

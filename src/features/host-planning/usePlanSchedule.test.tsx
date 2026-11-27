@@ -6,6 +6,49 @@ import { createPlanWrite, derivePlan, hydratePlan } from "./planModel";
 import { usePlanSchedule } from "./usePlanSchedule";
 import type { SetupForm, UpdatePlan } from "./types";
 afterEach(cleanup);
+it("does not schedule a challenge already selected as a different type", () => {
+  const task = {
+    id: "catalog:idea",
+    title: "Idea",
+    description: "Test",
+    kind: "main" as const,
+    minutes: 5,
+    points: 10,
+    vibe: [],
+    accessibility: [],
+    equipment: [],
+    setup: "",
+    prep: "",
+    evidenceRequired: false,
+  };
+  const notice = vi.fn();
+  const { result } = renderHook(() => {
+    const [form, setForm] = useState<SetupForm>({
+      ...defaultForm,
+      selectedSecret: ["explore-idea"],
+    });
+    const update: UpdatePlan = (key, value) =>
+      setForm((current) => ({ ...current, [key]: value }));
+    return {
+      form,
+      ...usePlanSchedule({
+        form,
+        setForm,
+        update,
+        allTasks: [task],
+        stage: "create",
+        setNotice: vi.fn(),
+        setError: notice,
+      }),
+    };
+  });
+  act(() => result.current.addTaskToSchedule(task.id));
+  expect(result.current.form.selectedMain).toEqual([]);
+  expect(result.current.form.schedule).toEqual([]);
+  expect(notice).toHaveBeenCalledWith(
+    expect.stringContaining("already in this game as secret"),
+  );
+});
 it("initializes on build entry while preserving subsequent timeline edits", () => {
   const { result } = renderHook(() => {
     const [form, setForm] = useState<SetupForm>({ ...defaultForm });
@@ -19,6 +62,7 @@ it("initializes on build entry while preserving subsequent timeline edits", () =
       allTasks: derivePlan(form).allTasks,
       stage,
       setNotice: vi.fn(),
+      setError: vi.fn(),
     });
     return { form, setForm, stage, setStage, update, ...actions };
   });
@@ -77,6 +121,7 @@ it("keeps an imported main task selected once while preserving both timing phase
       allTasks: derivePlan(form).allTasks,
       stage: "build",
       setNotice: vi.fn(),
+      setError: vi.fn(),
     });
     return { form, ...actions };
   });
@@ -128,6 +173,7 @@ it.each(["schedule", "pre-game"] as const)(
           allTasks: [...derivePlan(form).allTasks, task],
           stage: "build",
           setNotice: vi.fn(),
+          setError: vi.fn(),
         }),
       };
     });
