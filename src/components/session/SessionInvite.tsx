@@ -10,6 +10,7 @@ import Icon from "../ui/Icon";
 export default function SessionInvite({
   joinUrl,
   onCopy,
+  onOpenHostJoin,
   copied = false,
   playerCount,
   playerLimit,
@@ -19,6 +20,7 @@ export default function SessionInvite({
 }: {
   joinUrl: string;
   onCopy: () => void | Promise<void>;
+  onOpenHostJoin?: () => void;
   copied?: boolean;
   playerCount: number;
   playerLimit: number;
@@ -51,6 +53,17 @@ export default function SessionInvite({
           />{" "}
           Copy join code
         </Button>
+        {onOpenHostJoin && (
+          <Button
+            type="button"
+            variant="session-ghost"
+            fullWidth={false}
+            onClick={onOpenHostJoin}
+          >
+            Open join screen{" "}
+            <Icon name="arrow-right" className="icon--size-16" />
+          </Button>
+        )}
         <ButtonLink
           variant="session-ghost"
           fullWidth={false}
@@ -58,7 +71,8 @@ export default function SessionInvite({
           target="_blank"
           rel="noreferrer"
         >
-          Open join screen <Icon name="arrow-right" className="icon--size-16" />
+          Open player join page{" "}
+          <Icon name="arrow-right" className="icon--size-16" />
         </ButtonLink>
       </div>
       <div className="session-invite__count">

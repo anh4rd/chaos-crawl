@@ -137,6 +137,9 @@ export default function SessionPanelsExample() {
           <SessionInvite
             joinUrl="#/styleguide"
             onCopy={() => setCopied(true)}
+            onOpenHostJoin={() =>
+              setNotice("Sample host join screen opened locally.")
+            }
             copied={copied}
             playerCount={3}
             playerLimit={12}

@@ -42,12 +42,18 @@
     justify-content: space-between;
     gap: (layout.$pixel-unit * 2.5);
   }
+  &--revisit &__actions {
+    flex-wrap: wrap;
+  }
+  &--revisit &__heading h1:focus {
+    @include focus-ring.focus-ring;
+  }
   &--join {
     width: min(100%, layout.$content-width);
     margin-inline: auto;
   }
-  &--join &__heading h1,
-  &--join &__heading p {
+  &--join:not(&--revisit) &__heading h1,
+  &--join:not(&--revisit) &__heading p {
     @include visually-hidden.visually-hidden;
   }
   &--details &__heading h1 {

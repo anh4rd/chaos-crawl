@@ -36,6 +36,7 @@ export default function HostRosterManagement({
   updatePlayersPerTeam,
   joinUrl,
   copyCode,
+  onOpenHostJoin,
   codeCopied,
   adjustScore,
   scoreAdjustmentCount,
@@ -59,6 +60,7 @@ export default function HostRosterManagement({
   updatePlayersPerTeam: (size: number) => Promise<void>;
   joinUrl: string;
   copyCode: () => void | Promise<void>;
+  onOpenHostJoin?: () => void;
   codeCopied: boolean;
   adjustScore: (target: "player" | "team", id: string, delta: number) => void;
   scoreAdjustmentCount: number;
@@ -270,6 +272,7 @@ export default function HostRosterManagement({
           bare
           joinUrl={joinUrl}
           onCopy={copyCode}
+          onOpenHostJoin={onOpenHostJoin}
           copied={codeCopied}
           playerCount={players.length}
           playerLimit={session.player_limit}

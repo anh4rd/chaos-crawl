@@ -594,7 +594,11 @@ test("shared session panel reference selects rounds and keeps invitation actions
   ).toBeFocused();
   await page.keyboard.press("Shift+Tab");
   await expect(
-    page.getByRole("link", { name: "Open join screen", exact: true }),
+    page.getByRole("link", { name: "Open player join page", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(
+    page.getByRole("button", { name: "Open join screen", exact: true }),
   ).toBeFocused();
   await page.keyboard.press("Shift+Tab");
   await expect(
@@ -607,7 +611,7 @@ test("shared session panel reference selects rounds and keeps invitation actions
       .locator(".lucide-check"),
   ).toBeVisible();
   const link = page.getByRole("link", {
-    name: "Open join screen",
+    name: "Open player join page",
     exact: true,
   });
   await expect(link).toHaveAttribute("href", "#/styleguide");

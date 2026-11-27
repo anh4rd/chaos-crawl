@@ -149,6 +149,9 @@ export default function HostRosterExample() {
             }
             joinUrl="#/styleguide"
             copyCode={() => setNotice("Copy selected locally.")}
+            onOpenHostJoin={() =>
+              setNotice("Sample host join screen opened locally.")
+            }
             codeCopied={false}
             adjustScore={(target, id, delta) => {
               if (target === "player")

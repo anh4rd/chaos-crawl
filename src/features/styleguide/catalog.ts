@@ -673,7 +673,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionInvite: {
     usage:
-      "Session QR, native join link, joined-player count and optional team guidance. The supplied copied state changes the copy icon to a check. Shared session panels and invitation demonstrates local callbacks.",
+      "Session QR, separate host join action and native player join link, joined-player count and optional team guidance. The supplied copied state changes the copy icon to a check. Shared session panels and invitation demonstrates local callbacks.",
     dependencies:
       "Caller-supplied URL, counts and team flags; QrFrame, shared controls and qrcode.react. No credential, clipboard or backend reads.",
   },

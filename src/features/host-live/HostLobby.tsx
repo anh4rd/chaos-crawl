@@ -1,7 +1,7 @@
 import JoinProgress from "../../components/ui/JoinProgress";
 import Button from "../../components/ui/Button";
 import type { Dispatch, SetStateAction } from "react";
-import { type FormEvent, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import Icon from "../../components/ui/Icon";
 import LobbyInviteStep from "./LobbyInviteStep";
 import LobbyParticipationStep from "./LobbyParticipationStep";
@@ -55,6 +55,7 @@ interface Props {
   renameTeam: (team: SessionTeam) => Promise<void>;
   uploadTeamPhoto: (team: SessionTeam, file: File) => Promise<void>;
   startGame: (confirmedOverride?: boolean) => Promise<void>;
+  onReturnToGame?: () => void;
 }
 export default function HostLobby({
   lobbyStep,
@@ -98,10 +99,17 @@ export default function HostLobby({
   renameTeam,
   uploadTeamPhoto,
   startGame,
+  onReturnToGame,
 }: Props) {
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const returningToGame = Boolean(onReturnToGame);
+  useEffect(() => {
+    if (returningToGame) headingRef.current?.focus();
+  }, [returningToGame]);
   const [photoNeedsSaving, setPhotoNeedsSaving] = useState(false);
   const choiceKey = `chaos-crawl-host-lobby-choice:${session.id}`;
   const [participates, setParticipates] = useState(() => {
+    if (returningToGame) return session.host_participates;
     const saved = localStorage.getItem(choiceKey);
     if (saved === "true" || saved === "false") return saved === "true";
     return lobbyStep >= 3 ? session.host_participates : true;
@@ -161,12 +169,12 @@ export default function HostLobby({
 
   return (
     <section
-      className={`lobby-setup${lobbyStep <= 3 ? " lobby-setup--join" : ""}${lobbyStep === 2 ? " lobby-setup--details" : ""}`}
+      className={`lobby-setup${lobbyStep <= 3 ? " lobby-setup--join" : ""}${lobbyStep === 2 ? " lobby-setup--details" : ""}${returningToGame ? " lobby-setup--revisit" : ""}`}
       aria-label={`Game setup step ${lobbyStep} of ${totalSteps}`}
     >
       <header className="lobby-setup__heading">
         {lobbyStep > 3 && <span>TEAM SETUP</span>}
-        <h1>
+        <h1 ref={headingRef} tabIndex={returningToGame ? -1 : undefined}>
           {
             (
               [
@@ -175,7 +183,7 @@ export default function HostLobby({
                 "Players & teams",
                 "Choose your teams",
                 "Name your teams",
-                "Ready to start",
+                returningToGame ? "Teams ready" : "Ready to start",
               ] as const
             )[lobbyStep - 1]
           }
@@ -191,7 +199,9 @@ export default function HostLobby({
                 "See who has joined and set the team capacity.",
                 "Move players into teams and check who is ready.",
                 "Give each team a name and picture.",
-                "Gather everyone, explain the rules and start the game.",
+                returningToGame
+                  ? "Review the players and teams in your game."
+                  : "Gather everyone, explain the rules and start the game.",
               ] as const
             )[lobbyStep - 1]
           }
@@ -265,9 +275,11 @@ export default function HostLobby({
             updatePlayersPerTeam={updatePlayersPerTeam}
           />
           <p className="lobby-setup__start-note">
-            {session.teams_enabled
-              ? "Continue once all players have joined."
-              : "Only start the game once all players have joined."}
+            {returningToGame
+              ? "Return to the game when you are ready."
+              : session.teams_enabled
+                ? "Continue once all players have joined."
+                : "Only start the game once all players have joined."}
           </p>
         </>
       )}
@@ -289,6 +301,7 @@ export default function HostLobby({
           teamName={teamName}
           setTeamName={setTeamName}
           goToLobbyStep={goToLobbyStep}
+          revisiting={returningToGame}
         />
       )}
 
@@ -321,6 +334,17 @@ export default function HostLobby({
       )}
 
       <footer className="lobby-setup__actions">
+        {onReturnToGame && (
+          <Button
+            variant="lobby-back"
+            fullWidth={false}
+            type="button"
+            disabled={busy || advancing || choosing}
+            onClick={onReturnToGame}
+          >
+            Return to game
+          </Button>
+        )}
         {lobbyStep !== 1 && (
           <Button
             variant="lobby-back"
@@ -347,7 +371,7 @@ export default function HostLobby({
           >
             Next <Icon name="arrow-right" className="icon--size-17" />
           </Button>
-        ) : (
+        ) : !onReturnToGame ? (
           <Button
             variant="lobby-next"
             fullWidth={false}
@@ -365,7 +389,7 @@ export default function HostLobby({
             )}{" "}
             Start Game
           </Button>
-        )}
+        ) : null}
       </footer>
     </section>
   );

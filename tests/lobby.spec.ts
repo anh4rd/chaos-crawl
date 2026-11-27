@@ -291,10 +291,9 @@ test("host lobby retains team capacity, assignment, creation, naming and photo p
   await expect(
     page.getByRole("heading", { name: "Share the invite", exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: /127.0.0.1/ })).toHaveAttribute(
-    "href",
-    /#\/join\?code=123456$/,
-  );
+  await expect(
+    page.getByRole("link", { name: /#\/join\?code=123456/ }),
+  ).toHaveAttribute("href", /#\/join\?code=123456$/);
   await next(page, "Enter your details");
   await setParticipation(page, false);
   await next(page, "Players & teams");

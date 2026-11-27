@@ -131,6 +131,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   const [linkCopyFeedback, setLinkCopyFeedback] = useState(false);
   const [actionError, setError] = useState("");
   const [activeTab, setActiveTab] = useState<HostTab>("game");
+  const [hostJoinFlowOpen, setHostJoinFlowOpen] = useState(false);
   const [tourDismissed, setTourDismissed] = useState(false);
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("main");
   const [activeHostSection, setActiveHostSection] =
@@ -716,6 +717,11 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
       />
     );
 
+  function openHostJoinFlow() {
+    goToLobbyStep(1);
+    setHostJoinFlowOpen(true);
+  }
+
   const lobbyFlow = (
     <HostLobby
       lobbyStep={lobbyStep}
@@ -763,6 +769,14 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
       renameTeam={renameTeam}
       uploadTeamPhoto={uploadTeamPhoto}
       startGame={startGame}
+      onReturnToGame={
+        session.status === "live"
+          ? () => {
+              setHostJoinFlowOpen(false);
+              restoreFocus();
+            }
+          : undefined
+      }
     />
   );
 
@@ -1111,9 +1125,10 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
             }
             showHost
             tourTarget="host-sections"
-            onSelect={(section) =>
-              setActiveTab(section === "final" ? "final-round" : section)
-            }
+            onSelect={(section) => {
+              setHostJoinFlowOpen(false);
+              setActiveTab(section === "final" ? "final-round" : section);
+            }}
           />
         ) : undefined
       }
@@ -1206,7 +1221,8 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
         </>
       }
     >
-      {session.status === "lobby" ? (
+      {session.status === "lobby" ||
+      (session.status === "live" && hostJoinFlowOpen) ? (
         <HostManagement>{lobbyFlow}</HostManagement>
       ) : (
         <>
@@ -1572,6 +1588,11 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                         inviteControls={
                           <SessionInvite
                             joinUrl={joinUrl}
+                            onOpenHostJoin={
+                              session.status === "live"
+                                ? openHostJoinFlow
+                                : undefined
+                            }
                             onCopy={() => copyCode("invite")}
                             copied={codeCopied && codeCopyTarget === "invite"}
                             playerCount={players.length}
@@ -1765,6 +1786,9 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                       assignTeam={assignTeam}
                       updatePlayersPerTeam={updatePlayersPerTeam}
                       joinUrl={joinUrl}
+                      onOpenHostJoin={
+                        session.status === "live" ? openHostJoinFlow : undefined
+                      }
                       copyCode={() => copyCode("invite")}
                       codeCopied={codeCopied && codeCopyTarget === "invite"}
                       adjustScore={adjustScore}

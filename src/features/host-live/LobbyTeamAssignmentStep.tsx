@@ -26,6 +26,7 @@ interface Props {
   teamName: string;
   setTeamName: Dispatch<SetStateAction<string>>;
   goToLobbyStep: (step: 1 | 2 | 3 | 4 | 5 | 6) => void;
+  revisiting?: boolean;
 }
 export default function LobbyTeamAssignmentStep({
   session,
@@ -43,6 +44,7 @@ export default function LobbyTeamAssignmentStep({
   teamName,
   setTeamName,
   goToLobbyStep,
+  revisiting = false,
 }: Props) {
   return (
     <ContentPanel
@@ -142,15 +144,16 @@ export default function LobbyTeamAssignmentStep({
             busy={busy}
             createTeam={createTeam}
           />
-          <Button
-            variant="lobby-shortcut"
-            fullWidth={false}
-            type="button"
-
-            onClick={() => goToLobbyStep(6)}
-          >
-            Start Game <Icon name="arrow-right" className="icon--size-15" />
-          </Button>
+          {!revisiting && (
+            <Button
+              variant="lobby-shortcut"
+              fullWidth={false}
+              type="button"
+              onClick={() => goToLobbyStep(6)}
+            >
+              Start Game <Icon name="arrow-right" className="icon--size-15" />
+            </Button>
+          )}
         </>
       )}
     </ContentPanel>

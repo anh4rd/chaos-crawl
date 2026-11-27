@@ -7,6 +7,10 @@ writes are included.
 
 ## In progress
 
+Live hosts can reopen the host join flow from either invitation control, or
+open a separate player join link with the game code filled in. Returning from
+the join flow keeps the live session running without starting it again.
+
 The live host schedule links uniquely identifiable planned challenge phases to
 their live challenge. Its editor includes saved setup and preparation alongside
 the existing live fields and equipment. Participation is still configured for

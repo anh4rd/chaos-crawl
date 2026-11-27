@@ -963,6 +963,149 @@ test("shared participant states cover breaks, completion and host-assigned teams
   backend.verify();
 });
 
+for (const section of ["Controls", "Teams"]) {
+  test(`live host can reopen the join flow from ${section}`, async ({
+    page,
+  }, testInfo) => {
+    if (testInfo.project.name === "mobile-chrome")
+      await page.setViewportSize({ width: 320, height: 720 });
+    const backend = await installSessionBackend(page, { host: true });
+    backend.session.teams_enabled = true;
+    await page.goto(`#/host/live/${sessionId}`);
+    const hostNavigation = page
+      .getByRole("navigation", { name: "Game pages" })
+      .getByRole("button", { name: "Host", exact: true });
+    await hostNavigation.click();
+    await page.getByRole("tab", { name: section, exact: true }).click();
+    const panel = page.getByRole("tabpanel", { name: section });
+    await panel.getByText("Invite players", { exact: true }).click();
+    const playerLink = panel.getByRole("link", {
+      name: "Open player join page",
+      exact: true,
+    });
+    await expect(playerLink).toHaveAttribute("href", /#\/join\?code=123456$/);
+    await expect(playerLink).toHaveAttribute("target", "_blank");
+    await expect(playerLink).toHaveAttribute("rel", "noreferrer");
+    const playerUrl = await playerLink.getAttribute("href");
+    if (!playerUrl) throw new Error("Player join link has no destination");
+
+    await page.evaluate(
+      (id) => localStorage.setItem(`chaos-crawl-host-flow:${id}`, "5"),
+      sessionId,
+    );
+    await activateByKeyboard(
+      page,
+      panel.getByRole("button", { name: "Open join screen", exact: true }),
+    );
+    const heading = page.getByRole("heading", {
+      name: "Share the invite",
+      exact: true,
+    });
+    await expect(heading).toBeFocused();
+    await expect(heading).toBeVisible();
+    await activateByKeyboard(
+      page,
+      page.getByRole("button", { name: "Next", exact: true }),
+    );
+    await expect(
+      page.getByRole("heading", { name: "Enter your details" }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("checkbox", { name: "Play as host" }),
+    ).not.toBeChecked();
+    for (const step of [
+      "Players & teams",
+      "Choose your teams",
+      "Name your teams",
+      "Teams ready",
+    ]) {
+      await activateByKeyboard(
+        page,
+        page.getByRole("button", { name: "Next", exact: true }),
+      );
+      await expect(
+        page.getByRole("heading", { name: step, exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Start Game" }),
+      ).toHaveCount(0);
+      expect(
+        await page.evaluate(
+          () =>
+            document.documentElement.scrollWidth <=
+            document.documentElement.clientWidth,
+        ),
+      ).toBe(true);
+    }
+    await activateByKeyboard(
+      page,
+      page.getByRole("button", { name: "Return to game", exact: true }),
+    );
+    await expect(hostNavigation).toBeFocused();
+    await expect(page.getByRole("tabpanel", { name: section })).toBeVisible();
+    expect(
+      backend.requests.filter((r) => r.name === "cc_host_start_game_session"),
+    ).toHaveLength(0);
+    expect(
+      backend.requests.filter((r) => r.name === "cc_host_join_as_player"),
+    ).toHaveLength(0);
+    expect(backend.session.status).toBe("live");
+
+    await panel.getByText("Invite players", { exact: true }).click();
+    await activateByKeyboard(
+      page,
+      page.getByRole("tabpanel", { name: section }).getByRole("button", {
+        name: "Open join screen",
+        exact: true,
+      }),
+    );
+    await expect(heading).toBeFocused();
+    await page
+      .getByRole("navigation", { name: "Game pages" })
+      .getByRole("button", { name: "Game", exact: true })
+      .click();
+    await hostNavigation.click();
+    await expect(page.getByRole("tabpanel", { name: section })).toBeVisible();
+    await expect(heading).toHaveCount(0);
+    await page.goto(playerUrl);
+    await expect(
+      page.getByRole("textbox", { name: "Enter six digit game code" }),
+    ).toHaveValue(sessionCode);
+    backend.verify();
+  });
+}
+
+test("revisiting a live solo lobby cannot start the game again", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Host", exact: true }).click();
+  await page.getByText("Invite players", { exact: true }).click();
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Open join screen", exact: true }),
+  );
+  for (const step of ["Enter your details", "Players & teams"]) {
+    await activateByKeyboard(
+      page,
+      page.getByRole("button", { name: "Next", exact: true }),
+    );
+    await expect(
+      page.getByRole("heading", { name: step, exact: true }),
+    ).toBeVisible();
+  }
+  await expect(page.getByRole("button", { name: "Start Game" })).toHaveCount(0);
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Return to game", exact: true }),
+  );
+  expect(
+    backend.requests.filter((r) => r.name === "cc_host_start_game_session"),
+  ).toHaveLength(0);
+  backend.verify();
+});
+
 test("host roster tab edits player names, moves players and creates teams", async ({
   page,
 }) => {
@@ -1010,7 +1153,7 @@ test("host roster tab edits player names, moves players and creates teams", asyn
   await panel.getByRole("button", { name: "+ Add team" }).click();
   await expect(panel.getByLabel("Name for Team Spark")).toBeVisible();
   await expect(
-    panel.getByRole("link", { name: /Open join screen/ }),
+    panel.getByRole("link", { name: /Open player join page/ }),
   ).toBeVisible();
   expect(
     await page.evaluate(
