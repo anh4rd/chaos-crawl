@@ -1,5 +1,8 @@
 import type { Favourite, Task, TaskKind, SetupForm } from "./types";
 import type { CommunityPlanTask } from "../../types/hostPlanning";
+import type { CatalogTask } from "../host-explore/types";
+import { tasks as exploreTasks } from "../host-explore/catalogue";
+import { taskLibrary } from "./catalog";
 interface ExploreIdea {
   id: string;
   title: string;
@@ -100,6 +103,29 @@ export function explorePlanTask(json: string, kind: TaskKind): Task {
   const idea: unknown = JSON.parse(json);
   if (!isExploreIdea(idea)) throw new Error("Invalid Explore challenge.");
   return taskFromExploreIdea(idea, kind, `explore-${idea.id}`);
+}
+
+export function cataloguePlanTask(idea: CatalogTask): Task {
+  return taskFromExploreIdea(idea, idea.kind, `catalog:${idea.id}`);
+}
+
+export function favouriteTaskId(id: string): string {
+  if (id.startsWith("catalog:")) return id.slice("catalog:".length);
+  if (id.startsWith("explore-")) return id.slice("explore-".length);
+  const task = taskLibrary.find((item) => item.id === id);
+  if (!task) return id;
+  return (
+    exploreTasks.find(
+      (idea) =>
+        idea.title === task.title &&
+        idea.description === task.description &&
+        idea.kind === task.kind &&
+        idea.minutes === task.minutes &&
+        idea.points === task.points &&
+        idea.prepMinutes === task.prepMinutes &&
+        idea.performanceMinutes === task.performanceMinutes,
+    )?.id ?? id
+  );
 }
 
 export function savedSecretTasks(favourites: Favourite[]) {

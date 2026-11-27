@@ -9,6 +9,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { type FormEvent } from "react";
 import Icon from "../../components/ui/Icon";
 import { vibes } from "./catalog";
+import { favouriteTaskId } from "./planImports";
 import { type Favourite, type Task } from "./types";
 
 interface ChallengeLibraryProps {
@@ -186,7 +187,10 @@ export default function ChallengeLibrary({
             {visibleTasks.map((task) => {
               const selected = selectedIds.includes(task.id);
               const saved = favourites.some(
-                (f) => f.item_type === "task" && f.item_id === task.id,
+                (f) =>
+                  f.item_type === "task" &&
+                  (f.item_id === task.id ||
+                    f.item_id === favouriteTaskId(task.id)),
               );
               return (
                 <ChallengeTile

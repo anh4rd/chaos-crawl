@@ -556,6 +556,7 @@ export async function installSessionBackend(
     }
     const tables: Record<string, unknown[]> = {
       host_favourites: [],
+      cc_catalog_submissions: [],
       host_games: [
         {
           id: "test-plan",

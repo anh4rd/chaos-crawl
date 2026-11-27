@@ -7,6 +7,20 @@ import type {
   Task,
   PlanWrite,
 } from "../types/hostPlanning";
+import type { CommunitySubmission } from "../types/hostExplore";
+
+export function readApprovedPlanningChallenges() {
+  return runApi<CommunitySubmission[]>(() =>
+    supabase
+      .from("cc_catalog_submissions")
+      .select(
+        "id,item_type,title,description,payload,status,submitted_by,review_note,created_at",
+      )
+      .eq("item_type", "challenge")
+      .eq("status", "approved")
+      .order("created_at", { ascending: false }),
+  );
+}
 export function readPlanFavourites(hostId: string) {
   return runApi<Favourite[]>(() =>
     supabase

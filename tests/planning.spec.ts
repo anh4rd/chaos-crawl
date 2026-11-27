@@ -1,7 +1,8 @@
 import { tabTo, activateByKeyboard } from "./support/keyboard";
 import { expect, test, type Page } from "@playwright/test";
 import { Buffer } from "node:buffer";
-import { installSessionBackend } from "./support/sessionBackend";
+import { hostId, installSessionBackend } from "./support/sessionBackend";
+import { exploreSubmissions } from "./support/hostExplore";
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-11-17T12:00:00Z"));
 });
@@ -20,6 +21,107 @@ async function start(page: Page, name = "Planning regression") {
     .first()
     .click();
 }
+test("builder includes Explore and approved community challenges and saves their selections", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  const catalogueQueries: URL[] = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.pathname.endsWith("/cc_catalog_submissions"))
+      catalogueQueries.push(url);
+  });
+  backend.rows.cc_catalog_submissions = exploreSubmissions();
+  await start(page);
+  await section(page, "Main Challenges");
+  await expect(
+    page.getByText("Obtain the best thing", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Pending contribution", { exact: true }),
+  ).toHaveCount(0);
+  expect(catalogueQueries[0]?.searchParams.get("item_type")).toBe(
+    "eq.challenge",
+  );
+  expect(catalogueQueries[0]?.searchParams.get("status")).toBe("eq.approved");
+  await section(page, "Side challenges");
+  const community = page
+    .locator("article")
+    .filter({ hasText: "Community paper tower" });
+  await expect(community).toBeVisible();
+  await community.getByRole("button", { name: "Add", exact: true }).click();
+  await section(page, "Secret missions");
+  const secret = page
+    .locator("article")
+    .filter({ hasText: "Friendly sabotage" });
+  await expect(secret).toBeVisible();
+  await secret.getByRole("button", { name: "Add", exact: true }).click();
+  await section(page, "Schedule");
+  await page
+    .getByRole("combobox", { name: "Add a challenge", exact: true })
+    .selectOption("catalog:task-best-thing");
+  await page.getByRole("button", { name: "Save draft", exact: true }).click();
+  await expect
+    .poll(
+      () =>
+        backend.requests.find(
+          (r) => r.name === "host_games" && r.method === "POST",
+        )?.body,
+    )
+    .toMatchObject({
+      plan_data: {
+        selectedMain: ["catalog:task-best-thing"],
+        selectedSide: expect.arrayContaining([
+          "catalog:community-approved-challenge",
+        ]),
+        selectedSecret: expect.arrayContaining(["catalog:task-sabotage"]),
+        customTasks: expect.arrayContaining([
+          expect.objectContaining({
+            id: "catalog:task-best-thing",
+            title: "Obtain the best thing",
+          }),
+          expect.objectContaining({
+            id: "catalog:community-approved-challenge",
+            title: "Community paper tower",
+          }),
+          expect.objectContaining({
+            id: "catalog:task-sabotage",
+            title: "Friendly sabotage",
+          }),
+        ]),
+      },
+    });
+  backend.verify();
+});
+test("builder reports and retries a failed community catalogue read", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  backend.rows.cc_catalog_submissions = exploreSubmissions();
+  backend.failures.add("cc_catalog_submissions");
+  await start(page);
+  await section(page, "Side challenges");
+  await expect(
+    page.getByText(/Couldn't load community challenges/),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Community paper tower", { exact: true }),
+  ).toHaveCount(0);
+  backend.failures.delete("cc_catalog_submissions");
+  await page
+    .getByRole("button", { name: "Retry community challenges" })
+    .click();
+  await expect(
+    page.getByText("Community paper tower", { exact: true }),
+  ).toBeVisible();
+  backend.verify();
+});
 test("planning adds and removes scheduled challenges before saving the complete plan", async ({
   page,
 }) => {
@@ -179,6 +281,7 @@ test("editing a phased challenge retains selection until its final phase is dele
     {
       id: "test-plan",
       name: "Phased plan",
+      host_id: hostId,
       event_date: "2030-01-01",
       start_time: "18:00",
       end_time: "22:00",
@@ -589,6 +692,7 @@ test("planning reorders side, secret and timeline items from the keyboard and sa
     {
       id: "test-plan",
       name: "Keyboard plan",
+      host_id: hostId,
       event_date: "2030-01-01",
       start_time: "18:00",
       end_time: "22:00",

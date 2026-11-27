@@ -2,7 +2,7 @@ import { useState } from "react";
 import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { defaultForm } from "./catalog";
-import { derivePlan } from "./planModel";
+import { createPlanWrite, derivePlan, hydratePlan } from "./planModel";
 import { usePlanSchedule } from "./usePlanSchedule";
 import type { SetupForm, UpdatePlan } from "./types";
 afterEach(cleanup);
@@ -67,6 +67,7 @@ it("keeps an imported main task selected once while preserving both timing phase
       selectedMain: [task.id],
       customTasks: [task],
     });
+
     const update: UpdatePlan = (key, value) =>
       setForm((current) => ({ ...current, [key]: value }));
     const actions = usePlanSchedule({
@@ -94,3 +95,57 @@ it("keeps an imported main task selected once while preserving both timing phase
     result.current.form.schedule.filter((item) => item.taskId === task.id),
   ).toHaveLength(2);
 });
+it.each(["schedule", "pre-game"] as const)(
+  "snapshots an Explore main challenge when added to %s",
+  (target) => {
+    const task = {
+      id: "catalog:task-main",
+      title: "Explore main",
+      description: "An idea",
+      kind: "main" as const,
+      minutes: 10,
+      points: 20,
+      vibe: [],
+      accessibility: [],
+      equipment: [],
+      setup: "",
+      prep: "",
+      evidenceRequired: false,
+    };
+    const { result } = renderHook(() => {
+      const [form, setForm] = useState<SetupForm>({
+        ...defaultForm,
+        preGameEnabled: true,
+      });
+      const update: UpdatePlan = (key, value) =>
+        setForm((current) => ({ ...current, [key]: value }));
+      return {
+        form,
+        ...usePlanSchedule({
+          form,
+          setForm,
+          update,
+          allTasks: [...derivePlan(form).allTasks, task],
+          stage: "build",
+          setNotice: vi.fn(),
+        }),
+      };
+    });
+    act(() => {
+      if (target === "schedule") result.current.addTaskToSchedule(task.id);
+      else result.current.setPreGameTask(task.id);
+    });
+    expect(result.current.form.customTasks).toContainEqual(task);
+    expect(derivePlan(result.current.form).selectedTasks).toContainEqual(task);
+    const saved = createPlanWrite(result.current.form, "host", "draft");
+    const reopened = hydratePlan({
+      id: "plan",
+      ...saved,
+      plan_data: { ...saved.plan_data },
+    });
+    expect(derivePlan(reopened).selectedTasks).toContainEqual(task);
+    expect(result.current.form.schedule).toContainEqual(
+      expect.objectContaining({ taskId: task.id }),
+    );
+  },
+);

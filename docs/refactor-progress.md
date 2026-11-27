@@ -7,6 +7,13 @@ writes are included.
 
 ## In progress
 
+The game builder now includes the built-in Explore challenges and approved
+community challenges alongside its existing library. It reads only approved
+community challenge rows and offers retry on failure. Selected catalogue tasks
+are saved with the plan, including scheduled and pre-game tasks, and retain
+their Explore favourite identities. Mocked tests do not verify deployed schema
+or policies.
+
 Super Admin can list and add co-hosts from platform games; only the owner can
 remove them. A read-only host preview shows saved challenges, community
 submissions and custom challenges in game plans. Plan entries identify their

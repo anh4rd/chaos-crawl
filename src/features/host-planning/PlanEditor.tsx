@@ -24,8 +24,9 @@ import { usePlanChallenges } from "./usePlanChallenges";
 import { usePlanSchedule } from "./usePlanSchedule";
 import { usePlanSave } from "./usePlanSave";
 import { usePlanPhoto } from "./usePlanPhoto";
+import { usePlanCatalogue } from "./usePlanCatalogue";
 import { derivePlan } from "./planModel";
-import { savedSecretTasks } from "./planImports";
+import { favouriteTaskId, savedSecretTasks } from "./planImports";
 import { defaultForm, tabItems } from "./catalog";
 import type { BuilderTab, SetupForm, TaskKind } from "./types";
 import { openMojiSelection } from "../../lib/openmoji";
@@ -74,12 +75,18 @@ export default function PlanEditor({
     setError,
   });
   const savedSecrets = savedSecretTasks(favourites);
-  const libraryTasks = [
-    ...allTasks,
-    ...savedSecrets.tasks.filter(
-      (task) => !allTasks.some((existing) => existing.id === task.id),
-    ),
-  ];
+  const catalogue = usePlanCatalogue();
+  const libraryTasks = [...allTasks];
+  for (const task of [...savedSecrets.tasks, ...catalogue.tasks]) {
+    if (
+      !libraryTasks.some(
+        (existing) =>
+          existing.kind === task.kind &&
+          favouriteTaskId(existing.id) === favouriteTaskId(task.id),
+      )
+    )
+      libraryTasks.push(task);
+  }
   const {
     loading,
     ownerId,
@@ -131,7 +138,14 @@ export default function PlanEditor({
     addTaskToSchedule,
     addScheduleItem,
     deleteScheduleItem,
-  } = usePlanSchedule({ form, setForm, update, allTasks, stage, setNotice });
+  } = usePlanSchedule({
+    form,
+    setForm,
+    update,
+    allTasks: libraryTasks,
+    stage,
+    setNotice,
+  });
   const { saving, save } = usePlanSave({
     id,
     form,
@@ -284,6 +298,21 @@ export default function PlanEditor({
           </Button>
         </FeedbackNotice>
       )}
+      {stage === "build" && catalogue.error && (
+        <FeedbackNotice tone="error" role="alert">
+          Couldn't load community challenges: {catalogue.error}{" "}
+          <Button
+            variant="comic-ghost"
+            disabled={catalogue.loading}
+            onClick={catalogue.retry}
+          >
+            Retry community challenges
+          </Button>
+        </FeedbackNotice>
+      )}
+      {stage === "build" && catalogue.loading && (
+        <output className="muted-copy">Loading community challenges…</output>
+      )}
       {notice && (
         <FeedbackNotice tone="success" role="status">
           {notice}
@@ -374,7 +403,7 @@ export default function PlanEditor({
               sideReviewCount={sideReviewCount}
               sideRewardPoints={sideRewardPoints}
               addTaskToSchedule={addTaskToSchedule}
-              allTasks={allTasks}
+              allTasks={libraryTasks}
               challengeArtUrls={form.challengeArtUrls}
               uploadChallengeIcon={uploadChallengeIcon}
               clearChallengeArt={clearChallengeArt}
@@ -393,7 +422,7 @@ export default function PlanEditor({
               update={update}
               preparation={preparation}
               setPreGameTask={setPreGameTask}
-              allTasks={allTasks}
+              allTasks={libraryTasks}
               customTitle={customTitle}
               customDesc={customDesc}
               setCustomTitle={setCustomTitle}
