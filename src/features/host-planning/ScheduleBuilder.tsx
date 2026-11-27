@@ -7,7 +7,12 @@ import type { Dispatch, SetStateAction } from "react";
 import { Field } from "../../components/ui/Field";
 import Icon from "../../components/ui/Icon";
 import { Toggle } from "../../components/ui/Toggle";
-import { type ScheduleItem, type SetupForm, type Task } from "./types";
+import {
+  type ScheduleItem,
+  type SetupForm,
+  type Task,
+  type TaskKind,
+} from "./types";
 
 interface ScheduleBuilderProps {
   calculatedEnd: string;
@@ -27,6 +32,8 @@ interface ScheduleBuilderProps {
   dragged: string | null;
   updateScheduleItem: (itemId: string, patch: Partial<ScheduleItem>) => void;
   deleteScheduleItem: (itemId: string) => void;
+  changeType: (task: Task, kind: TaskKind) => void;
+  changeUnlinkedType: (item: ScheduleItem, kind: TaskKind) => void;
 }
 
 export default function ScheduleBuilder({
@@ -47,6 +54,8 @@ export default function ScheduleBuilder({
   dragged,
   updateScheduleItem,
   deleteScheduleItem,
+  changeType,
+  changeUnlinkedType,
 }: ScheduleBuilderProps) {
   return (
     <ContentPanel variant="section">
@@ -55,7 +64,8 @@ export default function ScheduleBuilder({
           <h3>Event timeline</h3>
           <p>
             Breaks are inserted automatically. Change durations or move tasks to
-            adjust the running order.
+            adjust the running order. Changing a challenge to another type
+            removes its scheduled entries.
           </p>
         </div>
         <div className="end-time">
@@ -164,6 +174,8 @@ export default function ScheduleBuilder({
               onReorder={(items) => update("schedule", items)}
               onPatch={updateScheduleItem}
               onDelete={deleteScheduleItem}
+              onChangeType={changeType}
+              onChangeUnlinkedType={changeUnlinkedType}
             />
           );
         })}

@@ -9,6 +9,7 @@ export default function SessionReview({
   ownerAvatarUrl,
   points,
   evidence,
+  answer,
   open,
   vote,
   outcome,
@@ -27,6 +28,7 @@ export default function SessionReview({
   ownerAvatarUrl?: string | null;
   points: number;
   evidence: EvidencePresentation[];
+  answer?: string | null;
   open: boolean;
   vote?: "success" | "fail" | null;
   outcome?: "success" | "fail" | null;
@@ -54,7 +56,11 @@ export default function SessionReview({
       </strong>
       <h2>{title}</h2>
       <p>{description}</p>
-      {evidence.length ? (
+      {answer ? (
+        <p>
+          <strong>Answer:</strong> {answer}
+        </p>
+      ) : evidence.length ? (
         <EvidenceGallery items={evidence} />
       ) : (
         <p>No photo or video submitted for this mission.</p>

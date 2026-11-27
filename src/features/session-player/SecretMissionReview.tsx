@@ -31,6 +31,7 @@ export default function SecretMissionReview({
         portraits.players[mission.player_id] ?? mission.player_avatar_url
       }
       points={mission.points}
+      answer={secretReview.answer}
       evidence={secretReview.media.map((item) => ({
         id: item.id,
         url: mediaUrl(item.storage_path),

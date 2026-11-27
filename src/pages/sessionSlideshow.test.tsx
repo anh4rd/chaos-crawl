@@ -130,6 +130,55 @@ afterEach(() => {
   Reflect.deleteProperty(document.documentElement, "requestFullscreen");
 });
 
+it("introduces a text mission before revealing its answer and resets for another mission", async () => {
+  backend.rpc.mockResolvedValue({
+    data: {
+      ...view(),
+      evidence_id: null,
+      items: [],
+      answer: "A secret answer",
+    },
+    error: null,
+  });
+  mount("secret");
+  await advance();
+  expect(screen.getByRole("heading", { name: "Secret toast" })).toBeDefined();
+  expect(screen.getByText(/SECRET MISSION · Pat/)).toBeDefined();
+  expect(screen.queryByText("A secret answer")).toBeNull();
+  await advance(5000);
+  expect(screen.getByText("A secret answer")).toBeDefined();
+  backend.rpc.mockResolvedValue({
+    data: {
+      ...nextView(),
+      assignment_id: "second",
+      evidence_id: null,
+      items: [],
+      answer: "Another answer",
+    },
+    error: null,
+  });
+  await advance(1500);
+  expect(screen.getByRole("heading", { name: "New mission" })).toBeDefined();
+  expect(screen.queryByText("Another answer")).toBeNull();
+  await advance(5000);
+  expect(screen.getByText("Another answer")).toBeDefined();
+  backend.rpc.mockResolvedValue({
+    data: {
+      ...nextView(),
+      assignment_id: "second",
+      review_opened_at: "2030-01-01T12:05:00Z",
+      evidence_id: null,
+      items: [],
+      answer: "Another answer",
+    },
+    error: null,
+  });
+  await advance(1500);
+  expect(screen.queryByText("Another answer")).toBeNull();
+  await advance(5000);
+  expect(screen.getByText("Another answer")).toBeDefined();
+});
+
 for (const kind of ["final", "secret"] as const) {
   describe(`${kind} TV route`, () => {
     const rpc =

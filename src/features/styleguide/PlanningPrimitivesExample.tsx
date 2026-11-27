@@ -11,12 +11,15 @@ import Note from "../../components/ui/Note";
 import ControlRow from "../../components/ui/ControlRow";
 import { Field } from "../../components/ui/Field";
 import PlanNavigation from "../host-planning/PlanNavigation";
+import ChallengeTypeActions from "../host-planning/ChallengeTypeActions";
+import { taskLibrary } from "../host-planning/catalog";
 import HostPatternPreview from "./HostPatternPreview";
 import ExampleGrid from "./ExampleGrid";
 import { Example } from "./Example";
 export default function PlanningPrimitivesExample() {
   const [notice, setNotice] = useState("");
   const [selected, setSelected] = useState(false);
+  const [exampleTask, setExampleTask] = useState(taskLibrary[0]);
   return (
     <>
       <Example
@@ -158,6 +161,23 @@ export default function PlanningPrimitivesExample() {
           <Note as="output">
             {notice || "Choose a local file or try a control."}
           </Note>
+        </HostPatternPreview>
+      </Example>
+      <Example
+        title="Challenge type actions"
+        source="src/features/host-planning/ChallengeTypeActions.tsx"
+        code={"<ChallengeTypeActions task={task} onChange={onChange} />"}
+      >
+        <HostPatternPreview>
+          <p>
+            {exampleTask.title}: {exampleTask.kind}
+          </p>
+          <ChallengeTypeActions
+            task={exampleTask}
+            onChange={(_, kind) =>
+              setExampleTask((task) => ({ ...task, kind }))
+            }
+          />
         </HostPatternPreview>
       </Example>
       <Example

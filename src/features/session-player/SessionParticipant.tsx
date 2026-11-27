@@ -641,7 +641,9 @@ export default function SessionParticipant({
                                 mission,
                               })
                             }
-                            onSubmit={() => void submitSecretMission(mission)}
+                            onSubmit={(answer) =>
+                              void submitSecretMission(mission, answer)
+                            }
                             onDismiss={() =>
                               dismissCompletedSecretMission(mission)
                             }

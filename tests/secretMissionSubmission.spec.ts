@@ -20,6 +20,67 @@ async function acceptMission(page: Page, title: string) {
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2030-01-01T12:00:00Z"));
 });
+test("a player can submit a written secret mission answer", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page);
+  seedPrivateMissions(backend, [
+    privateMissionFixture({ response_mode: "text", allow_photo_upload: false }),
+  ]);
+  await page.goto("#/play/123456");
+  await acceptMission(page, "Lead a conga line");
+  const card = page.locator("#cc-side-challenge-private-one");
+  const submit = card.getByRole("button", {
+    name: "I've completed my mission",
+  });
+  await expect(submit).toBeDisabled();
+  await expect(
+    card.getByLabel("Upload evidence for Lead a conga line"),
+  ).toHaveCount(0);
+  await card.getByLabel("Your answer").fill("My secret answer");
+  await activateByKeyboard(page, submit);
+  await expect(card.getByRole("status")).toHaveText(
+    "Marked complete · waiting for the group review",
+  );
+  expect(
+    backend.requests
+      .filter((request) => request.name === "cc_player_submit_secret_text")
+      .map((request) => request.body),
+  ).toEqual([
+    {
+      p_join_code: "123456",
+      p_player_token: "test-player-token",
+      p_assignment_id: "private-one",
+      p_answer: "My secret answer",
+    },
+  ]);
+  backend.verify();
+});
+test("the secret slideshow introduces the player and mission before the answer", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page);
+  backend.responses.cc_get_session_secret_review_slideshow = {
+    open: true,
+    assignment_id: "private-one",
+    evidence_id: null,
+    mission: {
+      title: "Secret question",
+      description: "What did you find?",
+      player_name: "Pat",
+    },
+    items: [],
+    answer: "A secret clue",
+  };
+  await page.goto("#/secret-slideshow/test-session");
+  await expect(
+    page.getByRole("heading", { name: "Secret question" }),
+  ).toBeVisible();
+  await expect(page.getByText("SECRET MISSION · Pat")).toBeVisible();
+  await expect(page.getByText("A secret clue")).toHaveCount(0);
+  await expect(page.getByText("A secret clue")).toBeVisible({ timeout: 8000 });
+  backend.verify();
+});
 for (const media of ["image", "video"] as const) {
   test(`uploads assignment evidence and submits the secret mission with ${media}`, async ({
     page,

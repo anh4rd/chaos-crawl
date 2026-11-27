@@ -14,4 +14,8 @@
     color: colors.$white;
     font-size: fonts.$size-slideshow-message-heading;
   }
+  &__answer {
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+  }
 }

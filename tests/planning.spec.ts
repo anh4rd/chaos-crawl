@@ -6,6 +6,46 @@ import { exploreSubmissions } from "./support/hostExplore";
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-11-17T12:00:00Z"));
 });
+test("a planned secret mission saves its written-answer mode", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  await start(page);
+  await section(page, "Main Challenges");
+  const tile = page
+    .locator(".challenge-tile")
+    .filter({ hasText: "without disrupting other guests" });
+  await tile
+    .getByRole("button", { name: "Add Make the best noise as secret mission" })
+    .click();
+  await section(page, "Secret missions");
+  await page
+    .getByLabel("Mission response for Make the best noise")
+    .selectOption("text");
+  await page.getByRole("button", { name: "Save draft", exact: true }).click();
+  await expect
+    .poll(
+      () =>
+        backend.requests.find(
+          (r) => r.name === "host_games" && r.method === "POST",
+        )?.body,
+    )
+    .toMatchObject({
+      plan_data: {
+        selectedTasks: expect.arrayContaining([
+          expect.objectContaining({
+            title: "Make the best noise",
+            kind: "secret",
+            secretResponseMode: "text",
+          }),
+        ]),
+      },
+    });
+  backend.verify();
+});
 async function section(page: Page, name: string) {
   await page
     .getByRole("navigation", { name: "Game setup steps" })
@@ -21,6 +61,133 @@ async function start(page: Page, name = "Planning regression") {
     .first()
     .click();
 }
+test("hosts can change challenge types from selections and the schedule", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  await start(page);
+  await section(page, "Side challenges");
+  const selected = page.locator(".selected-challenge").filter({
+    hasText: "Invent a secret handshake",
+  });
+  const toMain = selected.getByRole("button", {
+    name: "Change Invent a secret handshake to main challenge",
+  });
+  await tabTo(page, toMain);
+  await page.keyboard.press("Enter");
+  await expect(selected).toHaveCount(0);
+  await section(page, "Schedule");
+  const row = page.locator(".schedule-item").filter({
+    has: page.getByRole("button", {
+      name: "Change Invent a secret handshake to secret mission",
+    }),
+  });
+  await expect(row).toHaveCount(1);
+  const toSecret = row.getByRole("button", {
+    name: "Change Invent a secret handshake to secret mission",
+  });
+  await toSecret.evaluate((button) =>
+    button.scrollIntoView({ block: "center", behavior: "instant" }),
+  );
+  await toSecret.click();
+  await expect(row).toHaveCount(0);
+  await section(page, "Secret missions");
+  const mission = page.locator(".selected-challenge").filter({
+    hasText: "Invent a secret handshake",
+  });
+  await expect(mission).toHaveCount(1);
+  await mission
+    .getByRole("button", {
+      name: "Change Invent a secret handshake to side challenge",
+    })
+    .click();
+  await section(page, "Side challenges");
+  await expect(selected).toHaveCount(1);
+  await page.getByRole("button", { name: "Save draft", exact: true }).click();
+  await expect
+    .poll(
+      () =>
+        backend.requests.find(
+          (r) => r.name === "host_games" && r.method === "POST",
+        )?.body,
+    )
+    .toMatchObject({
+      plan_data: {
+        selectedMain: [],
+        selectedSide: expect.arrayContaining(["team-handshake"]),
+        selectedSecret: [],
+        selectedTasks: expect.arrayContaining([
+          expect.objectContaining({ id: "team-handshake", kind: "side" }),
+        ]),
+      },
+    });
+  backend.verify();
+});
+test("library and custom schedule challenges can be added as another type", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    savedPlayer: false,
+  });
+  await start(page);
+  await section(page, "Main Challenges");
+  const tile = page.locator(".challenge-tile").filter({
+    hasText: "without disrupting other guests",
+  });
+  await tile
+    .getByRole("button", {
+      name: "Add Make the best noise as secret mission",
+    })
+    .click();
+  await section(page, "Schedule");
+  await page.getByRole("button", { name: "Create challenge" }).click();
+  await page.getByLabel("Edit New challenge").fill("Custom challenge");
+  const custom = page.locator(".schedule-item").filter({
+    has: page.getByRole("button", {
+      name: "Change Custom challenge to side challenge",
+    }),
+  });
+  const change = custom.getByRole("button", {
+    name: "Change Custom challenge to side challenge",
+  });
+  await change.evaluate((button) =>
+    button.scrollIntoView({ block: "center", behavior: "instant" }),
+  );
+  await change.click();
+  await section(page, "Side challenges");
+  await expect(
+    page.locator(".selected-challenge").filter({ hasText: "Custom challenge" }),
+  ).toHaveCount(1);
+  await page.getByRole("button", { name: "Save draft", exact: true }).click();
+  await expect
+    .poll(
+      () =>
+        backend.requests.find(
+          (r) => r.name === "host_games" && r.method === "POST",
+        )?.body,
+    )
+    .toMatchObject({
+      plan_data: {
+        selectedSecret: ["best-noise"],
+        selectedTasks: expect.arrayContaining([
+          expect.objectContaining({
+            title: "Make the best noise",
+            kind: "secret",
+          }),
+          expect.objectContaining({
+            title: "Custom challenge",
+            kind: "side",
+            minutes: 15,
+          }),
+        ]),
+      },
+    });
+  backend.verify();
+});
 test("builder includes Explore and approved community challenges and saves their selections", async ({
   page,
 }) => {

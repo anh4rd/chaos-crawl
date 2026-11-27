@@ -3,6 +3,8 @@ import { useState } from "react";
 import Icon from "../../components/ui/Icon";
 import Button from "../../components/ui/Button";
 import ChallengeArtwork from "../../components/challenge/ChallengeArtwork";
+import ChallengeTypeActions from "./ChallengeTypeActions";
+import { unlinkedScheduleTask } from "./planModel";
 import { timePlus } from "../../utils/dateTime";
 import {
   closestOpenMoji,
@@ -13,7 +15,7 @@ import {
   searchOpenMojis,
   selectedOpenMojiCode,
 } from "../../lib/openmoji";
-import type { ScheduleItem, Task } from "./types";
+import type { ScheduleItem, Task, TaskKind } from "./types";
 export default function TimelineItem({
   item,
   index,
@@ -30,6 +32,8 @@ export default function TimelineItem({
   onReorder,
   onPatch,
   onDelete,
+  onChangeType,
+  onChangeUnlinkedType,
 }: {
   item: ScheduleItem;
   index: number;
@@ -46,6 +50,8 @@ export default function TimelineItem({
   onReorder: (items: ScheduleItem[]) => void;
   onPatch: (id: string, patch: Partial<ScheduleItem>) => void;
   onDelete: (id: string) => void;
+  onChangeType: (task: Task, kind: TaskKind) => void;
+  onChangeUnlinkedType: (item: ScheduleItem, kind: TaskKind) => void;
 }) {
   const [emojiSearch, setEmojiSearch] = useState("");
   const start = schedule
@@ -54,6 +60,7 @@ export default function TimelineItem({
   const task = item.taskId
     ? allTasks.find((candidate) => candidate.id === item.taskId)
     : undefined;
+  const unlinkedTask = unlinkedScheduleTask(item);
   const taskId = item.taskId;
   const automaticEmoji = task
     ? closestOpenMoji(item.title, task.description)
@@ -124,6 +131,15 @@ export default function TimelineItem({
           {item.taskId && <small>{task?.prep}</small>}
           {task && task.equipment.length > 0 && (
             <small>Equipment: {task.equipment.join(", ")}</small>
+          )}
+          {item.type === "challenge" && task && (
+            <ChallengeTypeActions task={task} onChange={onChangeType} />
+          )}
+          {unlinkedTask && (
+            <ChallengeTypeActions
+              task={unlinkedTask}
+              onChange={(_, kind) => onChangeUnlinkedType(item, kind)}
+            />
           )}
           {showEmojiPicker && task?.kind === "main" && taskId && (
             <div className="schedule-item__artwork">

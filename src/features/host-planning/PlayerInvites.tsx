@@ -5,7 +5,8 @@ import type { Dispatch, SetStateAction } from "react";
 import { Field } from "../../components/ui/Field";
 import Icon from "../../components/ui/Icon";
 import { Toggle } from "../../components/ui/Toggle";
-import { type SetupForm, type Task } from "./types";
+import ChallengeTypeActions from "./ChallengeTypeActions";
+import { type SetupForm, type Task, type TaskKind } from "./types";
 
 interface PlayerInvitesProps {
   form: SetupForm;
@@ -18,6 +19,7 @@ interface PlayerInvitesProps {
   setCustomTitle: Dispatch<SetStateAction<string>>;
   setCustomDesc: Dispatch<SetStateAction<string>>;
   setNotice: Dispatch<SetStateAction<string>>;
+  changeType: (task: Task, kind: TaskKind) => void;
 }
 
 export default function PlayerInvites({
@@ -31,6 +33,7 @@ export default function PlayerInvites({
   setCustomTitle,
   setCustomDesc,
   setNotice,
+  changeType,
 }: PlayerInvitesProps) {
   return (
     <ContentPanel variant="section">
@@ -68,6 +71,7 @@ export default function PlayerInvites({
             <div key={t.id}>
               <strong>{t.title}</strong>
               <p>{t.prep}</p>
+              <ChallengeTypeActions task={t} onChange={changeType} />
             </div>
           ))
         ) : (

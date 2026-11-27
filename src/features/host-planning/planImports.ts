@@ -3,6 +3,7 @@ import type { CommunityPlanTask } from "../../types/hostPlanning";
 import type { CatalogTask } from "../host-explore/types";
 import { tasks as exploreTasks } from "../host-explore/catalogue";
 import { taskLibrary } from "./catalog";
+import { challengeScheduleItems } from "./planModel";
 interface ExploreIdea {
   id: string;
   title: string;
@@ -240,5 +241,128 @@ export function attachPlanTask(current: SetupForm, task: Task): SetupForm {
         : current.selectedSecret,
     sideChallenges: kind === "side" ? true : current.sideChallenges,
     secretMissions: kind === "secret" ? true : current.secretMissions,
+  };
+}
+
+export function changePlanChallengeKind(
+  current: SetupForm,
+  task: Task,
+  target: TaskKind,
+  selectedTasks: Task[],
+): { form: SetupForm; error?: string } {
+  const matches = selectedTasks.filter(
+    (selected) =>
+      selectedChallengeKind(
+        {
+          selectedMain: selected.kind === "main" ? [selected.id] : [],
+          selectedSide: selected.kind === "side" ? [selected.id] : [],
+          selectedSecret: selected.kind === "secret" ? [selected.id] : [],
+        },
+        current.customTasks,
+        task,
+      ) !== undefined,
+  );
+  const selectedGroups = (["main", "side", "secret"] as const).filter(
+    (kind) =>
+      selectedChallengeKind(
+        {
+          selectedMain: kind === "main" ? current.selectedMain : [],
+          selectedSide: kind === "side" ? current.selectedSide : [],
+          selectedSecret: kind === "secret" ? current.selectedSecret : [],
+        },
+        current.customTasks,
+        task,
+      ) === kind,
+  );
+  if (matches.length > 1 || selectedGroups.length > 1)
+    return {
+      form: current,
+      error:
+        "This challenge is already selected more than once. Remove the duplicate before changing its type.",
+    };
+  const selected = matches[0];
+  if (
+    selectedGroups.length &&
+    (!selected || selected.kind !== selectedGroups[0])
+  )
+    return {
+      form: current,
+      error:
+        "This challenge's saved type is inconsistent. Remove it before changing its type.",
+    };
+  if (selected?.kind === target) return { form: current };
+  const source = selected ?? task;
+  const converted: Task = {
+    ...source,
+    kind: target,
+    preGame: target === "main" ? source.preGame : false,
+    evidenceRequired: target === "main" ? source.evidenceRequired : true,
+  };
+  const removeId = (ids: string[]) =>
+    selected ? ids.filter((id) => id !== selected.id) : ids;
+  const selectedMain = removeId(current.selectedMain);
+  const selectedSide = removeId(current.selectedSide);
+  const selectedSecret = removeId(current.selectedSecret);
+  if (target === "main") selectedMain.push(converted.id);
+  else if (target === "side") selectedSide.push(converted.id);
+  else selectedSecret.push(converted.id);
+
+  const wasPreGame = Boolean(selected && selected.id === current.preGameTaskId);
+  let schedule = current.schedule.filter(
+    (item) =>
+      !(selected && item.type === "challenge" && item.taskId === selected.id) &&
+      !(
+        wasPreGame &&
+        (item.type === "pregame" || item.type === "pregame-review")
+      ),
+  );
+  if (target === "main") {
+    schedule = [...schedule, ...challengeScheduleItems(converted, Date.now())];
+  }
+  if (selected?.kind === "secret" && selectedSecret.length === 0)
+    schedule = schedule.filter((item) => item.type !== "secret-reveal");
+  if (
+    target === "secret" &&
+    current.secretRevealMode === "scheduled" &&
+    !schedule.some((item) => item.type === "secret-reveal")
+  )
+    schedule = [
+      ...schedule,
+      {
+        id: "secret-reveal",
+        type: "secret-reveal",
+        title: "Reveal secret missions",
+        duration: 0,
+      },
+    ];
+
+  return {
+    form: {
+      ...current,
+      selectedMain,
+      selectedSide,
+      selectedSecret,
+      customTasks: [
+        ...current.customTasks.filter((item) => item.id !== converted.id),
+        converted,
+      ],
+      schedule,
+      preGameEnabled: wasPreGame ? false : current.preGameEnabled,
+      preGameTaskId: wasPreGame ? "" : current.preGameTaskId,
+      sideChallenges:
+        target === "side"
+          ? true
+          : selected?.kind === "side" && !selectedSide.length
+            ? false
+            : current.sideChallenges,
+      secretMissions:
+        target === "secret"
+          ? true
+          : selected?.kind === "secret" && !selectedSecret.length
+            ? false
+            : current.secretMissions,
+      liveFinal: target === "side" ? true : current.liveFinal,
+      slideshow: target === "side" ? true : current.slideshow,
+    },
   };
 }

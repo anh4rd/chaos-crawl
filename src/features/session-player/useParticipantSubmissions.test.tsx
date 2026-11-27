@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   prepare: vi.fn(),
   upload: vi.fn(),
   submit: vi.fn(),
+  submitText: vi.fn(),
 }));
 vi.mock("../../lib/sessionEvidence", () => ({
   prepareSessionEvidence: mocks.prepare,
@@ -25,6 +26,7 @@ vi.mock("../../lib/sessionEvidence", () => ({
 }));
 vi.mock("../../lib/sessionParticipantCommands", () => ({
   playerSubmitSecretMission: mocks.submit,
+  playerSubmitSecretText: mocks.submitText,
 }));
 afterEach(cleanup);
 beforeEach(() => {
@@ -35,6 +37,7 @@ beforeEach(() => {
   });
   mocks.upload.mockResolvedValue({ data: "path", error: null });
   mocks.submit.mockResolvedValue({ data: null, error: null });
+  mocks.submitText.mockResolvedValue({ data: null, error: null });
 });
 function mission(overrides: Partial<SecretMission> = {}): SecretMission {
   return {
@@ -54,6 +57,28 @@ function mission(overrides: Partial<SecretMission> = {}): SecretMission {
     ...overrides,
   };
 }
+it("submits a written answer through the text command and rejects blank text", async () => {
+  const props = options();
+  const { result } = renderHook(() => useParticipantSubmissions(props));
+  const question = mission({
+    response_mode: "text",
+    allow_photo_upload: false,
+  });
+  await act(async () => result.current.submitSecretMission(question, "  "));
+  expect(mocks.submitText).not.toHaveBeenCalled();
+  expect(props.setError).toHaveBeenLastCalledWith(
+    "Enter an answer before submitting this secret mission.",
+  );
+  await act(async () => result.current.submitSecretMission(question, "A clue"));
+  expect(mocks.submitText).toHaveBeenCalledWith({
+    p_join_code: "123456",
+    p_player_token: "participant-token",
+    p_assignment_id: "assignment",
+    p_answer: "A clue",
+  });
+  expect(mocks.submit).not.toHaveBeenCalled();
+  expect(props.loadView).toHaveBeenCalledOnce();
+});
 function review(): SecretReviewView {
   return {
     open: false,

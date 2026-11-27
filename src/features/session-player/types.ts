@@ -100,6 +100,8 @@ export interface SecretMission {
   reviewed_at: string | null;
   awarded_points: number;
   allow_photo_upload: boolean;
+  response_mode?: "media" | "text";
+  answer?: string | null;
 }
 
 export interface SecretReviewMedia {
@@ -126,6 +128,7 @@ export interface SecretReviewLeaderboardEntry {
 
 export interface SecretReviewView {
   open: boolean;
+  answer?: string | null;
   voting_open: boolean;
   assignment_id: string | null;
   current_evidence_id: string | null;

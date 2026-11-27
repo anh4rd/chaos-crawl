@@ -1,7 +1,8 @@
 import Icon from "../../components/ui/Icon";
 import Button from "../../components/ui/Button";
 import ChallengeArtwork from "../../components/challenge/ChallengeArtwork";
-import type { Task } from "./types";
+import ChallengeTypeActions from "./ChallengeTypeActions";
+import type { Task, TaskKind } from "./types";
 export default function ChallengeTile({
   task,
   tab,
@@ -9,6 +10,8 @@ export default function ChallengeTile({
   saved,
   toggleFavourite,
   selectTask,
+  changeType,
+  selectedKind,
 }: {
   task: Task;
   tab: "main" | "side" | "secret";
@@ -16,6 +19,8 @@ export default function ChallengeTile({
   saved: boolean;
   toggleFavourite: (task: Task) => Promise<void>;
   selectTask: (task: Task) => void;
+  changeType: (task: Task, kind: TaskKind) => void;
+  selectedKind: TaskKind | undefined;
 }) {
   return (
     <article
@@ -50,6 +55,12 @@ export default function ChallengeTile({
           {task.equipment.length > 0 && <span>Equipment</span>}
           {task.evidenceRequired && <span>Evidence required</span>}
         </div>
+        <ChallengeTypeActions
+          task={task}
+          onChange={changeType}
+          currentKind={selectedKind}
+          inPlan={selectedKind !== undefined}
+        />
       </div>
       <Button
         variant="setup-select"

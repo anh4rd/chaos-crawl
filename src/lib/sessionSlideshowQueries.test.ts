@@ -11,7 +11,10 @@ vi.mock("./monitoring", () => ({ reportError: backend.reportError }));
 beforeEach(() => backend.rpc.mockReset());
 for (const { read, rpc } of [
   { read: readFinalSlideshow, rpc: "cc_get_session_final_slideshow" },
-  { read: readSecretSlideshow, rpc: "cc_get_session_secret_review_slideshow" },
+  {
+    read: readSecretSlideshow,
+    rpc: "cc_get_session_secret_review_slideshow",
+  },
 ]) {
   it(`${rpc} preserves the public session-only read contract`, async () => {
     const data = {

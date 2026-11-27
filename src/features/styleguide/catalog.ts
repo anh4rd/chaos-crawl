@@ -625,7 +625,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   MissionCreationForm: {
     usage:
-      "Controlled custom mission form inside a native disclosure. Supply values, callbacks and busy state. Local reference never creates a backend record.",
+      "Controlled custom mission form inside a native disclosure, including written-answer and photo/video options. Supply values, callbacks and busy state. Local reference never creates a backend record.",
     dependencies:
       "Disclosure session, FormLabel session/checkbox and shared Button; command defaults and persistence remain in the feature controller.",
   },
@@ -806,21 +806,27 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   ChallengeTile: {
     usage:
-      "Planning challenge presentation with supplied selection/favourite state and callbacks.",
+      "Planning challenge presentation with supplied selection/favourite state and type-change callbacks.",
     dependencies:
       "Core Task contract, shared Button/Icon and SCSS .challenge-tile; no queries.",
   },
   SelectedChallenge: {
     usage:
-      "Selected challenge row with drag/move/remove callbacks, task-specific accessible names and disabled ordering boundaries. Pass its index and count.",
+      "Selected challenge row with type-change, drag/move/remove callbacks, task-specific accessible names and disabled ordering boundaries. Pass its index and count.",
     dependencies:
       "Task and ordering supplied by the parent; SCSS .selected-challenge.",
   },
   TimelineItem: {
     usage:
-      "Timeline row with named duration/move controls and reorder/delete callbacks. Keyboard movement crosses adjacent breaks, like drag/drop; ordering boundaries are disabled.",
+      "Timeline row with challenge type actions, named duration/move controls and reorder/delete callbacks. Keyboard movement crosses adjacent breaks, like drag/drop; ordering boundaries are disabled.",
     dependencies:
       "Schedule/task data supplied by ScheduleBuilder; SCSS .schedule-item. No persistence.",
+  },
+  ChallengeTypeActions: {
+    usage:
+      "Controlled challenge-type actions; the local planning example updates local state only.",
+    dependencies:
+      "Task and callbacks supplied by the caller; shared Button and SCSS .challenge-type-actions. No persistence.",
   },
   PlanEditor: {
     usage:
@@ -1341,7 +1347,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionReview: {
     usage:
-      "Shared secret review with optional owner and published-voter portraits. Voter identities remain hidden while voting is open.",
+      "Shared secret review with optional written answer, owner and published-voter portraits. The local session preview toggles written answers; voter identities remain hidden while voting is open.",
     dependencies:
       "Project SCSS; caller-supplied presentation data and actions. No backend or storage access.",
   },

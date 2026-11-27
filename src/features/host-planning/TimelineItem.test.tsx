@@ -40,6 +40,8 @@ it.each([-1, 1] as const)(
         onReorder={onReorder}
         onPatch={vi.fn()}
         onDelete={vi.fn()}
+        onChangeType={vi.fn()}
+        onChangeUnlinkedType={vi.fn()}
       />,
     );
     fireEvent.click(
@@ -80,6 +82,8 @@ it("lets hosts select a different OpenMoji for a scheduled challenge", () => {
       onReorder={vi.fn()}
       onPatch={vi.fn()}
       onDelete={vi.fn()}
+      onChangeType={vi.fn()}
+      onChangeUnlinkedType={vi.fn()}
     />,
   );
   fireEvent.click(screen.getByText("Change emoji"));

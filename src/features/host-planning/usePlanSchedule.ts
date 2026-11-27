@@ -1,6 +1,6 @@
 import { useEffect, type Dispatch, type SetStateAction } from "react";
 import type { SetupForm, Task, ScheduleItem, UpdatePlan } from "./types";
-import { initialSchedule } from "./planModel";
+import { challengeScheduleItems, initialSchedule } from "./planModel";
 import { taskLibrary } from "./catalog";
 import { selectedChallengeKind } from "./planImports";
 export function usePlanSchedule({
@@ -120,43 +120,10 @@ export function usePlanSchedule({
     if (!form.selectedMain.includes(taskId)) {
       update("selectedMain", [...form.selectedMain, taskId]);
     }
-    const stamp = Date.now();
-    if (task.prepMinutes || task.performanceMinutes) {
-      const phases: ScheduleItem[] = [];
-      if (task.prepMinutes)
-        phases.push({
-          id: `task-${task.id}-prep-${stamp}`,
-          type: "challenge",
-          title: `${task.title} — Player prep`,
-          duration: task.prepMinutes,
-          taskId: task.id,
-          phase: "prep",
-          editable: true,
-        });
-      if (task.performanceMinutes)
-        phases.push({
-          id: `task-${task.id}-performance-${stamp}`,
-          type: "challenge",
-          title: `${task.title} — Player performance`,
-          duration: task.performanceMinutes,
-          taskId: task.id,
-          phase: "performance",
-          editable: true,
-        });
-      update("schedule", [...form.schedule, ...phases]);
-    } else {
-      update("schedule", [
-        ...form.schedule,
-        {
-          id: `task-${task.id}-${stamp}`,
-          type: "challenge",
-          title: task.title,
-          duration: task.minutes,
-          taskId: task.id,
-          editable: true,
-        },
-      ]);
-    }
+    update("schedule", [
+      ...form.schedule,
+      ...challengeScheduleItems(task, Date.now()),
+    ]);
     setNotice(`Added “${task.title}” to the schedule.`);
   }
   function addScheduleItem(type: "break" | "challenge") {

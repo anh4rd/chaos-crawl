@@ -2592,6 +2592,47 @@ test("shared assignment reference toggles its empty state by keyboard without ba
   backend.verify();
 });
 
+test("the host can create a custom written-answer secret mission", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Host", exact: true }).click();
+  await page.getByRole("tab", { name: "Schedule", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Secret missions (0)", exact: true })
+    .click();
+  await page
+    .getByText("Add a custom secret mission to this game", { exact: true })
+    .click();
+  await page
+    .getByLabel("Mission title", { exact: true })
+    .fill("Secret question");
+  await page
+    .getByRole("checkbox", { name: "Require a written answer" })
+    .check();
+  await expect(
+    page.getByRole("checkbox", { name: "Require photo/video evidence" }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Add mission", exact: true }).click();
+  await expect
+    .poll(
+      () =>
+        backend.requests.find(
+          (r) => r.name === "cc_game_session_challenges" && r.method === "POST",
+        )?.body,
+    )
+    .toMatchObject({
+      title: "Secret question",
+      secret_response_mode: "text",
+      allow_photo_upload: false,
+    });
+  await expect(page.getByLabel("Mission title", { exact: true })).toHaveValue(
+    "",
+  );
+  backend.verify();
+});
+
 test("custom secret mission creation and immediate/scheduled assignment preserve their contracts", async ({
   page,
 }) => {
@@ -2667,6 +2708,7 @@ test("custom secret mission creation and immediate/scheduled assignment preserve
     duration_minutes: 10,
     sort_order: 3,
     allow_photo_upload: true,
+    secret_response_mode: "media",
   });
   await expect(page.getByLabel("Mission title", { exact: true })).toHaveValue(
     "",

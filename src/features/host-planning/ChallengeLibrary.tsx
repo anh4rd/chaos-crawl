@@ -10,7 +10,7 @@ import { type FormEvent } from "react";
 import Icon from "../../components/ui/Icon";
 import { vibes } from "./catalog";
 import { favouriteTaskId } from "./planImports";
-import { type Favourite, type Task } from "./types";
+import { type Favourite, type Task, type TaskKind } from "./types";
 
 interface ChallengeLibraryProps {
   tab: "main" | "side" | "secret";
@@ -20,6 +20,9 @@ interface ChallengeLibraryProps {
   dropTask: (targetId: string) => void;
   moveTask: (taskId: string, direction: -1 | 1) => void;
   selectTask: (task: Task) => void;
+  changeType: (task: Task, kind: TaskKind) => void;
+  changeSecretResponseMode: (task: Task, mode: "media" | "text") => void;
+  selectedKind: (task: Task) => TaskKind | undefined;
   favouritesOnly: boolean;
   setFavouritesOnly: Dispatch<SetStateAction<boolean>>;
   search: string;
@@ -46,6 +49,9 @@ export default function ChallengeLibrary({
   dropTask,
   moveTask,
   selectTask,
+  changeType,
+  changeSecretResponseMode,
+  selectedKind,
   favouritesOnly,
   setFavouritesOnly,
   search,
@@ -81,7 +87,8 @@ export default function ChallengeLibrary({
           <p>
             <strong>Private individual missions.</strong> Create the missions
             now; assign them to actual players only after those players have
-            joined the game. Evidence is required.
+            joined the game. Choose a written answer or the usual evidence
+            option.
           </p>
         </Explainer>
       )}
@@ -95,6 +102,10 @@ export default function ChallengeLibrary({
           </p>
         </Explainer>
       )}
+      <p className="muted-copy">
+        Changing a main challenge removes its scheduled entries; changing one to
+        main adds it to the schedule. Save the plan to keep your changes.
+      </p>
       <div
         className={`challenge-library__columns${tab === "main" ? " challenge-library__columns--single" : ""}`}
       >
@@ -125,6 +136,8 @@ export default function ChallengeLibrary({
                   dropTask={dropTask}
                   moveTask={moveTask}
                   selectTask={selectTask}
+                  changeType={changeType}
+                  changeSecretResponseMode={changeSecretResponseMode}
                 />
               );
             })}
@@ -201,6 +214,8 @@ export default function ChallengeLibrary({
                   saved={saved}
                   toggleFavourite={toggleFavourite}
                   selectTask={selectTask}
+                  changeType={changeType}
+                  selectedKind={selectedKind(task)}
                 />
               );
             })}

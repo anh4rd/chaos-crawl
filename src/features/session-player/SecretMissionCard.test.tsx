@@ -4,6 +4,48 @@ import SecretMissionCard from "./SecretMissionCard";
 import type { SecretMission } from "./types";
 
 afterEach(cleanup);
+it("requires a written answer without offering an upload", () => {
+  const mission: SecretMission = {
+    assignment_id: "answer",
+    challenge_id: "question",
+    title: "Secret question",
+    description: "What did you find?",
+    points: 10,
+    duration_minutes: 5,
+    status: "sent",
+    scheduled_at: "2030-01-01",
+    sent_at: null,
+    submitted_at: null,
+    reviewed_at: null,
+    awarded_points: 0,
+    allow_photo_upload: false,
+    response_mode: "text",
+  };
+  const onSubmit = vi.fn();
+  render(
+    <SecretMissionCard
+      mission={mission}
+      evidence={[]}
+      busy={false}
+      uploading={false}
+      onUpload={vi.fn()}
+      onSubmit={onSubmit}
+      onDismiss={vi.fn()}
+    />,
+  );
+  const submit = screen.getByRole("button", {
+    name: "I've completed my mission",
+  });
+  expect(submit.hasAttribute("disabled")).toBe(true);
+  expect(
+    screen.queryByLabelText("Upload evidence for Secret question"),
+  ).toBeNull();
+  fireEvent.change(screen.getByLabelText("Your answer"), {
+    target: { value: "A clue" },
+  });
+  fireEvent.click(submit);
+  expect(onSubmit).toHaveBeenCalledWith("A clue");
+});
 it("locks a final failed mission against resubmission while retaining dismissal", () => {
   const mission: SecretMission = {
     assignment_id: "assignment",

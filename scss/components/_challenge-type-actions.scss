@@ -1,0 +1,16 @@
+@use "../variables/layout";
+
+.challenge-type-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: (layout.$pixel-unit * 1);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  & > .btn {
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+  }
+}

@@ -62,11 +62,14 @@
     flex-wrap: wrap;
     align-items: center;
     gap: (layout.$pixel-unit * 1);
+    min-width: 0;
+    max-width: 100%;
     color: colors.$challenge-tile-heading-text;
     font-size: fonts.$size-tiny;
     font-weight: fonts.$weight-label;
   }
   &__artwork input {
+    min-width: 0;
     max-width: 100%;
     font-size: fonts.$size-tiny;
   }

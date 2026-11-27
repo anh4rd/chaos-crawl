@@ -1,7 +1,8 @@
 import Explainer from "../../components/ui/Explainer";
 import ContentPanel from "../../components/ui/ContentPanel";
 import Icon from "../../components/ui/Icon";
-import { type SetupForm, type Task } from "./types";
+import ChallengeTypeActions from "./ChallengeTypeActions";
+import { type SetupForm, type Task, type TaskKind } from "./types";
 
 interface LaunchSummaryProps {
   form: SetupForm;
@@ -11,6 +12,7 @@ interface LaunchSummaryProps {
   secretTasks: Task[];
   equipment: string[];
   preparation: Task[];
+  changeType: (task: Task, kind: TaskKind) => void;
 }
 
 export default function LaunchSummary({
@@ -21,6 +23,7 @@ export default function LaunchSummary({
   secretTasks,
   equipment,
   preparation,
+  changeType,
 }: LaunchSummaryProps) {
   return (
     <ContentPanel variant="section">
@@ -83,9 +86,12 @@ export default function LaunchSummary({
         <h3>Preparation for players</h3>
         {preparation.length ? (
           preparation.map((t) => (
-            <p key={t.id}>
-              <strong>{t.title}:</strong> {t.prep}
-            </p>
+            <div key={t.id}>
+              <p>
+                <strong>{t.title}:</strong> {t.prep}
+              </p>
+              <ChallengeTypeActions task={t} onChange={changeType} />
+            </div>
           ))
         ) : (
           <p>No advance preparation required.</p>

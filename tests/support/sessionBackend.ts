@@ -395,7 +395,10 @@ export async function installSessionBackend(
       await respond(null);
       return;
     }
-    if (name === "cc_player_submit_secret_mission") {
+    if (
+      name === "cc_player_submit_secret_mission" ||
+      name === "cc_player_submit_secret_text"
+    ) {
       const stored = responses.cc_get_player_secret_missions;
       const missions: unknown[] = Array.isArray(stored) ? stored : [];
       const mission = missions.find(
@@ -414,7 +417,12 @@ export async function installSessionBackend(
         ) ||
         Object.keys(body ?? {})
           .sort()
-          .join(",") !== "p_assignment_id,p_join_code,p_player_token"
+          .join(",") !==
+          (name === "cc_player_submit_secret_text"
+            ? "p_answer,p_assignment_id,p_join_code,p_player_token"
+            : "p_assignment_id,p_join_code,p_player_token") ||
+        (name === "cc_player_submit_secret_text" &&
+          (typeof body?.p_answer !== "string" || !body.p_answer.trim()))
       ) {
         await respond(
           { message: "Invalid secret mission submission fixture payload" },
@@ -422,7 +430,13 @@ export async function installSessionBackend(
         );
         return;
       }
-      Object.assign(mission, { status: "submitted", submitted_at: timestamp });
+      Object.assign(mission, {
+        status: "submitted",
+        submitted_at: timestamp,
+        ...(name === "cc_player_submit_secret_text"
+          ? { answer: body.p_answer.trim() }
+          : {}),
+      });
       await respond(null);
       return;
     }
@@ -680,7 +694,11 @@ export async function installSessionBackend(
         typeof body?.sort_order === "number" &&
         typeof body?.allow_photo_upload === "boolean" &&
         Object.keys(body).sort().join(",") ===
-          "allow_photo_upload,description,duration_minutes,kind,points,round_number,session_id,sort_order,title"
+          (body.kind === "secret"
+            ? "allow_photo_upload,description,duration_minutes,kind,points,round_number,secret_response_mode,session_id,sort_order,title"
+            : "allow_photo_upload,description,duration_minutes,kind,points,round_number,session_id,sort_order,title") &&
+        (body.kind !== "secret" ||
+          ["media", "text"].includes(body.secret_response_mode))
       ) {
         const id = `custom-${body.kind}-${fixture.challenges.length}`;
         fixture.challenges.push({ ...fixture.challenges[0], ...body, id });

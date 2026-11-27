@@ -14,6 +14,8 @@ interface Props {
   setNewSecretPoints: (value: number) => void;
   newSecretEvidenceRequired: boolean;
   setNewSecretEvidenceRequired: (value: boolean) => void;
+  newSecretTextAnswer: boolean;
+  setNewSecretTextAnswer: (value: boolean) => void;
   busy: boolean;
 }
 export default function MissionCreationForm({
@@ -26,6 +28,8 @@ export default function MissionCreationForm({
   setNewSecretPoints,
   newSecretEvidenceRequired,
   setNewSecretEvidenceRequired,
+  newSecretTextAnswer,
+  setNewSecretTextAnswer,
   busy,
 }: Props) {
   return (
@@ -71,14 +75,26 @@ export default function MissionCreationForm({
           <span>
             <input
               type="checkbox"
-              checked={newSecretEvidenceRequired}
-              onChange={(event) =>
-                setNewSecretEvidenceRequired(event.target.checked)
-              }
+              checked={newSecretTextAnswer}
+              onChange={(event) => setNewSecretTextAnswer(event.target.checked)}
             />{" "}
-            Require photo/video evidence
+            Require a written answer
           </span>
         </FormLabel>
+        {!newSecretTextAnswer && (
+          <FormLabel variant="session-checkbox">
+            <span>
+              <input
+                type="checkbox"
+                checked={newSecretEvidenceRequired}
+                onChange={(event) =>
+                  setNewSecretEvidenceRequired(event.target.checked)
+                }
+              />{" "}
+              Require photo/video evidence
+            </span>
+          </FormLabel>
+        )}
         <Button
           type="submit"
           variant="session-secondary"

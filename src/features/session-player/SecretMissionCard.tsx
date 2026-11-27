@@ -1,6 +1,7 @@
-import type { ChangeEvent } from "react";
+import { useState, type ChangeEvent } from "react";
 import SessionChallengeCard from "../../components/session/SessionChallengeCard";
 import SessionSubmission from "../../components/session/SessionSubmission";
+import FormLabel from "../../components/ui/FormLabel";
 import type { EvidencePresentation } from "../../components/session/types";
 import type { SecretMission } from "./types";
 
@@ -20,9 +21,10 @@ export default function SecretMissionCard({
   busy: boolean;
   uploading: boolean;
   onUpload: (event: ChangeEvent<HTMLInputElement>) => void;
-  onSubmit: () => void;
+  onSubmit: (answer?: string) => void;
   onDismiss: () => void;
 }) {
+  const [answer, setAnswer] = useState(mission.answer ?? "");
   const complete =
     mission.status === "submitted" ||
     mission.status === "approved" ||
@@ -45,6 +47,19 @@ export default function SecretMissionCard({
       description={mission.description}
       points={mission.points}
     >
+      {mission.response_mode === "text" && (
+        <FormLabel variant="session">
+          <span>Your answer</span>
+          <textarea
+            value={answer}
+            onChange={(event) => setAnswer(event.target.value)}
+            maxLength={2000}
+            rows={4}
+            disabled={complete || Boolean(finalOutcome)}
+            required
+          />
+        </FormLabel>
+      )}
       <SessionSubmission
         variant="secret-mission"
         title={mission.title}
@@ -53,8 +68,14 @@ export default function SecretMissionCard({
         awardedPoints={mission.awarded_points}
         busy={busy}
         uploading={uploading}
-        disabled={Boolean(finalOutcome)}
-        evidenceRequired={mission.allow_photo_upload}
+        disabled={
+          Boolean(finalOutcome) ||
+          (mission.response_mode === "text" && !answer.trim())
+        }
+        evidenceRequired={
+          mission.response_mode !== "text" && mission.allow_photo_upload
+        }
+        allowUpload={mission.response_mode !== "text"}
         allowSubmit={!complete}
         submitLabel={
           mission.status === "rejected"
@@ -63,7 +84,9 @@ export default function SecretMissionCard({
         }
         statusMessage={statusMessage}
         onUpload={onUpload}
-        onSubmit={onSubmit}
+        onSubmit={() =>
+          onSubmit(mission.response_mode === "text" ? answer : undefined)
+        }
       />
       {complete && (
         <button type="button" className="btn" onClick={onDismiss}>

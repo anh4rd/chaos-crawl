@@ -20,6 +20,7 @@ export default function MissionFormsExample() {
     description: "",
     points: 10,
     evidence: false,
+    textAnswer: false,
   });
   function update(values: Partial<typeof form>) {
     setForm((current) => ({ ...current, ...values }));
@@ -75,6 +76,8 @@ export default function MissionFormsExample() {
               setNewSecretEvidenceRequired={(value) =>
                 update({ evidence: value })
               }
+              newSecretTextAnswer={form.textAnswer}
+              setNewSecretTextAnswer={(value) => update({ textAnswer: value })}
               busy={busy}
             />
           </ContentPanel>

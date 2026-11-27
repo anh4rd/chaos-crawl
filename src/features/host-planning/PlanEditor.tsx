@@ -25,10 +25,21 @@ import { usePlanSchedule } from "./usePlanSchedule";
 import { usePlanSave } from "./usePlanSave";
 import { usePlanPhoto } from "./usePlanPhoto";
 import { usePlanCatalogue } from "./usePlanCatalogue";
-import { derivePlan } from "./planModel";
-import { favouriteTaskId, savedFavouriteTasks } from "./planImports";
+import { derivePlan, unlinkedScheduleTask } from "./planModel";
+import {
+  changePlanChallengeKind,
+  favouriteTaskId,
+  savedFavouriteTasks,
+  selectedChallengeKind,
+} from "./planImports";
 import { defaultForm, tabItems } from "./catalog";
-import type { BuilderTab, SetupForm, TaskKind } from "./types";
+import type {
+  BuilderTab,
+  ScheduleItem,
+  SetupForm,
+  Task,
+  TaskKind,
+} from "./types";
 import { openMojiSelection } from "../../lib/openmoji";
 export default function PlanEditor({
   id,
@@ -185,6 +196,48 @@ export default function PlanEditor({
       else delete challengeArtUrls[taskId];
       return { ...current, challengeArtUrls };
     });
+  }
+  function changeType(task: Task, kind: TaskKind, current = form) {
+    const result = changePlanChallengeKind(
+      current,
+      task,
+      kind,
+      derivePlan(current).selectedTasks,
+    );
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+    if (result.form === current) {
+      setNotice(`“${task.title}” is already in this game as ${kind}.`);
+      return;
+    }
+    setForm(result.form);
+    setError("");
+    setNotice(
+      `“${task.title}” is now a ${kind === "secret" ? "secret mission" : `${kind} challenge`}.${kind === "main" ? " It was added to the schedule." : ""}`,
+    );
+  }
+  function changeUnlinkedType(item: ScheduleItem, kind: TaskKind) {
+    const task = unlinkedScheduleTask(item);
+    if (
+      !task ||
+      derivePlan(form).allTasks.some((entry) => entry.id === task.id)
+    ) {
+      setError(
+        "This schedule item could not be changed. Remove it and add the challenge again.",
+      );
+      return;
+    }
+    const current: SetupForm = {
+      ...form,
+      customTasks: [...form.customTasks, task],
+      selectedMain: [...form.selectedMain, task.id],
+      schedule: form.schedule.map((row) =>
+        row.id === item.id ? { ...row, taskId: task.id } : row,
+      ),
+    };
+    changeType(task, kind, current);
   }
   if (loading)
     return (
@@ -372,6 +425,25 @@ export default function PlanEditor({
               dropTask={dropTask}
               moveTask={moveTask}
               selectTask={selectTask}
+              changeType={changeType}
+              changeSecretResponseMode={(task, mode) =>
+                setForm((current) => ({
+                  ...current,
+                  customTasks: [
+                    ...current.customTasks.filter(
+                      (item) => item.id !== task.id,
+                    ),
+                    { ...task, secretResponseMode: mode },
+                  ],
+                }))
+              }
+              selectedKind={(task) =>
+                selectedChallengeKind(form, form.customTasks, task) ??
+                (form.preGameEnabled &&
+                favouriteTaskId(form.preGameTaskId) === favouriteTaskId(task.id)
+                  ? "main"
+                  : undefined)
+              }
               favouritesOnly={favouritesOnly}
               setFavouritesOnly={setFavouritesOnly}
               search={search}
@@ -418,6 +490,8 @@ export default function PlanEditor({
               dragged={dragged}
               updateScheduleItem={updateScheduleItem}
               deleteScheduleItem={deleteScheduleItem}
+              changeType={changeType}
+              changeUnlinkedType={changeUnlinkedType}
             />
           )}
 
@@ -433,6 +507,7 @@ export default function PlanEditor({
               setCustomTitle={setCustomTitle}
               setCustomDesc={setCustomDesc}
               setNotice={setNotice}
+              changeType={changeType}
             />
           )}
 
@@ -447,6 +522,7 @@ export default function PlanEditor({
               secretTasks={secretTasks}
               equipment={equipment}
               preparation={preparation}
+              changeType={changeType}
             />
           )}
         </PlanBuilder>

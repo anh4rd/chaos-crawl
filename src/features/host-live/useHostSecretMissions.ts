@@ -37,6 +37,7 @@ export function useHostSecretMissions({
 
   const [newSecretEvidenceRequired, setNewSecretEvidenceRequired] =
     useState(false);
+  const [newSecretTextAnswer, setNewSecretTextAnswer] = useState(false);
 
   async function createSecretChallenge(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,7 +58,8 @@ export function useHostSecretMissions({
         points: Math.max(0, Number(newSecretPoints) || 0),
         duration_minutes: 10,
         sort_order: nextSortOrder,
-        allow_photo_upload: newSecretEvidenceRequired,
+        allow_photo_upload: !newSecretTextAnswer && newSecretEvidenceRequired,
+        secret_response_mode: newSecretTextAnswer ? "text" : "media",
       });
     setBusy(false);
     if (createError || !data) {
@@ -68,6 +70,7 @@ export function useHostSecretMissions({
     setNewSecretDescription("");
     setNewSecretPoints(10);
     setNewSecretEvidenceRequired(false);
+    setNewSecretTextAnswer(false);
     setSelectedSecretChallengeId(data.id);
     setNotice(
       "Secret mission added. Choose a player and send it now or schedule it.",
@@ -176,6 +179,8 @@ export function useHostSecretMissions({
     setNewSecretPoints,
     newSecretEvidenceRequired,
     setNewSecretEvidenceRequired,
+    newSecretTextAnswer,
+    setNewSecretTextAnswer,
     createSecretChallenge,
     assignSecretMission,
     rescheduleSecretMission,

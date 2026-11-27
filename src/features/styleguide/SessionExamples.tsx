@@ -84,6 +84,7 @@ export default function SessionExamples() {
   const [uploaded, setUploaded] = useState(false);
   const [missionSubmitted, setMissionSubmitted] = useState(false);
   const [missionUploaded, setMissionUploaded] = useState(false);
+  const [textReview, setTextReview] = useState(false);
   const [selected, setSelected] = useState(false);
   const [notice, setNotice] = useState("");
   const [sideChallengeDialogOpen, setSideChallengeDialogOpen] = useState(false);
@@ -110,6 +111,7 @@ export default function SessionExamples() {
           setUploaded(false);
           setMissionSubmitted(false);
           setMissionUploaded(false);
+          setTextReview(false);
           setSelected(false);
           setNotice("");
           setSideChallengeDialogOpen(false);
@@ -139,6 +141,14 @@ export default function SessionExamples() {
           <option value="player">Player</option>
           <option value="host">Host</option>
         </select>
+        <label>
+          <input
+            type="checkbox"
+            checked={textReview}
+            onChange={(event) => setTextReview(event.target.checked)}
+          />{" "}
+          Written answer in review
+        </label>
         <label htmlFor="session-preview-phase">Phase</label>
         <select
           id="session-preview-phase"
@@ -338,7 +348,8 @@ export default function SessionExamples() {
             owner="Alex"
             ownerAvatarUrl={`${import.meta.env.BASE_URL}chaos-logo.png`}
             points={20}
-            evidence={[media]}
+            evidence={textReview ? [] : [media]}
+            answer={textReview ? "I found a hidden clue." : null}
             open
             votesCast={2}
             successVotes={null}

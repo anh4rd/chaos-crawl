@@ -11,6 +11,7 @@ export function insertSecretChallenge(values: {
   duration_minutes: number;
   sort_order: number;
   allow_photo_upload: boolean;
+  secret_response_mode: "media" | "text";
 }): Promise<ApiResult<{ id: string }>> {
   return runApi<{ id: string }>(() =>
     supabase

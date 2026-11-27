@@ -17,6 +17,7 @@ export type Task = {
   setup: string;
   prep: string;
   evidenceRequired: boolean;
+  secretResponseMode?: "media" | "text";
   preGame?: boolean;
   instructions?: string;
   tags?: string[];

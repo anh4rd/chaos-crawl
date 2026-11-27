@@ -63,6 +63,17 @@ export function playerSubmitSecretMission(parameters: {
   );
 }
 
+export function playerSubmitSecretText(parameters: {
+  p_join_code: string;
+  p_player_token: string;
+  p_assignment_id: string;
+  p_answer: string;
+}): Promise<ApiResult<unknown>> {
+  return runApi<unknown>(() =>
+    supabase.rpc("cc_player_submit_secret_text", parameters),
+  );
+}
+
 export function playerCastSecretReviewVote(parameters: {
   p_join_code: string;
   p_player_token: string;

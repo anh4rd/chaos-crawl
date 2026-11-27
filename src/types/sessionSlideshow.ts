@@ -24,5 +24,7 @@ export interface FinalSlideshowView extends SessionSlideshowView<FinalSlideshowI
 
 export interface SecretSlideshowView extends SessionSlideshowView {
   assignment_id: string | null;
+  answer?: string | null;
+  review_opened_at?: string | null;
   mission: { title: string; description: string; player_name: string } | null;
 }

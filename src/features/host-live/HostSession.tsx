@@ -395,6 +395,8 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     setNewSecretPoints,
     newSecretEvidenceRequired,
     setNewSecretEvidenceRequired,
+    newSecretTextAnswer,
+    setNewSecretTextAnswer,
     createSecretChallenge,
     assignSecretMission,
     rescheduleSecretMission,
@@ -892,6 +894,8 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
         setNewSecretPoints={setNewSecretPoints}
         newSecretEvidenceRequired={newSecretEvidenceRequired}
         setNewSecretEvidenceRequired={setNewSecretEvidenceRequired}
+        newSecretTextAnswer={newSecretTextAnswer}
+        setNewSecretTextAnswer={setNewSecretTextAnswer}
         busy={busy}
       />
     </>

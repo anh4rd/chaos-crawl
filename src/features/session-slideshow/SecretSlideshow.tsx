@@ -12,6 +12,7 @@ import { useSlideshowData } from "./useSlideshowData";
 import { useSlideshowSelection } from "./useSlideshowSelection";
 import { useEvidencePlayback } from "./useEvidencePlayback";
 import { useSlideshowFullscreen } from "./useSlideshowFullscreen";
+import SecretTextReveal from "./SecretTextReveal";
 
 export default function SecretSlideshow({ sessionId }: { sessionId: string }) {
   const { view, currentIndex, applyView, advance } =
@@ -68,6 +69,21 @@ export default function SecretSlideshow({ sessionId }: { sessionId: string }) {
             The host will open a mission review.
           </Note>
         </SlideshowMessage>
+      </SlideshowScreen>
+    );
+  }
+  if (view.answer) {
+    return (
+      <SlideshowScreen
+        live
+        onFullscreen={() => void enterFullscreen()}
+        error={error}
+      >
+        <SecretTextReveal
+          key={`${view.assignment_id ?? view.mission.title}:${view.review_opened_at ?? ""}`}
+          mission={view.mission}
+          answer={view.answer}
+        />
       </SlideshowScreen>
     );
   }

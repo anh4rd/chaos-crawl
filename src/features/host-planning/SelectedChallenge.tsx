@@ -2,7 +2,9 @@ import type { Dispatch, SetStateAction } from "react";
 import Icon from "../../components/ui/Icon";
 import Button from "../../components/ui/Button";
 import ChallengeArtwork from "../../components/challenge/ChallengeArtwork";
-import type { Task } from "./types";
+import ChallengeTypeActions from "./ChallengeTypeActions";
+import FormLabel from "../../components/ui/FormLabel";
+import type { Task, TaskKind } from "./types";
 export default function SelectedChallenge({
   task,
   index,
@@ -12,6 +14,8 @@ export default function SelectedChallenge({
   dropTask,
   moveTask,
   selectTask,
+  changeType,
+  changeSecretResponseMode,
 }: {
   task: Task;
   index: number;
@@ -21,6 +25,8 @@ export default function SelectedChallenge({
   dropTask: (id: string) => void;
   moveTask: (id: string, direction: -1 | 1) => void;
   selectTask: (task: Task) => void;
+  changeType: (task: Task, kind: TaskKind) => void;
+  changeSecretResponseMode: (task: Task, mode: "media" | "text") => void;
 }) {
   return (
     <article
@@ -47,6 +53,25 @@ export default function SelectedChallenge({
             : `${task.minutes} min · ${task.points} pts`}
           {task.preGame ? " · PRE-GAME" : ""}
         </small>
+        <ChallengeTypeActions task={task} onChange={changeType} />
+        {tab === "secret" && (
+          <FormLabel>
+            <span>Mission response</span>
+            <select
+              aria-label={`Mission response for ${task.title}`}
+              value={task.secretResponseMode ?? "media"}
+              onChange={(event) =>
+                changeSecretResponseMode(
+                  task,
+                  event.target.value === "text" ? "text" : "media",
+                )
+              }
+            >
+              <option value="media">Photo/video or completion</option>
+              <option value="text">Written answer</option>
+            </select>
+          </FormLabel>
+        )}
       </div>
       <div className="selected-challenge__actions">
         <Button

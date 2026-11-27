@@ -14,9 +14,12 @@ the entire game; per-challenge individual/team rules are not implemented.
 
 Adding a catalogue challenge to a game now rejects a second challenge type
 instead of creating a suffixed duplicate. Planner selections and scheduling
-apply the same guard across saved and catalogue ID aliases. Existing duplicate
-plans are not rewritten; hosts must remove the existing type before adding
-another.
+apply the same guard across saved and catalogue ID aliases. In the plan editor,
+type actions move a selected challenge between main, side and secret, or add a
+library idea as another type. Moving away from main removes its schedule and
+pre-game entries; moving to main adds it to the schedule. Saving keeps the
+change in that plan, not an already-created live session or the saved idea.
+Existing duplicate plans are not rewritten and must be cleaned up first.
 
 Anonymous player registration and recovery have an undeployed security
 milestone; see [player recovery](./player-recovery.md) for its contracts,
@@ -5033,3 +5036,25 @@ frontend change.
 Mocked desktop/mobile browser checks cover the signup redirect, successful and
 expired callbacks and host login recovery. They do not verify deployed Supabase
 settings or deliver a real confirmation email.
+
+# Secret mission written answers
+
+Hosts can choose a written answer for a planned secret mission or a custom
+mission created during a game. Players submit up to 2,000 characters; the
+assignment owner and the active review can read the answer. The TV displays
+the mission and assignee for five seconds before showing the answer. This
+introductory delay is local to each TV and does not delay the participant
+review or prevent network inspection of an already-open review.
+
+The additive `20261127000300_secret_text_evidence.sql` migration stores answers
+in a private RLS table, validates submissions against player tokens and
+assignments, blocks the old submission RPC from submitting without an answer,
+and projects answers only into the owner's mission list and the active review.
+It preserves the legacy media path. The launch wrapper maps saved tasks by the
+original session-creation order, not by title. Apply and verify this migration
+before deploying the frontend; it has not been applied to production. The
+slideshow inherits the existing session-ID-based review access contract.
+To repeat the SQL regressions, apply the migration to an isolated database
+containing the existing V2 schema, then run
+`psql "$ISOLATED_DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/sql/secret_text_evidence.sql`.
+The fixture rolls back its data; never point this test at production.

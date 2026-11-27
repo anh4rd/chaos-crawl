@@ -1,4 +1,4 @@
-import type { SetupForm, ScheduleItem } from "./types";
+import type { SetupForm, ScheduleItem, Task } from "./types";
 import type {
   StoredPlan,
   PlanSnapshot,
@@ -17,8 +17,73 @@ function stringRecord(value: unknown): Record<string, string> {
   );
 }
 
+export function challengeScheduleItems(
+  task: Task,
+  stamp: number,
+): ScheduleItem[] {
+  const phases: ScheduleItem[] = [];
+  if (task.prepMinutes)
+    phases.push({
+      id: `task-${task.id}-prep-${stamp}`,
+      type: "challenge",
+      title: `${task.title} — Player prep`,
+      duration: task.prepMinutes,
+      taskId: task.id,
+      phase: "prep",
+      editable: true,
+    });
+  if (task.performanceMinutes)
+    phases.push({
+      id: `task-${task.id}-performance-${stamp}`,
+      type: "challenge",
+      title: `${task.title} — Player performance`,
+      duration: task.performanceMinutes,
+      taskId: task.id,
+      phase: "performance",
+      editable: true,
+    });
+  return phases.length
+    ? phases
+    : [
+        {
+          id: `task-${task.id}-${stamp}`,
+          type: "challenge",
+          title: task.title,
+          duration: task.minutes,
+          taskId: task.id,
+          editable: true,
+        },
+      ];
+}
+
+export function unlinkedScheduleTask(item: ScheduleItem): Task | undefined {
+  if (item.type !== "challenge" || item.taskId) return undefined;
+  return {
+    id: `schedule-${item.id}`,
+    title: item.title,
+    description: "",
+    kind: "main",
+    minutes: item.duration,
+    points: 10,
+    vibe: [],
+    accessibility: [],
+    equipment: [],
+    setup: "",
+    prep: "",
+    evidenceRequired: false,
+  };
+}
+
 export function derivePlan(form: SetupForm) {
-  const allTasks = [...taskLibrary, ...form.customTasks];
+  const allTasks = [
+    ...taskLibrary.map(
+      (task) =>
+        form.customTasks.find((custom) => custom.id === task.id) ?? task,
+    ),
+    ...form.customTasks.filter(
+      (custom) => !taskLibrary.some((task) => task.id === custom.id),
+    ),
+  ];
   const selectedTasks = allTasks.filter(
     (t) =>
       form.selectedMain.includes(t.id) ||
@@ -91,10 +156,30 @@ export function createPlanWrite(
   status: "draft" | "planned",
 ): PlanWrite {
   const projection = derivePlan(form);
+  const scheduledMainIds = [
+    ...new Set(
+      form.schedule
+        .filter((item) => item.type === "challenge" && item.taskId)
+        .map((item) => item.taskId),
+    ),
+  ];
+  const mainTasks = projection.selectedTasks.filter(
+    (task) => task.kind === "main",
+  );
+  const orderedMain = [
+    ...scheduledMainIds.flatMap((id) => {
+      const task = mainTasks.find((candidate) => candidate.id === id);
+      return task ? [task] : [];
+    }),
+    ...mainTasks.filter((task) => !scheduledMainIds.includes(task.id)),
+  ];
+  let mainIndex = 0;
   const planData: PlanSnapshot = {
     version: 3,
     ...form,
-    selectedTasks: projection.selectedTasks,
+    selectedTasks: projection.selectedTasks.map((task) =>
+      task.kind === "main" ? orderedMain[mainIndex++] : task,
+    ),
     selectedTaskIds: [
       ...form.selectedMain,
       ...form.selectedSide,

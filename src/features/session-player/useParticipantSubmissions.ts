@@ -127,7 +127,7 @@ export function useParticipantSubmissions({
     await loadView();
   }
 
-  async function submitSecretMission(mission: SecretMission) {
+  async function submitSecretMission(mission: SecretMission, answer?: string) {
     if (!token || !code) return;
     if (
       secretReview?.my_final_reviews.some(
@@ -140,6 +140,7 @@ export function useParticipantSubmissions({
       return;
     }
     if (
+      mission.response_mode !== "text" &&
       mission.allow_photo_upload &&
       evidenceForSecret(mission.assignment_id).length === 0
     ) {
@@ -150,12 +151,25 @@ export function useParticipantSubmissions({
     }
     setBusyKey(mission.assignment_id);
     setError("");
+    if (mission.response_mode === "text" && !answer?.trim()) {
+      setBusyKey(null);
+      setError("Enter an answer before submitting this secret mission.");
+      return;
+    }
+    const parameters = {
+      p_join_code: code,
+      p_player_token: token,
+      p_assignment_id: mission.assignment_id,
+    };
     const { error: submitError } =
-      await sessionParticipantCommands.playerSubmitSecretMission({
-        p_join_code: code,
-        p_player_token: token,
-        p_assignment_id: mission.assignment_id,
-      });
+      mission.response_mode === "text"
+        ? await sessionParticipantCommands.playerSubmitSecretText({
+            ...parameters,
+            p_answer: answer ?? "",
+          })
+        : await sessionParticipantCommands.playerSubmitSecretMission(
+            parameters,
+          );
     setBusyKey(null);
     if (submitError) {
       setError(submitError.message);

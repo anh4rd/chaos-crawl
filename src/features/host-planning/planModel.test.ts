@@ -1,12 +1,183 @@
 import { expect, it } from "vitest";
-import { defaultForm } from "./catalog";
-import { createPlanWrite, hydratePlan, initialSchedule } from "./planModel";
+import { defaultForm, taskLibrary } from "./catalog";
+import {
+  createPlanWrite,
+  derivePlan,
+  hydratePlan,
+  initialSchedule,
+} from "./planModel";
 import {
   attachPlanTask,
+  changePlanChallengeKind,
   communityPlanTask,
   explorePlanTask,
   savedFavouriteTasks,
 } from "./planImports";
+
+it.each([
+  ["main", "side"],
+  ["main", "secret"],
+  ["side", "main"],
+  ["side", "secret"],
+  ["secret", "main"],
+  ["secret", "side"],
+] as const)(
+  "moves a %s challenge to %s and survives saving and reopening",
+  (from, to) => {
+    const original = taskLibrary.find((task) => task.kind === from);
+    if (!original) throw new Error("Missing challenge fixture");
+    const form = {
+      ...defaultForm,
+      selectedMain: from === "main" ? [original.id] : [],
+      selectedSide: from === "side" ? [original.id] : [],
+      selectedSecret: from === "secret" ? [original.id] : [],
+      secretMissions: from === "secret",
+      schedule:
+        from === "main"
+          ? [
+              {
+                id: "prep",
+                type: "challenge" as const,
+                title: "Prep",
+                duration: 5,
+                taskId: original.id,
+                phase: "prep" as const,
+              },
+              {
+                id: "perform",
+                type: "challenge" as const,
+                title: "Perform",
+                duration: 10,
+                taskId: original.id,
+                phase: "performance" as const,
+              },
+            ]
+          : [],
+    };
+    const result = changePlanChallengeKind(
+      form,
+      original,
+      to,
+      derivePlan(form).selectedTasks,
+    );
+    expect(result.error).toBeUndefined();
+    const saved = createPlanWrite(result.form, "host", "draft");
+    const reopened = hydratePlan({
+      id: "plan",
+      ...saved,
+      plan_data: { ...saved.plan_data },
+    });
+    expect(derivePlan(reopened).selectedTasks).toEqual([
+      expect.objectContaining({
+        id: original.id,
+        kind: to,
+        title: original.title,
+        points: original.points,
+        description: original.description,
+      }),
+    ]);
+    expect(
+      reopened.schedule.filter((item) => item.taskId === original.id).length,
+    ).toBe(to === "main" ? 1 : 0);
+    expect(reopened.selectedMain.includes(original.id)).toBe(to === "main");
+    expect(reopened.selectedSide.includes(original.id)).toBe(to === "side");
+    expect(reopened.selectedSecret.includes(original.id)).toBe(to === "secret");
+    expect(reopened.secretMissions).toBe(to === "secret");
+    if (to === "side")
+      expect(reopened).toMatchObject({
+        sideChallenges: true,
+        liveFinal: true,
+        slideshow: true,
+      });
+  },
+);
+
+it("clears pre-game references when converting a pre-game challenge", () => {
+  const task = taskLibrary[0];
+  const form = {
+    ...defaultForm,
+    selectedMain: [task.id],
+    selectedSide: [],
+    preGameEnabled: true,
+    preGameTaskId: task.id,
+    schedule: [
+      {
+        id: "pregame",
+        type: "pregame" as const,
+        title: task.title,
+        duration: 0,
+        taskId: task.id,
+      },
+      {
+        id: "pregame-review",
+        type: "pregame-review" as const,
+        title: "Review",
+        duration: 15,
+      },
+    ],
+  };
+  const result = changePlanChallengeKind(
+    form,
+    task,
+    "side",
+    derivePlan(form).selectedTasks,
+  );
+  expect(result.form).toMatchObject({
+    preGameEnabled: false,
+    preGameTaskId: "",
+    schedule: [],
+  });
+});
+
+it("writes main challenges in schedule order when a side challenge becomes main", () => {
+  const side = taskLibrary.find((task) => task.id === "team-handshake");
+  if (!side) throw new Error("Missing challenge fixture");
+  const custom = { ...taskLibrary[0], id: "custom-main", title: "First" };
+  const form = {
+    ...defaultForm,
+    selectedMain: [custom.id],
+    selectedSide: [side.id],
+    customTasks: [custom],
+    schedule: [
+      {
+        id: "first",
+        type: "challenge" as const,
+        title: custom.title,
+        duration: custom.minutes,
+        taskId: custom.id,
+      },
+    ],
+  };
+  const result = changePlanChallengeKind(
+    form,
+    side,
+    "main",
+    derivePlan(form).selectedTasks,
+  );
+  const saved = createPlanWrite(result.form, "host", "draft");
+  expect(
+    saved.plan_data.selectedTasks
+      .filter((task) => task.kind === "main")
+      .map((task) => task.id),
+  ).toEqual(["custom-main", "team-handshake"]);
+});
+
+it("refuses to rewrite an existing duplicate across challenge types", () => {
+  const task = taskLibrary[0];
+  const form = {
+    ...defaultForm,
+    selectedMain: [task.id],
+    selectedSide: [task.id],
+  };
+  const result = changePlanChallengeKind(
+    form,
+    task,
+    "secret",
+    derivePlan(form).selectedTasks,
+  );
+  expect(result.form).toBe(form);
+  expect(result.error).toMatch(/already selected more than once/);
+});
 it("restores legacy selected IDs using saved row fields as authoritative values", () => {
   const form = hydratePlan({
     id: "legacy",
