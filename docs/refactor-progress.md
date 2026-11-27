@@ -5058,3 +5058,11 @@ To repeat the SQL regressions, apply the migration to an isolated database
 containing the existing V2 schema, then run
 `psql "$ISOLATED_DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/sql/secret_text_evidence.sql`.
 The fixture rolls back its data; never point this test at production.
+
+## Pre-event invitation sharing
+
+The Host Hub opens a planned game's lobby without starting it. Its lobby
+exposes the existing pre-event invitation separately from the direct join
+link, code and QR; the saved plan's invitation setting controls availability.
+Copy feedback uses the existing clipboard lifecycle, with the address shown on
+failure. The local lobby reference uses local actions only.

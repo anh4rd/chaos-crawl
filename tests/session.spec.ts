@@ -414,7 +414,9 @@ test("host planning saves its existing payload and launches a saved game", async
   });
   await page.goto("#/host");
   await page
-    .getByRole("button", { name: /Play game|Launch game|Open game/i })
+    .getByRole("button", {
+      name: /Open lobby & invite|Play game|Launch game|Open game/i,
+    })
     .first()
     .click();
   await expect(page).toHaveURL(new RegExp(`/host/live/${sessionId}$`));

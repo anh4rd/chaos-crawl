@@ -83,6 +83,13 @@ export function projectLiveHostPlan(value: unknown) {
       ? Number(plan.breakMinutes)
       : 0;
   return {
+    invitationEnabled: !isRecord(value)
+      ? null
+      : plan.inviteBeforeEvent == null
+        ? true
+        : typeof plan.inviteBeforeEvent === "boolean"
+          ? plan.inviteBeforeEvent
+          : null,
     gamePhotoUrl:
       typeof plan.gamePhotoUrl === "string" ? plan.gamePhotoUrl : null,
     teamPhotoUrls,

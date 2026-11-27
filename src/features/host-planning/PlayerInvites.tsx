@@ -171,8 +171,8 @@ export default function PlayerInvites({
         )}
         <small>
           Examples: dress most like the host, make the best entrance, or bring
-          the best item. Players can submit before the event; main challenge
-          evidence remains optional unless the host explicitly requests it.
+          the best item. Players can see the task in the invitation before the
+          event.
         </small>
       </div>
       <div className="preparation-list">
@@ -198,10 +198,10 @@ export default function PlayerInvites({
       <div className="invite-placeholder">
         <Icon name="info" className="icon--size-18" />
         <p>
-          The invite portal settings are saved with this plan. A shareable
-          pre-event link is generated when the game session is created; it will
-          show the demo, rules and preparation brief, not the selected challenge
-          library.
+          Save the plan as Planned, then choose “Open lobby &amp; invite” in
+          Host Hub. Copy the pre-event invitation link on the first lobby step.
+          It shows the demo, rules and preparation brief, not the selected
+          challenge library. Opening the lobby does not start the game.
         </p>
       </div>
     </ContentPanel>

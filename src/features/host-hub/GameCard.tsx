@@ -65,7 +65,7 @@ export function GameCard({
     ? "Starting…"
     : game.status === "live"
       ? "Resume live game"
-      : "Play game";
+      : "Open lobby & invite";
 
   return (
     <article className="game-plan-card">

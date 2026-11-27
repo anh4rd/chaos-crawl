@@ -5,20 +5,65 @@ import QrFrame from "../../components/ui/QrFrame";
 export default function LobbyJoinInfo({
   code,
   joinUrl,
+  invitationUrl,
+  invitationEnabled,
   copyCode,
   copyLink,
+  copyInvitation,
   codeCopied,
   linkCopied,
+  invitationCopied,
 }: {
   code: string;
   joinUrl: string;
+  invitationUrl: string;
+  invitationEnabled: boolean | null;
   copyCode: () => Promise<void>;
   copyLink: () => Promise<void>;
+  copyInvitation: () => Promise<void>;
   codeCopied: boolean;
   linkCopied: boolean;
+  invitationCopied: boolean;
 }) {
   return (
     <div className="lobby-join-info">
+      {invitationEnabled === true ? (
+        <div className="lobby-join-info__invitation">
+          <strong>Pre-event invitation</strong>
+          <p>
+            Share this link before the event for the game details, rules and
+            preparation.
+          </p>
+          <div className="lobby-join-info__link">
+            <a href={invitationUrl} target="_blank" rel="noreferrer">
+              {invitationUrl}
+            </a>
+            <button
+              className="lobby-join-info__copy-invitation"
+              type="button"
+              onClick={() => void copyInvitation()}
+              aria-label={
+                invitationCopied
+                  ? "Invitation link copied"
+                  : "Copy invitation link"
+              }
+            >
+              <Icon
+                name={invitationCopied ? "check" : "copy"}
+                className="icon--size-19"
+              />
+              {invitationCopied ? "Copied" : "Copy invite"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p>
+          {invitationEnabled === false
+            ? "Pre-event invitations are off. Enable them in the game plan's Invites settings."
+            : "Pre-event invitation details are unavailable. Check the saved game plan."}
+        </p>
+      )}
+      <strong>Direct game join</strong>
       <div className="lobby-join-info__code" aria-label="Game code">
         <strong>{code}</strong>
         <button

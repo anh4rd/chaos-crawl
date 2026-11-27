@@ -29,6 +29,15 @@ V2 uses `/join` (six-digit session code), `/play/:joinCode`, and the authenticat
 `/game`, and `/admin-legacy`; both admin routes require a host login. Legacy players
 and V2 session players use separate storage keys and backend contracts.
 
+### Sharing a pre-event invitation
+
+Save the game plan as Planned, then choose **Open lobby & invite** in Host Hub.
+On the lobby's first step, copy the **Pre-event invitation** link to share the
+game details, rules and preparation. Opening the lobby does not start the game.
+The direct join link, code and QR are separate. On later lobby steps, open
+**Show Join Info** to find them again. If invitations are disabled, turn on
+**Allow players to join before the event** in the plan's Invites settings.
+
 ## Local setup
 
 Use Node.js 22.12+ (or a newer supported LTS) and npm:

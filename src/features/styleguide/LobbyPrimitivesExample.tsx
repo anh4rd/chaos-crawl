@@ -32,6 +32,8 @@ export default function LobbyPrimitivesExample() {
   const [selected, setSelected] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [invitationCopied, setInvitationCopied] = useState(false);
+  const [invitationEnabled, setInvitationEnabled] = useState(true);
   const [hostJoinChoice, setHostJoinChoice] = useState(true);
   const [hostAvatarPreview, setHostAvatarPreview] = useState("");
   const [, setHostAvatarFile] = useState<File | null>(null);
@@ -48,7 +50,7 @@ export default function LobbyPrimitivesExample() {
         title="Host join information"
         source="src/features/host-live/LobbyGameHeading.tsx + LobbyJoinInfo.tsx + LobbyJoinDisclosure.tsx"
         code={
-          '<LobbyGameHeading name="Example party" photoUrl={imageSrc} />\n<LobbyJoinInfo code="123456" joinUrl="#/styleguide" codeCopied={codeCopied} linkCopied={linkCopied} copyCode={copyLocally} copyLink={copyLocally} />\n<LobbyJoinDisclosure code="123456" joinUrl="#/styleguide" codeCopied={codeCopied} linkCopied={linkCopied} copyCode={copyLocally} copyLink={copyLocally} />'
+          '<LobbyJoinInfo code="123456" joinUrl="#/styleguide" invitationUrl="#/styleguide" invitationEnabled={true} copyCode={copyLocally} copyLink={copyLocally} copyInvitation={copyLocally} codeCopied={false} linkCopied={false} invitationCopied={false} />'
         }
       >
         <HostPatternPreview>
@@ -56,19 +58,35 @@ export default function LobbyPrimitivesExample() {
           <LobbyJoinInfo
             code="123456"
             joinUrl="#/styleguide"
+            invitationUrl="#/styleguide"
+            invitationEnabled={invitationEnabled}
             codeCopied={codeCopied}
             linkCopied={linkCopied}
+            invitationCopied={invitationCopied}
             copyCode={async () => setCodeCopied(true)}
             copyLink={async () => setLinkCopied(true)}
+            copyInvitation={async () => setInvitationCopied(true)}
           />
           <LobbyJoinDisclosure
             code="123456"
             joinUrl="#/styleguide"
+            invitationUrl="#/styleguide"
+            invitationEnabled={invitationEnabled}
             codeCopied={codeCopied}
             linkCopied={linkCopied}
+            invitationCopied={invitationCopied}
             copyCode={async () => setCodeCopied(true)}
             copyLink={async () => setLinkCopied(true)}
+            copyInvitation={async () => setInvitationCopied(true)}
           />
+          <label>
+            <input
+              type="checkbox"
+              checked={invitationEnabled}
+              onChange={(event) => setInvitationEnabled(event.target.checked)}
+            />{" "}
+            Pre-event invitation enabled
+          </label>
         </HostPatternPreview>
       </Example>
       <Example

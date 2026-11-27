@@ -115,9 +115,9 @@ export default function LaunchSummary({
       <Explainer>
         <Icon name="shield-check" className="icon--size-18" />
         <p>
-          Saving a plan does not launch the game. Player invitations and the
-          pre-event portal become available when a session is created from this
-          plan.
+          Saving a plan does not launch the game. Save as Planned, then choose
+          “Open lobby &amp; invite” in Host Hub to copy the pre-event invitation
+          link. Opening the lobby does not start the game.
         </p>
       </Explainer>
       <Explainer>

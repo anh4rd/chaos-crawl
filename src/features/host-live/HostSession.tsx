@@ -147,6 +147,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     plannedTasks,
     setPlannedTasks,
     defaultBreakMinutes,
+    invitationEnabled,
     error: planError,
     setError: setPlanError,
   } = useHostPlan({ session });
@@ -218,6 +219,9 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   const joinUrl = session
     ? `${window.location.origin}${window.location.pathname}#/join?code=${session.join_code}`
     : "";
+  const invitationUrl = session
+    ? `${window.location.origin}${window.location.pathname}#/invite/${session.join_code}`
+    : "";
   const {
     secretReviewOptions,
     hasPendingSecretReviews,
@@ -270,6 +274,16 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
       setLinkCopyFeedback(false);
       setCopyError(`Copy isn't available. Game link: ${joinUrl}`);
     }
+  }
+  const { copied: invitationCopied, copy: copyInvitation } = useClipboard({
+    text: invitationUrl,
+    resetAfterMs: 1800,
+  });
+  async function copyInvitationLink() {
+    const result = await copyInvitation();
+    if (result === "copied") setCopyError("");
+    if (result === "failed")
+      setCopyError(`Copy isn't available. Invitation link: ${invitationUrl}`);
   }
 
   function evidenceUrl(path: string) {
@@ -708,10 +722,14 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
       gamePhotoUrl={gamePhotoUrl}
       session={session}
       joinUrl={joinUrl}
+      invitationUrl={invitationUrl}
+      invitationEnabled={invitationEnabled}
       copyCode={() => copyCode("lobby")}
       copyLink={copyLink}
+      copyInvitation={copyInvitationLink}
       codeCopied={codeCopied && codeCopyTarget === "lobby"}
       linkCopied={linkCopied && linkCopyFeedback}
+      invitationCopied={invitationCopied}
       players={players}
       hostAvatarPreview={hostAvatarPreview}
       setHostAvatarFile={setHostAvatarFile}

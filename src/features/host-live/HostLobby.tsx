@@ -18,10 +18,14 @@ interface Props {
   gamePhotoUrl: string | null;
   session: GameSession;
   joinUrl: string;
+  invitationUrl: string;
+  invitationEnabled: boolean | null;
   copyCode: () => Promise<void>;
   copyLink: () => Promise<void>;
+  copyInvitation: () => Promise<void>;
   codeCopied: boolean;
   linkCopied: boolean;
+  invitationCopied: boolean;
   players: SessionPlayer[];
   hostAvatarPreview: string;
   setHostAvatarFile: Dispatch<SetStateAction<File | null>>;
@@ -57,10 +61,14 @@ export default function HostLobby({
   gamePhotoUrl,
   session,
   joinUrl,
+  invitationUrl,
+  invitationEnabled,
   copyCode,
   copyLink,
+  copyInvitation,
   codeCopied,
   linkCopied,
+  invitationCopied,
   players,
   hostAvatarPreview,
   setHostAvatarFile,
@@ -202,21 +210,29 @@ export default function HostLobby({
         <LobbyInviteStep
           session={session}
           joinUrl={joinUrl}
+          invitationUrl={invitationUrl}
+          invitationEnabled={invitationEnabled}
           copyCode={copyCode}
           copyLink={copyLink}
+          copyInvitation={copyInvitation}
           codeCopied={codeCopied}
           linkCopied={linkCopied}
+          invitationCopied={invitationCopied}
         />
       )}
 
-      {(lobbyStep === 2 || lobbyStep === 3) && (
+      {lobbyStep !== 1 && (
         <LobbyJoinDisclosure
           code={session.join_code}
           joinUrl={joinUrl}
+          invitationUrl={invitationUrl}
+          invitationEnabled={invitationEnabled}
           copyCode={copyCode}
           copyLink={copyLink}
+          copyInvitation={copyInvitation}
           codeCopied={codeCopied}
           linkCopied={linkCopied}
+          invitationCopied={invitationCopied}
         />
       )}
 

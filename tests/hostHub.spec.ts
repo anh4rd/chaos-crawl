@@ -35,6 +35,77 @@ const games = [
     status: "completed",
   },
 ];
+test("opens the lobby from the hub and shares the pre-event invitation", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    lobby: true,
+    savedPlayer: false,
+  });
+  backend.rows.host_games = [games[0]];
+  backend.session.host_game_id = "future-plan";
+  backend.responses.cc_get_public_game_invite = {
+    enabled: true,
+    game_name: "Future plan",
+    event_date: "2030-01-01",
+    start_time: "18:00",
+    venue_name: "The Test Venue",
+    venue_address: null,
+    game_photo_url: null,
+    player_limit: 12,
+    joined_players: 0,
+    rules: "Bring a hat",
+    demo_enabled: false,
+    pre_game_enabled: false,
+    pre_game_task: null,
+    preparation: [],
+  };
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: async (value: string) => {
+          document.body.dataset.copiedInvite = value;
+        },
+      },
+    });
+  });
+  await page.goto("#/host/games");
+  await activateByKeyboard(
+    page,
+    page
+      .locator(".game-plan-card")
+      .getByRole("button", { name: "Open lobby & invite", exact: true }),
+  );
+  await expect(
+    page.getByRole("heading", { name: "Share the invite" }),
+  ).toBeVisible();
+  const link = page.getByRole("link", { name: /#\/invite\/123456$/ });
+  await expect(link).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  const href = await link.getAttribute("href");
+  if (!href) throw new Error("Invitation link was not supplied");
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Copy invitation link" }),
+  );
+  await expect(page.locator("body")).toHaveAttribute(
+    "data-copied-invite",
+    href,
+  );
+  expect(
+    backend.requests.some(
+      (request) => request.name === "cc_host_start_game_session",
+    ),
+  ).toBe(false);
+  await page.goto(href);
+  await expect(page.getByText("Bring a hat")).toBeVisible();
+  backend.verify();
+});
 test("owners manage co-hosts from the hub while shared games remain distinct", async ({
   page,
 }) => {
@@ -281,7 +352,9 @@ test("platform host preview keeps cards read-only and returns to the host hub", 
     page.getByRole("button", { name: "Edit plan", exact: true }),
   ).toBeDisabled();
   await expect(
-    page.getByRole("button", { name: "Play game", exact: true }),
+    page
+      .locator(".game-plan-card")
+      .getByRole("button", { name: "Open lobby & invite", exact: true }),
   ).toBeDisabled();
   await expect(
     page.getByRole("button", { name: "Create new game", exact: true }),
@@ -307,14 +380,19 @@ test("host hub reports a failed launch and keeps the plan available", async ({
   backend.rows.host_games = [games[0]];
   backend.failures.add("cc_host_create_game_session");
   await page.goto("#/host/games");
-  await page.getByRole("button", { name: "Play game", exact: true }).click();
+  await page
+    .locator(".game-plan-card")
+    .getByRole("button", { name: "Open lobby & invite", exact: true })
+    .click();
   await expect(
     page.getByText("Fixture connection failed", {
       exact: true,
     }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Play game", exact: true }),
+    page
+      .locator(".game-plan-card")
+      .getByRole("button", { name: "Open lobby & invite", exact: true }),
   ).toBeEnabled();
   await expect(page).toHaveURL(/#\/host\/games$/);
   backend.verify();

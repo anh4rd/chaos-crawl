@@ -5,6 +5,16 @@ import {
   plannedTaskForChallenge,
 } from "./liveHostPlanData";
 
+it("projects whether the saved plan enables pre-event invitations", () => {
+  expect(projectLiveHostPlan({}).invitationEnabled).toBe(true);
+  expect(
+    projectLiveHostPlan({ inviteBeforeEvent: false }).invitationEnabled,
+  ).toBe(false);
+  expect(projectLiveHostPlan(null).invitationEnabled).toBeNull();
+  expect(
+    projectLiveHostPlan({ inviteBeforeEvent: "unexpected" }).invitationEnabled,
+  ).toBeNull();
+});
 it("links a live challenge to its unique saved title without guessing between duplicates", () => {
   const task = { id: "plan-task", title: "Entrance", equipment: ["Hat"] };
   const live = { id: "live-id", title: "Entrance" };

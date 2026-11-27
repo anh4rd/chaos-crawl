@@ -718,13 +718,13 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   LobbyJoinInfo: {
     usage:
-      "Host lobby code, join link and QR with separate copy actions and caller-supplied check states. Shown in the local host join information example.",
+      "Host lobby pre-event invitation, direct join link, code and QR with separate copy actions and caller-supplied states. The local example also demonstrates disabled invitations.",
     dependencies:
       "Caller supplies the code, URL and callbacks; the example uses local actions only.",
   },
   LobbyJoinDisclosure: {
     usage:
-      "Host show/hide control reveals a card below with the join code, link, copy actions and QR code. The local host join example is interactive.",
+      "Host show/hide control reveals the pre-event invitation and direct join details. The local host join example is interactive.",
     dependencies:
       "Caller supplies code, URL, copy states and callbacks; disclosure state is local and no backend is accessed.",
   },

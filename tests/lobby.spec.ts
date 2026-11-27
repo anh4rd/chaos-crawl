@@ -22,6 +22,57 @@ async function setParticipation(page: Page, play: boolean) {
   }
 }
 
+test("does not offer a pre-event invitation when it is disabled in the plan", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    lobby: true,
+    savedPlayer: false,
+  });
+  backend.rows.host_games = [
+    {
+      id: "test-plan",
+      host_id: backend.session.host_id,
+      name: "Regression party",
+      plan_data: { inviteBeforeEvent: false },
+    },
+  ];
+  await page.goto(`#/host/live/${sessionId}`);
+  await expect(page.getByText(/Pre-event invitations are off/)).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Copy invitation link" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: /#\/join\?code=123456$/ }),
+  ).toBeVisible();
+  backend.verify();
+});
+test("shows the invitation address when clipboard access fails", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, {
+    host: true,
+    lobby: true,
+  });
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: async () => {
+          throw new Error("Clipboard unavailable");
+        },
+      },
+    });
+  });
+  await page.goto(`#/host/live/${sessionId}`);
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Copy invitation link" }),
+  );
+  await expect(page.getByRole("alert")).toContainText("#/invite/123456");
+  backend.verify();
+});
+
 test("default Play joins once before advancing and retries a failed join", async ({
   page,
 }) => {
@@ -433,12 +484,14 @@ test("join information stays available and team games cannot start with unassign
   await expect(details).toHaveAttribute("id", controlsId ?? "");
   await expect(details).toBeVisible();
   await expect(details.getByText("123456", { exact: true })).toBeVisible();
-  await expect(details.getByRole("link")).toHaveAttribute(
-    "href",
-    /#\/join\?code=123456$/,
-  );
+  await expect(
+    details.getByRole("link", { name: /#\/join\?code=/ }),
+  ).toHaveAttribute("href", /#\/join\?code=123456$/);
   await expect(
     details.getByRole("button", { name: "Copy game link" }),
+  ).toBeVisible();
+  await expect(
+    details.getByRole("button", { name: "Copy invitation link" }),
   ).toBeVisible();
   await expect(
     details.getByRole("img", { name: "QR code to join the game" }),
@@ -458,11 +511,16 @@ test("join information stays available and team games cannot start with unassign
   await activateByKeyboard(page, toggle);
   await expect(toggle).toHaveText("Hide Join Info");
   await expect(toggle).toHaveAttribute("aria-expanded", "true");
-  await expect(details.getByRole("link")).toBeVisible();
+  await expect(
+    details.getByRole("link", { name: /#\/join\?code=/ }),
+  ).toBeVisible();
   await expect(
     details.getByRole("button", { name: "Copy game link" }),
   ).toBeVisible();
   await next(page, "Choose your teams");
+  await expect(
+    page.getByRole("button", { name: "Hide Join Info" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Start Game", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Ready to start" }),

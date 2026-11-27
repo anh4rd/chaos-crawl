@@ -69,7 +69,7 @@ export function useHostPlan({ session }: Options) {
       if (error) throw error;
       setState({
         hostGameId,
-        ...projectLiveHostPlan(data?.plan_data),
+        ...projectLiveHostPlan(data ? (data.plan_data ?? {}) : null),
         loading: false,
         error: "",
       });
@@ -132,6 +132,7 @@ export function useHostPlan({ session }: Options) {
     [hostGameId],
   );
   return {
+    invitationEnabled: current.invitationEnabled,
     teamPhotoUrls: current.teamPhotoUrls,
     setTeamPhotoUrls,
     gamePhotoUrl: current.gamePhotoUrl,

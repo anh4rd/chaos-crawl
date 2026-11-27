@@ -46,7 +46,7 @@ export default function SetupProgress({
     dashboardGame?.status === "live"
       ? "Resume live game"
       : dashboardGame?.status === "planned"
-        ? "Play this game"
+        ? "Open lobby & invite"
         : dashboardGame
           ? "Continue setup"
           : "Plan your first game";
