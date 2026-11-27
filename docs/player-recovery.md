@@ -51,7 +51,7 @@ remains reusable; there is no user-facing rotation or revocation yet. Existing
 players retain their current tokens and are not automatically enrolled. If an
 existing player loses their token without an established recovery credential,
 the temporary phone option below is the only self-service alternative when
-explicitly enabled for that game. Independent verification is not implemented.
+available. Independent verification is not implemented.
 
 On the join screen, a saved player token is checked with
 `cc_get_game_session_view` before asking for details. A valid token resumes the
@@ -63,7 +63,7 @@ network problem as lost identity.
 
 This is deliberately insecure: anyone who knows a player's game code and phone
 number can take over that player, view their game information and invalidate
-their existing token. Do not enable this on games without explicit approval.
+their existing token. It applies to all eligible games after deployment.
 Players without a stored phone cannot use it; their recovery code remains an
 alternative. Recovery uses the same UK normalization as registration. It is
 limited per normalized game/number and by the existing global rate limiter.
@@ -72,29 +72,27 @@ credentials. Concurrent requests can invalidate earlier returned tokens.
 
 [`20261127000500_temporary_phone_recovery.sql`](../supabase/migrations/20261127000500_temporary_phone_recovery.sql)
 creates an RLS-protected private game allowlist and a service-role-only RPC.
-It is **off for every game by default**, and no entry can extend beyond
-**30 November 2026 at 12:00 UTC**. After that instant the database refuses
-phone-only recovery even if an entry remains. Changing this deadline requires
-a reviewed migration. The existing recovery-code path remains available.
+[`20261127000600_phone_recovery_all_games.sql`](../supabase/migrations/20261127000600_phone_recovery_all_games.sql)
+then removes the allowlist requirement from that RPC for all existing and
+future eligible games. Old allowlist entries, including expired entries, no
+longer control access. The old table remains private but unused. The database
+refuses phone-only recovery after **30 November 2026 at 12:00 UTC**. Changing
+this deadline requires a reviewed migration. The existing recovery-code path
+remains available.
 
 After review, apply the migrations in order and deploy the compatible
 `player-identity` Edge Function and frontend. Verify the function is deployed
 with JWT verification disabled and its service-role key remains server-only.
-Then, using an administrator SQL console, explicitly enable only the intended
-game by replacing the placeholder with its six-digit join code:
+There is no per-game activation step. To disable phone recovery for all games
+sooner, an administrator can revoke the RPC from the Edge Function's role:
 
 ```sql
-insert into public.cc_temporary_phone_recovery (session_id, expires_at)
-select id, '2026-11-30 12:00:00+00'::timestamptz
-from public.cc_game_sessions where join_code = '<GAME_CODE>'
-on conflict (session_id) do update set expires_at = excluded.expires_at
-returning session_id, expires_at;
+revoke execute on function public.cc_recover_player_with_phone(text, text) from service_role;
 ```
 
-Confirm exactly one row is returned. To turn the option off sooner, delete that
-game's row from `cc_temporary_phone_recovery`; this does not change player
-tokens. Do not include phone numbers, request bodies or tokens in logs. No
-deployment or allowlist change has been performed by this work.
+This does not change existing player tokens or credential recovery. Do not
+include phone numbers, request bodies or tokens in logs. No deployment has been
+performed by this work.
 
 ## Database and security
 
@@ -106,7 +104,7 @@ have RLS enabled and no direct grants to browser roles or `service_role`.
 Security-definer functions with empty search paths expose registration,
 candidate lookup, registration retry, token replacement, and rate limiting
 only to `service_role`. The temporary phone RPC is also service-only and checks
-the allowlist and expiry inside its transaction. `cc_join_game_session` instead raises an upgrade
+the expiry inside its transaction. `cc_join_game_session` instead raises an upgrade
 message; previously shipped clients may display their own generic error.
 The host participation RPC is unchanged.
 
@@ -131,16 +129,23 @@ function, proxy and error logging do not record request bodies. Establish
 additional abuse protection and an independently verified support process
 before production. No deployment commands have been run as part of this work.
 
+After deploying the Edge Function, verify a browser preflight returns HTTP 204
+and allows `authorization`, `apikey`, `content-type`, and `x-client-info`.
+The Supabase gateway can return 404 for a missing function; browsers report
+that failed preflight as a CORS error before the join request is sent.
+
 ## Testing
 
 Run `npx vitest run tests/support/playerIdentity.test.ts src/pages/JoinV2.test.tsx src/features/player-access/playerAccessLifecycle.test.tsx`
 and `npx playwright test tests/join.spec.ts tests/playerIdentity.spec.ts`.
 Mocked browser and handler tests never use the live backend.
 
-For SQL, apply the migrations in order only to a disposable database containing the V2
-schema and roles, then run `psql -v ON_ERROR_STOP=1 -f tests/database/player_recovery.sql`
-and `psql -v ON_ERROR_STOP=1 -f tests/database/temporary_phone_recovery.sql`.
-The successful phone recovery portion runs only before the hard expiry.
+For SQL, apply migrations in order only to a disposable database containing the
+V2 schema and roles. Run `psql -v ON_ERROR_STOP=1 -f tests/database/player_recovery.sql`
+after migration 004, and `psql -v ON_ERROR_STOP=1 -f tests/database/temporary_phone_recovery.sql`
+after migration 005 and before migration 006. After migration 006, run
+`psql -v ON_ERROR_STOP=1 -f tests/database/temporary_phone_recovery_all_games.sql`.
+The successful phone recovery portions run only before the hard expiry.
 The additional `tests/database/player_recovery_concurrent.sql` requires
 `dblink`, administrative local connection privileges, and a fresh disposable
 database: it creates an extension and commits test rows. Run it with

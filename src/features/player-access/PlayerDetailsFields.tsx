@@ -64,7 +64,7 @@ export default function PlayerDetailsFields({
           <Note variant="access-help">
             {mode === "join"
               ? "Optional. No SMS is sent. Leave this blank to join as a new player without a phone number."
-              : "No SMS is sent. Anyone who knows your game code and phone number can access your player profile. This temporary option is available only for enabled games until 30 November, 12:00 UTC."}
+              : "No SMS is sent. Anyone who knows your game code and phone number can access your player profile. This temporary option is available until 30 November, 12:00 UTC."}
           </Note>
           <FormLabel variant="access" htmlFor="phone-country">
             Country calling code

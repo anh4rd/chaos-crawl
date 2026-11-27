@@ -4,7 +4,7 @@ type Rpc = (name: string, args: Record<string, unknown>) => Promise<unknown>;
 
 const headers = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Cache-Control": "no-store",
   "Content-Type": "application/json",

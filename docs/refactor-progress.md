@@ -9,9 +9,9 @@ writes are included.
 
 Player access checks an existing browser token before requesting details.
 New players can leave their phone blank or select an international calling
-code. Temporary phone-only recovery is deliberately insecure and disabled
-unless an administrator enables an individual game; it has a hard expiry of
-30 November 2026 at 12:00 UTC. See [player recovery](./player-recovery.md).
+code. Temporary phone-only recovery is deliberately insecure and available for
+all eligible games after deployment; it has a hard expiry of 30 November 2026 at
+12:00 UTC. See [player recovery](./player-recovery.md).
 The migration, identity Edge Function and frontend require coordinated deployment.
 
 Live hosts can reopen the host join flow from either invitation control, or
@@ -35,7 +35,7 @@ Existing duplicate plans are not rewritten and must be cleaned up first.
 Anonymous player registration and recovery have an undeployed security
 milestone; see [player recovery](./player-recovery.md) for its contracts,
 rollout constraints and verification limitations. Existing tokens are not
-rotated by the migration. Phone-only rejoin is disabled when it is applied.
+rotated by the migration. The old phone-only rejoin RPC remains disabled.
 
 Session portrait views use uploaded player and team photos in team choices,
 scoreboards, reward candidates, roster summaries and review cards. A new

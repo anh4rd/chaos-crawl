@@ -20,6 +20,38 @@ function request(body: unknown) {
 }
 
 describe("player identity handler", () => {
+  it("allows the Supabase client headers in the browser preflight", async () => {
+    const rpc = vi.fn();
+    const result = await handleIdentity(
+      new Request("https://example.invalid", {
+        method: "OPTIONS",
+        headers: {
+          origin: "https://example.com",
+          "access-control-request-method": "POST",
+          "access-control-request-headers":
+            "authorization,apikey,content-type,x-client-info",
+        },
+      }),
+      rpc,
+    );
+    expect(result.status).toBe(204);
+    expect(result.headers.get("access-control-allow-origin")).toBe("*");
+    const allowed = result.headers
+      .get("access-control-allow-headers")
+      ?.toLowerCase()
+      .split(",")
+      .map((header) => header.trim());
+    expect(allowed).toEqual(
+      expect.arrayContaining([
+        "authorization",
+        "apikey",
+        "content-type",
+        "x-client-info",
+      ]),
+    );
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
   it("rate-limits phone recovery with a normalized per-game bucket", async () => {
     const rpc = vi.fn(async (name: string, _args: Record<string, unknown>) => {
       if (name === "cc_player_identity_rate_limit") return true;
