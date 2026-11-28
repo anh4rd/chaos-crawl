@@ -24,8 +24,8 @@ self.addEventListener("push", (event) => {
       let payload;
       try {
         payload = event.data?.json();
-      } catch (error) {
-        console.error("Invalid push notification payload.", error);
+      } catch {
+        console.error("Invalid push notification payload.");
       }
       const title =
         typeof payload?.title === "string" ? payload.title : "Chaos Crawl";

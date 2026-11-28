@@ -52,3 +52,41 @@ it("shows a private push message and opens the correct game", async () => {
     "https://example.test/chaos-crawl/#/play/123456",
   );
 });
+
+it("does not log malformed push payload details", async () => {
+  const listeners = new Map<string, (event: unknown) => void>();
+  const showNotification = vi.fn().mockResolvedValue(undefined);
+  const reportError = vi.fn();
+  const worker = {
+    registration: {
+      scope: "https://example.test/chaos-crawl/",
+      showNotification,
+    },
+    addEventListener: (name: string, handler: (event: unknown) => void) =>
+      listeners.set(name, handler),
+  };
+  runInNewContext(readFileSync("public/sw.js", "utf8"), {
+    self: worker,
+    URL,
+    console: { error: reportError },
+  });
+  let task = Promise.resolve();
+  listeners.get("push")?.({
+    data: {
+      json: () => {
+        throw new Error("private mission text");
+      },
+    },
+    waitUntil: (promise: Promise<void>) => {
+      task = promise;
+    },
+  });
+  await task;
+  expect(reportError).toHaveBeenCalledWith(
+    "Invalid push notification payload.",
+  );
+  expect(showNotification).toHaveBeenCalledWith(
+    "Chaos Crawl",
+    expect.objectContaining({ body: "Open Chaos Crawl for a game update." }),
+  );
+});

@@ -27,6 +27,14 @@ recipient isolation, subscription transfer and both player recovery paths.
 Production's hardening objects and replacement function hashes now match the
 local migration; its migration history remains empty. A repeated application is
 rejected by the function-definition guard. No real push delivery was verified.
+Malformed push payloads are reported without logging their contents; the
+service worker still displays the generic fallback notice.
+Verification: 896 unit/component tests passed, the production build passed,
+and production PWA and Vercel browser checks passed (4 and 6 tests). The full
+mocked browser suite finished with 564 passed and 314 failed, including host
+control and preview fixture failures; both notification browser tests passed.
+Full lint passed its JavaScript and SCSS checks but failed formatting on four
+unrelated SCSS files. Live push and iOS delivery remain unverified.
 
 The planning and live host schedules include an end review stage when side
 challenges or secret missions are enabled. It is derived from the plan or live

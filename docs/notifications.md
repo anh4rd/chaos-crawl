@@ -125,7 +125,8 @@ expired subscriptions are removed, and a retry after an interrupted sender
 may produce a duplicate. In-app notifications expire after 24 hours; notification
 records are removed after 30 days when the sender runs. Inspect Edge Function
 logs and the Supabase cron/HTTP job results when troubleshooting; never paste
-credentials into logs or issues.
+credentials into logs or issues. The service worker logs malformed payloads
+without recording their contents.
 The hardened queue does not claim notices after 24 hours, but a push already
 accepted by a provider can arrive later because its transport TTL is one hour.
 If queue insertion fails, the notice remains visible and the sender retries
