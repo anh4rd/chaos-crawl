@@ -15,11 +15,12 @@
   padding: (layout.$pixel-unit * 0) (layout.$pixel-unit * 0);
   border-radius: layout.$radius-lg;
   border: layout.$pixel-unit * 0.25;
-  box-shadow: layout.$pixel-unit * 0.5 layout.$pixel-unit * 0.5 0 colors.$comic-ink;
+  box-shadow: layout.$pixel-unit * 0.5 layout.$pixel-unit * 0.5 0
+    colors.$comic-ink;
   background: colors.$host-control-paper;
   font-size: fonts.$size-small;
-    font-weight: fonts.$weight-heavy;
-    line-height: 1.1;
+  font-weight: fonts.$weight-heavy;
+  line-height: 1.1;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   scroll-snap-type: x mandatory;

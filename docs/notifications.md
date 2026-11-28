@@ -36,10 +36,14 @@ against an empty project or replay the historical migrations on a later schema
 snapshot.
 
 On 28 November 2026, a read-only check of production `vleewyedtktarpotechj`
-found the original notification objects, but an empty migration history, no
-notification sender function and no `cc-notification-sender` cron job. The
+found the notification objects and an empty migration history. Later that day,
+the notification sender was deployed and the `cc-notification-sender` cron
+job returned HTTP 200. The live frontend bundle contains the matching VAPID
+public key. An in-app test worked, and a push opened the correct game on a test
+device. Its device type and iOS compatibility have not been confirmed. The
 separate TEST project `jeeacswzqpuvfhrldkaj` does not yet have a usable app
-baseline. Recheck each project's state before making changes.
+baseline. Recheck each project's state before making changes; do not create a
+duplicate sender job.
 
 The additive
 [`20261128000200_notification_hardening.sql`](../supabase-test/notification-migrations/20261128000200_notification_hardening.sql)

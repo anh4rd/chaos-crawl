@@ -18,7 +18,8 @@
   border-radius: layout.$radius-lg;
   background: colors.$white;
   color: colors.$ink;
-  box-shadow: layout.$spacing-unit * 0.5 layout.$spacing-unit * 0.5 colors.$purple-dark;
+  box-shadow: layout.$spacing-unit * 0.5 layout.$spacing-unit * 0.5
+    colors.$purple-dark;
 
   &::before {
     position: absolute;
