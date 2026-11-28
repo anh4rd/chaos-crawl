@@ -5134,3 +5134,10 @@ exposes the existing pre-event invitation separately from the direct join
 link, code and QR; the saved plan's invitation setting controls availability.
 Copy feedback uses the existing clipboard lifecycle, with the address shown on
 failure. The local lobby reference uses local actions only.
+
+## Player reconnect
+
+The small reconnect control returns on player game pages, including final and
+secret review, and opens the existing code-prefilled rejoin flow without
+clearing the player token. Embedded host participation keeps its own recovery.
+Desktop/mobile browser checks cover the player sections and keyboard recovery.

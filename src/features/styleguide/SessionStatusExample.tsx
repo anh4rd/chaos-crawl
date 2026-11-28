@@ -117,7 +117,7 @@ export default function SessionStatusExample() {
           ) : (
             <Icon name="rotate-ccw" className="icon--size-15" />
           )}{" "}
-          Need to rejoin on this device?
+          Reconnect
         </Button>
       </SessionPreview>
       <Note as="output">{notice}</Note>

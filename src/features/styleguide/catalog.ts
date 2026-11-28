@@ -32,7 +32,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   SessionStatusExample: {
     usage:
-      "Local participant status, private-feed, recovery and spinner reference on the session backdrop.",
+      "Local participant status, private-feed, reconnect and spinner reference on the session backdrop.",
     dependencies:
       "Shared presentation components and local state only; no connection, credential or backend hooks.",
   },

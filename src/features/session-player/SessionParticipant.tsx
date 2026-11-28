@@ -33,6 +33,7 @@ import { useSessionPlayerData } from "./useSessionPlayerData";
 import { useSessionTimer } from "./useSessionTimer";
 import { usePlayerNotifications } from "./usePlayerNotifications";
 import Button from "../../components/ui/Button";
+import Icon from "../../components/ui/Icon";
 
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -768,6 +769,16 @@ export default function SessionParticipant({
             />
           )}
         </>
+      )}
+      {!embeddedHostMode && (
+        <Button
+          type="button"
+          variant="participant-rejoin"
+          fullWidth={false}
+          onClick={() => navigate(`/join?code=${code}&returning=1`)}
+        >
+          <Icon name="rotate-ccw" className="icon--size-15" /> Reconnect
+        </Button>
       )}
     </>
   );

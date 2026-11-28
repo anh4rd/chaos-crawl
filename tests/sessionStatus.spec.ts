@@ -51,7 +51,7 @@ test("participant lobby feedback and keyboard recovery preserve the current join
   await activateByKeyboard(
     page,
     page.getByRole("button", {
-      name: "Need to rejoin on this device?",
+      name: "Reconnect",
       exact: true,
     }),
   );
@@ -69,6 +69,63 @@ test("participant lobby feedback and keyboard recovery preserve the current join
       request.name.includes("join_game_session"),
     ),
   ).toEqual([]);
+  backend.verify();
+});
+
+for (const section of [
+  "game",
+  "leaderboard",
+  "side-challenges",
+  "final",
+  "recap",
+] as const) {
+  test(`reconnect is available on the player ${section} page`, async ({
+    page,
+  }) => {
+    const backend = await installSessionBackend(page);
+    if (section === "final") {
+      backend.session.final_gallery_open = true;
+      backend.responses.cc_player_get_session_final_round_gallery = null;
+    }
+    if (section === "recap") backend.session.status = "completed";
+    await page.goto(`#/play/${sessionCode}/${section}`);
+    await expect(
+      page.getByRole("button", { name: "Reconnect", exact: true }),
+    ).toBeVisible();
+    backend.verify();
+  });
+}
+
+test("reconnect remains available during secret review but not in host mode", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page);
+  backend.responses.cc_player_get_session_secret_review = {
+    open: true,
+    voting_open: true,
+    mission: null,
+    my_final_reviews: [],
+  };
+  await page.goto(`#/play/${sessionCode}/game`);
+  await expect(
+    page.getByRole("heading", {
+      name: "Secret mission review is loading…",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Reconnect", exact: true }),
+  ).toBeVisible();
+  await page.goto(`#/play/${sessionCode}/game?hostEmbed=1`);
+  await expect(
+    page.getByRole("heading", {
+      name: "Secret mission review is loading…",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Reconnect", exact: true }),
+  ).toHaveCount(0);
   backend.verify();
 });
 
@@ -234,7 +291,7 @@ test("local participant status reference keeps recovery and final links in local
   await activateByKeyboard(
     page,
     reference.getByRole("button", {
-      name: "Need to rejoin on this device?",
+      name: "Reconnect",
       exact: true,
     }),
   );
