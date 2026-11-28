@@ -37,6 +37,7 @@ test("production install assets and offline fallback work at the deployment base
     const cache = await caches.open("chaos-crawl-offline-v1");
     return (await cache.keys()).map((entry) => entry.url);
   });
+
   expect(cachedUrls).toEqual([new URL("offline.html", baseURL).href]);
   await page.context().setOffline(true);
   await page.reload();
@@ -49,4 +50,42 @@ test("production install assets and offline fallback work at the deployment base
   await expect(
     page.getByRole("heading", { name: "Join the chaos", exact: true }),
   ).toBeVisible();
+});
+
+test("the installed service worker handles a generic game push", async ({
+  page,
+  context,
+}) => {
+  await page.goto("./#/join");
+  await page.evaluate(() => navigator.serviceWorker.ready);
+  const worker = context.serviceWorkers()[0];
+  if (!worker) throw new Error("The production service worker did not start.");
+  const notification = await worker.evaluate(async () => {
+    const registration = self.registration;
+    const original = registration.showNotification;
+    try {
+      return await new Promise((resolve) => {
+        registration.showNotification = (title, options) => {
+          resolve({ title, body: options?.body, data: options?.data });
+          return Promise.resolve();
+        };
+        self.dispatchEvent(
+          new PushEvent("push", {
+            data: JSON.stringify({
+              title: "Chaos Crawl",
+              body: "You have a new secret mission. Open the game to see it.",
+              joinCode: "123456",
+            }),
+          }),
+        );
+      });
+    } finally {
+      registration.showNotification = original;
+    }
+  });
+  expect(notification).toEqual({
+    title: "Chaos Crawl",
+    body: "You have a new secret mission. Open the game to see it.",
+    data: { joinCode: "123456" },
+  });
 });

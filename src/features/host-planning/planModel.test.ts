@@ -298,6 +298,39 @@ it("persists phased schedule timing separately from the target finish time", () 
   });
   expect(payload.plan_data.schedule).toHaveLength(2);
 });
+it("derives an end review from enabled features without double-counting the final", () => {
+  const form = {
+    ...defaultForm,
+    startTime: "18:00",
+    secretMissions: true,
+    schedule: [
+      { id: "main", type: "challenge" as const, title: "Main", duration: 20 },
+    ],
+  };
+  const projection = derivePlan(form);
+  expect(projection.reviewStage).toMatchObject({
+    title: "Review side challenges and secret missions",
+    duration: projection.liveFinalMinutes,
+  });
+  expect(projection.calculatedEnd).toBe("19:00");
+  expect(
+    derivePlan({ ...form, sideChallenges: false }).reviewStage,
+  ).toMatchObject({
+    title: "Review secret missions",
+    duration: 0,
+  });
+  expect(
+    derivePlan({ ...form, sideChallenges: false, secretMissions: false })
+      .reviewStage,
+  ).toBeNull();
+  const saved = createPlanWrite(form, "host", "draft");
+  const reopened = hydratePlan({
+    id: "plan",
+    ...saved,
+    plan_data: { ...saved.plan_data },
+  });
+  expect(derivePlan(reopened).reviewStage).toEqual(projection.reviewStage);
+});
 it("retains the distinct timing defaults of community and Explore imports", () => {
   const community = communityPlanTask(
     {

@@ -10,6 +10,108 @@ import {
   sessionId,
 } from "./support/sessionBackend";
 
+test("the host schedule links the final review to the existing controls", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  await page.goto(`#/host/live/${sessionId}`);
+  await page.getByRole("button", { name: "Host", exact: true }).click();
+  await page.getByRole("tab", { name: "Schedule", exact: true }).click();
+  const review = page.getByText("Review side challenges", { exact: true });
+  await activateByKeyboard(page, review.locator(".."));
+  const open = page.getByRole("button", { name: "Open review controls" });
+  await activateByKeyboard(page, open);
+  await expect(
+    page.getByRole("tab", { name: "Controls", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  const sideControls = page.locator("details").filter({
+    has: page.getByRole("heading", { name: "Final round", exact: true }),
+  });
+  const secretControls = page.locator("details.control-console__panel--secret");
+  await expect(sideControls).toHaveAttribute("open", "");
+  await expect(secretControls).toHaveAttribute("open", "");
+  await expect(sideControls.locator("summary")).toBeFocused();
+  backend.verify();
+});
+
+test("the last completed round leads to the final review controls", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  backend.rows.cc_game_session_reward_rounds = [
+    {
+      id: "reward-final",
+      session_id: sessionId,
+      challenge_id: "test-challenge",
+      reward_method: "voting",
+      target_kind: "player",
+      points: 20,
+      status: "completed",
+      created_at: "2030-01-01",
+      started_at: "2030-01-01",
+      completed_at: "2030-01-01",
+      released_at: "2030-01-01",
+    },
+  ];
+  await page.goto(`#/host/live/${sessionId}`);
+  const next = page
+    .getByRole("region", { name: "Host controls", exact: true })
+    .getByRole("button", { name: "Review side challenges", exact: true });
+  await activateByKeyboard(page, next);
+  await expect(
+    page.getByRole("heading", { name: "Final round", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("Secret mission vote", { exact: true }),
+  ).toBeVisible();
+  expect(
+    backend.requests.some(
+      (request) => request.name === "cc_host_set_game_session_round",
+    ),
+  ).toBe(false);
+  backend.verify();
+});
+
+test("the host can proceed to final review without a reward round", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  await page.goto(`#/host/live/${sessionId}`);
+  const controls = page.getByRole("region", {
+    name: "Host controls",
+    exact: true,
+  });
+  await controls.getByRole("button", { name: /Start Timer/ }).click();
+  await expect(controls.getByRole("button", { name: /Pause/ })).toBeVisible();
+  const next = controls.getByRole("button", {
+    name: "Review side challenges",
+    exact: true,
+  });
+  page.on("dialog", (dialog) => void dialog.accept());
+  await activateByKeyboard(page, next);
+  await expect(
+    page.getByRole("heading", { name: "Final round", exact: true }),
+  ).toBeVisible();
+  await expect
+    .poll(
+      () =>
+        backend.requests
+          .filter(
+            (request) =>
+              request.name === "cc_game_session_timers" &&
+              request.method === "POST",
+          )
+          .at(-1)?.body,
+    )
+    .toMatchObject({ is_running: false, is_on_break: false });
+  expect(
+    backend.requests.some(
+      (request) => request.name === "cc_host_set_game_session_round",
+    ),
+  ).toBe(false);
+  backend.verify();
+});
+
 test("V2 player retains credentials and can move between game sections", async ({
   page,
 }) => {

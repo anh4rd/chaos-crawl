@@ -27,7 +27,7 @@ export default function InstallPrompt({
     unavailable:
       "Installation could not be started. Use your browser's menu to add Chaos Crawl to your home screen.",
     notifications:
-      "Allow notifications for future game updates. You can change this later in your device settings.",
+      "Allow notifications, then enable game alerts after joining. You can change permission later in your device settings.",
     "notification-error":
       "Could not request notification permission. Check your device settings and try again later.",
   };

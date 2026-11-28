@@ -54,6 +54,14 @@ export function playerAccessErrorMessage(error: unknown, joining: boolean) {
   return "Couldn't complete player access. Check your details and try again.";
 }
 
+export function isPlayerAccessRejection(error: unknown) {
+  return (
+    error instanceof FunctionsHttpError &&
+    error.context instanceof Response &&
+    error.context.status === 400
+  );
+}
+
 export function joinGameSession(
   parameters:
     | {

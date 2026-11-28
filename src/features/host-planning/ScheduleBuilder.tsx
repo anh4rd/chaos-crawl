@@ -6,6 +6,8 @@ import Button from "../../components/ui/Button";
 import type { Dispatch, SetStateAction } from "react";
 import { Field } from "../../components/ui/Field";
 import Icon from "../../components/ui/Icon";
+import { timePlus } from "../../utils/dateTime";
+import type { reviewScheduleItem } from "../../lib/reviewSchedule";
 import { Toggle } from "../../components/ui/Toggle";
 import {
   type ScheduleItem,
@@ -19,6 +21,7 @@ interface ScheduleBuilderProps {
   form: SetupForm;
   update: <K extends keyof SetupForm>(key: K, value: SetupForm[K]) => void;
   liveFinalMinutes: number;
+  reviewStage: ReturnType<typeof reviewScheduleItem>;
   sideReviewCount: number;
   sideRewardPoints: number;
   addTaskToSchedule: (taskId: string) => void;
@@ -41,6 +44,7 @@ export default function ScheduleBuilder({
   form,
   update,
   liveFinalMinutes,
+  reviewStage,
   sideReviewCount,
   sideRewardPoints,
   addTaskToSchedule,
@@ -179,6 +183,31 @@ export default function ScheduleBuilder({
             />
           );
         })}
+        {reviewStage && (
+          <article className="schedule-item schedule-item--final">
+            <div className="schedule-item__time">
+              <strong>
+                {timePlus(
+                  form.startTime,
+                  form.schedule.reduce((sum, item) => sum + item.duration, 0),
+                )}
+              </strong>
+              <small>
+                {reviewStage.duration
+                  ? `${reviewStage.duration} min estimated for side challenges`
+                  : "Duration not set"}
+              </small>
+            </div>
+            <div className="schedule-item__detail">
+              <span className="schedule-item__type">FINAL REVIEW</span>
+              <strong>{reviewStage.title}</strong>
+              {form.secretMissions && (
+                <small>Secret mission review time is not included.</small>
+              )}
+              <small>Start each review from the host controls.</small>
+            </div>
+          </article>
+        )}
       </div>
       <Explainer>
         <Icon name="info" className="icon--size-18" />

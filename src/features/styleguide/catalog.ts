@@ -20,7 +20,7 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   HostGameSchedule: {
     usage:
-      "Host timeline with caller-supplied challenges and secret assignments. Compact rows show start time, round-number pills and titles, with distinct break labels; expanded rows reveal artwork, details and editing controls. Completed items are grouped, and the current row is highlighted.",
+      "Host timeline with caller-supplied challenges and secret assignments. An end review stage links to the existing host controls when side challenges or secret missions are present. Compact rows show start time, round-number pills and titles, with distinct break labels; expanded rows reveal artwork, details and editing controls. Completed items are grouped, and the current row is highlighted.",
     dependencies:
       "ChallengeArtwork, host schedule SCSS and caller-supplied editing callbacks. No data reads or writes.",
   },
@@ -1413,13 +1413,13 @@ const notes: Record<string, { usage: string; dependencies: string }> = {
   },
   HostRoundControls: {
     usage:
-      "Controlled timer and round actions. Stage changes animate the icon unless reduced motion is requested. startGameOrToggleTimer names its toggle/start behavior; resetRoundTimer pauses at full duration while restartRoundTimer runs. The feature owns transitions, persistence and locks; local timer primitives remain backend-free.",
+      "Controlled timer and round actions. At the final challenge, an optional review action opens the caller's final-review controls. Stage changes animate the icon unless reduced motion is requested. startGameOrToggleTimer names its toggle/start behavior; resetRoundTimer pauses at full duration while restartRoundTimer runs. The feature owns transitions, persistence and locks; local timer primitives remain backend-free.",
     dependencies:
       "Caller-supplied host models and callbacks; owned component and route SCSS. No internal backend reads or writes.",
   },
   HostControlOverrides: {
     usage:
-      "Controls-tab console: a dominant current-round surface with one dynamic primary action, compact accordion rows for breaks, side challenges (slot) and secret missions (slot), and a confirmed End game section. Expanded rows have a full-width white, padded content surface. The local example uses state only.",
+      "Controls-tab console: a dominant current-round surface with one dynamic primary action, compact accordion rows for breaks, side challenges (slot) and secret missions (slot), and a confirmed End game section. A final-review request opens both review panels and focuses the first. Expanded rows have a full-width white, padded content surface. The local example uses state only.",
     dependencies:
       "Caller-supplied state and callbacks; the host coordinator retains phase guards, timer publication, persistence and navigation.",
   },

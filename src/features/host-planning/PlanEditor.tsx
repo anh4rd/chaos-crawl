@@ -73,6 +73,7 @@ export default function PlanEditor({
     sideReviewCount,
     sideRewardPoints,
     liveFinalMinutes,
+    reviewStage,
     calculatedEnd,
   } = derivePlan(form);
   const {
@@ -478,6 +479,7 @@ export default function PlanEditor({
               form={form}
               update={update}
               liveFinalMinutes={liveFinalMinutes}
+              reviewStage={reviewStage}
               sideReviewCount={sideReviewCount}
               sideRewardPoints={sideRewardPoints}
               addTaskToSchedule={addTaskToSchedule}

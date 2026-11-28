@@ -538,6 +538,9 @@ export async function installSessionBackend(
       },
       cc_player_get_session_reward_round: null,
       cc_get_player_secret_missions: [],
+      cc_get_player_notifications: [],
+      cc_dismiss_player_notification: null,
+      cc_register_push_subscription: null,
       cc_player_get_session_secret_review: null,
       cc_get_player_session_evidence: uploadedEvidence.filter(
         (item) => item.player_id === currentPlayer.id,

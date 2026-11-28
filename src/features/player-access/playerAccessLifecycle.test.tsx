@@ -13,6 +13,8 @@ import { joinGameSession, readCachedPlayer } from "../../lib/playerAccess";
 vi.mock("../../lib/playerAccess", () => ({
   joinGameSession: vi.fn(),
   readCachedPlayer: vi.fn(),
+  isPlayerAccessRejection: (error: unknown) =>
+    error instanceof Error && error.message === "registration rejected",
   playerAccessErrorMessage: () =>
     "Couldn't complete player access. Check your details and try again.",
 }));
@@ -146,6 +148,74 @@ it("ignores an in-flight phone recovery after switching recovery methods", async
   expect(onJoined).not.toHaveBeenCalled();
   expect(localStorage.getItem(credentialKey)).toBeNull();
   expect(screen.getByLabelText("Recovery code")).toBeTruthy();
+});
+
+it("does not start phone recovery after a rejected registration becomes obsolete", async () => {
+  const pending = deferred();
+  vi.mocked(joinGameSession).mockReturnValueOnce(pending.promise);
+  const onJoined = vi.fn();
+  const { rerender } = render(
+    <PlayerAccess
+      codeFromUrl="123456"
+      initialMode="join"
+      onJoined={onJoined}
+    />,
+  );
+  await beginJoin();
+  rerender(
+    <PlayerAccess
+      codeFromUrl="654321"
+      initialMode="join"
+      onJoined={onJoined}
+    />,
+  );
+  await act(async () => {
+    pending.resolve({ data: null, error: new Error("registration rejected") });
+    await pending.promise;
+  });
+  expect(joinGameSession).toHaveBeenCalledTimes(1);
+  expect(onJoined).not.toHaveBeenCalled();
+});
+
+it("ignores an automatic phone recovery after the game changes", async () => {
+  const pending = deferred();
+  vi.mocked(joinGameSession)
+    .mockResolvedValueOnce({
+      data: null,
+      error: new Error("registration rejected"),
+    })
+    .mockReturnValueOnce(pending.promise);
+  const onJoined = vi.fn();
+  const { rerender } = render(
+    <PlayerAccess
+      codeFromUrl="123456"
+      initialMode="join"
+      onJoined={onJoined}
+    />,
+  );
+  await beginJoin();
+  expect(joinGameSession).toHaveBeenCalledTimes(2);
+  rerender(
+    <PlayerAccess
+      codeFromUrl="654321"
+      initialMode="join"
+      onJoined={onJoined}
+    />,
+  );
+  await act(async () => {
+    pending.resolve({
+      data: {
+        join_code: "123456",
+        player_token: "returning-token",
+        player_name: "Pat",
+        resumed: true,
+      },
+      error: null,
+    });
+    await pending.promise;
+  });
+  expect(onJoined).not.toHaveBeenCalled();
+  expect(localStorage.getItem(credentialKey)).toBeNull();
 });
 
 it("does not store credentials or redirect when a successful join finishes after unmount", async () => {

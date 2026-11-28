@@ -67,6 +67,27 @@ async function start(page: Page, name = "Planning regression") {
     .first()
     .click();
 }
+test("the schedule ends with the side challenge and secret mission review", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { host: true });
+  await start(page);
+  await section(page, "Main Challenges");
+  await page
+    .locator(".challenge-tile")
+    .filter({ hasText: "without disrupting other guests" })
+    .getByRole("button", { name: "Add Make the best noise as secret mission" })
+    .click();
+  await section(page, "Schedule");
+  const stage = page.locator(".event-timeline .schedule-item").last();
+  await expect(
+    stage.getByText("Review side challenges and secret missions"),
+  ).toBeVisible();
+  await expect(
+    stage.getByText(/Start each review from the host controls/),
+  ).toBeVisible();
+  backend.verify();
+});
 test("hosts can change challenge types from selections and the schedule", async ({
   page,
 }) => {

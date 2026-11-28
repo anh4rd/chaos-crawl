@@ -3,6 +3,7 @@ import ChallengeArtwork from "../../components/challenge/ChallengeArtwork";
 import Button from "../../components/ui/Button";
 import Icon from "../../components/ui/Icon";
 import StatSummary from "../../components/ui/StatSummary";
+import { reviewScheduleItem } from "../../lib/reviewSchedule";
 import { plannedTaskForChallenge } from "./liveHostPlanData";
 import type { PlannedTaskInfo } from "../../types/hostSession";
 import type {
@@ -58,6 +59,11 @@ interface Props {
   onBreak: boolean;
   onEditBreak: () => void;
   defaultBreakMinutes: number;
+  reviewFinalDuration: number | null;
+  plannedSideChallenges: boolean;
+  plannedSecretMissions: boolean;
+  reviewOpen: boolean;
+  onReview: () => void;
   plannedTasks: PlannedTaskInfo[];
   sessionStatus: SessionStatus;
   currentRound: number;
@@ -77,6 +83,11 @@ export default function HostGameSchedule({
   onBreak,
   onEditBreak,
   defaultBreakMinutes,
+  reviewFinalDuration,
+  plannedSideChallenges,
+  plannedSecretMissions,
+  reviewOpen,
+  onReview,
   plannedTasks,
   sessionStatus,
   currentRound,
@@ -128,6 +139,16 @@ export default function HostGameSchedule({
     (challenge) =>
       challenge.kind !== "secret" && !scheduledChallengeIds.has(challenge.id),
   );
+  const sideCount = challenges.filter((item) => item.kind === "side").length;
+  const reviewStage = reviewScheduleItem({
+    sideChallenges: plannedSideChallenges || sideCount > 0,
+    secretMissions:
+      plannedSecretMissions ||
+      challenges.some((item) => item.kind === "secret") ||
+      secretAssignments.some((item) => item.status !== "cancelled"),
+    finalDuration: reviewFinalDuration,
+    sideCount,
+  });
   const listed = [
     ...scheduledItems,
     ...unlistedChallenges.map((challenge) => ({
@@ -138,6 +159,9 @@ export default function HostGameSchedule({
       phase: undefined as string | undefined,
       challenge,
     })),
+    ...(reviewStage
+      ? [{ ...reviewStage, phase: undefined, challenge: undefined }]
+      : []),
   ];
   // Breaks between challenges follow the host timer: planned break items,
   // otherwise the plan's default break length.
@@ -166,7 +190,11 @@ export default function HostGameSchedule({
     onBreak &&
     challengeIndex >= 0 &&
     items[challengeIndex + 1]?.type === "break";
-  const currentIndex = breakActive ? challengeIndex + 1 : challengeIndex;
+  const currentIndex = reviewOpen
+    ? items.findIndex((item) => item.type === "final-review")
+    : breakActive
+      ? challengeIndex + 1
+      : challengeIndex;
   const totalMinutes = items.reduce((sum, item) => sum + item.duration, 0);
   const firstStart = startMinutes(startTime);
   let elapsed = firstStart;
@@ -258,7 +286,11 @@ export default function HostGameSchedule({
                 {!isBreak && (
                   <span className="host-game-schedule__kind">{meta.label}</span>
                 )}
-                <span>{item.duration} min</span>
+                <span>
+                  {item.type === "final-review" && item.duration === 0
+                    ? "Duration not set"
+                    : `${item.duration} min`}
+                </span>
               </div>
               <span className="host-game-schedule__art" aria-hidden="true">
                 <ScheduleArtwork
@@ -279,6 +311,24 @@ export default function HostGameSchedule({
               </div>
             )}
             {item.phase && <p>{item.phase}</p>}
+            {item.type === "final-review" && (
+              <>
+                <p>Start each review from the host controls.</p>
+                {(plannedSecretMissions ||
+                  challenges.some((challenge) => challenge.kind === "secret") ||
+                  secretAssignments.some(
+                    (assignment) => assignment.status !== "cancelled",
+                  )) && <p>Secret mission review time is not included.</p>}
+                <Button
+                  type="button"
+                  variant="session-action"
+                  fullWidth={false}
+                  onClick={onReview}
+                >
+                  Open review controls
+                </Button>
+              </>
+            )}
             {isBreak && item.nextTitle && (
               <p>After the break: {item.nextTitle}</p>
             )}

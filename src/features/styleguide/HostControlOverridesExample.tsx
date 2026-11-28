@@ -25,6 +25,7 @@ export default function HostControlOverridesExample() {
   const [running, setRunning] = useState(false);
   const [onBreak, setOnBreak] = useState(false);
   const [notice, setNotice] = useState("Try the local override controls.");
+  const [reviewRequest, setReviewRequest] = useState(0);
   const time = `${Math.floor(seconds / 60)
     .toString()
     .padStart(2, "0")}:${(seconds % 60).toString().padStart(2, "0")}`;
@@ -47,6 +48,14 @@ export default function HostControlOverridesExample() {
             currentRoundPointsAwarded={false}
             resumeRound={2}
             onNextRound={() => setNotice("Sample next round selected.")}
+            finalReviewTitle="Review side challenges and secret missions"
+            reviewRequest={reviewRequest}
+            onReviewOpened={() => setReviewRequest(0)}
+            onFinalReview={() => {
+              setRunning(false);
+              setReviewRequest((request) => request + 1);
+              setNotice("Sample final review selected.");
+            }}
             sideChallengeControls={<p>Local side challenge controls.</p>}
             secretMissionControls={<p>Local secret mission controls.</p>}
             timerRunning={running}

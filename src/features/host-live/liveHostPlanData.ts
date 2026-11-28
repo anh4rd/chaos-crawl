@@ -101,6 +101,14 @@ export function projectLiveHostPlan(value: unknown) {
     defaultBreakMinutes: Number.isFinite(breakMinutes)
       ? Math.max(0, breakMinutes)
       : 0,
+    reviewFinalDuration:
+      typeof plan.finalDuration === "number" &&
+      Number.isFinite(plan.finalDuration) &&
+      plan.finalDuration > 0
+        ? plan.finalDuration
+        : null,
+    plannedSideChallenges: plan.sideChallenges === true,
+    plannedSecretMissions: plan.secretMissions === true,
     gameSchedule: Array.isArray(plan.schedule)
       ? plan.schedule.filter(isScheduleItem).map((item) => ({
           type: item.type,

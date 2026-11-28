@@ -31,6 +31,8 @@ import { useParticipantVoting } from "./useParticipantVoting";
 import { usePrivateMissions } from "./usePrivateMissions";
 import { useSessionPlayerData } from "./useSessionPlayerData";
 import { useSessionTimer } from "./useSessionTimer";
+import { usePlayerNotifications } from "./usePlayerNotifications";
+import Button from "../../components/ui/Button";
 
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -75,6 +77,7 @@ export default function SessionParticipant({
     localStorage.getItem(playerStorageKey(code)),
   );
   const token = playerToken ?? storedToken;
+  const notifications = usePlayerNotifications(code, token);
   const {
     view,
     portraits,
@@ -438,6 +441,25 @@ export default function SessionParticipant({
     <>
       {(errorWithArt || sharedTimerError) && (
         <SessionFeedback message={errorWithArt || sharedTimerError} />
+      )}
+      {notifications.error && <SessionFeedback message={notifications.error} />}
+      {notifications.notifications.map((notification) => (
+        <SessionFeedback
+          key={notification.id}
+          message={notification.body}
+          kind="success"
+          onDismiss={() => void notifications.dismiss(notification.id)}
+        />
+      ))}
+      {notifications.canEnablePush && (
+        <Button
+          type="button"
+          variant="session-secondary"
+          disabled={notifications.busy}
+          onClick={notifications.enablePush}
+        >
+          Enable game alerts
+        </Button>
       )}
       {secretReviewTakeover && secretReview && (
         <SecretMissionReview

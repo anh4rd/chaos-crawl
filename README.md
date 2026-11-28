@@ -18,11 +18,12 @@ installed app. After installation, an optional button requests notification
 permission; iOS web push requires iOS/iPadOS 16.4 or newer and a Home Screen
 app. Availability and timing depend on the browser and device settings.
 
-Permission alone does not enable push notifications. Supabase subscription
-storage, a push service worker handler, VAPID keys, and a server-side sender
-must still be implemented before notifications can be delivered. Never put
-private VAPID keys in the frontend. The service worker only provides an offline
-message for navigation; games and host operations require a connection.
+Players also need to select **Enable game alerts** after joining. Push delivery
+requires the notification migration, Edge Function, scheduler and VAPID keys
+to be configured and deployed; see [notification setup](docs/notifications.md).
+In-app notices do not require browser notification permission. The service
+worker provides an offline navigation message; games and host operations
+require a connection.
 
 V2 uses `/join` (six-digit session code), `/play/:joinCode`, and the authenticated
 `/host` routes. The cleaned-up legacy workflows remain available at `/legacy/join`,

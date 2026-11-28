@@ -21,6 +21,11 @@ it("links scheduled preparation and performance to the live challenge and its sa
       onBreak={false}
       onEditBreak={vi.fn()}
       defaultBreakMinutes={0}
+      reviewFinalDuration={null}
+      plannedSideChallenges={false}
+      plannedSecretMissions={false}
+      reviewOpen={false}
+      onReview={vi.fn()}
       plannedTasks={[
         { id: "plan-id", title: challenge.title, equipment: ["Hat"] },
       ]}
@@ -78,4 +83,86 @@ it("links scheduled preparation and performance to the live challenge and its sa
       name: `Edit ${challenge.title}`,
     }),
   ).toBeTruthy();
+});
+
+it("places a combined review at the end and opens existing host controls", () => {
+  const onReview = vi.fn();
+  render(
+    <HostGameSchedule
+      startTime="18:00"
+      teamsEnabled={false}
+      onBreak={false}
+      onEditBreak={vi.fn()}
+      defaultBreakMinutes={0}
+      reviewFinalDuration={30}
+      plannedSideChallenges
+      plannedSecretMissions
+      reviewOpen
+      onReview={onReview}
+      plannedTasks={[]}
+      sessionStatus="live"
+      currentRound={1}
+      schedule={[
+        { id: "welcome", type: "welcome", title: "Welcome", duration: 10 },
+      ]}
+      challenges={[
+        hostChallengeFixture(),
+        { ...hostChallengeFixture(), id: "side", kind: "side", title: "Side" },
+      ]}
+      secretAssignments={[]}
+      secretMissionForms={null}
+      playerById={new Map()}
+      busy={false}
+      editable
+      onEdit={vi.fn()}
+    />,
+  );
+  const review = screen
+    .getByText("Review side challenges and secret missions")
+    .closest("li");
+  if (!review) throw new Error("Missing review stage.");
+  expect(review.getAttribute("aria-current")).toBe("step");
+  expect(within(review).getByText("18:20")).toBeTruthy();
+  fireEvent.click(
+    within(review).getByText("Review side challenges and secret missions"),
+  );
+  expect(within(review).getByText("35 min")).toBeTruthy();
+  expect(
+    within(review).getByText(/Secret mission review time is not included/),
+  ).toBeTruthy();
+  fireEvent.click(
+    within(review).getByRole("button", { name: "Open review controls" }),
+  );
+  expect(onReview).toHaveBeenCalledOnce();
+});
+
+it("shows a secret-only review for older games without inventing a duration", () => {
+  render(
+    <HostGameSchedule
+      startTime={null}
+      teamsEnabled={false}
+      onBreak={false}
+      onEditBreak={vi.fn()}
+      defaultBreakMinutes={0}
+      reviewFinalDuration={null}
+      plannedSideChallenges={false}
+      plannedSecretMissions={false}
+      reviewOpen={false}
+      onReview={vi.fn()}
+      plannedTasks={[]}
+      sessionStatus="lobby"
+      currentRound={0}
+      schedule={[]}
+      challenges={[{ ...hostChallengeFixture(), kind: "secret" }]}
+      secretAssignments={[]}
+      secretMissionForms={null}
+      playerById={new Map()}
+      busy={false}
+      editable
+      onEdit={vi.fn()}
+    />,
+  );
+  fireEvent.click(screen.getByText("Review secret missions"));
+  expect(screen.getByText("Duration not set")).toBeTruthy();
+  expect(screen.queryByText("Review side challenges")).toBeNull();
 });

@@ -6,6 +6,7 @@ import type {
 } from "../../types/hostPlanning";
 import { defaultForm, taskLibrary } from "./catalog";
 import { timePlus, today } from "../../utils/dateTime";
+import { reviewScheduleItem } from "../../lib/reviewSchedule";
 
 function stringRecord(value: unknown): Record<string, string> {
   if (typeof value !== "object" || value === null || Array.isArray(value))
@@ -112,6 +113,12 @@ export function derivePlan(form: SetupForm) {
   const liveFinalMinutes = form.sideChallenges
     ? form.finalDuration + sideReviewMinutes
     : 0;
+  const reviewStage = reviewScheduleItem({
+    sideChallenges: form.sideChallenges,
+    secretMissions: form.secretMissions,
+    finalDuration: form.finalDuration,
+    sideCount: sideReviewCount,
+  });
   function scheduleTotal() {
     return (
       form.schedule.reduce((sum, item) => sum + item.duration, 0) +
@@ -131,6 +138,7 @@ export function derivePlan(form: SetupForm) {
     sideReviewMinutes,
     sideRewardPoints,
     liveFinalMinutes,
+    reviewStage,
     calculatedEnd,
   };
 }

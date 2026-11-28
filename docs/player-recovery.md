@@ -59,6 +59,13 @@ existing player without rotating it. An expired token offers phone or credential
 recovery; an unavailable session check reports an error instead of treating a
 network problem as lost identity.
 
+When registration is rejected and a phone number was supplied, Join also tries
+the temporary phone recovery flow. A successful recovery returns directly to
+the existing player instead of presenting the newly generated recovery code,
+which was not registered to that player. The pending encrypted registration
+credential remains available for an interrupted registration retry. A blank
+phone number cannot identify a returning player.
+
 ## Temporary phone recovery for the birthday event
 
 This is deliberately insecure: anyone who knows a player's game code and phone

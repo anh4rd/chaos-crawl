@@ -1,4 +1,11 @@
-import { useId, useState, type FormEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import Button from "../../components/ui/Button";
 import ControlRow from "../../components/ui/ControlRow";
 import Dialog from "../../components/ui/Dialog";
@@ -44,6 +51,10 @@ interface Props {
   onFinish: () => void;
   onMemories: () => void;
   onEndGameReview?: () => void;
+  onFinalReview?: () => void;
+  finalReviewTitle?: string;
+  reviewRequest?: number;
+  onReviewOpened?: () => void;
   sideChallengeControls: ReactNode;
   secretMissionControls: ReactNode;
   endGameControls?: ReactNode;
@@ -80,6 +91,10 @@ export default function HostControlOverrides({
   onFinish,
   onMemories,
   onEndGameReview,
+  onFinalReview,
+  finalReviewTitle,
+  reviewRequest = 0,
+  onReviewOpened,
   sideChallengeControls,
   secretMissionControls,
   endGameControls,
@@ -89,6 +104,18 @@ export default function HostControlOverrides({
   const [timerMinutes, setTimerMinutes] = useState<string | null>(null);
   const timerTitle = useId();
   const roundHeading = useId();
+  const consoleRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!reviewRequest) return;
+    const panels = consoleRef.current?.querySelectorAll<HTMLDetailsElement>(
+      "details[data-final-review]",
+    );
+    panels?.forEach((panel) => {
+      panel.open = true;
+    });
+    panels?.[0]?.querySelector("summary")?.focus();
+    onReviewOpened?.();
+  }, [reviewRequest, onReviewOpened]);
   const selected =
     rounds.find((round) => round.id === selectedId) ??
     rounds.find((round) => round.round_number === currentRound) ??
@@ -105,6 +132,8 @@ export default function HostControlOverrides({
   );
   const expired = timerReady && timerSeconds === 0 && !timerRunning;
   const moveDisabled = busy || !live || rewardActive;
+  const finalReviewNext =
+    !onBreak && Boolean(onFinalReview) && currentRound >= lastRound;
 
   function saveTimer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -139,10 +168,15 @@ export default function HostControlOverrides({
         }
       : currentRoundPointsAwarded
         ? {
-            label: "Next round",
-            hint: "Points are saved. Move everyone on.",
-            onClick: onNextRound,
-            disabled: busy || !live || currentRound >= lastRound,
+            label: finalReviewNext
+              ? (finalReviewTitle ?? "Final review")
+              : "Next round",
+            hint: finalReviewNext
+              ? "Points are saved. Open the final review controls."
+              : "Points are saved. Move everyone on.",
+            onClick: finalReviewNext ? onFinalReview : onNextRound,
+            disabled:
+              busy || !live || (currentRound >= lastRound && !finalReviewNext),
           }
         : expired
           ? {
@@ -170,7 +204,11 @@ export default function HostControlOverrides({
           : "READY";
 
   return (
-    <div className="control-console" data-tour="host-start-controls">
+    <div
+      ref={consoleRef}
+      className="control-console"
+      data-tour="host-start-controls"
+    >
       <section
         className="control-console__round"
         aria-labelledby={roundHeading}
@@ -258,10 +296,20 @@ export default function HostControlOverrides({
             type="button"
             variant="session-secondary"
             fullWidth={false}
-            disabled={moveDisabled || currentRound >= lastRound}
-            onClick={() => confirmMove(currentRound + 1)}
+            disabled={
+              moveDisabled || (currentRound >= lastRound && !finalReviewNext)
+            }
+            onClick={() => {
+              if (!finalReviewNext) confirmMove(currentRound + 1);
+              else if (
+                window.confirm(
+                  "Open the final review? This may skip the current round.",
+                )
+              )
+                onFinalReview?.();
+            }}
           >
-            Skip
+            {finalReviewNext ? "Skip to final review" : "Skip"}
           </Button>
           <Button
             type="button"
@@ -447,6 +495,7 @@ export default function HostControlOverrides({
       <Disclosure
         variant="session"
         className="control-console__panel"
+        data-final-review
         summary={
           <PanelSummary
             icon="star"
@@ -463,6 +512,7 @@ export default function HostControlOverrides({
       <Disclosure
         variant="session"
         className="control-console__panel control-console__panel--secret"
+        data-final-review
         summary={
           <PanelSummary
             icon="lock-keyhole"

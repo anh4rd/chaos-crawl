@@ -187,6 +187,54 @@ test("join trims its payload, stores only the V2 credential and replaces the joi
   backend.verify();
 });
 
+test("join automatically recovers an existing player by phone", async ({
+  page,
+}) => {
+  const backend = await installSessionBackend(page, { savedPlayer: false });
+  backend.responses["player-identity"] = {
+    player_token: "returning-token",
+    join_code: "123456",
+    player_name: "Pat",
+    resumed: true,
+  };
+  let registrations = 0;
+  await page.route("**/functions/v1/player-identity", async (route) => {
+    if (route.request().postDataJSON().action === "register") {
+      registrations += 1;
+      await route.fulfill({
+        status: 400,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ error: "Unable to complete this request." }),
+      });
+    } else {
+      await route.fallback();
+    }
+  });
+  await enterDetails(page);
+  await typeField(page, "Your name?", "Pat");
+  await typeField(page, "Your phone number?", "0712345678");
+  await activateByKeyboard(
+    page,
+    page.getByRole("button", { name: "Join game", exact: true }),
+  );
+  await expect(page).toHaveURL(/\/play\/123456$/);
+  expect(registrations).toBe(1);
+  expect(joinRequests(backend)).toHaveLength(1);
+  expect(joinRequests(backend)[0].body).toMatchObject({
+    action: "recover_phone",
+    join_code: "123456",
+    mobile: "0712345678",
+  });
+  expect(await page.evaluate(() => window.history.state.usr)).toMatchObject({
+    welcomeBack: true,
+  });
+  expect(
+    await page.evaluate((key) => localStorage.getItem(key), credentialKey),
+  ).toBe("returning-token");
+  backend.verify();
+});
+
 test("rejoin uses the recovery credential and preserves the resumed redirect state", async ({
   page,
 }) => {

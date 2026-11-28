@@ -151,6 +151,93 @@ it("joins a V2 session using its RPC and stores the session token without changi
   expect(localStorage.getItem("chaos-crawl-player-id")).toBe("legacy-player");
 });
 
+it("rejoins with the supplied phone after a rejected registration", async () => {
+  mocks.invoke
+    .mockResolvedValueOnce({
+      data: null,
+      error: new FunctionsHttpError(new Response(null, { status: 400 })),
+    })
+    .mockResolvedValueOnce({
+      data: {
+        player_token: "returning-token",
+        join_code: "123456",
+        player_name: "Pat",
+        resumed: true,
+      },
+      error: null,
+    });
+  openJoin();
+  fillDetails();
+  fireEvent.click(screen.getByRole("button", { name: /Join game/ }));
+  await waitFor(() =>
+    expect(screen.getByLabelText("Location").textContent).toBe("/play/123456"),
+  );
+  expect(mocks.invoke).toHaveBeenNthCalledWith(2, "player-identity", {
+    body: {
+      action: "recover_phone",
+      join_code: "123456",
+      mobile: "0821234567",
+    },
+  });
+  expect(localStorage.getItem("chaos-crawl-session-player:123456")).toBe(
+    "returning-token",
+  );
+  expect(screen.queryByText("Your recovery code")).toBeNull();
+});
+
+it.each([
+  { status: 400, phone: "", expectedCalls: 1 },
+  { status: 503, phone: "0821234567", expectedCalls: 1 },
+  { status: 400, phone: "0821234567", expectedCalls: 2 },
+])(
+  "keeps a failed join retryable when registration returns $status and the phone is '$phone'",
+  async ({ status, phone, expectedCalls }) => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.invoke.mockResolvedValue({
+      data: null,
+      error: new FunctionsHttpError(new Response(null, { status })),
+    });
+    openJoin();
+    fireEvent.change(screen.getByLabelText("Your name?"), {
+      target: { value: "Pat" },
+    });
+    fireEvent.change(screen.getByLabelText("Your phone number?"), {
+      target: { value: phone },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /Join game/ }));
+    expect(await screen.findByRole("alert")).toBeTruthy();
+    expect(mocks.invoke).toHaveBeenCalledTimes(expectedCalls);
+    expect(screen.getByLabelText("Location").textContent).toBe("/join");
+    expect(
+      localStorage.getItem("chaos-crawl-session-player:123456"),
+    ).toBeNull();
+    expect(
+      screen.getByRole("button", { name: /Join game/ }),
+    ).not.toHaveProperty("disabled", true);
+  },
+);
+
+it("reports an unavailable phone recovery service after registration is rejected", async () => {
+  vi.spyOn(console, "error").mockImplementation(() => {});
+  mocks.invoke
+    .mockResolvedValueOnce({
+      data: null,
+      error: new FunctionsHttpError(new Response(null, { status: 400 })),
+    })
+    .mockResolvedValueOnce({
+      data: null,
+      error: new FunctionsHttpError(new Response(null, { status: 503 })),
+    });
+  openJoin();
+  fillDetails();
+  fireEvent.click(screen.getByRole("button", { name: /Join game/ }));
+  expect((await screen.findByRole("alert")).textContent).toContain(
+    "Player access is temporarily unavailable",
+  );
+  expect(mocks.invoke).toHaveBeenCalledTimes(2);
+  expect(localStorage.getItem("chaos-crawl-session-player:123456")).toBeNull();
+});
+
 it.each([
   {
     country: "44",

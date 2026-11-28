@@ -7,6 +7,39 @@ writes are included.
 
 ## In progress
 
+Player notifications now record secret-mission delivery, round changes and
+final voting as in-app notices and queue generic PWA push alerts. The sender
+also dispatches due missions while the host screen is closed. Subscription
+registration uses the existing player credential; the service worker never
+receives mission details. Configuration, deployment and sender scheduling are
+documented in [notification setup](./notifications.md). The migration,
+sender and frontend must be deployed together; no live writes were performed.
+Verification includes isolated PostgreSQL authorization/scheduling checks,
+Edge Runtime sender startup, unit tests, mocked desktop/mobile journeys and
+simulated push events in the production service worker.
+Notification snapshots are now scoped to the current game code and player
+token during rendering, preventing the previous player's notices from appearing
+on an identity change. Focused tests cover polling and dismissal after navigation;
+the desktop/mobile browser checks use a mocked backend, not a deployed service.
+An additive notification-hardening migration is staged outside the automatic
+migration track. An isolated PostgreSQL fixture exercises queue-failure recovery,
+recipient isolation, subscription transfer and both player recovery paths.
+Production's hardening objects and replacement function hashes now match the
+local migration; its migration history remains empty. A repeated application is
+rejected by the function-definition guard. No real push delivery was verified.
+
+The planning and live host schedules include an end review stage when side
+challenges or secret missions are enabled. It is derived from the plan or live
+challenges, including older games, and links to the existing manual review
+controls. It does not create an additional numbered challenge or automatically
+open voting, and is fixed at the end. After the last challenge's points are
+awarded, the host's next action opens both existing review panels. The host can
+also explicitly confirm skipping to review without a reward round. Side-review
+estimates use the existing final duration and five minutes per side challenge;
+secret review time is not estimated. Focused planning/live unit tests and mocked desktop/mobile schedule
+journeys passed; the build passed. Full lint was blocked by existing formatting
+in four unrelated SCSS files.
+
 Secret missions use one points value per game, editable under Secret missions in
 the host plan. An additive migration synchronizes active session missions and
 new custom missions; already awarded scores are not changed. The migration and

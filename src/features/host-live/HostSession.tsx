@@ -76,6 +76,7 @@ import GuidedTour from "../../components/tour/GuidedTour";
 import { upcomingStageModel } from "./upcomingStageModel";
 import HostWorkspaceNavigation from "../../components/session/HostWorkspaceNavigation";
 import StagePreview from "../../components/session/StagePreview";
+import { reviewScheduleItem } from "../../lib/reviewSchedule";
 
 const hostManagementSections = [
   { id: "overrides", label: "Controls", icon: "gamepad2" },
@@ -132,6 +133,7 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
   const [actionError, setError] = useState("");
   const [activeTab, setActiveTab] = useState<HostTab>("game");
   const [hostJoinFlowOpen, setHostJoinFlowOpen] = useState(false);
+  const [reviewRequest, setReviewRequest] = useState(0);
   const [tourDismissed, setTourDismissed] = useState(false);
   const [reviewFilter, setReviewFilter] = useState<ReviewFilter>("main");
   const [activeHostSection, setActiveHostSection] =
@@ -148,6 +150,9 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     plannedTasks,
     setPlannedTasks,
     defaultBreakMinutes,
+    reviewFinalDuration,
+    plannedSideChallenges,
+    plannedSecretMissions,
     invitationEnabled,
     error: planError,
     setError: setPlanError,
@@ -785,6 +790,24 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
     document.getElementById(`${hostManagementId}-tab-${section}`)?.focus();
     setActiveHostSection(section);
   }
+  function openFinalReviewControls() {
+    setActiveTab("host-controls");
+    openHostSection("overrides");
+    setReviewRequest((request) => request + 1);
+  }
+  function moveToFinalReview() {
+    if (roundClockRunning && !hostBreakActive) toggleTimer();
+    openFinalReviewControls();
+  }
+  const finalReview = reviewScheduleItem({
+    sideChallenges: plannedSideChallenges || sideChallenges.length > 0,
+    secretMissions:
+      plannedSecretMissions ||
+      secretChallenges.length > 0 ||
+      secretAssignments.some((assignment) => assignment.status !== "cancelled"),
+    finalDuration: reviewFinalDuration,
+    sideCount: sideChallenges.length,
+  });
   const sumPoints = (items: { awarded_points: number }[]) =>
     items.reduce((sum, item) => sum + item.awarded_points, 0);
   const mainSubmissions = submissions.filter(
@@ -1003,8 +1026,12 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
       skipTimerAndReview={skipTimerAndReview}
       onEditBreak={openBreakTimerEditor}
       nextStage={
-        hostBreakActive ? nextBreakChallenge?.title : upcomingStage?.title
+        hostBreakActive
+          ? nextBreakChallenge?.title
+          : (upcomingStage?.title ?? finalReview?.title)
       }
+      onFinalReview={finalReview ? moveToFinalReview : undefined}
+      finalReviewTitle={finalReview?.title}
     />
   );
   const gameTabHostControls = (
@@ -1529,6 +1556,12 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                           });
                         }}
                         onMemories={() => openHostSection("memories")}
+                        onFinalReview={
+                          finalReview ? moveToFinalReview : undefined
+                        }
+                        finalReviewTitle={finalReview?.title}
+                        reviewRequest={reviewRequest}
+                        onReviewOpened={() => setReviewRequest(0)}
                         currentRoundPointsAwarded={currentRoundPointsAwarded}
                         resumeRound={breakResumeRound}
                         onNextRound={() =>
@@ -1801,6 +1834,18 @@ export default function HostSession({ sessionId }: { sessionId: string }) {
                       onBreak={hostBreakActive}
                       onEditBreak={openBreakTimerEditor}
                       defaultBreakMinutes={defaultBreakMinutes}
+                      reviewFinalDuration={reviewFinalDuration}
+                      plannedSideChallenges={plannedSideChallenges}
+                      plannedSecretMissions={plannedSecretMissions}
+                      reviewOpen={Boolean(
+                        secretReviewState?.is_open ||
+                        secretReviewState?.voting_open ||
+                        finalRoundState?.is_open ||
+                        finalRoundState?.voting_open ||
+                        session.final_gallery_open ||
+                        session.final_voting_open,
+                      )}
+                      onReview={openFinalReviewControls}
                       plannedTasks={plannedTasks}
                       sessionStatus={session.status}
                       currentRound={session.current_round_number}

@@ -45,6 +45,8 @@ interface Props {
   skipTimerAndReview: () => void;
   onEditBreak?: () => void;
   nextStage?: string;
+  onFinalReview?: () => void;
+  finalReviewTitle?: string;
 }
 
 export default function HostRoundControls({
@@ -72,6 +74,8 @@ export default function HostRoundControls({
   skipTimerAndReview,
   onEditBreak,
   nextStage,
+  onFinalReview,
+  finalReviewTitle,
 }: Props) {
   const [editingTime, setEditingTime] = useState<string | null>(null);
   const [minutes, setMinutes] = useState("");
@@ -86,6 +90,10 @@ export default function HostRoundControls({
     (hostBreakActive || !currentRoundPointsAwarded) &&
     roundTimerHydrated;
   const canNavigate = session.status === "live" && !rewardActive;
+  const finalReviewNext =
+    !hostBreakActive &&
+    Boolean(onFinalReview) &&
+    session.current_round_number >= totalRounds;
   const canReview =
     session.status === "live" &&
     roundTimerHydrated &&
@@ -295,12 +303,19 @@ export default function HostRoundControls({
                 type="button"
                 variant="control-primary"
                 fullWidth={false}
-                disabled={busy || session.current_round_number >= totalRounds}
-                onClick={() =>
-                  requestMoveToRound(session.current_round_number + 1)
+                disabled={
+                  busy ||
+                  (session.current_round_number >= totalRounds &&
+                    !finalReviewNext)
                 }
+                onClick={() => {
+                  if (finalReviewNext) onFinalReview?.();
+                  else requestMoveToRound(session.current_round_number + 1);
+                }}
               >
-                Next Round{" "}
+                {finalReviewNext
+                  ? (finalReviewTitle ?? "Final review")
+                  : "Next Round"}{" "}
                 <Icon
                   name="arrow-right"
                   className="icon--size-16"
@@ -425,17 +440,27 @@ export default function HostRoundControls({
                 type="button"
                 variant="flow"
                 fullWidth={false}
-                disabled={busy || session.current_round_number >= totalRounds}
+                disabled={
+                  busy ||
+                  (session.current_round_number >= totalRounds &&
+                    !finalReviewNext)
+                }
                 onClick={() => {
                   if (
                     window.confirm(
-                      "Move to the next round? This may skip the current round or break.",
+                      finalReviewNext
+                        ? "Open the final review? This may skip the current round."
+                        : "Move to the next round? This may skip the current round or break.",
                     )
-                  )
-                    requestMoveToRound(session.current_round_number + 1);
+                  ) {
+                    if (finalReviewNext) onFinalReview?.();
+                    else requestMoveToRound(session.current_round_number + 1);
+                  }
                 }}
               >
-                Next{" "}
+                {finalReviewNext
+                  ? (finalReviewTitle ?? "Final review")
+                  : "Next"}{" "}
                 <Icon
                   name="arrow-right"
                   className="icon--size-16"

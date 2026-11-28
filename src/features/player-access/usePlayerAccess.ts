@@ -8,6 +8,7 @@ import {
   type FormEvent,
 } from "react";
 import {
+  isPlayerAccessRejection,
   joinGameSession,
   playerAccessErrorMessage,
   readCachedPlayer,
@@ -181,8 +182,22 @@ export function usePlayerAccess({
                 join_code: cleanCode,
                 credential: recoveryCredential,
               };
-      const { data, error: joinError } = await joinGameSession(parameters);
+      let { data, error: joinError } = await joinGameSession(parameters);
       if (!isCurrent()) return;
+      let recoveredByPhone = false;
+      if (
+        mode === "join" &&
+        formattedMobile &&
+        isPlayerAccessRejection(joinError)
+      ) {
+        ({ data, error: joinError } = await joinGameSession({
+          action: "recover_phone",
+          join_code: cleanCode,
+          mobile: formattedMobile,
+        }));
+        if (!isCurrent()) return;
+        recoveredByPhone = !joinError;
+      }
       if (joinError) throw joinError;
       const result = data;
       if (!result?.player_token || !result?.join_code) {
@@ -191,7 +206,8 @@ export function usePlayerAccess({
         );
       }
       localStorage.setItem(storageKey(result.join_code), result.player_token);
-      if (mode === "join") setSetup({ credential: recoveryCredential, result });
+      if (mode === "join" && !recoveredByPhone)
+        setSetup({ credential: recoveryCredential, result });
       else {
         if (result.resumed) setNotice(`Welcome back, ${result.player_name}!`);
         onJoined(result);
