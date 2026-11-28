@@ -1,0 +1,1 @@
+function e({sideChallenges:e,secretMissions:t,finalDuration:n,sideCount:r}){return!e&&!t?null:{id:`final-review`,type:`final-review`,title:e&&t?`Review side challenges and secret missions`:e?`Review side challenges`:`Review secret missions`,duration:e&&n!==null?n+r*5:0}}export{e as t};
